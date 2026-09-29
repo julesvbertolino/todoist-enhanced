@@ -10,7 +10,7 @@ const path = require('node:path');
 const APP_URL = (process.env.ENHANCED_URL || 'https://todoistenhanced.julesbertolino.fr/').trim();
 const APP_ORIGIN = new URL(APP_URL).origin;
 
-/* Option+Space is also Raycast's default. Change either one; this side reads
+/* Option+Space by default. This side reads
    `quickAddShortcut` from config.json in the app's data folder (Electron
    accelerator syntax, e.g. "Alt+Shift+Space"), or QUICKADD_SHORTCUT. */
 function readShortcut() {
@@ -124,7 +124,7 @@ function registerShortcut() {
   if (!ok) {
     new Notification({
       title: 'Enhanced for Todoist',
-      body: `${accelerator} is already taken by another app (Raycast uses it by default). ` +
+      body: `${accelerator} is already taken by another app. ` +
         'Set another one in config.json: { "quickAddShortcut": "Alt+Shift+Space" }.',
     }).show();
   }

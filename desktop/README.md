@@ -34,8 +34,7 @@ Then drag `dist/mac-*/Enhanced for Todoist.app` into Applications.
 
 ## The shortcut
 
-Option+Space is Raycast's default too. Either change Raycast's, or pick another
-here, in `~/Library/Application Support/enhanced-for-todoist-desktop/config.json`:
+Option+Space can be changed, if another app already uses it, in `~/Library/Application Support/enhanced-for-todoist-desktop/config.json`:
 
 ```json
 { "quickAddShortcut": "Alt+Shift+Space" }
