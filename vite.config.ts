@@ -120,6 +120,9 @@ export default defineConfig({
         theme_color: '#d1453b',
         background_color: '#ffffff',
         display: 'standalone',
+        /* On desktop Chromium, draw into the title bar and keep only the window
+           buttons. Anywhere that does not know this falls back to `display`. */
+        display_override: ['window-controls-overlay', 'standalone'],
         start_url: './',
         scope: './',
         icons: [

@@ -2641,3 +2641,23 @@
   font-variant-numeric:tabular-nums;box-shadow:0 0 0 2px var(--surface);
 }
 .carrying-selection .task.picked{opacity:.45}
+
+/* ---------- Installed window without a title bar ----------
+   With `display_override: window-controls-overlay` in the manifest, the
+   installed app draws into the title bar itself and only the window buttons
+   stay on top. This band takes the height the browser reserves for them, so
+   nothing sits under the buttons, and it is the part of the window you drag.
+   In a normal tab or on a phone this media query never matches. */
+@media (display-mode: window-controls-overlay) {
+  body::before{
+    content:"";position:fixed;top:0;left:0;right:0;z-index:100;
+    height:env(titlebar-area-height, 0px);
+    background:var(--bg);
+    -webkit-app-region:drag;app-region:drag;
+    pointer-events:none;
+  }
+  .app{
+    box-sizing:border-box;
+    padding-top:env(titlebar-area-height, 0px);
+  }
+}
