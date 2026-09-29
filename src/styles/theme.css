@@ -2661,3 +2661,20 @@
     padding-top:env(titlebar-area-height, 0px);
   }
 }
+
+/* ---------- The desktop app's quick-add window ----------
+   The window itself is transparent; the composer floats in it, so it looks
+   like it opened over whatever was on screen. */
+html.quickadd, html.quickadd body{background:transparent}
+html.quickadd .scrim{background:transparent}
+
+/* ---------- Inside the desktop app (desktop/) ----------
+   The window has no title bar and its buttons float over the top-left corner,
+   so the sidebar starts lower, and a thin strip at the top moves the window. */
+html.desktop-app body::before{
+  content:"";position:fixed;top:0;left:0;right:0;height:28px;z-index:100;
+  -webkit-app-region:drag;app-region:drag;
+}
+html.desktop-app .sidebar{padding-top:44px}
+html.desktop-app .app.collapsed .expand-wrap{top:8px;left:84px;-webkit-app-region:no-drag;app-region:no-drag}
+html.desktop-app.quickadd body::before{display:none}

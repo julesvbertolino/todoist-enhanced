@@ -1,0 +1,24 @@
+{
+  "name": "enhanced-for-todoist-desktop",
+  "private": true,
+  "version": "0.1.0",
+  "description": "A native window around Enhanced for Todoist, with a global quick-add shortcut. It loads the hosted site, so the site's updates are the app's updates.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --mac --dir"
+  },
+  "devDependencies": {
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "fr.julesbertolino.todoistenhanced.desktop",
+    "productName": "Enhanced for Todoist",
+    "files": ["main.js", "preload.js", "package.json"],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "../public/icon-512.png"
+    }
+  }
+}

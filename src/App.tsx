@@ -13,6 +13,7 @@ import { ProjectSheet, type ProjectSheetTarget } from './components/overlays/Pro
 import { Unestimated } from './components/overlays/Unestimated';
 import { ConfirmProvider } from './components/overlays/Confirm';
 import { Overlay } from './components/overlays/Overlay';
+import { QUICK_ADD, QuickAdd } from './QuickAdd';
 import { WeekView } from './views/WeekView';
 import { UpcomingView } from './views/UpcomingView';
 import { SimpleListView } from './views/SimpleListView';
@@ -150,7 +151,7 @@ export function App() {
      Opened here and closed by the dialog, so asking for it again from Settings
      goes through the same door. */
   useEffect(() => {
-    if (ready && (connected || demo) && !hasOnboarded(userId) && !onboardingStarted) {
+    if (!QUICK_ADD && ready && (connected || demo) && !hasOnboarded(userId) && !onboardingStarted) {
       setOnboardingStarted(true);
       /* Somebody meeting the app for the first time is getting the tour; a
          list of what changed since a version they never used is not news. */
@@ -173,7 +174,7 @@ export function App() {
      top of the first run, and never in the demo, which has no account to
      remember having shown it. */
   useEffect(() => {
-    if (!ready || !connected || demo || !settled || !hasOnboarded(userId)) return;
+    if (QUICK_ADD || !ready || !connected || demo || !settled || !hasOnboarded(userId)) return;
     if (tourOpen || walkthroughOpen || whatsNew) return;
     if (seenVersion === VERSION) return;
     let cancelled = false;
@@ -204,6 +205,8 @@ export function App() {
   if (!connected) {
     return <ConnectView />;
   }
+
+  if (QUICK_ADD) return <QuickAdd />;
 
   return (
     <>

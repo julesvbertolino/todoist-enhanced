@@ -5,3 +5,8 @@
 declare const __PUBLIC_URL__: string;
 /** The development address Todoist also returns to, listed in oauth/client.json. */
 declare const __OAUTH_DEV_REDIRECT__: string;
+
+interface Window {
+  /** Present only inside the desktop app (desktop/), which adds it in its preload script. */
+  enhancedDesktop?: { hideQuickAdd: () => void };
+}
