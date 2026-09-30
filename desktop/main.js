@@ -71,8 +71,11 @@ function createMain() {
 
 function createQuick() {
   quick = new BrowserWindow({
-    width: 660,
-    height: 640,
+    /* Wider than the composer (660): the window is transparent and clips what
+       is drawn outside it, so the composer's shadow, which reaches about 56px
+       to each side, needs that much room or it is cut off in a straight line. */
+    width: 820,
+    height: 680,
     show: false,
     frame: false,
     transparent: true,
