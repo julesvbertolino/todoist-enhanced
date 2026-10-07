@@ -1,0 +1,27 @@
+# Cloudflare Pages reads this file. It carries over the rules that
+# public/.htaccess applies on Apache (the original host). Keep the
+# Content-Security-Policy in step with `preview.headers` in vite.config.ts.
+# If a new view fetches from another host (for example a Google Sheet for KPI
+# values), add that host to connect-src here and in vite.config.ts.
+
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.todoist.com; img-src 'self' data: blob: https:; font-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
+/manifest.webmanifest
+  Content-Type: application/manifest+json
+  Cache-Control: no-cache, must-revalidate
+
+/sw.js
+  Cache-Control: no-cache, must-revalidate
+
+/registerSW.js
+  Cache-Control: no-cache, must-revalidate
+
+/theme-boot.js
+  Cache-Control: no-cache, must-revalidate
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

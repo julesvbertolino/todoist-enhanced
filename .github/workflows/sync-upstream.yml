@@ -1,0 +1,30 @@
+name: Sync upstream
+
+# Every Monday, and on demand from the Actions tab: if the original
+# Enhanced for Todoist has new changes, open a pull request that merges them
+# into this fork. You review it (Cloudflare Pages builds a preview), then merge.
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: ./scripts/sync-upstream.sh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
