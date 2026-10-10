@@ -19,9 +19,16 @@ export const createUiSlice: Slice<UiSlice> = (set, get) => ({
   selectionAnchor: null,
   sidePanel: null,
   timeFilter: { minutes: null, scope: 'page', sort: 'duration' },
-  openSidePanel(panel) { set({ sidePanel: panel }); },
+  /* Closing "I have time" ends the choice: the pill reads "I have time" again
+     and the next opening starts with no duration picked (#30). */
+  openSidePanel(panel) {
+    const leavingTime = get().sidePanel === 'time' && panel !== 'time';
+    set({ sidePanel: panel, ...(leavingTime ? { timeFilter: { ...get().timeFilter, minutes: null } } : {}) });
+  },
   closeSidePanel(panel) {
-    if (!panel || get().sidePanel === panel) set({ sidePanel: null });
+    if (panel && get().sidePanel !== panel) return;
+    const leavingTime = get().sidePanel === 'time';
+    set({ sidePanel: null, ...(leavingTime ? { timeFilter: { ...get().timeFilter, minutes: null } } : {}) });
   },
   setTimeFilter(patch) { set({ timeFilter: { ...get().timeFilter, ...patch } }); },
   toast(message, undo, options) {

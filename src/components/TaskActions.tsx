@@ -617,7 +617,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep }: TaskActionsPro
             ref={(node) => { placement.ref.current = node; moreKeys.current = node; }}
           >
             <button className="opt" onClick={() => { setMenu('none'); onOpen(item.id); }}>
-              <span><Icon name="edit" size="sm" /> {t('detail.title')}</span>
+              <span><Icon name="edit" size="sm" /> {t('task.edit')}</span>
             </button>
             {/* On a phone this sheet is what holding the row opens, and it has
                 to be the whole of what hovering one would have shown — the
@@ -695,12 +695,17 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep }: TaskActionsPro
   return (
     <span className="trow-actions" ref={ref} onClick={(e) => e.stopPropagation()}>
       {menu === 'estimate' && !phone ? (
+        /* Opens empty, with the current duration shown as the placeholder: the
+           point of the field is to type a new one, and Enter on nothing leaves
+           it as it was rather than clearing it. */
         <EstimateField
           autoFocus
-          minutes={computed ? null : minutes}
+          minutes={null}
+          placeholder={!computed && minutes !== null ? formatDuration(minutes, locale) : undefined}
           onCancel={() => setMenu('none')}
           onCommit={(value) => {
             setMenu('none');
+            if (value === null && !computed && minutes !== null) return;
             void updateTask(item.id, { estimateMinutes: value });
           }}
         />
@@ -712,8 +717,8 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep }: TaskActionsPro
               it should be a swipe rather than a trip through the panel. */}
           <button
             className="rowact-wide"
-            aria-label={t('detail.title')}
-            title={t('detail.title')}
+            aria-label={t('task.edit')}
+            title={t('task.edit')}
             onClick={() => onOpen(item.id)}
           >
             <Icon name="edit" size="sm" />

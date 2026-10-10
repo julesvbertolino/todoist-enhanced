@@ -21,6 +21,7 @@ const SECURITY_HEADERS = {
     "manifest-src 'self'",
     "worker-src 'self'",
     "base-uri 'self'",
+    "frame-src https://tally.so",
     "form-action 'self'",
     "frame-ancestors 'none'",
     "object-src 'none'",

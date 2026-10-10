@@ -83,3 +83,23 @@ export function itemFromCompleted(entry: CompletedItem): Item {
     note_count: entry.note_count,
   });
 }
+
+/**
+ * Adds or removes the signed-in person's reaction on a comment.
+ *
+ * Todoist has dedicated endpoints for this (API v1, "Add Comment Reaction" and
+ * "Remove Comment Reaction": `POST /comments/{id}/reactions` and
+ * `POST /comments/{id}/reactions/remove`, body `{ reaction }`). The sync
+ * command `note_update` does not write reactions: it was accepted and ignored,
+ * so the next sync took the reaction back off the screen (#26).
+ *
+ * Adding returns the comment with its reactions, which is what the caller keeps.
+ * Removing answers 204 with no body.
+ */
+export async function setCommentReaction(
+  commentId: string, reaction: string, on: boolean,
+): Promise<Note['reactions'] | undefined> {
+  const path = `/comments/${encodeURIComponent(commentId)}/reactions${on ? '' : '/remove'}`;
+  const answer = await request<Partial<Note> | null>(path, { method: 'POST', json: { reaction }, retries: 1 });
+  return answer && typeof answer === 'object' ? answer.reactions : undefined;
+}

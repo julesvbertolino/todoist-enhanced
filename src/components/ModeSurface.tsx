@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useDndMonitor } from '@dnd-kit/core';
-import { TaskGroup } from './TaskGroup';
+import { SectionName, TaskGroup } from './TaskGroup';
 import { Icon } from './Icon';
 import { DraggableTask } from './dnd/DraggableTask';
 import { useT } from '@/hooks/useT';
@@ -12,6 +12,7 @@ import { differenceInCalendarWeeks } from 'date-fns';
 import { formatDuration } from '@/domain/estimates';
 import { summariseLoad } from '@/domain/load';
 import { Droppable } from './dnd/Droppable';
+import { RowListContext } from './dnd/RowList';
 import type { DropTarget, RowOrder } from '@/domain/dnd';
 import type { TranslationKey } from '@/i18n';
 
@@ -32,6 +33,8 @@ interface ModeSurfaceProps {
   addToGroup?: (groupKey: string) => (() => void) | undefined;
   /** Which of Todoist's orders "manual" reads here; a week reads the other one. */
   order?: RowOrder;
+  /** The page's view, so a card put in a place by hand turns its sort to manual. */
+  viewKey?: string;
   /** Board columns come from sections when a project supplies them. */
   boardColumns?: Array<{
     id: string;
@@ -42,8 +45,12 @@ interface ModeSurfaceProps {
     onAddTask?: () => void;
     /** A day column knows its capacity, and shows its load against it. */
     capacityMinutes?: number | null;
-    /** Quick is blue, as it is in a list; its cards say which section they come from. */
-    accent?: 'quick';
+    /** Quick is blue, as it is in a list; its cards say which section they come from. Late is red. */
+    accent?: 'quick' | 'late';
+    /** A link at the end of the column's heading, such as "Move all to today". */
+    action?: ReactNode;
+    /** A column that is a real section can be renamed from its heading. */
+    onRename?: (name: string) => void;
   }>;
   /**
    * Makes a section at the end of the board, from a column of its own after
@@ -51,8 +58,6 @@ interface ModeSurfaceProps {
    * has sections to add to.
    */
   onAddSection?: (name: string) => Promise<void> | void;
-  /** A board as wide as the page rather than the header (ViewPrefs.wide). */
-  wide?: boolean;
   /**
    * Groups a list leads with, above whatever it was grouped by (the Quick
    * group, #154). A board has no such lead, and never draws one.
@@ -132,10 +137,11 @@ function ListSurface(props: ModeSurfaceProps) {
   );
 }
 
-/** A column is never narrower than this: below it a title stops being readable. */
-const COLUMN_MIN = 272;
-/** Nor wider than this, past which a column stops reading as a column. */
-const COLUMN_MAX = 420;
+/** A board column is never narrower than 320px (v2): wide enough to read a title. */
+const COLUMN_MIN = 320;
+/** Nor wider than this, past which a column stops reading as a column. They
+ *  stretch between the two so that a whole number of them fills the page (#99). */
+const COLUMN_MAX = 480;
 /** How close to the board's edge a held card has to be to turn the page. */
 const EDGE_ZONE = 48;
 /** How long it is held there before the first turn, and between the next ones. */
@@ -269,7 +275,7 @@ function BoardSurface(props: ModeSurfaceProps) {
         </div>
       )}
       <div
-        className={`board${props.group === 'day' ? ' days' : ''}${props.wide ? ' fullwidth' : ''}`}
+        className={`board fullwidth${props.group === 'day' ? ' days' : ''}`}
         ref={boardRef}
         style={page ? ({ '--colw': `${page.width}px` } as React.CSSProperties) : undefined}
       >
@@ -279,8 +285,9 @@ function BoardSurface(props: ModeSurfaceProps) {
           const load = summariseLoad(column.items, props.childrenOf, column.capacityMinutes ?? null);
           const parts = [
             load.estimatedMinutes > 0 ? formatDuration(load.estimatedMinutes, locale) : null,
-            load.unestimatedCount > 0 ? t('metrics.unestimated', { count: load.unestimatedCount }) : null,
-            load.percentage !== null ? `${load.percentage} %` : null,
+            /* What has no estimate is not counted here: a column says its time
+               when it has one, and is silent about the rest. */
+            load.estimatedMinutes > 0 && load.percentage !== null ? `${load.percentage} %` : null,
           ].filter((part): part is string => part !== null);
           // An empty column has nothing to measure; "0 %" under it is noise.
           if (column.items.length === 0) parts.length = 0;
@@ -288,13 +295,32 @@ function BoardSurface(props: ModeSurfaceProps) {
             <section className={`col${column.accent ? ` accent-${column.accent}` : ''}${isOver ? ' dropping' : ''}`}>
             <div className="chead">
               <div className="chead-title">
-                <strong>{column.title}</strong>
-                <small>{t('metrics.tasks', { count: column.items.length })}</small>
+                {column.onRename ? (
+                  <SectionName
+                    id={column.id}
+                    value={column.title}
+                    placeholder={t('section.untitled')}
+                    label={t('section.name')}
+                    onRename={column.onRename}
+                    wrap
+                  />
+                ) : (
+                  <strong>{column.title}</strong>
+                )}
+                <small className={load.level === 'over' ? 'over' : undefined}>
+                  {[t('metrics.tasks', { count: column.items.length }), ...parts].join(' · ')}
+                </small>
               </div>
+              {column.action}
             </div>
-            {parts.length > 0 && (
-              <p className={`cload${load.level === 'over' ? ' over' : ''}`}>{parts.join(' · ')}</p>
-            )}
+            {/* A column is a list its cards take a place in, like a list's
+                group: the place follows the pointer between the cards (#20). */}
+            <RowListContext.Provider value={column.dropTarget ? {
+              order: props.order ?? 'project',
+              ids: column.items.map((item) => item.id),
+              target: column.dropTarget,
+              viewKey: props.viewKey,
+            } : null}>
             {column.items.map((item) => (
               <DraggableTask
                 key={item.id}
@@ -306,11 +332,13 @@ function BoardSurface(props: ModeSurfaceProps) {
                 surface="card"
               />
             ))}
+            </RowListContext.Provider>
             {isOver && <div className="dropbar" aria-hidden="true" />}
-            {column.items.length === 0 && <p className="empty">{t('group.empty')}</p>}
+            {/* While a card hovers an empty column, its place stands where the text was. */}
+            {column.items.length === 0 && !isOver && <p className="empty">{t('group.empty')}</p>}
             {/* Not a card: a card is a task, and the thing that makes one is
                 the end of the column rather than something sitting in it. */}
-            {column.accent !== 'quick' && (column.onAddTask ?? props.addToGroup?.(column.id)) && (
+            {(column.onAddTask ?? props.addToGroup?.(column.id)) && (
               <button
                 className="coladd"
                 onClick={column.onAddTask ?? props.addToGroup?.(column.id)}

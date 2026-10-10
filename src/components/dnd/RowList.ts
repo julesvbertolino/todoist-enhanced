@@ -16,6 +16,8 @@ export interface RowList {
   ids: string[];
   /** What the list is, so a task arriving from another one takes it on. */
   target?: DropTarget;
+  /** Takes no task from another list: Quick follows the estimate only (#32). */
+  closed?: boolean;
   /**
    * The page this list is drawn on.
    *

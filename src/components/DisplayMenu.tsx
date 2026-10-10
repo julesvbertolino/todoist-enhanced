@@ -1,7 +1,7 @@
-import { CreateTagInput } from './CreateTagInput';
 import { useEffect, useRef, useState } from 'react';
 import { Icon, type IconName } from './Icon';
 import { Select } from './Select';
+import { DetailsEditor } from './DetailsEditor';
 import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
 import { viewPrefs } from '@/store/prefs';
@@ -31,6 +31,17 @@ const MODE_ICON: Record<DisplayMode, IconName> = {
   list: 'list',
   board: 'board',
   focus: 'stack',
+};
+
+/** An icon for every grouping and sort, so the list reads at a glance. */
+const GROUP_ICON: Partial<Record<GroupKey, IconName>> = {
+  none: 'list', scheduled: 'calendar', day: 'calendar', week: 'week', month: 'calendar',
+  workspace: 'project', project: 'project', section: 'section', priority: 'flag',
+  label: 'tag', estimate: 'clock',
+};
+const SORT_ICON: Record<SortKey, IconName> = {
+  manual: 'drag', priority: 'flag', due: 'calendar', 'added-desc': 'sort', 'added-asc': 'sort',
+  alphabetical: 'sort', 'estimate-asc': 'clock', 'estimate-desc': 'clock', label: 'tag',
 };
 
 /**
@@ -110,7 +121,7 @@ export function DisplayMenu({
       {open && (
         <div className="popover displaypanel" role="dialog" aria-label={t('toolbar.display')}>
           <div className="panelhead">
-            <h5>{t('toolbar.presentation')}</h5>
+            <h5>{t('toolbar.display')}</h5>
             <button
               className="resetbtn"
               onClick={() => setViewPrefs(viewKey, base)}
@@ -133,21 +144,6 @@ export function DisplayMenu({
             ))}
           </div>
 
-          {/* A board opens at the width of the header above it, the way a
-              list does; this widens it to the whole page (#108 follow-up). */}
-          {current.mode === 'board' && (
-            <div className="panelrow">
-              <span>{t('toolbar.fullWidth')}</span>
-              <button
-                className="switch"
-                role="switch"
-                aria-checked={current.wide === true}
-                aria-label={t('toolbar.fullWidth')}
-                onClick={() => setViewPrefs(viewKey, { wide: !current.wide })}
-              />
-            </div>
-          )}
-
           {/* Two questions, two selects, drawn the way every other select in
               the app is drawn. */}
           <div className="panelgrid">
@@ -158,6 +154,7 @@ export function DisplayMenu({
               options={groups.map((group) => ({
                 value: group,
                 label: t(`group.${group}` as TranslationKey),
+                icon: GROUP_ICON[group],
               }))}
             />
             <Select
@@ -167,6 +164,7 @@ export function DisplayMenu({
               options={sorts.map((sort) => ({
                 value: sort,
                 label: t(`sort.${sort}` as TranslationKey),
+                icon: SORT_ICON[sort],
               }))}
             />
           </div>
@@ -191,26 +189,6 @@ export function DisplayMenu({
               </button>
             ))}
           </div>
-
-          {(
-            <>
-              <h5>{t('filter.labels')}</h5>
-              <div className="chiprow scroll">
-                {tags.map((label) => (
-                  <button
-                    key={label.id}
-                    className="chip"
-                    aria-pressed={current.filters.labels.includes(label.name)}
-                    onClick={() => setFilters({ labels: toggleIn(current.filters.labels, label.name) })}
-                  >
-                    <Icon name="tag" size="sm" className="taglabel" style={markerStyle(label.color, false)} />
-                    {label.name}
-                  </button>
-                ))}
-              </div>
-              <CreateTagInput onCreated={(name) => setFilters({ labels: [...new Set([...current.filters.labels, name])] })} />
-            </>
-          )}
 
           <h5>{t('filter.estimated')}</h5>
           <div className="segmented small">
@@ -298,6 +276,31 @@ export function DisplayMenu({
               />
             </div>
           )}
+
+          <hr />
+          <>
+              <h5>{t('filter.labels')}</h5>
+              <div className="chiprow scroll">
+                {tags.map((label) => (
+                  <button
+                    key={label.id}
+                    className="chip"
+                    aria-pressed={current.filters.labels.includes(label.name)}
+                    onClick={() => setFilters({ labels: toggleIn(current.filters.labels, label.name) })}
+                  >
+                    <Icon name="tag" size="sm" className="taglabel" style={markerStyle(label.color, false)} />
+                    {label.name}
+                  </button>
+                ))}
+              </div>
+          </>
+
+
+          <hr />
+          {/* The one setting here that is not about this page: what every task
+              row shows, and in what order. It says so, and Reset all leaves it. */}
+          <h5>{t('details.title')} <em className="global">{t('details.global')}</em></h5>
+          <DetailsEditor />
         </div>
       )}
     </div>

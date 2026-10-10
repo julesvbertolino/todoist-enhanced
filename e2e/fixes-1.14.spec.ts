@@ -45,7 +45,7 @@ test('a bulk toast stands above the bulk-edit bar (#88)', async ({ demo: page })
 test('every row menu on a short board uses the whole page, never the column (#87, #111)', async ({ demo: page }) => {
   await go(page, '#/project/site');
   await page.getByRole('button', { name: 'Display' }).click();
-  await page.getByRole('button', { name: 'Board' }).click();
+  await page.getByRole('button', { name: 'Board', exact: true }).click();
   await page.keyboard.press('Escape');
 
   const board = page.locator('.screen.active .board');

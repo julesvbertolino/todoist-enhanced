@@ -87,7 +87,7 @@ export function EisenhowerDisplayMenu() {
       {open && (
         <div className="popover displaypanel anchor-right" role="dialog" aria-label={t('toolbar.display')}>
           <div className="panelhead">
-            <h5>{t('toolbar.presentation')}</h5>
+            <h5>{t('toolbar.display')}</h5>
             <button className="resetbtn" onClick={reset}>{t('toolbar.resetAll')}</button>
           </div>
 
@@ -159,31 +159,33 @@ export function EisenhowerDisplayMenu() {
             </>
           )}
 
+          {/* Toggle pills, like the filters of every other Display panel (#23). */}
           <h5>{t('matrix.urgent')}</h5>
-          <div className="matrix-checks">
+          <div className="chiprow">
             {EISENHOWER_URGENCY_RULES.map((rule) => (
-              <label className="checkrow" key={rule}>
-                <input
-                  type="checkbox"
-                  checked={prefs.eisenhowerUrgent.includes(rule)}
-                  onChange={() => toggleUrgent(rule)}
-                />
-                <span>{t(`matrix.urgent.${rule}` as TranslationKey)}</span>
-              </label>
+              <button
+                key={rule}
+                className="chip"
+                aria-pressed={prefs.eisenhowerUrgent.includes(rule)}
+                onClick={() => toggleUrgent(rule)}
+              >
+                {t(`matrix.urgent.${rule}` as TranslationKey)}
+              </button>
             ))}
           </div>
 
           <h5>{t('matrix.important')}</h5>
-          <div className="matrix-checks importance-checks">
+          <div className="chiprow">
             {EISENHOWER_PRIORITIES.map((priority) => (
-              <label className="checkrow" key={priority}>
-                <input
-                  type="checkbox"
-                  checked={prefs.eisenhowerImportant.includes(priority)}
-                  onChange={() => toggleImportant(priority)}
-                />
-                <span>{t(`common.p${priority}` as TranslationKey)}</span>
-              </label>
+              <button
+                key={priority}
+                className="chip"
+                aria-pressed={prefs.eisenhowerImportant.includes(priority)}
+                onClick={() => toggleImportant(priority)}
+              >
+                <span className="flagdot" style={{ background: `var(--p${priority})` }} />
+                P{priority}
+              </button>
             ))}
           </div>
           <p className="displayhelp">{t('matrix.settings.help')}</p>

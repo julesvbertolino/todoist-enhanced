@@ -4,7 +4,7 @@ test('#99 a board is a whole number of columns, and the arrows turn a page', asy
   await page.setViewportSize({ width: 1280, height: 800 });
   await go(page, '#/upcoming');
   await page.getByRole('button', { name: 'Display' }).click();
-  await page.getByRole('button', { name: 'Board' }).first().click();
+  await page.getByRole('button', { name: 'Board', exact: true }).first().click();
   await page.keyboard.press('Escape');
 
   const board = page.locator('.screen.active .board');

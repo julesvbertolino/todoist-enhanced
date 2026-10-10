@@ -1,7 +1,7 @@
 /** Tasks: creating, editing, ticking, recurring, deleting and restoring. */
 import { command, addItem, type Command, completeItem, deleteItem, newUuid, reorderItems, uncompleteItem, updateItem } from '@/api/commands';
 import * as idb from '@/db/idb';
-import { fetchComments, fetchTask, itemFromCompleted } from '@/api/tasks';
+import { fetchComments, fetchTask, itemFromCompleted, setCommentReaction } from '@/api/tasks';
 import { isUncompletable, toTodoistPriority, type Item, type Note, type Snapshot } from '@/domain/types';
 import { canStoreDurations, estimatePatch } from '@/domain/estimates';
 import { toApiDate } from '@/domain/dates';
@@ -237,6 +237,84 @@ export const createTasksSlice: Slice<TasksSlice> = (set, get) => ({
     } catch {
       return 'offline';
     }
+  },
+  async addComment(itemId, content, attachment = null) {
+    const text = content.trim();
+    if ((!text && !attachment) || !get().snapshot.items[itemId]) return false;
+    const tempId = newUuid();
+    const mapping = await get().apply(
+      [{
+        type: 'note_add', uuid: newUuid(), temp_id: tempId,
+        args: { item_id: itemId, content: text, ...(attachment ? { file_attachment: attachment } : {}) },
+      }],
+      (snapshot) => ({
+        ...snapshot,
+        notes: {
+          ...snapshot.notes,
+          [tempId]: {
+            id: tempId, item_id: itemId, project_id: null, content: text,
+            posted_at: new Date().toISOString(), posted_uid: snapshot.user?.id ?? '',
+            is_deleted: false, file_attachment: attachment,
+          } as Note,
+        },
+      }),
+    );
+    /* A refused comment is taken off the screen (revertRefused): say so to
+       the field, which then gives the words back (#28). */
+    return Boolean(mapping[tempId] || get().snapshot.notes[tempId] || get().snapshot.notes[get().resolvedIds[tempId] ?? '']);
+  },
+  async updateComment(id, content) {
+    const note = get().snapshot.notes[id];
+    const text = content.trim();
+    if (!note || (!text && !note.file_attachment) || text === note.content) return;
+    await get().apply(
+      [command('note_update', { id, content: text })],
+      (snapshot) => ({ ...snapshot, notes: { ...snapshot.notes, [id]: { ...note, content: text } } }),
+    );
+  },
+  async deleteComment(id) {
+    const note = get().snapshot.notes[id];
+    if (!note) return;
+    await get().apply(
+      [command('note_delete', { id })],
+      (snapshot) => ({ ...snapshot, notes: { ...snapshot.notes, [id]: { ...note, is_deleted: true } } }),
+    );
+  },
+  /* Reactions have their own endpoints at Todoist (see `setCommentReaction`): the change shows at once,
+     is sent straight away rather than through the sync queue, and is rolled back with a word if Todoist
+     refuses it or cannot be reached. */
+  async toggleReaction(id, emoji) {
+    const note = get().snapshot.notes[id];
+    const me = get().snapshot.user?.id;
+    if (!note || !me) return;
+    const before = note.reactions ?? null;
+    const reactions = { ...(before ?? {}) };
+    const who = reactions[emoji] ?? [];
+    const on = !who.includes(me);
+    const next = on ? [...who, me] : who.filter((uid) => uid !== me);
+    if (next.length > 0) reactions[emoji] = next;
+    else delete reactions[emoji];
+    const put = (value: Note['reactions']) => set((state) => {
+      const current = state.snapshot.notes[id];
+      if (!current) return {};
+      return { snapshot: { ...state.snapshot, notes: { ...state.snapshot.notes, [id]: { ...current, reactions: value } } } };
+    });
+    put(reactions);
+    if (get().demo) return;
+    try {
+      const saved = await setCommentReaction(get().resolvedIds[id] ?? id, emoji, on);
+      if (saved !== undefined) put(saved);
+    } catch {
+      put(before);
+      get().toast(translate(get().prefs.locale, 'comment.reactionFailed'), undefined, { tone: 'error' });
+    }
+  },
+  async duplicateTask(id) {
+    const { snapshot } = get();
+    const item = snapshot.items[id];
+    if (!item) return;
+    const open = branchOf([id], snapshot.items).filter((entry) => !entry.checked || entry.id === id);
+    await get().restoreTasks(open.map((entry) => ({ ...entry, checked: false, completed_at: null })), []);
   },
   async updateTask(id, args) {
     const item = get().snapshot.items[id];

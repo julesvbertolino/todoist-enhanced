@@ -31,7 +31,7 @@ interface PageHeaderProps {
 /**
  * The line every page shares: what this page is, how many tasks and how much
  * estimated time are on it, and whether that fits. The duration turns amber
- * from 90% of the capacity and red from 100% where capacity means something,
+ * from 95% of the capacity and red beyond it where capacity means something,
  * which the caller decides by passing it or not (#173).
  */
 export function PageHeader({
@@ -62,7 +62,7 @@ export function PageHeader({
         {actions && <div className="pactions">{actions}</div>}
       </div>
 
-      <div className="metrics" data-tour="metrics">
+      <div className="metrics">
         <span className="metric">
           <Icon name="tasks" size="sm" />
           <b>{load.taskCount}</b> {t('metrics.taskWord', { count: load.taskCount })}
@@ -81,6 +81,7 @@ export function PageHeader({
               onClick={() => onOpenUnestimated?.()}
               aria-label={durationLabel}
               title={durationLabel}
+              data-tour="metrics"
             >
               <Icon name="clock" size="sm" />
               {load.estimatedMinutes > 0
@@ -103,11 +104,10 @@ export function PageHeader({
                 onClick={time.onToggle}
               >
                 <Icon name="clock" size="sm" />
-                {time.minutes !== null
-                  ? t('time.pillActive', { duration: formatDuration(time.minutes, locale) })
-                  : t('time.pill')}
+                {/* Always the same words: the duration lives in the panel (#30). */}
+                {t('time.pill')}
               </button>
-              {time.minutes !== null && (
+              {time.minutes !== null && time.open && (
                 <button
                   className="timepill-x"
                   aria-label={t('time.clear')}

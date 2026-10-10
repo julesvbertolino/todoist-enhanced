@@ -4,6 +4,7 @@ import { request } from '@/api/client';
 import { command, type Command, deleteItem, newUuid } from '@/api/commands';
 import * as idb from '@/db/idb';
 import { setWeekLabel, type Note, type Snapshot } from '@/domain/types';
+import { defaultSidebarNav } from '@/domain/sidebar';
 import { detectLocale } from '@/i18n';
 import { buildDemoSnapshot } from '@/demo/demoData';
 import { defaultPreferences, hydratePreferences, viewPrefs as readViewPrefs, PREFERENCES_TASK_CONTENT, SETTINGS_COMMENT_MARKER, mergeSynced, readSettingsComment, settingsCommentContent, settingsCommentMatches, syncedPreferences, type Preferences } from './prefs';
@@ -19,6 +20,28 @@ export let preferencesWriteTimer: number | null = null;
 export let creatingPreferencesTask = false;
 
 export let tourSnapshotBackup: Snapshot | null = null;
+/** The account's own preferences, kept aside while the tour shows its own (#4). */
+let tourPrefsBackup: Preferences | null = null;
+/** A setting changed during the tour (the Setup's last answers): written once it ends. */
+let tourPrefsChanged = false;
+
+/**
+ * What the tour needs to find every one of its stops, whatever the account
+ * chose: every sidebar entry, the matrix, the Quick group, My week as a list,
+ * the sidebar open. The look (layout, background, accent, theme) stays the
+ * person's own.
+ */
+const tourPreferences = (prefs: Preferences): Preferences => ({
+  ...prefs,
+  sidebarNav: defaultSidebarNav(),
+  sidebarSearch: true,
+  sidebarCounts: true,
+  sidebarCollapsed: false,
+  eisenhowerEnabled: true,
+  showQuickGroup: true,
+  weekLayout: 'unified',
+  views: {},
+});
 
 export function schedulePreferencesWrite(get: () => AppState) {
   if (!get().connected || get().demo) return;
@@ -121,6 +144,15 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
   walkthrough: false,
   prefs: defaultPreferences(detectLocale()),
   setPrefs(patch) {
+    /* During the tour a change is the account's, not the tour's: it goes to
+       the preferences kept aside, and is written when the tour ends. */
+    if (tourPrefsBackup) {
+      tourPrefsBackup = { ...tourPrefsBackup, ...patch };
+      tourPrefsChanged = true;
+      void idb.savePrefs(PREFS_KEY, tourPrefsBackup);
+      set({ prefs: tourPreferences({ ...get().prefs, ...patch }) });
+      return;
+    }
     const prefs = { ...get().prefs, ...patch };
     if (prefs.estimateStorage === 'duration' && !canStoreDurations(get().snapshot.user)) prefs.estimateStorage = 'tag';
     if (patch.weekLabel !== undefined) setWeekLabel(prefs.weekLabel);
@@ -129,6 +161,12 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
     schedulePreferencesWrite(get);
   },
   setViewPrefs(viewKey, patch) {
+    if (tourPrefsBackup) {
+      /* A view arranged during the tour is the demo's: nothing is kept. */
+      const current = readViewPrefs(get().prefs, viewKey);
+      set({ prefs: { ...get().prefs, views: { ...get().prefs.views, [viewKey]: { ...current, ...patch } } } });
+      return;
+    }
     const current = readViewPrefs(get().prefs, viewKey);
     const prefs = {
       ...get().prefs,
@@ -226,16 +264,33 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
       creatingPreferencesTask = false;
     }
   },
+  /**
+   * The tour always plays on the full demo view (#4), for a real account and
+   * for the demo alike: the snapshot and the preferences are set aside, the
+   * demo's tasks and the tour's preferences shown, and nothing is written to
+   * Todoist while it runs (apply, refresh and the settings comment all stand
+   * still). Both come back exactly on Done, Skip, Escape or a page change; a
+   * reload never saw them replaced, since nothing of the tour is stored.
+   */
   beginTourPreview() {
-    if (get().demo || tourSnapshotBackup) return;
+    if (tourSnapshotBackup) return;
+    if (preferencesWriteTimer) { window.clearTimeout(preferencesWriteTimer); preferencesWriteTimer = null; tourPrefsChanged = true; }
     tourSnapshotBackup = get().snapshot;
-    set({ snapshot: buildDemoSnapshot(get().prefs.locale) });
+    tourPrefsBackup = get().prefs;
+    set({ snapshot: buildDemoSnapshot(get().prefs.locale), prefs: tourPreferences(get().prefs) });
   },
   endTourPreview() {
     if (!tourSnapshotBackup) return;
     const snapshot = tourSnapshotBackup;
+    const prefs = tourPrefsBackup ?? get().prefs;
+    const changed = tourPrefsChanged;
     tourSnapshotBackup = null;
-    set({ snapshot });
+    tourPrefsBackup = null;
+    tourPrefsChanged = false;
+    set({ snapshot, prefs });
+    if (changed) schedulePreferencesWrite(get);
+    /* What Todoist said while the tour was open was not read: read it now. */
+    if (!get().demo) void get().refresh();
   },
   setWalkthrough(open) { set({ walkthrough: open }); },
 });

@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 4173;
+// 4173 is also where the design prototype is served; PLAYWRIGHT_PORT keeps the
+// two apart so a test never runs against the wrong page.
+const PORT = Number(process.env.PLAYWRIGHT_PORT ?? 4173);
 const development = process.env.PLAYWRIGHT_DEV === '1';
 
 /**

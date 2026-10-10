@@ -1,4 +1,10 @@
 import { useLayoutEffect, useRef, useMemo, useState, type ReactNode } from 'react';
+import {
+  DndContext, DragOverlay, KeyboardSensor, MeasuringStrategy, PointerSensor, closestCenter, useSensor, useSensors,
+  type DragEndEvent, type DragOverEvent, type DragStartEvent,
+} from '@dnd-kit/core';
+import { restrictToParentElement } from '@dnd-kit/modifiers';
+import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable } from '@dnd-kit/sortable';
 import { Icon } from './Icon';
 import { useT } from '@/hooks/useT';
 import {
@@ -65,44 +71,99 @@ export function DashboardGrid({ cards, headings, editing, onMove }: DashboardGri
     return () => window.removeEventListener('resize', align);
   }, [cards, editing]);
 
-  const groups = useMemo(() => (['summary', 'activity'] as const).map((group) => {
-    const own = cards.filter((card) => dashboardGroupOf(card.id) === group);
-    const spans = fillRows(own.map((card) => card.span));
-    return { group, own, spans };
-  }), [cards]);
+  /* While a card is held, the cards are laid out as they would be if it were dropped where the pointer is:
+     the others do not slide by a transform, they simply take their new places, and nothing is written until
+     the card is let go. */
+  const [live, setLive] = useState<{ group: DashboardGroup; ids: DashboardCardId[]; active: DashboardCardId } | null>(null);
 
+  const groups = useMemo(() => (['summary', 'activity'] as const).map((group) => {
+    const stored = cards.filter((card) => dashboardGroupOf(card.id) === group);
+    const own = live && live.group === group
+      ? live.ids.map((id) => stored.find((card) => card.id === id)).filter((card): card is DashboardCardSpec => Boolean(card))
+      : stored;
+    const spans = fillRows(own.map((card) => card.span));
+    return { group, own, spans, stored };
+  }), [cards, live]);
+
+  /* Where a card is in the order that is stored, not in the one a held card is showing. */
   const position = (id: DashboardCardId) => {
-    const own = groups.find((entry) => entry.own.some((card) => card.id === id));
-    return { at: own?.own.findIndex((card) => card.id === id) ?? 0, count: own?.own.length ?? 0, own };
+    const own = groups.find((entry) => entry.stored.some((card) => card.id === id));
+    return { at: own?.stored.findIndex((card) => card.id === id) ?? 0, count: own?.stored.length ?? 0, own };
   };
+  /* The same gesture as everywhere else: grab a card by its grip and the others part to make room. */
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
   const nameOf = (id: DashboardCardId) => cards.find((card) => card.id === id)?.name ?? '';
 
   const move = (id: DashboardCardId, toIndex: number) => {
     const { own } = position(id);
     if (!own) return;
-    onMove(id, toIndex, own.own.map((card) => card.id));
-    const clamped = Math.max(0, Math.min(own.own.length - 1, toIndex));
-    setAnnouncement(t('dashboard.moved', { name: nameOf(id), position: clamped + 1, count: own.own.length }));
+    onMove(id, toIndex, own.stored.map((card) => card.id));
+    const clamped = Math.max(0, Math.min(own.stored.length - 1, toIndex));
+    setAnnouncement(t('dashboard.moved', { name: nameOf(id), position: clamped + 1, count: own.stored.length }));
   };
 
   return (
     <>
       <div ref={grid} className="bento dashboard-bento" data-editing={editing || undefined}>
-        {groups.map(({ group, own, spans }) => own.length > 0 && (
+        {groups.map(({ group, own, spans, stored }) => own.length > 0 && (
           <SectionOfCards key={group}>
             <h2 className="dashboard-group-label">{headings[group]}</h2>
-              {own.map((card, index) => (
-                <DashboardCard
-                  key={card.id}
-                  card={card}
-                  span={spans[index]}
-                  editing={editing}
-                  index={index}
-                  count={own.length}
-                  onMove={move}
-                />
-              ))}
-
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
+              /* Never the page's own sideways scroll: a card held near the right edge used to carry the whole page with it. */
+              autoScroll={{ threshold: { x: 0, y: 0.2 } }}
+              modifiers={[restrictToParentElement]}
+              onDragStart={({ active }: DragStartEvent) => setLive({
+                group, ids: stored.map((card) => card.id), active: active.id as DashboardCardId,
+              })}
+              onDragOver={({ active, over }: DragOverEvent) => {
+                if (!over || active.id === over.id) return;
+                setLive((now) => {
+                  if (!now) return now;
+                  const from = now.ids.indexOf(active.id as DashboardCardId);
+                  const to = now.ids.indexOf(over.id as DashboardCardId);
+                  return from < 0 || to < 0 ? now : { ...now, ids: arrayMove(now.ids, from, to) };
+                });
+              }}
+              onDragEnd={({ active }: DragEndEvent) => {
+                const final = live?.ids ?? [];
+                setLive(null);
+                const to = final.indexOf(active.id as DashboardCardId);
+                const from = stored.findIndex((card) => card.id === active.id);
+                if (to >= 0 && from >= 0 && to !== from) move(active.id as DashboardCardId, to);
+              }}
+              onDragCancel={() => setLive(null)}
+            >
+              <SortableContext items={own.map((card) => card.id)} strategy={() => null}>
+                {own.map((card, index) => (
+                  <DashboardCard
+                    key={card.id}
+                    card={card}
+                    span={spans[index]}
+                    editing={editing}
+                    index={index}
+                    count={own.length}
+                    onMove={move}
+                  />
+                ))}
+              </SortableContext>
+              <DragOverlay dropAnimation={null}>
+                {live && live.group === group && (() => {
+                  const card = own.find((entry) => entry.id === live.active);
+                  const at = own.findIndex((entry) => entry.id === live.active);
+                  return card ? (
+                    <section className={`card w${spans[at]}${card.className ? ` ${card.className}` : ''} editing carried`}>
+                      <div className="dashboard-card-content">{card.children}</div>
+                    </section>
+                  ) : null;
+                })()}
+              </DragOverlay>
+            </DndContext>
           </SectionOfCards>
         ))}
       </div>
@@ -127,14 +188,27 @@ interface DashboardCardProps {
 
 function DashboardCard({ card, span, editing, index, count, onMove }: DashboardCardProps) {
   const { t } = useT();
+  const { attributes, listeners, setNodeRef, isDragging } = useSortable({
+    id: card.id, disabled: !editing,
+  });
 
   return (
     <section
-      className={`card w${span}${card.className ? ` ${card.className}` : ''}${editing ? ' editing' : ''}`}
+      ref={setNodeRef}
+      className={`card w${span}${card.className ? ` ${card.className}` : ''}${editing ? ' editing' : ''}${isDragging ? ' lifted' : ''}`}
       data-card={card.id}
     >
       {editing && (
         <div className="dash-edit">
+          <button
+            className="iconbtn dash-grip"
+            aria-label={`${t('task.drag')}: ${card.name}`}
+            title={t('task.drag')}
+            {...attributes}
+            {...listeners}
+          >
+            <Icon name="drag" size="sm" />
+          </button>
           <button
             className="iconbtn"
             aria-label={t('dashboard.moveEarlier', { name: card.name })}

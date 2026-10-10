@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { isTopOverlay, overlayCount, pushOverlay, removeOverlay } from './overlayStack';
 
 interface OverlayProps {
@@ -22,7 +22,16 @@ interface OverlayProps {
    * whether its dialog is still the one in front (`isTopOverlay`).
    */
   overlayId?: string;
+  /**
+   * A selector for the thing this hangs from. The sheet then opens beneath it,
+   * as a popover with nothing dimmed behind it, instead of in the middle of
+   * the window. On a phone it stays a sheet.
+   */
+  anchor?: string;
 }
+
+/** How long a side panel takes to leave. The enter is 160ms; leaving is quicker. */
+const SIDE_EXIT_MS = 320;
 
 /** What the page's scroll was set to before the first dialog took it. */
 let scrollWas = '';
@@ -69,10 +78,15 @@ function returnFocus(el: HTMLElement | null | undefined, byPointer: boolean) {
   const clear = () => {
     el.removeAttribute('data-pointer-focus');
     el.removeEventListener('blur', clear);
-    document.removeEventListener('keydown', clear, true);
+    document.removeEventListener('keydown', onKey, true);
+  };
+  /* Only a key that moves the cursor brings the ring back: a shortcut such as
+     `q` opening the composer is not "using the keyboard on this row". */
+  const onKey = (e: KeyboardEvent) => {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab', 'j', 'k', 'J', 'K', 'Home', 'End'].includes(e.key)) clear();
   };
   el.addEventListener('blur', clear);
-  document.addEventListener('keydown', clear, true);
+  document.addEventListener('keydown', onKey, true);
 }
 
 /**
@@ -81,7 +95,7 @@ function returnFocus(el: HTMLElement | null | undefined, byPointer: boolean) {
  * where it came from on close, and the page behind held still throughout.
  */
 export function Overlay({
-  open, onClose, children, label, variant = 'sheet', size = 'md', returnFocusTo, overlayId,
+  open, onClose, children, label, variant = 'sheet', size = 'md', returnFocusTo, overlayId, anchor,
 }: OverlayProps) {
   const ownId = useId();
   const id = overlayId ?? ownId;
@@ -183,7 +197,8 @@ export function Overlay({
       sheetRef.current?.querySelector<HTMLElement>(
         'input, textarea, button, [tabindex]:not([tabindex="-1"])',
       );
-    target?.focus();
+    /* Focus inside, without the keyboard ring when the dialog was opened with the mouse. */
+    returnFocus(target, lastInput === 'pointer');
 
     return () => {
       document.removeEventListener('keydown', onKey);
@@ -194,7 +209,30 @@ export function Overlay({
     /* `open` and nothing else. See closeRef above. */
   }, [open, id]);
 
-  if (!open) return null;
+  /* A side panel takes a moment to leave: it is not unmounted until its exit
+     has played (`SIDE_EXIT_MS`, matched by the stylesheet), and in that time
+     it is already out of the dialog stack, inert and not clickable. */
+  const [leaving, setLeaving] = useState(false);
+  const wasOpenForExit = useRef(false);
+  useEffect(() => {
+    if (open) { wasOpenForExit.current = true; setLeaving(false); return; }
+    if (!wasOpenForExit.current || variant !== 'side') return;
+    wasOpenForExit.current = false;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    setLeaving(true);
+    const timer = window.setTimeout(() => setLeaving(false), SIDE_EXIT_MS);
+    return () => window.clearTimeout(timer);
+  }, [open, variant]);
+
+  const [hung, setHung] = useState<CSSProperties | null>(null);
+  useLayoutEffect(() => {
+    if (!open || !anchor || window.matchMedia('(max-width: 720px)').matches) { setHung(null); return; }
+    const rect = document.querySelector(anchor)?.getBoundingClientRect();
+    if (!rect) { setHung(null); return; }
+    setHung({ position: 'fixed', top: rect.bottom + 10, left: Math.max(8, rect.left - 8) });
+  }, [open, anchor]);
+
+  if (!open && !leaving) return null;
 
   const sheetClass =
     variant === 'side'
@@ -207,9 +245,9 @@ export function Overlay({
         }`;
 
   return (
-    <div className="overlay open" role="dialog" aria-modal="true" aria-label={label}>
-      <div className="scrim" onClick={onClose} />
-      <div className={sheetClass} ref={sheetRef}>
+    <div className={`overlay${open ? ' open' : ' leaving'}${hung ? ' hung' : ''}`} role="dialog" aria-modal="true" aria-label={label}>
+      <div className="scrim" onClick={open ? onClose : undefined} />
+      <div className={sheetClass} ref={sheetRef} style={hung ?? undefined}>
         {children}
       </div>
     </div>

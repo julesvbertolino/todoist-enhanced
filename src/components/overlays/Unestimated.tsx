@@ -86,7 +86,6 @@ export function EstimateBulk({ items, onOpen, onDone, resetKey }: EstimateBulkPr
           <p className="empty">{t('issues.none')}</p>
         ) : (
           <>
-            <p className="estlist-hint">{t('issues.estimateHint')}</p>
             <div className="estlist" ref={listRef}>
               {items.map((item, index) => {
                 const project = snapshot.projects[item.project_id];
@@ -133,10 +132,12 @@ export function EstimateBulk({ items, onOpen, onDone, resetKey }: EstimateBulkPr
 
       {items.length > 0 && (
         <div className="sheet-foot estfoot">
-          {/* What the pass adds up to, so the number is read before it lands. */}
+          {/* What the pass adds up to, so the number is read before it lands,
+              and what the keyboard does and when anything is written. */}
           <span className="estfoot-tally">
             {t('issues.estimateFilled', { count: filled.length, total: items.length })}
             {total > 0 && <b>{formatDuration(total, locale)}</b>}
+            <span className="estfoot-hint">{t('issues.estimateHint')}</span>
           </span>
           <button className="btn quiet" onClick={onDone}>{t('common.cancel')}</button>
           <button
@@ -165,11 +166,11 @@ export function Unestimated({ open, onClose, items, onOpen }: UnestimatedProps) 
   const { t } = useT();
 
   return (
-    <Overlay open={open} onClose={onClose} label={t('issues.toComplete')} size="sm">
-      <div className="sheet-head">
+    <Overlay open={open} onClose={onClose} label={t('unest.title')} size="sm">
+      <div className="sheet-head unest-head">
         <div>
-          <h2>{t('issues.toComplete')}</h2>
-          <p className="psub">{t('issues.toCompleteIntro')}</p>
+          <h2>{t('unest.title')}</h2>
+          <p className="psub">{t('unest.intro', { count: items.length })}</p>
         </div>
         <button className="iconbtn" aria-label={t('common.close')} onClick={onClose}>
           <Icon name="close" />

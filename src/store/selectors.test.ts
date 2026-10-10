@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupItems, pullQuick, sortItems } from './selectors';
+import { datedRoots, groupItems, projectTree, pullQuick, sortItems } from './selectors';
 import { emptySnapshot, type Project, type Section, type Snapshot } from '@/domain/types';
 import { due, item } from '@/test/items';
 
@@ -178,5 +178,58 @@ describe('pullQuick (#154)', () => {
     const { quick, rest } = pullQuick(page, false, 'manual', none, 'project', snapshot, now);
     expect(quick).toEqual([]);
     expect(rest).toBe(page);
+  });
+});
+
+describe('the order of the project groups', () => {
+  const account = (): Snapshot => ({
+    ...emptySnapshot(),
+    workspaces: { w1: { id: 'w1', name: 'Studio' }, w2: { id: 'w2', name: 'Client' } },
+    projects: {
+      a: { id: 'a', name: 'Mine', color: 'red', parent_id: null, child_order: 1, is_archived: false, is_deleted: false, is_favorite: false },
+      b: { id: 'b', name: 'S', color: 'red', parent_id: null, child_order: 1, is_archived: false, is_deleted: false, is_favorite: false, workspace_id: 'w1' },
+      c: { id: 'c', name: 'C', color: 'red', parent_id: null, child_order: 1, is_archived: false, is_deleted: false, is_favorite: false, workspace_id: 'w2' },
+    },
+  });
+  const keys = (order?: string[]) => projectTree(account(), order).map((g) => g.workspaceId ?? 'personal');
+
+  it('leads with the personal space until the person says otherwise', () => {
+    expect(keys()).toEqual(['personal', 'w1', 'w2']);
+  });
+
+  it('follows the order given, and puts a group not placed yet after the ones that are', () => {
+    expect(keys(['w2', 'personal', 'w1'])).toEqual(['w2', 'personal', 'w1']);
+    expect(keys(['w2'])).toEqual(['w2', 'personal', 'w1']);
+    expect(keys(['gone', 'w1'])).toEqual(['w1', 'personal', 'w2']);
+  });
+});
+
+describe('datedRoots (#1)', () => {
+  const snap = (items: ReturnType<typeof item>[]): Snapshot => ({ ...emptySnapshot(), items: Object.fromEntries(items.map((i) => [i.id, i])) });
+
+  it('lifts a dated subtask whose parent has no date', () => {
+    const parent = item({ id: 'p', due: null, labels: [] });
+    const a = item({ id: 'a', parent_id: 'p', due: due('2026-10-10') });
+    const b = item({ id: 'b', parent_id: 'p', due: null });
+    expect(datedRoots([parent, a, b], snap([parent, a, b])).map((i) => i.id)).toEqual(['p', 'a']);
+  });
+
+  it('lifts a subtask dated today under a parent dated tomorrow', () => {
+    const parent = item({ id: 'p', due: due('2999-01-02') });
+    const a = item({ id: 'a', parent_id: 'p', due: due('2999-01-01') });
+    expect(datedRoots([parent, a], snap([parent, a])).map((i) => i.id)).toEqual(['p', 'a']);
+  });
+
+  it('leaves a subtask under its parent on the same day, so nothing shows twice', () => {
+    const parent = item({ id: 'p', due: due('2999-01-02') });
+    const a = item({ id: 'a', parent_id: 'p', due: due('2999-01-02') });
+    expect(datedRoots([parent, a], snap([parent, a])).map((i) => i.id)).toEqual(['p']);
+  });
+});
+
+describe('projectTree keeps empty spaces (#13)', () => {
+  it('shows a workspace with no project, and the personal space with none', () => {
+    const tree = projectTree({ ...emptySnapshot(), workspaces: { w1: { id: 'w1', name: 'Studio' } } });
+    expect(tree.map((g) => [g.workspaceId, g.roots.length])).toEqual([[null, 0], ['w1', 0]]);
   });
 });

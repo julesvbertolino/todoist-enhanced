@@ -26,7 +26,7 @@ test.describe('#170 the dashboard changes period without freezing', () => {
   test('every preset answers, in turn, across the clock change', async ({ demo: page }) => {
     await page.clock.setFixedTime(new Date('2026-10-07T10:00:00+02:00'));
     await go(page, '#/insights');
-    const preset = (name: string) => page.locator('.periodbar .btn', { hasText: new RegExp(name === 'Day' ? '^Today$' : `^This ${name}$`, 'i') });
+    const preset = (name: string) => page.locator('.periodbar .spanbar button', { hasText: new RegExp(`^${name}$`, 'i') });
 
     await expect(preset('Week')).toHaveAttribute('aria-pressed', 'true');
     await preset('Month').click();
@@ -53,10 +53,10 @@ test.describe('#170 the dashboard changes period without freezing', () => {
   test('the logbook describes the same window as the overview', async ({ demo: page }) => {
     await page.clock.setFixedTime(new Date('2026-10-07T10:00:00+02:00'));
     await go(page, '#/insights');
-    await page.locator('.periodbar .btn', { hasText: /^This month$/ }).click();
+    await page.locator('.periodbar .spanbar button', { hasText: /^Month$/ }).click();
     const range = await page.locator('.dashboard-title-range').innerText();
-    await page.getByRole('tab', { name: 'Logbook' }).click();
-    await expect(page.locator('.periodbar .btn', { hasText: /^This month$/ })).toHaveAttribute('aria-pressed', 'true');
+    await go(page, '#/insights/logbook');
+    await expect(page.locator('.periodbar .spanbar button', { hasText: /^Month$/ })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('.dashboard-title-range')).toHaveText(range);
   });
 });
@@ -73,7 +73,7 @@ test.describe('#170 the period controls', () => {
     await expect(next).toBeDisabled();
 
     // A month back is September, and forward again is October.
-    await page.locator('.periodbar .btn', { hasText: /^This month$/ }).click();
+    await page.locator('.periodbar .spanbar button', { hasText: /^Month$/ }).click();
     await expect(range).toContainText('Oct');
     await previous.click();
     await expect(range).toContainText('Sep');
@@ -83,27 +83,27 @@ test.describe('#170 the period controls', () => {
     await expect(next).toBeDisabled();
 
     // A quarter back crosses the year boundary after four steps, and a year back is last year.
-    await page.locator('.periodbar .btn', { hasText: /^This quarter$/ }).click();
+    await page.locator('.periodbar .spanbar button', { hasText: /^Quarter$/ }).click();
     for (let step = 0; step < 4; step += 1) await previous.click();
     await expect(range).toContainText('2025');
-    await page.locator('.periodbar .btn', { hasText: /^This year$/ }).click();
+    await page.locator('.periodbar .spanbar button', { hasText: /^Year$/ }).click();
     await previous.click();
     await expect(range).toContainText('2025');
     await expect(page.getByRole('heading', { name: 'Completed per month' })).toBeVisible();
 
     // Switching back to a preset forgets the offset, and the buttons say where it is.
-    await page.locator('.periodbar .btn', { hasText: /^This week$/ }).click();
-    await expect(page.locator('.periodbar .btn', { hasText: /^This week$/ })).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('.periodbar .spanbar button', { hasText: /^Week$/ }).click();
+    await expect(page.locator('.periodbar .spanbar button', { hasText: /^Week$/ })).toHaveAttribute('aria-pressed', 'true');
     await expect(range).toContainText('Oct');
   });
 
   test('a period taking its time never lets an older answer replace the one chosen', async ({ demo: page }) => {
     await go(page, '#/insights');
     // Nothing to wait on in the demo, so the order is made rapid instead: every press lands before the last render.
-    for (const name of [/^This month$/, /^This year$/, /^This quarter$/, /^Today$/, /^This week$/]) {
-      await page.locator('.periodbar .btn', { hasText: name }).click({ noWaitAfter: true });
+    for (const name of [/^Month$/, /^Year$/, /^Quarter$/, /^Day$/, /^Week$/]) {
+      await page.locator('.periodbar .spanbar button', { hasText: name }).click({ noWaitAfter: true });
     }
-    await expect(page.locator('.periodbar .btn', { hasText: /^This week$/ })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.periodbar .spanbar button', { hasText: /^Week$/ })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByRole('heading', { name: 'Completed per day' })).toBeVisible();
   });
 
@@ -111,8 +111,8 @@ test.describe('#170 the period controls', () => {
     await go(page, '#/insights');
     await expect(page.locator('.screen.active')).toHaveCSS('scrollbar-gutter', 'stable');
     const before = (await page.locator('.screen.active .page').first().boundingBox())!;
-    await page.locator('.periodbar .btn', { hasText: /^This month$/ }).click();
-    await page.locator('.periodbar .btn', { hasText: /^This week$/ }).click();
+    await page.locator('.periodbar .spanbar button', { hasText: /^Month$/ }).click();
+    await page.locator('.periodbar .spanbar button', { hasText: /^Week$/ }).click();
     const after = (await page.locator('.screen.active .page').first().boundingBox())!;
     expect(after.x).toBe(before.x);
     expect(after.width).toBe(before.width);
@@ -452,7 +452,7 @@ test.describe('#173 the line under a page’s title', () => {
     await expect(line.locator('.summary-time')).toHaveAttribute('aria-label', /without an estimate.*% of your capacity/);
   });
 
-  test('turns amber from 90% and red from 100% of the capacity, and is neutral below', async ({ demo: page }) => {
+  test('turns amber from 95% and red beyond a full week, and is neutral below', async ({ demo: page }) => {
     // The week's own figure is read from the page, and the capacity is set to land on each side of it.
     await go(page, '#/week');
     const text = await page.locator('.screen.active .summary-time').innerText();
@@ -470,9 +470,10 @@ test.describe('#173 the line under a page’s title', () => {
       return page.locator('.screen.active .summary-time').getAttribute('class');
     };
     expect(await tone(Math.ceil(total / 0.5))).not.toMatch(/warn|over/);        // 50%
-    expect(await tone(Math.ceil(total / 0.89))).not.toMatch(/warn|over/);       // under 90%
+    expect(await tone(Math.ceil(total / 0.93))).not.toMatch(/warn|over/);       // under 95%
     expect(await tone(Math.floor(total / 0.95))).toMatch(/warn/);               // 95%
-    expect(await tone(Math.floor(total / 1.0))).toMatch(/over/);                // 100%
+    expect(await tone(Math.ceil(total / 1.0))).toMatch(/warn/);                 // a full week is amber, not yet red
+    expect(await tone(Math.floor(total / 1.1))).toMatch(/over/);                // 110%
     expect(await tone(Math.floor(total / 1.6))).toMatch(/over/);                // 160%
   });
 
@@ -493,20 +494,20 @@ test.describe('#174 and #172 the dashboard', () => {
     await go(page, '#/insights');
     const range = page.locator('.dashboard-title-range');
     const week = await range.innerText();
-    await page.locator('.periodbar .btn', { hasText: /^This month$/ }).click();
+    await page.locator('.periodbar .spanbar button', { hasText: /^Month$/ }).click();
     await expect(range).not.toHaveText(week);
     await expect(page.locator('.rangelabel')).toHaveCount(0);
-    // The figure and its change are on one line, the label under them.
+    // The label comes first, the figure and its change under it (the 2.0 design).
     const tile = page.locator('.metric-card').first();
     const top = await tile.locator('.stat-topline').boundingBox();
     const label = await tile.locator('.stat-label').boundingBox();
-    expect(label!.y).toBeGreaterThan(top!.y + top!.height - 2);
+    expect(top!.y).toBeGreaterThan(label!.y + label!.height - 2);
     await expect(page.locator('.compare-delta').first()).toHaveAttribute('aria-label', /vs .* in the previous period/);
   });
 
   test('a quarter is read by month, and the three months add up to the quarter', async ({ demo: page }) => {
     await go(page, '#/insights');
-    await page.locator('.periodbar .btn', { hasText: /^This quarter$/ }).click();
+    await page.locator('.periodbar .spanbar button', { hasText: /^Quarter$/ }).click();
     await expect(page.getByRole('heading', { name: 'Completed per month' })).toBeVisible();
     const total = Number((await page.locator('.metric-card').first().locator('.stat-value').innerText()).trim());
     const bars = await page.locator('[data-card="trend"] .slot, [data-card="trend"] [role="img"]').count();
@@ -515,11 +516,13 @@ test.describe('#174 and #172 the dashboard', () => {
     // Half width for a quarter's heatmap, the whole row for a year's.
     const grid = page.locator('[data-card="heatmap"]');
     const half = (await grid.boundingBox())!.width;
-    await page.locator('.periodbar .btn', { hasText: /^This year$/ }).click();
+    await page.locator('.periodbar .spanbar button', { hasText: /^Year$/ }).click();
     const full = (await page.locator('[data-card="heatmap"]').boundingBox())!.width;
     expect(full).toBeGreaterThan(half * 1.6);
   });
+});
 
+test.describe('#172 the dashboard layout', () => {
   test('the layout can be rearranged with the keyboard buttons, survives a period change, and resets', async ({ demo: page }) => {
     await go(page, '#/insights');
     const order = () => page.locator('.dashboard-bento [data-card]').evaluateAll((all) => all.map((n) => (n as HTMLElement).dataset.card));
@@ -537,7 +540,7 @@ test.describe('#174 and #172 the dashboard', () => {
     expect([...moved].sort()).toEqual([...first].sort());
 
     // A period that draws another set of cards keeps the arrangement of the ones it shares.
-    await page.locator('.periodbar .btn', { hasText: /^This quarter$/ }).click();
+    await page.locator('.periodbar .spanbar button', { hasText: /^Quarter$/ }).click();
     await expect(page.locator('[data-card="heatmap"]')).toBeVisible();
     const quarter = await order();
     expect(quarter).toContain('heatmap');
@@ -545,7 +548,7 @@ test.describe('#174 and #172 the dashboard', () => {
     expect(quarter.filter((id) => shared.includes(id))).toEqual(shared);
 
     await page.getByRole('button', { name: 'Reset to default' }).click();
-    await page.locator('.periodbar .btn', { hasText: /^This week$/ }).click();
+    await page.locator('.periodbar .spanbar button', { hasText: /^Week$/ }).click();
     await expect.poll(order).toEqual(first);
     await page.getByRole('button', { name: 'Done' }).click();
     await expect(page.locator('.dash-edit')).toHaveCount(0);
@@ -557,21 +560,10 @@ test.describe('#174 and #172 the dashboard', () => {
     await page.locator('[data-card="completed"]').getByRole('button', { name: /later/ }).click();
     await expect(page.locator('.sr[role="status"]', { hasText: /moved to position/ })).toHaveCount(1);
   });
-});
 
-test.describe('#172 the cards while they move, and the charts', () => {
-  test('a card carried over a larger one keeps its own size, and the year’s heatmap fills its card', async ({ demo: page }) => {
+  test('a card carried over a larger one keeps its own size', async ({ demo: page }) => {
     await go(page, '#/insights');
-    await page.getByRole('button', { name: 'This year' }).click();
-    const heat = page.locator('[data-card="heatmap"]');
-    await expect(heat).toBeVisible();
-    // The weeks share the card: the grid reaches across it, not half of it.
-    const card = (await heat.boundingBox())!;
-    const grid = (await heat.locator('.contribution-grid').boundingBox())!;
-    expect(grid.width).toBeGreaterThan(card.width * 0.85);
-    // Every bar chart stands on a line.
-    await expect(page.locator('[data-card="trend"] .chart-plot').first()).toHaveCSS('border-bottom-width', '1px');
-
+    await page.getByRole('button', { name: 'Year', exact: true }).click();
     await page.getByRole('button', { name: 'Edit layout' }).click();
     const trend = page.locator('[data-card="trend"]');
     const size = (await trend.boundingBox())!;
@@ -582,14 +574,32 @@ test.describe('#172 the cards while they move, and the charts', () => {
   });
 });
 
+test.describe('#172 the charts', () => {
+  test('the year’s heatmap fills its card', async ({ demo: page }) => {
+    await go(page, '#/insights');
+    await page.getByRole('button', { name: 'Year', exact: true }).click();
+    const heat = page.locator('[data-card="heatmap"]');
+    await expect(heat).toBeVisible();
+    // The weeks share the card: the grid reaches across it, not half of it.
+    const card = (await heat.boundingBox())!;
+    const grid = (await heat.locator('.contribution-grid').boundingBox())!;
+    expect(grid.width).toBeGreaterThan(card.width * 0.85);
+    // Every bar chart stands on a line.
+    await expect(page.locator('[data-card="trend"] .chart-plot').first()).toHaveCSS('border-bottom-width', '1px');
+
+  });
+});
+
 test.describe('#175 task metadata chips', () => {
   test('are drawn in order, light, and the repeat badge keeps its shape', async ({ demo: page }) => {
     await go(page, '#/week');
     const meta = row(page, 'Take out the recycling').locator('.meta');
     const kinds = await meta.locator('> *').evaluateAll((nodes) => nodes.map((n) => n.className.split(' ')[0]));
-    expect(kinds.indexOf('at')).toBeLessThan(kinds.indexOf('repeatdot'));
-    expect(kinds.indexOf('repeatdot')).toBeLessThan(kinds.indexOf('est'));
-    expect(kinds.indexOf('est')).toBeLessThan(kinds.indexOf('proj'));
+    // The v2 default order: the estimate first, then the date (with its repeat badge), then the project.
+    const date = kinds.findIndex((kind) => kind === 'at' || kind === 'late');
+    expect(kinds.indexOf('est')).toBeLessThan(date);
+    expect(date).toBeLessThan(kinds.indexOf('repeatdot'));
+    expect(kinds.indexOf('repeatdot')).toBeLessThan(kinds.indexOf('proj'));
     const badge = await meta.locator('.repeatdot').boundingBox();
     expect(Math.round(badge!.width)).toBe(18);
     expect(Math.round(badge!.height)).toBe(18);
@@ -606,30 +616,14 @@ test.describe('#175 task metadata chips', () => {
     const coloured = await project().evaluate((n) => getComputedStyle(n).color);
 
     await go(page, '#/settings');
-    await page.getByRole('radio', { name: 'Neutral' }).click();
-    await expect(page.getByRole('radio', { name: 'Neutral' })).toHaveAttribute('aria-checked', 'true');
+    await page.getByRole('radiogroup', { name: 'Task metadata' }).getByRole('radio', { name: 'Neutral' }).click();
+    await expect(page.getByRole('radiogroup', { name: 'Task metadata' }).getByRole('radio', { name: 'Neutral' })).toHaveAttribute('aria-checked', 'true');
     await go(page, '#/week');
     const grey = await project().evaluate((n) => getComputedStyle(n).color);
     expect(grey).not.toBe(coloured);
     // An overdue date stays red either way.
     await expect(page.locator('.screen.active .task .meta .late').first()).toHaveCSS('color', /rgb\((1[7-9]\d|2\d\d), \d+, \d+\)|rgb\(2\d\d/);
 
-  });
-
-  test('the first run reads the same value Settings wrote', async ({ page }) => {
-    await page.goto('/');
-    await page.getByRole('button', { name: 'Explore with demo data instead' }).click();
-    await page.getByRole('button', { name: 'End tour' }).click();
-    await expect(page.locator('.setup')).toBeVisible();
-    for (let step = 0; step < 2; step += 1) await page.getByRole('button', { name: 'Continue' }).click();
-    // Existing accounts keep the published plain metadata style.
-    await expect(page.getByRole('radio', { name: 'Todoist inspired' })).toHaveAttribute('aria-checked', 'true');
-    await page.getByRole('radio', { name: 'Neutral' }).click();
-    await page.getByRole('button', { name: 'Use these settings' }).click();
-    await go(page, '#/settings');
-    await expect(page.getByRole('radio', { name: 'Neutral' })).toHaveAttribute('aria-checked', 'true');
-    await page.getByRole('radio', { name: 'Inherited colours' }).click();
-    await expect(page.getByRole('radio', { name: 'Inherited colours' })).toHaveAttribute('aria-checked', 'true');
   });
 });
 
@@ -641,8 +635,8 @@ test.describe('#176 the Insights panel', () => {
     await expect(panel).toBeVisible();
     await expect(panel).not.toContainText('Estimate coverage');
     await expect(panel).toContainText('Last 7 days');
-    await expect(panel.locator('.insights-scope')).toContainText('Open tasks: Website');
-    await expect(panel.locator('.insights-scope')).toContainText('every project');
+    // The page it summarises is named in the header; the longer note about scope is gone.
+    await expect(panel.locator('.insights-scope')).toHaveCount(0);
     // Seven bars, even when a day is empty.
     await expect(panel.locator('.barslot')).toHaveCount(7);
     await expect(panel.getByRole('button', { name: 'Open full insights' })).toBeVisible();
@@ -672,99 +666,15 @@ test.describe('#177 Settings', () => {
     await expect(monday).toHaveValue(/\d+ h/);
   });
 
-  test('previews follow the choice and are not clickable', async ({ demo: page }) => {
+  test('the switches and ticks of the sidebar change the sidebar itself', async ({ demo: page }) => {
     await go(page, '#/settings');
-    await page.getByRole('switch', { name: 'Eisenhower Matrix' }).click();
-    const preview = page.locator('#features .polish-preview');
-    await expect(preview.locator('.preview-nav', { hasText: 'Eisenhower Matrix' })).toBeVisible();
-    await expect(preview.locator('.preview-callout')).toContainText('Quick Tasks');
-    await expect(preview.locator('button, a, input')).toHaveCount(0);
-    await page.getByRole('button', { name: 'Today and My week' }).click();
-    await page.getByRole('option', { name: /Today \+ My Week/ }).click();
-    await expect(preview.locator('.preview-nav', { hasText: 'Today' })).toBeVisible();
-  });
-});
-
-test.describe('#178 Setup', () => {
-  const open = async (page: Page) => {
-    await page.goto('/');
-    await page.getByRole('button', { name: 'Explore with demo data instead' }).click();
-    // A first visit starts with the tour; ending it goes on to the setup.
-    await page.getByRole('button', { name: 'End tour' }).click();
-    await expect(page.locator('.setup')).toBeVisible();
-  };
-  const next = (page: Page) => page.getByRole('button', { name: 'Continue' }).click();
-
-  test('is five screens, each with one title, and Back keeps the choices', async ({ page }) => {
-    await open(page);
-    const titles = [];
-    for (let step = 0; step < 5; step += 1) {
-      titles.push(await page.locator('.setup-head h2').innerText());
-      if (step < 4) await next(page);
-    }
-    expect(titles).toEqual(['Choose your appearance', 'Choose your colour', 'Give your tasks room', 'Shape your workspace', 'Where to store estimates']);
-    // The last screen has no picture of the workspace, and nothing is converted.
-    await expect(page.locator('.setup .polish-preview')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Start using Enhanced' })).toBeVisible();
-    await page.locator('.setup').getByRole('button', { name: 'Back', exact: true }).click();
-    await page.getByRole('switch', { name: 'Eisenhower Matrix' }).click();
-    await page.locator('.setup').getByRole('button', { name: 'Back', exact: true }).click();
-    await next(page);
-    await expect(page.getByRole('switch', { name: 'Eisenhower Matrix' })).toHaveAttribute('aria-checked', 'true');
-    await expect(page.locator('.setup .preview-nav', { hasText: 'Eisenhower Matrix' })).toBeVisible();
-  });
-
-  test('Custom is a card like the others; its editor appears below it, refuses a bad code and keeps the last good one', async ({ page }) => {
-    await open(page);
-    await next(page);
-    await expect(page.locator('.setup .custom-colour-editor')).toHaveCount(0);
-    await page.getByRole('radio', { name: 'Custom' }).click();
-    await expect(page.getByRole('radio', { name: 'Custom' })).toHaveAttribute('aria-checked', 'true');
-    // No interactive control inside a radio.
-    await expect(page.getByRole('radio', { name: 'Custom' }).locator('input, button')).toHaveCount(0);
-    const hex = page.getByLabel('Colour, as a hex code');
-    await hex.fill('#2e7d32');
-    await hex.press('Enter');
-    await expect.poll(() => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent').trim())).not.toBe('');
-    const good = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent').trim());
-    await hex.fill('banana');
-    await hex.press('Enter');
-    await expect(page.getByRole('alert').filter({ hasText: 'not a colour code' })).toBeVisible();
-    await expect(hex).toHaveValue('#2e7d32');
-    expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--accent').trim())).toBe(good);
-    // A preset is still there afterwards, and the composer in the picture wears the accent.
-    await page.getByRole('radio', { name: 'Blue' }).click();
-    await expect(page.locator('.setup .preview-primary')).toHaveCSS('background-color', /rgb\(3\d, 1\d\d, 2\d\d\)/);
-  });
-
-  for (const [label, width, height] of [['a desktop', 1280, 800], ['a laptop', 1366, 768], ['a phone', 390, 844]] as const) {
-    test(`every choice is in view on ${label}, with no scrolling area inside`, async ({ page }) => {
-      await page.setViewportSize({ width, height });
-      await open(page);
-      for (let step = 0; step < 5; step += 1) {
-        const box = await page.locator('.setup').boundingBox();
-        expect(box!.height, `step ${step}`).toBeLessThanOrEqual(height);
-        const overflow = await page.locator('.setup').evaluate((root) =>
-          [root, ...Array.from(root.querySelectorAll('*'))].filter((n) => {
-            const style = getComputedStyle(n);
-            return /auto|scroll/.test(style.overflowY) && n.scrollHeight > n.clientHeight + 1;
-          }).length);
-        expect(overflow, `step ${step}`).toBe(0);
-        const wide = await page.locator('.setup').evaluate((root) => root.scrollWidth > root.clientWidth + 1);
-        expect(wide, `step ${step}`).toBe(false);
-        await expect(page.getByRole('button', { name: step === 4 ? 'Start using Enhanced' : 'Continue' })).toBeInViewport();
-        if (step < 4) await next(page);
-      }
-    });
-  }
-
-  test('the last screen offers both storages, and finishing records the first run', async ({ page }) => {
-    await open(page);
-    for (let step = 0; step < 4; step += 1) await next(page);
-    await expect(page.getByRole('radio', { name: 'As a tag', exact: true })).toBeVisible();
-    await expect(page.getByRole('radio', { name: 'As a Todoist duration', exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Start using Enhanced' }).click();
-    await expect(page.locator('.setup')).toHaveCount(0);
+    // The matrix is turned on from its entry in Sidebar → Entries (#16).
+    await page.getByRole('checkbox', { name: 'Eisenhower Matrix' }).setChecked(true, { force: true });
+    const real = page.locator('.sidebar:not(.pvscale .sidebar)');
+    await expect(real.locator('.navitem', { hasText: 'Eisenhower Matrix' })).toBeVisible();
+    // Today has no setting of its own: it is on the sidebar when it is ticked where the sidebar is arranged.
+    await page.getByRole('checkbox', { name: 'Today' }).setChecked(true, { force: true });
+    await expect(real.locator('.navitem', { hasText: /^Today/ })).toBeVisible();
   });
 });
 

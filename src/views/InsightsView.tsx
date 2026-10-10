@@ -8,6 +8,7 @@ import {
   type SliceDatum,
 } from '@/components/charts';
 import { DashboardGrid, type DashboardCardSpec } from '@/components/DashboardCards';
+import { cutLogbook, LOG_GROUPS, LOG_SORTS, type LogGroup, type LogSort } from '@/domain/logbook';
 import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
 import { useData } from '@/hooks/useData';
@@ -31,9 +32,8 @@ import { byChildOrder } from '@/domain/orderKey';
 import { plainTitle } from '@/domain/markdown';
 
 type Tab = 'overview' | 'logbook';
-type LogGroup = 'day' | 'project' | 'priority';
 
-const PRESETS: Period[] = ['day', 'week', 'month', 'quarter', 'year'];
+const SPANS: Period[] = ['day', 'week', 'month', 'quarter', 'year', 'custom'];
 
 /**
  * Insights.
@@ -108,7 +108,7 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
 
   const intl = locale === 'fr' ? 'fr-FR' : 'en-GB';
 
-  /* The layout can be edited on the overview only, and leaving the tab ends it. */
+  /* The layout can be edited on the dashboard only, and leaving it ends it. */
   const [editing, setEditing] = useState(false);
   useEffect(() => { if (tab !== 'overview') setEditing(false); }, [tab]);
   const storedOrder = useStore((s) => s.prefs.dashboardOrder);
@@ -210,13 +210,15 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
     const sign = delta > 0 ? '+' : delta < 0 ? '−' : '';
     const text = `${sign}${formatValue(Math.abs(delta))}${deltaUnit}`;
     const baseline = t('insights.previousValue', { value: `${formatValue(earlier)}${previousUnit}` });
-    return <strong
-      className={`compare-delta${delta > 0 ? ' up' : delta < 0 ? ' down' : ''}`}
-      title={baseline}
-      aria-label={`${text}; ${baseline}`}
-    >
-      {text}
-    </strong>;
+    return <span className="compare" title={baseline}>
+      <strong
+        className={`compare-delta${delta > 0 ? ' up' : delta < 0 ? ' down' : ''}`}
+        aria-label={`${text}; ${baseline}`}
+      >
+        {text}
+      </strong>
+      <small className="compare-vs">{t('insights.vsBefore', { value: `${formatValue(earlier)}${previousUnit}` })}</small>
+    </span>;
   };
   const showHeatmap = period === 'quarter' || period === 'year'
     || (period === 'custom' && spanOf(range) >= 89);
@@ -288,7 +290,7 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
           value={`${summary.focusScore}%`}
           hint={comparison(summary.focusScore, previousSummary.focusScore, String, ' pts', '%')}
         />
-        <SplitBar data={byPriority} format={(count) =>
+        <SplitBar data={byPriority} hideValues format={(count) =>
           `${summary.completedCount > 0 ? Math.round(count / summary.completedCount * 100) : 0}%`
         } />
       </>,
@@ -335,7 +337,7 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
       },
     }),
     hours: {
-      id: 'hours', name: t('insights.dayActivity'), span: grain === null ? 12 : 6,
+      id: 'hours', name: t('insights.dayActivity'), span: 6,
       children: <>
         <ChartHead
           title={t('insights.dayActivity')}
@@ -412,36 +414,41 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
     toast(t('dashboard.layoutReset'));
   };
 
+  const pickSpan = (next: Period) => {
+    if (next === 'custom') {
+      // Starts from the dates the last span stood for, so the bounds are already sensible.
+      setCustom(range);
+      setPeriod('custom');
+      setOffset(0);
+    } else {
+      pickPreset(next);
+    }
+  };
+
   return (
     <div className="page wide">
       <div className="phead">
         <div>
-          <h1 className="ptitle">
-            {t('insights.title')}
-            {/* Which dates the period stands for, beside the title where it is
-                seen at once, and changing with the period (#174). */}
-            <small className="dashboard-title-range" aria-live="polite">{formatRange(range, intl)}</small>
-          </h1>
+          <h1 className="ptitle">{t(tab === 'logbook' ? 'insights.logbook' : 'nav.dashboard')}</h1>
+          <p className="psub">{t(tab === 'logbook' ? 'insights.logbookSub' : 'insights.dashboardSub')}</p>
         </div>
         <div className="pactions">
-          {tab === 'overview' && (
-            <>
-            {editing && (
-              <button
-                className="btn"
-                disabled={isDefaultDashboardOrder(order)}
-                onClick={resetLayout}
-              >
+          {/* The two pages are one subject: each points at the other. */}
+          <button className="btn" onClick={() => (tab === 'logbook' ? navigate('insights') : navigate('insights', 'logbook'))}>
+            <Icon name={tab === 'logbook' ? 'trend' : 'tasks'} size="sm" />
+            {t(tab === 'logbook' ? 'nav.dashboard' : 'insights.logbook')}
+          </button>
+          {tab === 'overview' && editing && (
+              <button className="btn" disabled={isDefaultDashboardOrder(order)} onClick={resetLayout}>
                 {t('dashboard.resetLayout')}
               </button>
             )}
+          {tab === 'overview' && (
             <button className="btn" aria-pressed={editing} onClick={() => setEditing((on) => !on)}>
               <Icon name={editing ? 'check' : 'sliders'} size="sm" />
               {editing ? t('dashboard.doneEditing') : t('dashboard.editLayout')}
             </button>
-            </>
           )}
-
         </div>
       </div>
 
@@ -455,6 +462,9 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
           >
             <Icon name="arrow-left" size="sm" />
           </button>
+          {/* Which dates the span stands for, between the arrows where it is
+              seen at once. */}
+          <span className="pagerlabel dashboard-title-range" aria-live="polite">{formatRange(range, intl)}</span>
           <button
             className="iconbtn"
             aria-label={t('insights.next')}
@@ -465,58 +475,47 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
             <Icon name="arrow-right" size="sm" />
           </button>
         </span>
-        {PRESETS.map((value) => (
-          <button
-            key={value}
-            className="btn"
-            aria-pressed={period === value && offset === 0}
-            onClick={() => pickPreset(value)}
-          >
-            {t(`insights.period.${value}` as TranslationKey)}
-          </button>
-        ))}
-        {/* The dates the presets resolve to, editable: change one and the
-            range becomes your own. */}
-        <span className="rangefields">
-          {/* The app's own calendar, not the browser's. `<input type="date">`
-              was the one control the rest of the app refuses to use, and it
-              put the system's picker, in the system's type, in the middle of a
-              page drawn in this one's. */}
-          <span className="rangefield">
-            <span className="rangefield-label">{t('insights.from')}</span>
-            <DateField
-              value={toApiDate(range.since)}
-              label={t('insights.from')}
-              max={toApiDate(new Date())}
-              clearable={false}
-              onChange={(next) => pickBound('since', next)}
-            />
+        <div className="periodright">
+        {/* Only a span of your own has dates to set: the others already say theirs. */}
+        {period === 'custom' && (
+          <span className="rangefields">
+            {/* The app's own calendar, not the browser's. */}
+            <span className="rangefield">
+              <span className="rangefield-label">{t('insights.from')}</span>
+              <DateField
+                value={toApiDate(range.since)}
+                label={t('insights.from')}
+                max={toApiDate(new Date())}
+                clearable={false}
+                onChange={(next) => pickBound('since', next)}
+              />
+            </span>
+            <span className="rangefield">
+              <span className="rangefield-label">{t('insights.to')}</span>
+              <DateField
+                value={toApiDate(range.until)}
+                label={t('insights.to')}
+                min={toApiDate(range.since)}
+                clearable={false}
+                onChange={(next) => pickBound('until', next)}
+              />
+            </span>
           </span>
-          <span className="rangefield">
-            <span className="rangefield-label">{t('insights.to')}</span>
-            <DateField
-              value={toApiDate(range.until)}
-              label={t('insights.to')}
-              min={toApiDate(range.since)}
-              clearable={false}
-              onChange={(next) => pickBound('until', next)}
-            />
-          </span>
-        </span>
+        )}
+        <div className="segmented small spanbar" role="group" aria-label={t('insights.span')}>
+          {SPANS.map((value) => (
+            <button
+              key={value}
+              aria-pressed={period === value}
+              onClick={() => pickSpan(value)}
+            >
+              <small>{t(`insights.span.${value}` as TranslationKey)}</small>
+            </button>
+          ))}
+        </div>
+        </div>
       </div>
 
-      <div className="tabs" role="tablist">
-        {(['overview', 'logbook'] as const).map((value) => (
-          <button
-            key={value}
-            role="tab"
-            aria-selected={tab === value}
-            onClick={() => navigate('insights', value === 'logbook' ? 'logbook' : undefined)}
-          >
-            {t(`insights.${value}` as TranslationKey)}
-          </button>
-        ))}
-      </div>
 
       {editing && tab === 'overview' && <p className="psub dash-hint">{t('dashboard.layoutHint')}</p>}
 
@@ -580,6 +579,7 @@ function Logbook({ completed, onOpen }: { completed: CompletedItem[]; onOpen?: (
   const { t, locale } = useT();
   const { snapshot } = useData();
   const [group, setGroup] = useState<LogGroup>('day');
+  const [sort, setSort] = useState<LogSort>('date');
   /* Several projects and several priorities at once: one of each was never
      the question anybody asked of a record. Empty means "all". */
   const [projectFilter, setProjectFilter] = useState<string[]>([]);
@@ -618,36 +618,16 @@ function Logbook({ completed, onOpen }: { completed: CompletedItem[]; onOpen?: (
   const toggleIn = <T,>(list: T[], value: T): T[] =>
     list.includes(value) ? list.filter((x) => x !== value) : [...list, value];
 
-  const groups = useMemo(() => {
-    const map = new Map<string, { title: string; rows: typeof filtered }>();
-    for (const task of filtered) {
-      const at = new Date(task.completed_at);
-      let key: string;
-      let title: string;
-
-      if (group === 'project') {
-        key = task.project_id;
-        title = snapshot.projects[task.project_id]?.name ?? '—';
-      } else if (group === 'priority') {
-        const p = toDisplayPriority(task.priority ?? 1);
-        key = `p${p}`;
-        title = `P${p}`;
-      } else {
-        key = format(at, 'yyyy-MM-dd');
-        title = formatRelativeDay(at, locale);
-      }
-
-      const bucket = map.get(key);
-      if (bucket) bucket.rows.push(task);
-      else map.set(key, { title, rows: [task] });
-    }
-
-    const entries = [...map.entries()].map(([key, value]) => ({ key, ...value }));
-    // Days read newest first, priorities from P1 down, projects largest first.
-    if (group === 'day') return entries.sort((a, b) => b.key.localeCompare(a.key));
-    if (group === 'priority') return entries.sort((a, b) => a.key.localeCompare(b.key));
-    return entries.sort((a, b) => b.rows.length - a.rows.length);
-  }, [filtered, group, snapshot.projects, locale]);
+  const groups = useMemo(() => cutLogbook(filtered, group, sort).map((cut) => {
+    const title = cut.projectId !== null
+      ? snapshot.projects[cut.projectId]?.name ?? '—'
+      : cut.priority !== null
+        ? `P${cut.priority}`
+        : cut.at !== null && group === 'month'
+          ? new Intl.DateTimeFormat(locale === 'fr' ? 'fr-FR' : 'en-GB', { month: 'long', year: 'numeric' }).format(cut.at)
+          : cut.at !== null ? formatRelativeDay(cut.at, locale) : '—';
+    return { ...cut, title };
+  }), [filtered, group, sort, snapshot.projects, locale]);
 
   const projects = Object.values(snapshot.projects)
     .filter((p) => !p.is_deleted && !p.is_folder)
@@ -656,6 +636,32 @@ function Logbook({ completed, onOpen }: { completed: CompletedItem[]; onOpen?: (
   return (
     <>
       <div className="viewbar logbar">
+        <div className="logcontrol">
+          <span className="logcontrol-label">{t('logbook.groupBy')}</span>
+          <div className="segmented small" role="group" aria-label={t('logbook.groupBy')}>
+            {LOG_GROUPS.map((value) => (
+              <button key={value} aria-pressed={group === value} onClick={() => setGroup(value)}>
+                <small>{t(`group.${value}` as TranslationKey)}</small>
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* Grouped by priority the order inside a group is the priority's own,
+            so there is nothing to choose: the control fades and folds away
+            rather than vanishing (#31). */}
+        <div
+          className={`logcontrol logsort${group === 'priority' ? ' gone' : ''}`}
+          aria-hidden={group === 'priority' || undefined}
+        >
+          <span className="logcontrol-label">{t('logbook.sortBy')}</span>
+          <div className="segmented small" role="group" aria-label={t('logbook.sortBy')}>
+            {LOG_SORTS.map((value) => (
+              <button key={value} aria-pressed={sort === value} tabIndex={group === 'priority' ? -1 : undefined} onClick={() => setSort(value)}>
+                <small>{t(`logbook.sort.${value}` as TranslationKey)}</small>
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="displaywrap" ref={filtersRef}>
           <button
             className="btn"
@@ -671,7 +677,7 @@ function Logbook({ completed, onOpen }: { completed: CompletedItem[]; onOpen?: (
           {filtersOpen && (
             <div className="popover displaypanel anchor-left" role="dialog" aria-label={t('logbook.filters')}>
               <div className="panelhead">
-                <h5>{t('toolbar.group')}</h5>
+                <h5>{t('filter.priorities')}</h5>
                 {activeFilters > 0 && (
                   <button
                     className="resetbtn"
@@ -682,19 +688,6 @@ function Logbook({ completed, onOpen }: { completed: CompletedItem[]; onOpen?: (
                 )}
               </div>
 
-              <div className="segmented">
-                {(['day', 'project', 'priority'] as const).map((value) => (
-                  <button
-                    key={value}
-                    aria-pressed={group === value}
-                    onClick={() => setGroup(value)}
-                  >
-                    <small>{t(`group.${value}` as TranslationKey)}</small>
-                  </button>
-                ))}
-              </div>
-
-              <h5>{t('filter.priorities')}</h5>
               <div className="chiprow">
                 {([1, 2, 3, 4] as const).map((p) => (
                   <button
@@ -727,18 +720,26 @@ function Logbook({ completed, onOpen }: { completed: CompletedItem[]; onOpen?: (
           )}
         </div>
 
-        <span className="kpi-label">{t('metrics.tasks', { count: filtered.length })}</span>
       </div>
 
       {groups.length === 0 ? (
         <p className="empty">{t('insights.noHistory')}</p>
       ) : (
         <div className="logbook">
+          {/* A legend over the two columns on the right, in place of a total
+              that said less (#31). */}
+          <div className="logrow loglegend" aria-hidden="true">
+            <span />
+            <span />
+            <span>{t('logbook.legendProject')}</span>
+            <span className="time">{t('logbook.legendEstimate')}</span>
+          </div>
           {groups.map((entry) => (
             <section className="logday" key={entry.key}>
               <h4>
                 {entry.title}
                 <span className="gcount">{entry.rows.length}</span>
+                {entry.minutes > 0 && <span className="gtime">{formatDuration(entry.minutes, locale)}</span>}
               </h4>
               {entry.rows.map((task) => {
                 const project = snapshot.projects[task.project_id];
@@ -774,11 +775,11 @@ function Logbook({ completed, onOpen }: { completed: CompletedItem[]; onOpen?: (
                   >
                     <span className={`logtick p${priority}`}><Icon name="check" size="sm" /></span>
                     <span className="logname">{plainTitle(task.content)}</span>
-                    {project && (
-                      <span className="logmeta" style={markerStyle(project.color, false)}>
+                    {project ? (
+                      <span className="logmeta logproject" style={markerStyle(project.color, false)}>
                         #{project.name}
                       </span>
-                    )}
+                    ) : <span className="logmeta logproject" />}
                     <span className="logmeta time">
                       {minutes !== null ? formatDuration(minutes, locale) : '—'}
                     </span>

@@ -109,11 +109,41 @@ export interface Workspace {
   logo_big?: string | null;
 }
 
+/** Who a project is shared with, and whether they have said yes. */
+export interface CollaboratorState {
+  project_id: string;
+  user_id: string;
+  /** `active` and `invited` are the ones that matter here; Todoist also reports who declined or left. */
+  state: string;
+  role?: string;
+}
+
 export interface Collaborator {
   id: string;
   email: string;
   full_name: string;
   image_id: string | null;
+}
+
+/**
+ * One of Todoist's own notifications (a share invitation, a task assigned to
+ * you, a comment…). Todoist's list of kinds is not documented and was not
+ * read from a real account, so only the fields every kind seems to carry are
+ * typed and everything else is read defensively (domain/notifications.ts).
+ */
+export interface LiveNotification {
+  id: string;
+  notification_type?: string;
+  created_at?: string;
+  created?: string;
+  is_unread?: boolean;
+  is_deleted?: boolean;
+  from_uid?: string;
+  project_id?: string;
+  item_id?: string;
+  invitation_id?: string;
+  invitation_secret?: string;
+  [extra: string]: unknown;
 }
 
 export interface Note {
@@ -124,12 +154,21 @@ export interface Note {
   posted_at: string;
   posted_uid: string;
   is_deleted: boolean;
-  file_attachment: {
-    file_name?: string;
-    file_type?: string;
-    file_url?: string;
-    file_size?: number;
-  } | null;
+  file_attachment: NoteAttachment | null;
+  /** Who reacted with which emoji. Todoist keeps these on the comment itself. */
+  reactions?: Record<string, string[]> | null;
+}
+
+/** A file kept with a comment: uploaded to Todoist first, then linked. */
+export interface NoteAttachment {
+  file_name?: string;
+  file_type?: string;
+  file_url?: string;
+  file_size?: number;
+  resource_type?: string;
+  upload_state?: string;
+  /** Todoist's thumbnail of an image, when it made one. */
+  image?: string;
 }
 
 export interface Reminder {
@@ -181,6 +220,9 @@ export interface Snapshot {
   labels: Record<string, Label>;
   workspaces: Record<string, Workspace>;
   collaborators: Record<string, Collaborator>;
+  /** Absent in a snapshot saved before 2.0. */
+  notifications?: Record<string, LiveNotification>;
+  collaboratorStates?: CollaboratorState[];
   notes: Record<string, Note>;
   reminders: Record<string, Reminder>;
   user: TodoistUser | null;
@@ -335,12 +377,6 @@ export interface ViewPrefs {
   group: GroupKey;
   sort: SortKey;
   filters: ViewFilters;
-  /**
-   * A board as wide as the page, rather than as wide as the header above it
-   * (#108 follow-up). Off by default: a board opens at the width of a list,
-   * and the Display control widens it for a page that wants the room.
-   */
-  wide?: boolean;
 }
 
 /**

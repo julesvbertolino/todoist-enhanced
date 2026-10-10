@@ -12,6 +12,8 @@ import type { TranslationKey } from '@/i18n';
 export interface TourStop {
   /** The `data-tour` value of the element to light up. */
   target: string;
+  /** Other elements lit up with it, as one highlight around all of them. */
+  also?: string[];
   title: TranslationKey;
   body: TranslationKey;
   /** The release that brought it, `x.y.z`. */
@@ -19,13 +21,17 @@ export interface TourStop {
 }
 
 export const TOUR_STOPS: TourStop[] = [
-  { target: 'metrics', since: '1.0.0', title: 'walkthrough.feature.estimates', body: 'walkthrough.feature.estimatesBody' },
+  { target: 'week', also: ['someday'], since: '1.0.0', title: 'tour.week', body: 'tour.weekBody' },
+  { target: 'metrics', since: '1.0.0', title: 'tour.durations', body: 'tour.durationsBody' },
   { target: 'folder', since: '1.0.0', title: 'walkthrough.feature.folders', body: 'walkthrough.feature.foldersBody' },
-  { target: 'project-icon', since: '1.11.0', title: 'walkthrough.feature.icons', body: 'walkthrough.feature.iconsBody' },
+  { target: 'project-icon', since: '1.11.0', title: 'tour.icons', body: 'tour.iconsBody' },
   { target: 'quick', since: '1.0.0', title: 'tour.quick', body: 'tour.quickBody' },
   { target: 'time', since: '1.19.0', title: 'tour.time', body: 'tour.timeBody' },
   { target: 'subtasks', since: '1.0.0', title: 'tour.subtasks', body: 'tour.subtasksBody' },
   { target: 'review', since: '1.0.0', title: 'tour.review', body: 'tour.reviewBody' },
+  { target: 'dashboard', also: ['logbook'], since: '2.0.0', title: 'tour.dashboard', body: 'tour.dashboardBody' },
+  { target: 'matrix', since: '1.9.0', title: 'tour.matrix', body: 'tour.matrixBody' },
+  { target: 'notifications', since: '2.0.0', title: 'tour.notifications', body: 'tour.notificationsBody' },
 ];
 
 /**

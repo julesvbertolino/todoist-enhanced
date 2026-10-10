@@ -7,8 +7,9 @@ import { useConfirm } from './overlays/Confirm';
 import { navigate } from '@/hooks/useRoute';
 import { usePhoneBehaviour } from '@/hooks/useTouchLayout';
 import type { Project } from '@/domain/types';
-import { copyPending, isTemporaryId, projectEmail } from '@/api/links';
+import { copyPending, copyText, isTemporaryId, projectEmail, todoistProjectUrl } from '@/api/links';
 import { ApiError } from '@/api/client';
+import { isSharedWithMe } from '@/domain/sharing';
 
 export interface ProjectMenuProps {
   project: Project;
@@ -43,8 +44,9 @@ export function ProjectMenu({
   const updateProjectFields = useStore((s) => s.updateProjectFields);
   const archiveProject = useStore((s) => s.archiveProject);
   const deleteProject = useStore((s) => s.deleteProject);
+  const leaveProject = useStore((s) => s.leaveProject);
+  const foreign = useStore((s) => isSharedWithMe(s.snapshot, project.id));
   const duplicateProject = useStore((s) => s.duplicateProject);
-  const nestProject = useStore((s) => s.nestProject);
   const demo = useStore((s) => s.demo);
   const toast = useStore((s) => s.toast);
   const ref = useRef<HTMLDivElement>(null);
@@ -121,6 +123,19 @@ export function ProjectMenu({
     if (ok) await archiveProject(project.id);
   }
 
+  async function leave() {
+    onClose();
+    const ok = await confirm({
+      title: t('project.leaveTitle'),
+      body: t('project.leaveBody', { name: project.name }),
+      confirmLabel: t('project.leave'),
+      destructive: true,
+    });
+    if (!ok) return;
+    if (window.location.hash.includes(project.id)) navigate('week');
+    await leaveProject(project.id);
+  }
+
   async function remove() {
     onClose();
     const ok = await confirm({
@@ -148,6 +163,19 @@ export function ProjectMenu({
         visibility: position ? undefined : 'hidden',
       }}
     >
+      {/* The Inbox is the one project that is not yours to rename, move or delete: all it offers is its link. */}
+      {project.inbox_project ? (
+        <button
+          className="opt"
+          role="menuitem"
+          onClick={() => {
+            onClose();
+            void copyText(todoistProjectUrl(project.id)).then((ok) => toast(t(ok ? 'task.linkCopied' : 'task.linkNotCopied')));
+          }}
+        >
+          <Icon name="link" size="sm" /><span>{t('task.copyLink')}</span>
+        </button>
+      ) : (<>
       {onAddAbove && onAddBelow && (
         <>
           <button className="opt" role="menuitem" onClick={() => { onClose(); onAddAbove(); }}>
@@ -162,6 +190,18 @@ export function ProjectMenu({
       <button className="opt" role="menuitem" onClick={() => { onClose(); onEdit(); }}>
         <Icon name="edit" size="sm" /><span>{t('project.edit')}</span>
       </button>
+      {!isTemporaryId(project.id) && !project.inbox_project && (
+        <button
+          className="opt"
+          role="menuitem"
+          onClick={() => {
+            onClose();
+            window.dispatchEvent(new CustomEvent('enhanced:share', { detail: { projectId: project.id } }));
+          }}
+        >
+          <Icon name="user" size="sm" /><span>{t('project.share')}</span>
+        </button>
+      )}
       <button
         className="opt"
         role="menuitem"
@@ -214,24 +254,20 @@ export function ProjectMenu({
           <Icon name="mail" size="sm" /><span>{t('project.copyEmail')}</span>
         </button>
       )}
-      {/* The gesture that nests a project is a drag to the right; getting one
-          back out is the thing a gesture is bad at, so it is also a command. */}
-      {project.parent_id && (
-        <button
-          className="opt"
-          role="menuitem"
-          onClick={() => { onClose(); void nestProject(project.id, null); }}
-        >
-          <Icon name="arrow-left" size="sm" /><span>{t('project.moveToTop')}</span>
-        </button>
-      )}
       <hr />
+      {foreign ? (
+        <button className="opt danger" role="menuitem" onClick={() => void leave()}>
+          <Icon name="close" size="sm" /><span>{t('project.leave')}</span>
+        </button>
+      ) : (<>
       <button className="opt" role="menuitem" onClick={() => void archive()}>
         <Icon name="export" size="sm" /><span>{t('project.archive')}</span>
       </button>
       <button className="opt danger" role="menuitem" onClick={() => void remove()}>
         <Icon name="close" size="sm" /><span>{t('project.delete')}</span>
       </button>
+      </>)}
+      </>)}
     </div>
   );
 

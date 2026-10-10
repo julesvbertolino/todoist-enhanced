@@ -47,11 +47,8 @@ test('description takes focus and composer starts compact on the title edge',asy
  await page.getByRole('button',{name:'Add task',exact:true}).first().click();const desc=page.locator('.descedit.composer');await expect(desc.locator('.cm-placeholder')).toHaveText('Description');
  const a=(await page.locator('.composer-name').boundingBox())!,b=(await desc.locator('.cm-content').boundingBox())!;expect(Math.abs(a.x-b.x)).toBeLessThan(3);expect(b.height).toBeLessThan(26);expect((await desc.boundingBox())!.height).toBeLessThan(65);
 });
-test('minimalist rows keep title description date and recurrence icon',async({demo:page})=>{
- await go(page,'#/settings');await page.getByRole('radio',{name:'Minimalist',exact:true}).click();await go(page,'#/week');const recycling=row(page,'Take out the recycling');await expect(recycling.locator('.meta')).toBeHidden();await expect(recycling.locator('.titleline .ic')).toBeVisible();await expect(recycling.locator('.minimal-date')).toBeVisible();
-});
 test('year layout stays half width for tags after moving beside the heatmap',async({demo:page})=>{
- await go(page,'#/insights');await page.getByRole('button',{name:'This year',exact:true}).click();await page.getByRole('button',{name:'Edit layout'}).click();
+ await go(page,'#/insights');await page.locator('.periodbar .spanbar button',{hasText:/^Year$/}).click();await page.getByRole('button',{name:'Edit layout'}).click();
  const tags=page.locator('[data-card="tags"]');await tags.getByRole('button',{name:/earlier/}).click();await tags.getByRole('button',{name:/earlier/}).click();await expect(tags).toHaveClass(/w6/);await expect(page.locator('[data-card="heatmap"]')).toHaveClass(/w12/);
 });
 for(const width of [390,1000])test(`dark offline editing and all weekly review steps at ${width}px`,async({demo:page,context})=>{

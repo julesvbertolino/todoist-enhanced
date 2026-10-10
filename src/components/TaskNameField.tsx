@@ -3,6 +3,7 @@ import {
   type ChangeEvent, type ClipboardEvent, type KeyboardEvent, type MouseEvent, type MutableRefObject,
   type SyntheticEvent,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { Icon } from './Icon';
 import { markerStyle } from '@/domain/colors';
 import {
@@ -32,6 +33,29 @@ function tokenAtCaret(
     query: match[3].toLowerCase(),
     start: caret - match[3].length - 1,
   };
+}
+
+/**
+ * Where a character of the name sits on screen, read from the mirror behind the
+ * field (it holds the same text at the same place, scrolled with it).
+ */
+function caretRect(mirror: HTMLElement | null, offset: number): { left: number; top: number; bottom: number } | null {
+  if (!mirror || offset < 0) return null;
+  const walker = document.createTreeWalker(mirror, NodeFilter.SHOW_TEXT);
+  let left = offset;
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const length = node.textContent?.length ?? 0;
+    if (left <= length) {
+      const range = document.createRange();
+      range.setStart(node, left);
+      range.setEnd(node, Math.min(length, left + 1));
+      const rect = range.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) return null;
+      return { left: rect.left, top: rect.top, bottom: rect.bottom };
+    }
+    left -= length;
+  }
+  return null;
 }
 
 interface TaskNameFieldProps {
@@ -120,7 +144,11 @@ export function TaskNameField({
   const ranges = estimateOnly
     ? (tail ? [{ start: tail.start, end: tail.end, kind: 'duration' as const }] : [])
     : read.ranges;
-  const token = estimateOnly ? null : tokenAtCaret(value, caret);
+  /* The word whose list Escape put away: it stays away until the text changes,
+     however often the caret is read again. */
+  const [dismissed, setDismissed] = useState<{ value: string; start: number } | null>(null);
+  const found = estimateOnly ? null : tokenAtCaret(value, caret);
+  const token = found && dismissed && dismissed.value === value && dismissed.start === found.start ? null : found;
 
   /**
    * The refusals that are still refusing something.
@@ -215,9 +243,10 @@ export function TaskNameField({
           sigil: '#' as const,
           isNew: false,
         },
-        /* Nothing typed yet is a list of projects, not of every section in
-           the account: the sections arrive once a project is being named. */
-        ...(head === '' ? [] : sectionsOf(p.id).map(sectionOption(p))),
+        /* Each project brings its sections from the first keystroke, as in
+           Todoist: the list is the tree of places a task can go, and it
+           scrolls rather than hiding the sections until a name is typed. */
+        ...sectionsOf(p.id).map(sectionOption(p)).map((option) => ({ ...option, nested: true })),
       ]);
 
       /* And a section whose own name matches, in a project whose name does
@@ -228,7 +257,7 @@ export function TaskNameField({
           .filter((s) => squash(s.name).includes(squash(head)))
           .map(sectionOption(p)));
 
-      return [...withSections, ...elsewhere].slice(0, 8);
+      return [...withSections, ...elsewhere].slice(0, 60);
     }
     const known = Object.values(snapshot.labels)
       .filter((l) => !l.is_deleted && !l.name.startsWith('est-'))
@@ -264,6 +293,40 @@ export function TaskNameField({
   })();
 
   useEffect(() => { setPick(0); }, [value, caret]);
+
+  /* The list lives in a portal, so no sheet's overflow can cut it (#24). It
+     opens under the word being typed and flips above it when the window has
+     no room below, the way the date picker does. */
+  const listRef = useRef<HTMLDivElement>(null);
+  const [place, setPlace] = useState<{ top?: number; bottom?: number; left: number; maxHeight: number } | null>(null);
+  const showList = options.length > 0;
+  const tokenStart = token?.start ?? -1;
+  useLayoutEffect(() => {
+    if (!showList) { setPlace(null); return; }
+    const measure = () => {
+      const field = inputRef.current;
+      if (!field) return;
+      const box = field.getBoundingClientRect();
+      const at = caretRect(mirrorRef.current, tokenStart) ?? { left: box.left, top: box.top, bottom: box.top + 22 };
+      const room = 340;
+      const below = window.innerHeight - at.bottom - 12;
+      const above = at.top - 12;
+      const left = Math.max(8, Math.min(at.left - 10, window.innerWidth - 300));
+      setPlace(below >= Math.min(room, 200) || below >= above
+        ? { top: at.bottom + 6, left, maxHeight: Math.min(room, below) }
+        : { bottom: window.innerHeight - at.top + 6, left, maxHeight: Math.min(room, above) });
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    window.addEventListener('scroll', measure, true);
+    return () => {
+      window.removeEventListener('resize', measure);
+      window.removeEventListener('scroll', measure, true);
+    };
+  }, [showList, tokenStart, value]);
+  useEffect(() => {
+    listRef.current?.querySelector<HTMLElement>('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' });
+  }, [pick, place]);
 
   // The mirror must follow the input's own scroll, or the marks drift off the
   // text as soon as the name is longer than the field.
@@ -433,7 +496,9 @@ export function TaskNameField({
           track(e.currentTarget);
           clicked(e.currentTarget.selectionStart ?? 0);
         },
-        onKeyUp: (e: KeyboardEvent<HTMLInputElement>) => track(e.currentTarget),
+        /* Escape put the list away on key down; reading the caret again as the key
+        comes back up would open it straight after. */
+        onKeyUp: (e: KeyboardEvent<HTMLInputElement>) => { if (e.key !== 'Escape') track(e.currentTarget); },
         onKeyDown: (e: KeyboardEvent<HTMLInputElement>) => {
           /* Cmd+Enter is the sheet's, not the field's: it saves the whole
              thing. Answering it here as well as there submitted the task
@@ -459,7 +524,7 @@ export function TaskNameField({
             }
             if (e.key === 'Escape') {
               e.stopPropagation();
-              setCaret(-1);
+              if (token) setDismissed({ value, start: token.start });
               return;
             }
           }
@@ -494,13 +559,29 @@ export function TaskNameField({
         },
       })}
 
-      {options.length > 0 && (
-        <div className="popover namepicker" role="listbox">
+      {showList && place && token && createPortal(
+        <div
+          className="popover namepicker floating"
+          role="listbox"
+          ref={listRef}
+          style={{ top: place.top, bottom: place.bottom, left: place.left, maxHeight: place.maxHeight }}
+          /* A press in the list must not take the focus from the field. */
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          {/* The search is the text after the sigil: shown here, so the list
+              says what it is filtering on and that typing narrows it. */}
+          <div className="namepicker-search" aria-hidden="true">
+            <Icon name="search" size="sm" />
+            {token.query
+              ? <span className="namepicker-query">{token.sigil}{token.query}</span>
+              : <span className="namepicker-placeholder">{t(token.sigil === '#' ? 'composer.searchProjects' : 'composer.searchTags')}</span>}
+          </div>
           {options.map((option, index) => (
             <button
               key={option.id}
               role="option"
               aria-selected={index === pick}
+              className={'nested' in option && option.nested ? 'namepicker-section' : undefined}
               onMouseDown={(e) => { e.preventDefault(); choose(option.name, option.isNew); }}
               onMouseEnter={() => setPick(index)}
             >
@@ -509,12 +590,13 @@ export function TaskNameField({
                 : option.sigil === '#'
                   ? <span className="hash" style={markerStyle(option.color)}>#</span>
                   : <Icon name={option.isNew ? 'plus' : 'tag'} size="sm" className="taglabel" style={markerStyle(option.color, false)} />}
-              <span>{option.label}</span>
-              {option.hint && <small className="namepicker-new">{option.hint}</small>}
+              <span className="namepicker-label">{option.label}</span>
+              {option.hint && !('nested' in option && option.nested) && <small className="namepicker-new">{option.hint}</small>}
               {option.isNew && <small className="namepicker-new">{t('labels.createNew')}</small>}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

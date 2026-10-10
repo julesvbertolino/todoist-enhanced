@@ -8,6 +8,44 @@ Chaque ligne est marquée :
 - 🎨 ce qui existait et a été redessiné ou reformulé,
 - 🐛 un bug ou une régression corrigés.
 
+## 2.0.0
+
+Un nouveau look, une configuration qui façonne la barre latérale et ce qu’affiche une tâche, un Tableau de bord et un Journal à part entière, et les premiers pas vers le travail à plusieurs.
+
+🆕 **Choisissez comment l’app se pose dans la fenêtre, et ce qu’il y a derrière.** Réglages, Apparence, propose deux dispositions (une barre latérale flottante sur une page pleine, ou une page flottante sur le fond) et deux fonds (neutre, ou un dégradé tiré de votre couleur). Le texte de la barre latérale reste lisible sur n’importe quelle couleur. Le rouge de Todoist s’appelle désormais Todoist, et Cacao et Graphite rejoignent les couleurs.
+
+🆕 **Composez la barre latérale.** Réglages, Barre latérale, permet de cocher ce qui s’affiche (Tableau de bord et Journal sont maintenant des entrées à part), de glisser les entrées dans l’ordre voulu, de masquer le champ de recherche et les compteurs, et de ranger « Mes projets » et vos espaces de travail dans l’ordre que vous aimez. Ce que vous masquez reste trouvable avec ⌘K.
+
+🆕 **Choisissez ce qu’affiche une tâche, et dans quel ordre.** Dans Affichage, « Afficher sur chaque tâche » liste les détails sous un titre (date, échéance, projet, tags, estimation). Cliquez-en un pour l’afficher ou le masquer, glissez-le, ou appuyez sur Alt et une flèche, pour fixer l’ordre dans toutes les listes.
+
+🆕 **Une configuration pour tout le monde, et une visite à la suite.** Après la mise à jour, et pour chaque nouveau compte, cinq courts écrans règlent le look, la barre latérale et les détails d’une tâche. Le dernier propose la visite, qui montre aussi le Tableau de bord, la matrice et les notifications.
+
+🆕 **Les notifications de Todoist.** La cloche ouvre une fenêtre avec ce que Todoist vous dit et, à côté, les conflits de votre planning. Marquez une notification ou toutes comme lues, acceptez ou refusez une invitation à un projet partagé. Pas encore essayé avec un second compte Todoist.
+
+🆕 **Partager un projet et assigner des tâches.** Le menu d’un projet propose Partager…, pour inviter par e-mail, voir qui a accès et retirer quelqu’un. Dans un projet partagé, une tâche a un champ « Assignée à ». Pas encore essayé avec un second compte Todoist.
+
+🆕 **Une vue par défaut pour chaque projet.** La fiche projet demande s’il s’ouvre en liste ou en tableau, et le dit aussi à Todoist. Il peut aussi être rangé sous un projet parent, avec les vingt couleurs de Todoist.
+
+🆕 **Créer un projet sans quitter la nouvelle tâche.** La liste des projets du composeur se termine par Nouveau projet…, et vous revenez avec lui choisi.
+
+🎨 **Un look plus calme partout.** Des angles plus arrondis, des boutons secondaires gris doux, des cases à cocher carrées, des barres de défilement fines qui n’apparaissent que sous le pointeur, une barre latérale qui glisse, et des panneaux qui flottent dans la marge de la page.
+
+🎨 **Ouvrir une tâche en fenêtre ou en panneau latéral.** Réglages, Listes, au choix. La priorité devient quatre pastilles douces, et la croix d’un tag est centrée.
+
+🎨 **Des listes dans l’ordre de Todoist.** Les groupes se replient depuis une flèche à leur gauche avec leur nombre après le titre, les sous-tâches se placent juste sous leur tâche et se replient avec leur pastille d’avancement, et les tableaux gardent des colonnes entières sur la page.
+
+🎨 **« J’ai du temps » est une seule liste.** Elle suit l’ordre choisi (la plus courte d’abord, ou la priorité d’abord) et dit l’échéance de chaque tâche, au lieu de regrouper par jour.
+
+🎨 **L’en-tête de page le dit en une ligne.** Le temps estimé passe en orange à partir de 95 % de votre capacité et en rouge au-delà, et un clic dessus ouvre les tâches sans estimation.
+
+🎨 **Tableau de bord et Journal sont deux pages.** Une ligne de contrôles choisit la période (Jour, Semaine, Mois, Trimestre, Année ou Personnalisée, où les dates apparaissent). Le Journal groupe par jour, mois, projet ou priorité, trie par date de fin ou priorité, et additionne le temps de chaque groupe. L’agencement des cartes du Tableau de bord ne se modifie plus.
+
+🎨 **Les Réglages dans un nouvel ordre.** Compte, Général, Apparence, Barre latérale, Listes, Fonctionnalités et organisation, Détection des conflits, À propos. La carte de soutien reste visible, et le début de semaine est lu dans Todoist avec un lien pour le changer là-bas.
+
+🎨 **Un nouvel écran de connexion et un journal des modifications plus large.** La connexion montre à quoi sert l’app à côté du formulaire. Le journal a un sélecteur de version, marque chaque ligne Nouveauté, Design ou Correction, et lance la visite depuis son pied.
+
+🎨 **Les revues.** Les choix d’une ligne forment un seul contrôle segmenté rempli de votre couleur, et les étapes sont reliées par une ligne qui se remplit jusqu’à celle où vous êtes.
+
 ## 1.22.0
 
 Un menu sur chaque section, des durées qui suivent les sous-tâches et Cette semaine dans le même ordre que l'Aujourd'hui de Todoist.

@@ -85,12 +85,8 @@ export function InsightsPanel({
     <Overlay open={open} onClose={onClose} label={t('insights.title')} variant="side">
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 'var(--s4)' }}>
         <div>
-          <h2 style={{ fontSize: 'var(--fs-20)', fontWeight: 700 }}>{t('insights.title')}</h2>
+          <h2 style={{ fontSize: 'var(--fs-16)', fontWeight: 700 }}>{t('insights.title')}</h2>
           <p className="psub">{contextLabel}</p>
-          {/* Which numbers belong to this page and which do not: the open
-              tasks do, the completed ones are the whole account's, over the
-              seven days named here (#176). */}
-          <p className="psub insights-scope">{t('insights.scopeNote', { page: contextLabel })}</p>
         </div>
         <button className="iconbtn" aria-label={t('common.close')} onClick={onClose}>
           <Icon name="close" />
@@ -101,7 +97,7 @@ export function InsightsPanel({
         <div className="icard late">
           <div className="ihead">
             <div className="ikicker">{t('insights.behindSchedule')}</div>
-            <strong style={{ color: 'var(--accent)', fontSize: 'var(--fs-20)' }}>{late.length}</strong>
+            <strong style={{ color: 'var(--accent)', fontSize: 'var(--fs-16)' }}>{late.length}</strong>
           </div>
           <div className="latelist">
             {late.slice(0, 4).map((item) => (
@@ -122,8 +118,8 @@ export function InsightsPanel({
 
       <div className="icard">
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--s4)' }}>
-          <div className="ring" style={{ '--ring': `${summary.progressPercentage}%`, width: 88, height: 88 } as React.CSSProperties}>
-            <div><strong style={{ fontSize: 'var(--fs-20)' }}>{summary.progressPercentage}%</strong></div>
+          <div className="ring" style={{ '--ring': `${summary.progressPercentage}%`, width: 72, height: 72 } as React.CSSProperties}>
+            <div><strong style={{ fontSize: 'var(--fs-16)' }}>{summary.progressPercentage}%</strong></div>
           </div>
           <div className="ilist">
             <span><strong>{summary.completedCount}</strong> {t('insights.completed')}</span>
@@ -166,7 +162,7 @@ export function InsightsPanel({
         ) : (
           <Bars
             data={weekBars}
-            height={88}
+            height={72}
             emptyLabel={t('insights.noHistory')}
             format={(value) => t('metrics.tasks', { count: value })}
           />

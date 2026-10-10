@@ -54,8 +54,16 @@ export const toApiDateTime = (d: Date): string => format(d, "yyyy-MM-dd'T'HH:mm:
 export interface WeekBounds { start: Date; end: Date }
 
 /** The user's week, honouring the start_day they set in Todoist (1 = Monday). */
+/** Todoist's start_day (1 = Monday … 7 = Sunday) as date-fns's weekStartsOn;
+    anything missing or out of range falls back to Monday. */
+export function weekStartsOnOf(startDay: number | undefined): 0 | 1 | 2 | 3 | 4 | 5 | 6 {
+  return typeof startDay === 'number' && Number.isInteger(startDay) && startDay >= 1 && startDay <= 7
+    ? ((startDay % 7) as 0 | 1 | 2 | 3 | 4 | 5 | 6)
+    : 1;
+}
+
 export function weekBounds(now: Date, startDay: number): WeekBounds {
-  const weekStartsOn = (startDay % 7) as 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  const weekStartsOn = weekStartsOnOf(startDay);
   return {
     start: startOfWeek(now, { weekStartsOn }),
     end: endOfWeek(now, { weekStartsOn }),
@@ -68,6 +76,22 @@ export function daysBetween(from: Date, to: Date): Date[] {
   const span = differenceInCalendarDays(to, from);
   for (let i = 0; i <= span; i += 1) out.push(startOfDay(addDays(from, i)));
   return out;
+}
+
+/**
+ * How long ago something happened, the way Todoist words its notifications:
+ * "10 minutes ago", "2 days ago", then a plain date once it is a week old.
+ */
+export function formatTimeAgo(date: Date, locale: 'en' | 'fr', now = new Date()): string {
+  const seconds = Math.max(0, Math.round((now.getTime() - date.getTime()) / 1000));
+  const intl = locale === 'fr' ? 'fr-FR' : 'en-GB';
+  const relative = new Intl.RelativeTimeFormat(intl, { numeric: 'always' });
+  const upper = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+  if (seconds < 60) return locale === 'fr' ? 'À l’instant' : 'Just now';
+  if (seconds < 3600) return upper(relative.format(-Math.floor(seconds / 60), 'minute'));
+  if (seconds < 86400) return upper(relative.format(-Math.floor(seconds / 3600), 'hour'));
+  if (seconds < 7 * 86400) return upper(relative.format(-Math.floor(seconds / 86400), 'day'));
+  return new Intl.DateTimeFormat(intl, { day: 'numeric', month: 'short' }).format(date);
 }
 
 /** "Today", "Tomorrow", "Mon 14", "14 Sep" depending on how far away it is. */

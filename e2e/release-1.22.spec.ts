@@ -6,7 +6,7 @@ const sectionBox = (page: import('@playwright/test').Page, name: string) =>
 test('a section header shows its count after the title and offers a menu (#185)', async ({ demo: page }) => {
   await go(page, '#/project/site');
   const group = sectionBox(page, 'To do');
-  await expect(group.locator('.gtoggle .gcount')).toHaveText(/^\d+$/);
+  await expect(group.locator('.gtoggle .gcount')).toHaveText(/^\d+ tasks?$/);
   // One menu button replaces the trash button.
   await expect(group.getByRole('button', { name: 'Delete section' })).toHaveCount(0);
 

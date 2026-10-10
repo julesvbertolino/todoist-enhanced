@@ -41,6 +41,8 @@ interface SelectProps {
   unsetLabel?: string;
   /** The chip's own glyph, where the option's marker or icon is not the right one. */
   chipIcon?: ReactNode;
+  /** The list is exactly as wide as the control, however long its options are. */
+  matchWidth?: boolean;
 }
 
 /**
@@ -58,7 +60,7 @@ interface SelectProps {
  */
 export function Select({
   label, value, options, onChange, ariaLabel, placeholder, searchable: searchableProp,
-  variant = 'field', unset = false, unsetLabel, chipIcon,
+  variant = 'field', unset = false, unsetLabel, chipIcon, matchWidth = false,
 }: SelectProps) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
@@ -66,6 +68,7 @@ export function Select({
   const [query, setQuery] = useState('');
   const [position, setPosition] = useState<{ top: number; left: number; width: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const [quiet, setQuiet] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const typed = useRef({ text: '', at: 0 });
@@ -149,6 +152,9 @@ export function Select({
     if (!option) return;
     onChange(option.value);
     setOpen(false);
+    /* Focus comes back to the field for the keyboard, without the ring a
+       pick would otherwise leave on it (#25); the next key shows it again. */
+    setQuiet(true);
     buttonRef.current?.focus();
   }
 
@@ -202,6 +208,7 @@ export function Select({
         top: position?.top ?? -9999,
         left: position?.left ?? -9999,
         minWidth: position?.width,
+        ...(matchWidth ? { width: position?.width, maxWidth: position?.width } : {}),
         visibility: position ? undefined : 'hidden',
       }}
     >
@@ -251,14 +258,15 @@ export function Select({
       <button
         type="button"
         ref={buttonRef}
-        className={`fselect-face${chip ? ' chipface' : ''}${chip && unset ? ' unset' : ''}${open ? ' open' : ''}`}
+        className={`fselect-face${chip ? ' chipface' : ''}${chip && unset ? ' unset' : ''}${open ? ' open' : ''}${quiet ? ' quiet' : ''}`}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={ariaLabel ?? label}
         onClick={() => setOpen((v) => !v)}
-        onKeyDown={onKeyDown}
+        onBlur={() => setQuiet(false)}
+        onKeyDown={(event) => { setQuiet(false); onKeyDown(event); }}
       >
-        {chip && unset ? <Icon name="plus" size="sm" /> : chip && chipIcon ? chipIcon : (
+        {chip && chipIcon ? chipIcon : (
           <>
             {current?.icon && <Icon name={current.icon} size="sm" />}
             {current?.marker !== undefined && (

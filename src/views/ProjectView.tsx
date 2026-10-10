@@ -11,6 +11,8 @@ import type { ProjectSheetTarget } from '@/components/overlays/ProjectSheet';
 import { AddSectionLine } from '@/components/AddSectionLine';
 import { useConfirm } from '@/components/overlays/Confirm';
 import { Icon } from '@/components/Icon';
+import { ProjectIcon, ProjectIconGrid } from '@/components/ProjectIconPicker';
+import { markerStyle } from '@/domain/colors';
 import { TimePanel } from '@/components/TimePanel';
 import { useT } from '@/hooks/useT';
 import { useTimePill } from '@/hooks/useTimePill';
@@ -60,6 +62,17 @@ function ProjectBody({
   projectId, revealSectionId, onOpen, onInsights, onUnestimated, onAddTaskTo, onProjectSheet,
 }: ProjectViewProps) {
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [iconOpen, setIconOpen] = useState(false);
+  useEffect(() => {
+    if (!iconOpen) return;
+    const away = (event: MouseEvent) => {
+      if (!(event.target as HTMLElement).closest('.ptitle-icon')) setIconOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') setIconOpen(false); };
+    document.addEventListener('mousedown', away);
+    document.addEventListener('keydown', escape);
+    return () => { document.removeEventListener('mousedown', away); document.removeEventListener('keydown', escape); };
+  }, [iconOpen]);
   const { t } = useT();
   const timePill = useTimePill();
   const { snapshot, items, childrenOf } = useData();
@@ -252,8 +265,10 @@ function ProjectBody({
           onAddTask: () => onAddTaskTo(
             group.id === 'none' ? { projectId } : { projectId, sectionId: group.id },
           ),
+          onRename: group.id === 'none' ? undefined : (name: string) => void updateSectionFields(group.id, { name }),
         })),
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- updateSectionFields comes from the store and is stable.
     [sectionGroups, looseItems, projectId, t, onAddTaskTo, split.quick, current.mode],
   );
 
@@ -282,13 +297,59 @@ function ProjectBody({
     <div className="page">
       <PageHeader
         title={
-          <EditableTitle
-            value={project.name}
-            label={t('project.rename')}
-            onCommit={(next) => void updateProjectFields(projectId, { name: next })}
-          />
+          <span className="ptitle-row">
+            {/* The project's mark, in front of its name: pressing it opens the
+                same icon choice the project sheet has. */}
+            {project.inbox_project ? (
+              /* The Inbox is not yours to rename, recolour or give an icon. */
+              <span className="ptitle-icon">
+                <span className="ptitle-mark static" aria-hidden="true">
+                  <span className="hash" style={markerStyle(project.color)}><Icon name="inbox" /></span>
+                </span>
+              </span>
+            ) : (
+            <span className="ptitle-icon">
+              <button
+                type="button"
+                className="ptitle-mark"
+                aria-label={t('project.changeIcon')}
+                title={t('project.changeIcon')}
+                aria-expanded={iconOpen}
+                onClick={() => setIconOpen((open) => !open)}
+              >
+                <span className="hash" style={markerStyle(project.color)}>
+                  {readProjectIcon(project.description)
+                    ? <ProjectIcon iconId={readProjectIcon(project.description)!} style={{ color: 'inherit' }} />
+                    : '#'}
+                </span>
+              </button>
+              {iconOpen && (
+                <div className="popover ptitle-icons" role="dialog" aria-label={t('project.icon')}>
+                  <ProjectIconGrid
+                    value={readProjectIcon(project.description)}
+                    onPick={(iconId) => {
+                      void updateProjectFields(projectId, {
+                        description: withProjectIcon(stripProjectIcon(project.description), iconId),
+                      });
+                      setIconOpen(false);
+                    }}
+                  />
+                </div>
+              )}
+            </span>
+            )}
+            {project.inbox_project ? (
+              <h1 className="titlefield static">{project.name}</h1>
+            ) : (
+              <EditableTitle
+                value={project.name}
+                label={t('project.rename')}
+                onCommit={(next) => void updateProjectFields(projectId, { name: next })}
+              />
+            )}
+          </span>
         }
-        subtitle={
+        subtitle={project.inbox_project ? undefined : (
           <EditableDescription
             value={stripProjectIcon(project.description)}
             placeholder={t('project.editDescription')}
@@ -299,7 +360,7 @@ function ProjectBody({
               description: withProjectIcon(next, readProjectIcon(project.description)),
             })}
           />
-        }
+        )}
         actions={
           <>
             <DisplayMenu
@@ -361,7 +422,7 @@ function ProjectBody({
           items={scoped}
           childrenOf={childrenOf}
           mode="board"
-          wide={current.wide}
+          viewKey={viewKey}
           group={current.group}
           sort={current.sort}
           onOpen={onOpen}
@@ -466,7 +527,7 @@ function ProjectBody({
           lead={quickGroup}
           childrenOf={childrenOf}
           mode={current.mode}
-          wide={current.wide}
+          viewKey={viewKey}
           group={current.group}
           sort={current.sort}
           onOpen={onOpen}

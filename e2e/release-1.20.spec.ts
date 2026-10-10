@@ -52,7 +52,7 @@ test('selected tasks receive an estimate together and a background click clears 
   await first.click({ modifiers: ['ControlOrMeta'] });
   await second.click({ modifiers: ['ControlOrMeta'] });
   const toolbar = page.getByRole('toolbar');
-  await toolbar.getByRole('button', { name: 'Estimate', exact: true }).click();
+  await toolbar.getByRole('button', { name: 'Duration', exact: true }).click();
   await page.locator('.bulk-estimate input').fill('1h15');
   await page.getByRole('button', { name: 'Apply to selection' }).click();
   await expect(toolbar).toContainText('2 selected');
@@ -108,7 +108,7 @@ accountTest('initial choice offers conversion, with verified and pending rows sc
     localStorage.setItem('onboarded', JSON.stringify(['account-test']));
     const db = await new Promise<IDBDatabase>((resolve, reject) => { const request = indexedDB.open('todoist-enhancements', 1); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
     const tx = db.transaction('prefs', 'readwrite');
-    tx.objectStore('prefs').put({ locale: 'en', onboarded: true, seenVersion: version, estimateStorage: null }, 'preferences');
+    tx.objectStore('prefs').put({ locale: 'en', onboarded: true, setupDone: true, seenVersion: version, estimateStorage: null }, 'preferences');
     await new Promise<void>((resolve, reject) => { tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error); });
     db.close();
   }, VERSION);
@@ -142,7 +142,7 @@ test('bulk selection creates and attaches a tag to every selected task', async (
   await expect(page.locator('.screen.active [data-task-id][aria-selected="true"]').last()).toContainText('bulk-new-tag');
 });
 
-test('composer creates a tag, and display filters also offer tag creation', async ({ demo: page }) => {
+test('the composer creates a tag; Display only filters by the tags that exist', async ({ demo: page }) => {
   await go(page, '#/inbox');
   await page.keyboard.press('q');
   const composer = page.getByRole('dialog', { name: 'Add task', exact: true });
@@ -154,9 +154,4 @@ test('composer creates a tag, and display filters also offer tag creation', asyn
   await page.keyboard.press('Escape');
   await composer.getByRole('button', { name: 'Add task', exact: true }).click();
   await expect(row(page, 'Tagged sample')).toContainText('composer-new-tag');
-  await page.getByRole('button', { name: 'Display', exact: true }).click();
-  const filters = page.getByRole('dialog', { name: 'Display', exact: true });
-  await filters.getByRole('textbox', { name: 'New tag', exact: true }).fill('filter-new-tag');
-  await filters.getByRole('button', { name: 'Create “filter-new-tag”' }).click();
-  await expect(filters.getByRole('button', { name: 'filter-new-tag', exact: true })).toHaveAttribute('aria-pressed', 'true');
 });

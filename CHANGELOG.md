@@ -13,6 +13,44 @@ things first, then redesigns, then fixes, so write them in the order you
 want within each kind: the most visible, most frequent case first. The
 French translation lives in CHANGELOG.fr.md.
 
+## 2.0.0
+
+A new look, a setup that shapes the sidebar and what a task shows, a Dashboard and a Logbook of their own, and the first steps towards working with others.
+
+🆕 **Choose how the app sits in the window, and what is behind it.** Settings, Appearance, has two layouts (a floating sidebar over a full page, or a floating page over the background) and two backgrounds (neutral, or a gradient taken from your colour). The text of the sidebar stays readable on any colour. Todoist red is now called Todoist, and Cocoa and Graphite join the colours.
+
+🆕 **Arrange the sidebar.** Settings, Sidebar, lets you tick what shows (Dashboard and Logbook are now entries of their own), drag the entries into the order you want, hide the search field and the task counts, and put “My projects” and your workspaces in the order you like. What you hide is still found with ⌘K.
+
+🆕 **Choose what a task shows, and in what order.** In Display, “Show on each task” lists the details under a title (date, deadline, project, tags, estimate). Click one to show or hide it, drag it, or press Alt and an arrow key, to set the order for every list.
+
+🆕 **A setup for everyone, and a tour to follow it.** After the update, and for every new account, five short screens set the look, the sidebar and the task details. The last one offers the tour, which now also points at the Dashboard, the matrix and the notifications.
+
+🆕 **Notifications from Todoist.** The bell opens a window with what Todoist tells you and, beside it, the conflicts of your plan. Mark a notification or all of them as read, and accept or decline an invitation to a shared project. Not yet tried against a second Todoist account.
+
+🆕 **Share a project and assign tasks.** The project menu has Share…, to invite people by e-mail, see who has access and remove someone. In a shared project, a task has an “Assigned to” field. Not yet tried against a second Todoist account.
+
+🆕 **A default view for each project.** The project sheet asks whether it opens as a list or as a board, and tells Todoist too. It can also be filed under a parent project, with the twenty colours Todoist offers.
+
+🆕 **Create a project without leaving the new task.** The project list of the composer ends with New project…, and you come back with it chosen.
+
+🎨 **A calmer look all round.** Rounder corners, soft grey secondary buttons, square check boxes, thin scrollbars that show only when the pointer is on them, a sidebar that slides away, and panels that float in the margin of the page.
+
+🎨 **Open a task as a window or as a side panel.** Settings, Lists, chooses. The priority is four soft pills, and the cross of a tag is centred.
+
+🎨 **Lists, in the order Todoist shows them.** Groups fold from a caret on their left with their count after the title, sub-tasks sit right under their task and fold from their progress pill, and boards keep whole columns across the page.
+
+🎨 **“I have time” is one list.** It follows the order you pick (shortest first, or priority first) and says each task’s due date, instead of grouping by day.
+
+🎨 **The page header says it in one line.** The estimated time turns orange from 95 % of your capacity and red beyond it, and clicking it opens the tasks that have no estimate.
+
+🎨 **Dashboard and Logbook are two pages.** One line of controls picks the span (Day, Week, Month, Quarter, Year or Custom, where the dates appear). The Logbook groups by day, month, project or priority, sorts by completion date or priority, and adds up the time of each group. The arrangement of the Dashboard cards can no longer be edited.
+
+🎨 **Settings in a new order.** Account, General, Appearance, Sidebar, Lists, Features and planning, Conflict detection, About. The support card stays in view, and the week start is read from Todoist with a link to change it there.
+
+🎨 **A new sign-in screen and a wider changelog.** The sign-in shows what the app is for beside the form. The changelog has a version picker, marks each line Feature, Design or Bug fixed, and starts the tour from its foot.
+
+🎨 **Reviews.** The choices on a row are one segmented control filled with your colour, and the steps are joined by a line that fills up to the one you are on.
+
 ## 1.22.0
 
 A menu on every section, durations that follow the subtasks, and My week in the same order as Todoist's Today.

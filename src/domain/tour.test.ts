@@ -27,4 +27,10 @@ describe('the tour (#159)', () => {
     const targets = TOUR_STOPS.map((stop) => stop.target);
     expect(new Set(targets).size).toBe(targets.length);
   });
+
+  it('lights the Dashboard and the Logbook together, and only the duration line', () => {
+    expect(TOUR_STOPS.find((stop) => stop.target === 'dashboard')?.also).toEqual(['logbook']);
+    expect(TOUR_STOPS.map((stop) => stop.target)).toContain('metrics');
+  });
 });
+

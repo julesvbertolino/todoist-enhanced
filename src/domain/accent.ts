@@ -21,9 +21,9 @@
  * until they clear what red already clears. A custom colour cannot be
  * illegible; the worst it can be is not to your taste.
  *
- * The colour you pick IS `--accent`, exactly, whenever white text on it
- * already clears 4.5:1 — which most deliberate choices do. It is darkened only
- * when it does not, and then only as far as it has to be. Everything else in
+ * The colour you pick IS `--accent`, exactly, always. What changes with it is
+ * the ink that sits on it (`--on-accent`): white while white reads, dark when
+ * the colour is too light for white. Everything else in
  * the family is derived: the washes and the ink keep the recipe's lightness,
  * because a wash has to stay a wash whatever it was derived from, and take the
  * picked hue and saturation so a muted choice gives a muted family and a grey
@@ -33,7 +33,7 @@
 export const ACCENT_TOKENS = [
   'accent', 'accent-dark', 'accent-soft', 'accent-tint', 'accent-line',
   'accent-wash', 'accent-wash-deep', 'accent-badge',
-  'sidebar', 'tb-on-line', 'today-line', 'today-wash',
+  'sidebar', 'tb-on-line', 'today-line', 'today-wash', 'on-accent',
 ] as const;
 
 export type AccentToken = (typeof ACCENT_TOKENS)[number];
@@ -54,6 +54,7 @@ const LIGHT: Profile = {
   'tb-on-line': [3.5, 64.9, 85.5],
   'today-line': [6, 58.3, 85.9],
   'today-wash': [0, 66.7, 97.6],
+  'on-accent': [0, 0, 100],
 };
 
 const DARK: Profile = {
@@ -69,6 +70,7 @@ const DARK: Profile = {
   'tb-on-line': [1.5, 31.4, 27.5],
   'today-line': [1.7, 30.4, 27.1],
   'today-wash': [2.7, 13.4, 13.1],
+  'on-accent': [0, 0, 100],
 };
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));
@@ -113,7 +115,7 @@ function luminance(hex: string): number {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-const contrast = (a: string, b: string) => {
+export const contrast = (a: string, b: string) => {
   const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
   return (hi + 0.05) / (lo + 0.05);
 };
@@ -126,6 +128,8 @@ const contrast = (a: string, b: string) => {
  * the default does not meet would be an odd place to draw the line.
  */
 const TEXT_MIN = 4.5;
+/** White ink stays while it reads at least this well on the accent (large, bold text). */
+const INK_MIN = 3;
 const BADGE_MIN = 4.0;
 
 /** Walks lightness until the colour clears `target` against `on`. */
@@ -176,7 +180,17 @@ export function accentFamily(hex: string, scheme: 'light' | 'dark'): Record<Acce
          faintly pink approximation of itself. */
       s = picked.s;
       l = picked.l;
-      l = solve(h, s, l, '#ffffff', TEXT_MIN, -0.5);
+    } else if (token === 'on-accent') {
+      /* The ink on the colour is chosen to suit the colour, rather than the
+         colour being bent to suit the ink: a light green stays the light green
+         that was picked, and carries dark text. */
+      /* The dark ink is the picked hue taken very dark, not a flat near-black:
+         on a salmon or a soft yellow, black looks cut out with scissors, a
+         deep brown or green sits on it. Still far above any legibility floor. */
+      out[token] = contrast('#ffffff', out.accent) >= INK_MIN
+        ? '#ffffff'
+        : hslToHex(hue, Math.min(picked.s, 55), 12);
+      continue;
     } else if (token === 'accent-dark') {
       if (scheme === 'dark') s = Math.min(s, 80);
       const step = scheme === 'light' ? -0.5 : 0.5;
@@ -188,4 +202,48 @@ export function accentFamily(hex: string, scheme: 'light' | 'dark'): Record<Acce
   }
 
   return out;
+}
+
+/** `a` moved `t` (0 to 1) of the way to `b`, both as #rrggbb. */
+function mix(a: string, b: string, t: number): string {
+  const channel = (hex: string, i: number) => parseInt(hex.slice(i, i + 2), 16);
+  const part = (i: number) => Math.round(channel(a, i) + (channel(b, i) - channel(a, i)) * t)
+    .toString(16).padStart(2, '0');
+  return `#${part(1)}${part(3)}${part(5)}`;
+}
+
+/**
+ * The gradient behind the frame when the background is "coloured".
+ *
+ * Drawn from the accent: lighter at the top left, deeper at the bottom right.
+ * The sidebar sits straight on it in white, so the lightest stop is only
+ * lightened as far as white text still clears BACKDROP_MIN. That is lower than
+ * the 4.5 the accent itself is held to: the light end is a corner the
+ * navigation barely reaches, and the default red needs it to read as a
+ * gradient at all. A light accent, already darkened by the family to carry
+ * white, gets a gentler one rather than washing out into a pastel.
+ *
+ * So the frame is deliberately not the exact colour picked, custom or not:
+ * only its middle stop is (or that colour darkened until white reads on it).
+ * Decided with Jules on 2026-10-10 (#8): readability over the exact hex, the
+ * accent itself (`--accent`) stays the exact colour.
+ */
+const BACKDROP_MIN = 3;
+const BACKDROP_LIGHTEN = 0.28;
+
+export function backdropGradient(fill: string): string {
+  if (!/^#[0-9a-f]{6}$/i.test(fill)) return fill;
+  /* A light accent (Sunflower) carries dark ink, so it cannot be the backdrop
+     of a white sidebar as it is: the gradient is built from it taken down to
+     where white reads. */
+  let accent = fill;
+  for (let t = 0.04; t < 0.9 && contrast(accent, '#ffffff') < BACKDROP_MIN + 0.4; t += 0.04) {
+    accent = mix(fill, '#000000', t);
+  }
+  let top = mix(accent, '#ffffff', BACKDROP_LIGHTEN);
+  for (let t = BACKDROP_LIGHTEN; t > 0 && contrast(top, '#ffffff') < BACKDROP_MIN; t -= 0.02) {
+    top = mix(accent, '#ffffff', Math.max(0, t - 0.02));
+  }
+  const bottom = mix(accent, '#000000', 0.16);
+  return `linear-gradient(165deg, ${top} 0%, ${accent} 42%, ${bottom} 100%)`;
 }

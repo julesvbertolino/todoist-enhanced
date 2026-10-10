@@ -9,6 +9,7 @@ import { createTasksMoveSlice } from './tasks-move';
 import { createStructureSlice } from './structure';
 import { createUiSlice } from './ui';
 import { createDustSlice } from './dust';
+import { createCollabSlice } from './collab';
 import * as idb from '@/db/idb';
 import { flushPersist, pendingDeletes } from './helpers';
 
@@ -29,6 +30,7 @@ export const useStore = create<AppState>()((...a) => ({
   ...createStructureSlice(...a),
   ...createUiSlice(...a),
   ...createDustSlice(...a),
+  ...createCollabSlice(...a),
 }));
 
 // Covers hydration, remote settings, account switches and the quick-add entry.

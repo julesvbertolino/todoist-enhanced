@@ -51,13 +51,17 @@ interface TaskGroupProps {
   onDelete?: () => void;
   /** Decision views can reuse rows while explicitly forbidding drag semantics. */
   draggable?: boolean;
+  /** A group that is always open: no caret, and the title is not a button. */
+  collapsible?: boolean;
+  /** Each task on a card of its own, as in a board column. */
+  cards?: boolean;
 }
 
 export function TaskGroup({
   title, items, childrenOf, onOpen, tint, actions,
   showProject = true, showSection = false, defaultCollapsed = false, dropTarget, onAddTask, accent,
   sectionId, projectId, onRename, onDelete, reorderable, viewKey, keepWhenEmpty = false, draggable = true,
-  subtitle, dust = false,
+  subtitle, dust = false, collapsible = true, cards = false,
 }: TaskGroupProps) {
   const { t, locale } = useT();
   const dragging = useStore((s) => s.draggingTaskId !== null);
@@ -107,8 +111,9 @@ export function TaskGroup({
               still collapses it. */}
           {sectionId && <SectionHandle id={sectionId} label={t('section.move')} />}
           {/* The caret sits in the gutter, left of the title, so the titles
-              stay lined up with the tasks under them (#185). */}
-          {sectionId && (
+              stay lined up with the tasks under them (#185) — on every group,
+              a derived one as much as a real section. */}
+          {collapsible && (
             <button
               className="gcaret"
               aria-expanded={!collapsed}
@@ -121,8 +126,9 @@ export function TaskGroup({
           )}
           <button
             className="gtoggle"
-            aria-expanded={!collapsed}
-            onClick={() => setCollapsed((v) => !v)}
+            aria-expanded={collapsible ? !collapsed : undefined}
+            onClick={collapsible ? () => setCollapsed((v) => !v) : undefined}
+            style={collapsible ? undefined : { cursor: 'default' }}
           >
             {onRename && sectionId ? (
               <SectionName
@@ -136,9 +142,11 @@ export function TaskGroup({
               <span className="gname">{title}</span>
             )}
             {subtitle && <span className="gsub">{subtitle}</span>}
-            {/* On a real section the round count follows the title (#185). */}
-            {sectionId && <span className="gcount">{items.length}</span>}
-            {totalMinutes > 0 && <span className="gtime">{formatDuration(totalMinutes, locale)}</span>}
+            {/* The round count follows the title, then the time (#185). */}
+            <span className="gstats">
+              <span className="gcount">{t('metrics.tasks', { count: items.length })}</span>
+              {totalMinutes > 0 && <span className="gtime">{formatDuration(totalMinutes, locale)}</span>}
+            </span>
           </button>
           {actions && <span className="gactions">{actions}</span>}
           {sectionId ? (
@@ -172,20 +180,7 @@ export function TaskGroup({
                 )}
               </>
             )
-          ) : (
-            <>
-              <span className="gcount">{items.length}</span>
-              {/* The disclosure caret ends the row, as it does in the sidebar. */}
-              <button
-                className="gdisclose"
-                aria-expanded={!collapsed}
-                aria-label={title}
-                onClick={() => setCollapsed((v) => !v)}
-              >
-                <Icon name={collapsed ? 'caret' : 'caret-up'} size="sm" />
-              </button>
-            </>
-          )}
+          ) : null}
         </div>
 
         </div>
@@ -202,6 +197,18 @@ export function TaskGroup({
             showSection={showSection}
             dust={dust}
           />
+        ) : cards ? (
+          <div className="taskwrap" key={item.id}>
+            <TaskRow
+              item={item}
+              childrenOf={childrenOf}
+              onOpen={onOpen}
+              showProject={showProject}
+              showSection={showSection}
+              dust={dust}
+              nestable={false}
+            />
+          </div>
         ) : (
           <TaskRow
             key={item.id}
@@ -240,7 +247,7 @@ export function TaskGroup({
      is in it, and what the list itself means for a task arriving from
      somewhere else. */
   const list = reorderable
-    ? { order: reorderable, ids: items.map((item) => item.id), target: dropTarget, viewKey }
+    ? { order: reorderable, ids: items.map((item) => item.id), target: dropTarget, viewKey, closed: mark === 'quick' }
     : null;
   const wrapped = (isOver: boolean) => (
     <RowListContext.Provider value={list}>{body(isOver)}</RowListContext.Provider>
@@ -303,39 +310,87 @@ function SectionDropSlots({ id }: { id: string }) {
  * that stretches pushes the duration and the count halfway across the page for
  * no reason.
  */
-function SectionName({
-  id, value, placeholder, label, onRename,
+export function SectionName({
+  id, value, placeholder, label, onRename, wrap = false,
 }: {
   id: string;
   value: string;
   placeholder: string;
   label: string;
   onRename: (name: string) => void;
+  /** A board column: the name is read on up to two lines, and is a field only while edited (#21). */
+  wrap?: boolean;
 }) {
   const [draft, setDraft] = useState(value);
+  const [editing, setEditing] = useState(false);
   useEffect(() => { setDraft(value); }, [value]);
+
+  if (wrap && !editing) {
+    return (
+      <span
+        className="gname gnamewrap"
+        data-section-name={id}
+        role="button"
+        tabIndex={0}
+        aria-label={label}
+        title={value || placeholder}
+        onClick={(e) => { e.stopPropagation(); setEditing(true); }}
+        onFocus={() => setEditing(true)}
+      >
+        {value || placeholder}
+      </span>
+    );
+  }
+
+  /* Full width of the column, height from the text: sizing the width to the
+     text as well made a long word break at a narrower width than the column. */
+  const fit = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  };
+  const common = {
+    autoFocus: wrap,
+    className: 'gname gnamefield',
+    'data-section-name': id,
+    value: draft,
+    placeholder,
+    'aria-label': label,
+    onClick: (e: React.MouseEvent) => e.stopPropagation(),
+    /* An emptied name is put back rather than sent: Todoist refuses a
+       section with no name. */
+    onBlur: () => {
+      setEditing(false);
+      if (!draft.trim()) setDraft(value);
+      else if (draft.trim() !== value) onRename(draft.trim());
+    },
+    onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => {
+      e.stopPropagation();
+      if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); }
+      if (e.key === 'Escape') { setDraft(value); e.currentTarget.blur(); }
+    },
+  };
+
+  /* A column's name is typed in a box that grows with its text and wraps, so
+     the whole name stays in view while it is written (#21). */
+  if (wrap) {
+    return (
+      <textarea
+        {...common}
+        ref={fit}
+        rows={1}
+        className="gname gnamefield gnamearea"
+        onFocus={(e) => e.currentTarget.select()}
+        onChange={(e) => setDraft(e.target.value.replace(/\n/g, ' '))}
+      />
+    );
+  }
 
   return (
     <input
-      className="gname gnamefield"
-      data-section-name={id}
-      value={draft}
-      placeholder={placeholder}
-      aria-label={label}
+      {...common}
       size={Math.max(placeholder.length, draft.length + 1)}
       onChange={(e) => setDraft(e.target.value)}
-      onClick={(e) => e.stopPropagation()}
-      /* An emptied name is put back rather than sent: Todoist refuses a
-         section with no name. */
-      onBlur={() => {
-        if (!draft.trim()) setDraft(value);
-        else if (draft.trim() !== value) onRename(draft.trim());
-      }}
-      onKeyDown={(e) => {
-        e.stopPropagation();
-        if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); }
-        if (e.key === 'Escape') { setDraft(value); e.currentTarget.blur(); }
-      }}
     />
   );
 }

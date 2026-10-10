@@ -20,6 +20,11 @@
   /* The only place in the app that carries the brand at full strength. */
   background:linear-gradient(180deg,var(--accent) 0%,#770800 100%);
 }
+.gettingready p{margin:0;color:#fff;font-size:var(--fs-16,16px);font-weight:600;text-align:center}
+.readybar{width:min(220px,60vw);height:5px;border-radius:999px;background:rgba(255,255,255,.28);overflow:hidden}
+.readybar span{display:block;height:100%;width:40%;border-radius:inherit;background:#fff;animation:readyslide 1.2s cubic-bezier(.4,0,.2,1) infinite}
+@keyframes readyslide{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+@media (prefers-reduced-motion:reduce){.readybar span{animation:none;width:100%;opacity:.7}}
 .connect-card{
   box-sizing:border-box;width:100%;max-width:531px;
   background:var(--surface);border-radius:60px;
@@ -176,14 +181,6 @@
   font-size:var(--fs-13);
 }
 
-/* Issues badge in the sidebar */
-.issuesbtn{position:relative}
-.issuesbtn .badge{
-  position:absolute;top:2px;right:2px;min-width:16px;height:16px;padding:0 4px;
-  display:grid;place-items:center;border-radius:var(--r-full);
-  background:var(--accent);color:#fff;font-size:9px;font-weight:700;
-}
-
 /* Focus mode */
 .focusstage{max-width:640px;margin:var(--s5) auto 0}
 .focuscard{
@@ -290,9 +287,14 @@
 
 /* ---------- Filling in missing estimates ---------- */
 .estlist{display:grid}
+/* The window that asks for them is a little wider than a dialog, and airier:
+   a column of fields wants room to be walked down (v2). */
+.sheet-sm:has(.estlist){width:min(620px,calc(100vw - 32px))}
+.unest-head h2{margin-bottom:2px}
+.unest-head .psub{margin:0;max-width:44ch}
 .estrow{
   display:grid;grid-template-columns:18px minmax(0,1fr) auto;
-  gap:12px;align-items:center;padding:10px 0;
+  gap:14px;align-items:center;padding:14px 0;
   border-bottom:1px solid var(--border);
 }
 .estrow:last-child{border-bottom:0}
@@ -316,6 +318,9 @@
   color:var(--faint);font-size:var(--fs-12);
 }
 .estfoot-tally b{color:var(--text);font-size:var(--fs-13);font-weight:700}
+.estfoot-hint{flex-basis:100%;color:var(--faint)}
+.estfoot-tally{flex-wrap:wrap}
+.estrow .estinput{height:38px;width:96px;font-size:var(--fs-14)}
 
 /* The unestimated count in a page header is a way in, so it looks like one. */
 .metric-link{
@@ -408,22 +413,6 @@
 .side-sheet .sheet-body{padding-top:var(--s4)}
 
 /* ---------- The new-project sheet ---------- */
-/* The marker the sidebar will show, so the colour choice has a subject. */
-.projectpreview{
-  display:flex;align-items:center;gap:10px;
-  padding:var(--s3) var(--s4);margin-bottom:var(--s5);
-  border-radius:12px;background:var(--subtle);
-  font-size:var(--fs-14);font-weight:600;color:var(--text);
-}
-.projectpreview .hash{width:22px;height:22px;flex:0 0 auto}
-.projectpreview-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.projectpreview-star{flex:0 0 auto;color:var(--p2);fill:currentColor}
-/* Where it will live, said at the end of the line rather than left to memory. */
-.projectpreview-where{
-  margin-left:auto;flex:0 0 auto;padding-left:var(--s3);
-  color:var(--faint);font-size:var(--fs-12);font-weight:600;
-}
-
 /* The project icon picker (see domain/projectIcons.ts): a field like the
    colour swatches beside it, not a popover — everything already on the page.
    `appearance:none` and an explicit zero padding matter here specifically: a
@@ -458,22 +447,83 @@
 
 /* One field under the next, each labelled, none of them guessing at a width. */
 .projectform{display:grid;gap:var(--s4)}
-.projectform .projectpreview + .formfield{margin-top:2px}
-
-/* The star is a state, so it is a thing you press that stays pressed, not a
-   checkbox in a row of text. Creating a project offers it as readily as
-   editing one does; there was never a reason for the two to differ. */
-.favtoggle{
-  justify-self:start;display:inline-flex;align-items:center;gap:8px;
-  min-height:34px;padding:0 12px 0 10px;
-  border:1px solid var(--border);border-radius:var(--r-full);
-  color:var(--muted);font-size:var(--fs-13);font-weight:600;
+/* The project card is the form: the icon, the name and the description are
+   typed into where they will be read, and the star sits at the end of it. */
+.pcx{
+  display:flex;align-items:flex-start;gap:14px;padding:16px;
+  border:1px solid var(--border-strong);border-radius:var(--r-lg);background:var(--surface);
 }
-.favtoggle:hover{border-color:var(--border-strong);color:var(--text)}
-.favtoggle .ic{color:var(--faint)}
-.favtoggle.on{border-color:var(--p2);background:rgba(181,101,0,.08);color:var(--p2)}
-.favtoggle.on .ic{color:var(--p2);fill:currentColor}
-.projectform .projectpreview{margin-bottom:0}
+.pcx-icon{
+  position:relative;flex:none;width:52px;height:52px;display:grid;place-items:center;
+  border-radius:var(--r-lg);font-size:22px;font-weight:700;
+  background:color-mix(in srgb,var(--c) 14%,var(--surface));color:var(--c);
+  transition:transform .15s;
+}
+.pcx-icon .hash{width:auto;height:auto;display:grid;place-items:center;transition:transform .3s cubic-bezier(.2,1.4,.4,1)}
+.pcx-icon .ic{width:24px;height:24px}
+.pcx-icon:hover{transform:scale(1.05)}
+.pcx-icon.open,.pcx-icon:focus-visible{box-shadow:0 0 0 2px var(--c)}
+.pcx-icon.open .hash{transform:scale(1.08)}
+/* A small pencil in the corner says the icon can be changed; it leans in when
+   the pointer is on it and while the icon grid below is open. */
+.pcx-icon::after{
+  content:"";position:absolute;right:-3px;bottom:-3px;width:16px;height:16px;border-radius:50%;
+  background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z'/%3E%3C/svg%3E") center/10px no-repeat;
+  box-shadow:0 0 0 1px var(--border-strong);
+  transition:transform .25s cubic-bezier(.2,1.4,.4,1);
+}
+.pcx-icon:hover::after,.pcx-icon.open::after{transform:scale(1.25) rotate(-8deg)}
+.pcx-main{flex:1;min-width:0;display:grid;gap:2px}
+.pcx-name,.pcx-desc{
+  width:calc(100% + 12px);margin:0 -6px;padding:3px 6px;border:0;border-radius:var(--r-sm);
+  background:transparent;color:var(--text);font:inherit;resize:none;overflow:hidden;
+}
+.pcx-name:hover,.pcx-desc:hover,.pcx-name:focus,.pcx-desc:focus{background:var(--hover);outline:0}
+.pcx-name{font-size:var(--fs-20);font-weight:700;letter-spacing:-.01em}
+.pcx-desc{font-size:var(--fs-14);color:var(--muted);line-height:1.45}
+.pcx-name::placeholder,.pcx-desc::placeholder{color:var(--faint)}
+.pcx .starbtn{margin-top:9px}
+.starbtn{
+  width:34px;height:34px;flex:none;display:grid;place-items:center;
+  border-radius:var(--r-md);color:var(--faint);
+}
+.starbtn:hover{background:var(--hover);color:var(--text)}
+.starbtn.on{color:var(--p2)}
+.starbtn.on .ic{fill:currentColor}
+
+/* The icon grid unfolds under the card: height and opacity, not a jump. */
+.iconfold{
+  display:grid;grid-template-rows:0fr;opacity:0;
+  transition:grid-template-rows .38s cubic-bezier(.2,.8,.2,1),opacity .28s ease;
+}
+.iconfold.open{grid-template-rows:1fr;opacity:1}
+.iconfold-in{
+  overflow:hidden;min-height:0;transform:translateY(-8px);
+  transition:transform .38s cubic-bezier(.2,.8,.2,1);
+}
+.iconfold.open .iconfold-in{transform:none}
+.iconfold:not(.open) .iconfold-in{visibility:hidden;transition:transform .38s cubic-bezier(.2,.8,.2,1),visibility 0s .38s}
+@media (prefers-reduced-motion:reduce){
+  .iconfold,.iconfold-in,.pcx-icon,.pcx-icon .hash,.pcx-icon::after{transition:none}
+}
+
+/* What the card does not say — where it is filed, and in which workspace — as
+   a short list of settings rather than more fields. */
+.pjrows{display:grid;gap:2px}
+.pjrow{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:8px 0;border-bottom:1px solid var(--border);
+}
+.pjrow > span:first-child{font-size:var(--fs-14);color:var(--muted)}
+.pjrow .fselect{min-width:190px}
+.pjvalue{font-size:var(--fs-14);color:var(--text)}
+.fieldlabel .cname{margin-left:6px;color:var(--faint);font-weight:500}
+/* Twenty colours do not fit a line of this sheet: two rows of ten, rather
+   than scrolling sideways, where the last two would be out of sight. */
+.projectform .swatches{
+  display:grid;grid-template-columns:repeat(10,26px);justify-content:space-between;
+  gap:10px 6px;overflow:visible;padding:4px 2px;margin:-4px -2px;
+}
 .formfield{display:grid;gap:8px}
 .fieldlabel{
   display:block;color:var(--muted);font-size:var(--fs-12);font-weight:600;
@@ -600,23 +650,6 @@
 .reviewrow.settling .ttitle{color:var(--faint)}
 @media (prefers-reduced-motion: reduce){
   .reviewrow.settling{transition:none}
-}
-
-/* Loud enough to be read at rest, quiet enough not to compete with Add task:
-   the same wash the Behind schedule section uses, with no filled background
-   and no border of its own. */
-.issuesline{
-  display:flex;align-items:center;gap:8px;width:100%;
-  margin-top:6px;padding:7px 10px;border-radius:var(--r-sm);
-  background:var(--accent-wash);color:var(--accent-dark);
-  font-size:var(--fs-13);font-weight:600;text-align:left;
-}
-.issuesline:hover{background:var(--accent-tint)}
-.issuesline .ic{flex:0 0 auto;color:var(--accent)}
-.issuesline .count{
-  margin-left:auto;padding:1px 7px;border-radius:var(--r-full);
-  background:var(--accent-badge);color:var(--accent-dark);
-  font-size:var(--fs-11);font-weight:700;font-variant-numeric:tabular-nums;
 }
 
 /* A sidebar project being aimed at another one, to sit inside it. The two
@@ -1335,7 +1368,7 @@
 
 .composerbox .composer-actions{
   display:flex;align-items:center;justify-content:flex-end;gap:var(--s2);
-  width:100%;margin:0;padding:var(--s3) var(--s4);border-top:1px solid var(--border);
+  width:100%;margin:0;padding:var(--s3) var(--s4);border-top:0;
 }
 .composer-hint{
   margin-right:auto;display:inline-flex;align-items:center;gap:4px;

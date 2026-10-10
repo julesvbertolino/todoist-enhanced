@@ -110,6 +110,8 @@ export function ReviewView({ onOpen }: ReviewViewProps) {
    * made rather than states the data happened to be in.
    */
   const [chosen, setChosen] = useState<Record<string, ReviewAction>>({});
+  /** The rows ticked off here that have not gone yet. */
+  const [settlingIds, setSettlingIds] = useState<Set<string>>(new Set());
 
   /* The weekly pass reports what was finished, which is history and is read
      on demand. The daily pass never asks, so it never fetches. */
@@ -410,22 +412,26 @@ export function ReviewView({ onOpen }: ReviewViewProps) {
     return (
       <div className="reviewlist">
         {rows.map((item) => (
-          <Row key={item.id} item={item} step={step} />
+          renderRow(item, step)
         ))}
       </div>
     );
   }
 
   /** One decision, one row. */
-  function Row({ item, step: s }: { item: Item; step: ReviewStep }) {
+  /* Drawn by a plain function, not a component declared inside this one: a
+     component made fresh on every render is a different component each time,
+     and every row was thrown away and rebuilt on each change, taking the
+     sliding thumb of its choices with it. */
+  function renderRow(item: Item, s: ReviewStep) {
     const project = snapshot.projects[item.project_id];
     /* Ticked here, not yet gone: the same pause `TaskRow` takes, for the same
        reason — a row that vanishes under the pointer leaves you asking which
        one you just hit. */
-    const [settling, setSettling] = useState(false);
+    const settling = settlingIds.has(item.id);
     const complete = () => {
       if (settling) return;
-      setSettling(true);
+      setSettlingIds((prev) => new Set(prev).add(item.id));
       window.setTimeout(() => {
         forget(item.id);
         void toggleTask(item.id);
@@ -447,7 +453,7 @@ export function ReviewView({ onOpen }: ReviewViewProps) {
          honest answer to "this is late" is often "I did it on Friday and
          forgot to tick it", and that answer has to look the same in a review
          as it does in a list. */
-      <div className={`reviewrow${settling ? ' done settling' : ''}`}>
+      <div key={item.id} className={`reviewrow${settling ? ' done settling' : ''}`}>
         {/* Sometimes the answer is that it is already done. */}
         {isUncompletable(item) ? (
           <span
@@ -576,7 +582,7 @@ export function ReviewView({ onOpen }: ReviewViewProps) {
           <Settled />
         ) : (
           <div className="reviewlist scrolls">
-            {rows.map((item) => <Row key={item.id} item={item} step={s} />)}
+            {rows.map((item) => renderRow(item, s))}
           </div>
         )}
       </>

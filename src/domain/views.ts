@@ -10,7 +10,7 @@ export const hasLabel = (item: Item, label: string): boolean =>
 export const QUICK_THRESHOLD_MINUTES = 5;
 
 /**
- * Quick holds tasks that take under five minutes.
+ * Quick holds tasks that take five minutes or less.
  *
  * The estimate is the fact and the `quick` tag is a claim: a task tagged quick
  * but estimated at forty minutes is not quick, so it stays out of the group
@@ -21,7 +21,7 @@ export function isQuick(item: Item): boolean {
   const est = estimateOf(item);
   if (est !== null && est > QUICK_THRESHOLD_MINUTES) return false;
   if (hasLabel(item, SYSTEM_LABELS.quick)) return true;
-  return est !== null && est < QUICK_THRESHOLD_MINUTES;
+  return est !== null && est <= QUICK_THRESHOLD_MINUTES;
 }
 
 /**

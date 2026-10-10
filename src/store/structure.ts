@@ -147,18 +147,53 @@ export const createStructureSlice: Slice<StructureSlice> = (_set, get) => ({
       ),
     );
   },
+  async moveProjectToWorkspace(id, workspaceId) {
+    const project = get().snapshot.projects[id];
+    if (!project || (project.workspace_id ?? null) === workspaceId) return;
+    const before = project.workspace_id ?? null;
+    /* A project that changes space leaves its parent behind: the branch it was in does not exist there. */
+    const patch = (to: string | null) => (snapshot: Snapshot): Snapshot => {
+      const own = snapshot.projects[id];
+      if (!own) return snapshot;
+      return {
+        ...snapshot,
+        projects: { ...snapshot.projects, [id]: { ...own, workspace_id: to, parent_id: null } },
+      };
+    };
+    const move = (to: string | null) => command(
+      to ? 'project_move_to_workspace' : 'project_move_to_personal',
+      to ? { project_id: id, workspace_id: to } : { project_id: id },
+    );
+    await get().apply([move(workspaceId)], patch(workspaceId));
+    get().toast(
+      translate(get().prefs.locale, 'project.movedToSpace', {
+        name: project.name,
+        space: workspaceId
+          ? get().snapshot.workspaces[workspaceId]?.name ?? ''
+          : translate(get().prefs.locale, 'nav.myProjects'),
+      }),
+      () => void get().apply([move(before)], patch(before)),
+    );
+  },
   async createProject(name, color, workspaceId = null, anchor = null, extra = {}) {
     const tempId = newUuid();
     const snapshot = get().snapshot;
-    const sibling = anchor ? snapshot.projects[anchor.siblingId] : undefined;
+    const neighbour = anchor ? snapshot.projects[anchor.siblingId] : undefined;
+    /* A parent chosen in the sheet that is not the neighbour's own wins, and
+       the position goes with it: "next to" something in another branch means
+       nothing. */
+    const sibling = neighbour && (extra.parentId === undefined || (neighbour.parent_id ?? null) === extra.parentId)
+      ? neighbour : undefined;
 
     /* Todoist reads the absence of workspace_id as the personal space, so the
        key is left off entirely rather than sent as null. */
     const args: Record<string, unknown> = { name, color };
     if (workspaceId) args.workspace_id = workspaceId;
     if (sibling?.parent_id) args.parent_id = sibling.parent_id;
+    if (extra.parentId) args.parent_id = extra.parentId;
     if (extra.description) args.description = extra.description;
     if (extra.favourite) args.is_favorite = true;
+    if (extra.viewStyle) args.view_style = extra.viewStyle;
 
     const commands: Command[] = [];
 
@@ -213,12 +248,13 @@ export const createStructureSlice: Slice<StructureSlice> = (_set, get) => ({
         ...current.projects,
         [tempId]: {
           id: tempId, name, color,
-          parent_id: (sibling?.parent_id ?? null),
+          parent_id: extra.parentId ?? sibling?.parent_id ?? null,
           child_order: childOrder,
           order_key: orderKey,
           description: extra.description ?? '',
           is_archived: false, is_deleted: false,
           is_favorite: extra.favourite ?? false,
+          ...(extra.viewStyle ? { view_style: extra.viewStyle } : {}),
           workspace_id: sibling ? (sibling.workspace_id ?? null) : workspaceId,
         },
       },

@@ -12,7 +12,7 @@ import { useData } from '@/hooks/useData';
 import { useStore } from '@/store/store';
 import { useConfirm } from '@/components/overlays/Confirm';
 import { viewPrefs } from '@/store/prefs';
-import { applyFilters, rootItems, sortItems } from '@/store/selectors';
+import { applyFilters, datedRoots, sortItems } from '@/store/selectors';
 import { anytimeItems, bucketOf, groupWeek, weekItems } from '@/domain/views';
 import { summariseLoad, weeklyCapacity } from '@/domain/load';
 import { toApiDate } from '@/domain/dates';
@@ -80,7 +80,7 @@ function WeekBody({
   const current = viewPrefs(prefs, viewKey);
 
   const scoped = useMemo(() => {
-    const roots = rootItems(items);
+    const roots = datedRoots(items, snapshot);
     const now = new Date();
     const inScope =
       scope === 'today'
@@ -157,7 +157,7 @@ function WeekBody({
      today are neither, so an empty one is just noise. */
   const weekColumns = useMemo(() => {
     const today = [
-      { id: 'overdue', title: t('group.overdue'), items: groups.overdue },
+      { id: 'overdue', title: t('group.overdue'), items: groups.overdue, accent: 'late' as const },
       ...(prefs.showQuickGroup
         /* Blue, and a place to look rather than somewhere to drop: a card is
            not made quick by being dragged here. */
@@ -177,7 +177,13 @@ function WeekBody({
       .filter((column) => column.items.length > 0 || column.dropTarget)
       .map((column) => ({
         ...column, items: sortItems(column.items, current.sort, childrenOf, 'day', snapshot, true),
+        /* Each column a task can be added to has the line to do it, empty or full. */
+        onAddTask: column.id === 'quick' ? () => onAddTaskTo(placementFor({ kind: 'quick' }))
+          : column.id === 'untimed' || column.id === 'timed' ? () => onAddTaskTo(placementFor({ kind: 'today' }))
+            : column.id === 'anytime' ? () => onAddTaskTo(placementFor({ kind: 'anytime' }))
+              : undefined,
       }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- placementFor and onAddTaskTo are stable for a page.
   }, [groups, prefs.showQuickGroup, current.sort, childrenOf, snapshot, t, scope]);
 
   return (
@@ -244,7 +250,6 @@ function WeekBody({
               reorderable={byHand}
               viewKey={viewKey}
               accent="quick"
-              dropTarget={{ kind: 'quick' }}
               onAddTask={() => onAddTaskTo(placementFor({ kind: 'quick' }))}
             />
           )}
@@ -290,15 +295,28 @@ function WeekBody({
           items={scoped}
           childrenOf={childrenOf}
           mode={current.mode}
-          wide={current.wide}
           group={current.group}
           sort={current.sort}
           order="day"
+          viewKey={viewKey}
           onOpen={onOpen}
           /* Only when nothing else was asked for: a board grouped by project
              is a board of projects, not of the week's buckets. */
           boardColumns={
-            current.mode === 'board' && current.group === 'none' ? weekColumns : undefined
+            current.mode === 'board' && current.group === 'none'
+              ? weekColumns.map((column) => column.id !== 'overdue' || column.items.length === 0 ? column : {
+                ...column,
+                action: (
+                  <button
+                    className="btn sm linklike"
+                    onClick={() => void rescheduleOverdue()}
+                    title={t('group.rescheduleAllHint')}
+                  >
+                    {t('group.rescheduleAll')}
+                  </button>
+                ),
+              })
+              : undefined
           }
           addToGroup={(key) => {
             const place = addToGroupFor(current.group, key);

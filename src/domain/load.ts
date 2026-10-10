@@ -66,7 +66,7 @@ export function summariseLoad(
 
 /**
  * How full the capacity is, as the header's duration shows it (#173): neutral
- * under 90%, amber from 90 to 99, red from 100 up, and neutral wherever the
+ * under 95%, amber from 95 up to a full day, red beyond it, and neutral wherever the
  * page has no capacity to measure against. The percentage is the one the
  * tooltip reads out, so what is said and what is shown never disagree.
  */
@@ -74,7 +74,7 @@ export type LoadTone = 'neutral' | 'warn' | 'over';
 
 export function loadTone(percentage: number | null): LoadTone {
   if (percentage === null) return 'neutral';
-  if (percentage >= 100) return 'over';
-  if (percentage >= 90) return 'warn';
+  if (percentage > 100) return 'over';
+  if (percentage >= 95) return 'warn';
   return 'neutral';
 }

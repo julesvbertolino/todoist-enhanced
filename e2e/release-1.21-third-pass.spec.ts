@@ -51,24 +51,13 @@ test('selected clipboard link ends before subsequent typing and undo restores se
   await page.keyboard.type(' normal'); await expect(body.locator('.md-link')).toHaveText('word'); await expect(body).toHaveText('word word normal');
   await page.keyboard.press('ControlOrMeta+z'); await page.keyboard.press('ControlOrMeta+z'); await expect(body.locator('.md-link')).toHaveCount(0);
 });
-test('four independent metadata choices, plain default and compact duration at right edge',async({demo:page})=>{
-  await go(page,'#/settings'); const choices=page.locator('.chipschoice'); await expect(choices.getByRole('radio')).toHaveCount(4); await expect(choices.getByRole('radio',{name:'Todoist inspired'})).toHaveAttribute('aria-checked','true');
+test('three independent metadata choices, plain default',async({demo:page})=>{
+  await go(page,'#/settings'); const choices=page.locator('.chipschoice'); await expect(choices.getByRole('radio')).toHaveCount(3); await expect(choices.getByRole('radio',{name:'Todoist inspired'})).toHaveAttribute('aria-checked','true');
   if(process.env.REVIEW_SCREENSHOTS)await page.screenshot({path:`${process.env.REVIEW_SCREENSHOTS}/quatre-styles.png`});
-  await choices.getByRole('radio',{name:'Minimalist'}).click(); await go(page,'#/week'); const task=row(page,'Choose the site typeface'); const summary=task.locator('.minimal-date'); await expect(summary).toHaveText(/3min · Today/);
-  const a=(await task.boundingBox())!, b=(await summary.boundingBox())!; expect(Math.abs(a.x+a.width-b.x-b.width)).toBeLessThan(18);
-  await task.hover();await expect(summary).toBeVisible();
-  const aligned=await task.evaluate(n=>{
-    const centre=(sel:string)=>{const b=n.querySelector(sel)!.getBoundingClientRect();return b.y+b.height/2;};
-    return [centre('.ttitle'),centre('.check'),centre('.minimal-date')];
-  });
-  for(const y of aligned)expect(Math.abs(y-aligned[0])).toBeLessThan(2);
-  for(const name of ['Task','Set an estimate','Schedule','Move to project','More actions'])await expect(task.getByRole('button',{name,exact:true})).toBeVisible();
-  const dateAfter=(await summary.boundingBox())!;expect(dateAfter.x).toBeCloseTo(b.x,0);
-  if(process.env.REVIEW_SCREENSHOTS)await page.screenshot({path:`${process.env.REVIEW_SCREENSHOTS}/minimalist-alignment.png`});
   await expect(page.getByRole('button',{name:'Notepad',exact:true})).toHaveCount(0);
 });
 test('layout controls add no card height and chart contents align on the same row',async({demo:page})=>{
-  await go(page,'#/insights'); await page.getByRole('button',{name:'This year',exact:true}).click();
+  await go(page,'#/insights'); await page.getByRole('button',{name:'Year',exact:true}).click();
   const sizes=await page.locator('.dashboard-bento .card').evaluateAll(cards=>cards.map(c=>({id:(c as HTMLElement).dataset.card,height:c.getBoundingClientRect().height})));
   await page.getByRole('button',{name:'Edit layout'}).click();
   for(const size of sizes){const b=(await page.locator(`[data-card="${size.id}"]`).boundingBox())!;expect(b.height, size.id).toBeCloseTo(size.height,0);}
@@ -98,7 +87,7 @@ test('link cancellation returns to the editor, shortcut stays inside it and Esca
 for(const width of [1280,390])test(`header keeps the published title size at either density at ${width}px`,async({demo:page})=>{
   await page.setViewportSize({width,height:844});await go(page,'#/settings');
   for(const density of ['Comfortable','Compact']){
-    await page.getByRole('radio',{name:density,exact:true}).click();await go(page,'#/week');await expect(page.locator('.screen.active .ptitle')).toHaveCSS('font-size',width>720?'26px':'22px');await go(page,'#/settings');
+    await page.getByRole('radio',{name:density,exact:true}).click();await go(page,'#/week');await expect(page.locator('.screen.active .ptitle')).toHaveCSS('font-size',width>720?'27px':'22px');await go(page,'#/settings');
   }
 });
 
@@ -120,7 +109,7 @@ test('metadata preview type remains the same size across styles',async({demo:pag
   await go(page,'#/settings');
   const font=()=>page.locator('.preview-task .meta > *').evaluateAll(nodes=>nodes.map(n=>getComputedStyle(n).fontSize));
   const before=await font();expect(before.length).toBeGreaterThan(0);
-  for(const name of ['Neutral','Inherited colours','Minimalist','Todoist inspired']){
+  for(const name of ['Neutral','Inherited colours','Todoist inspired']){
     await page.locator('.chipschoice').getByRole('radio',{name,exact:true}).click();expect(await font()).toEqual(before);
   }
 });
@@ -134,7 +123,7 @@ test('Enter replacing formatted words stays invisible and saves cleanly',async({
 });
 
 for(const theme of ['Light','Dark'])test(`neutral recurrence badge is grey in ${theme}`,async({demo:page})=>{
-  await go(page,'#/settings');await page.getByRole('radio',{name:theme,exact:true}).click();await page.getByRole('radio',{name:'Neutral',exact:true}).click();await go(page,'#/week');
+  await go(page,'#/settings');await page.getByRole('radio',{name:theme,exact:true}).click();await page.getByRole('radiogroup',{name:'Task metadata'}).getByRole('radio',{name:'Neutral',exact:true}).click();await go(page,'#/week');
   const badge=row(page,'Take out the recycling').locator('.repeatdot');
   const colours=await badge.evaluate(n=>({actual:getComputedStyle(n).color,muted:getComputedStyle(n.parentElement!.querySelector('.est')!).color}));
   await expect(badge).toHaveCSS('color',colours.muted);

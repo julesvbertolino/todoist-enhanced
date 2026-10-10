@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Select } from './Select';
+import { Select, type SelectOption } from './Select';
 import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
 import { byChildOrder, bySectionOrder } from '@/domain/orderKey';
@@ -20,7 +20,13 @@ interface PlacementFieldProps {
   onChange: (placement: Placement) => void;
   /** A field, or a chip in the composer's planning line (#113). */
   variant?: 'field' | 'chip';
+  /** When given, the list ends with "New project…", which hands over to the caller. */
+  onNewProject?: () => void;
+  /** The list is as wide as the field, however long a project's name is. */
+  matchWidth?: boolean;
 }
+
+const NEW_PROJECT = 'action:new-project';
 
 /**
  * The one field that says where a task lives.
@@ -31,7 +37,7 @@ interface PlacementFieldProps {
  * appear, and choosing again. So the sections are listed under their project,
  * indented, and picking one says both things at once.
  */
-export function PlacementField({ label, ariaLabel, value, onChange, variant }: PlacementFieldProps) {
+export function PlacementField({ label, ariaLabel, value, onChange, variant, onNewProject, matchWidth }: PlacementFieldProps) {
   const { t } = useT();
   const projects = useStore((s) => s.snapshot.projects);
   const sections = useStore((s) => s.snapshot.sections);
@@ -42,7 +48,7 @@ export function PlacementField({ label, ariaLabel, value, onChange, variant }: P
       .sort(bySectionOrder);
 
     const places = new Map<string, Placement>();
-    const options = Object.values(projects)
+    const options: SelectOption[] = Object.values(projects)
       .filter((p) => !p.is_deleted && !p.is_archived && !p.is_folder)
       .sort(byChildOrder)
       .flatMap((project) => {
@@ -70,8 +76,9 @@ export function PlacementField({ label, ariaLabel, value, onChange, variant }: P
         ];
       });
 
+    if (onNewProject) options.push({ value: NEW_PROJECT, label: t('composer.newProject'), icon: 'plus' as const });
     return { options, places };
-  }, [projects, sections, t]);
+  }, [projects, sections, t, onNewProject]);
 
   return (
     <Select
@@ -80,7 +87,9 @@ export function PlacementField({ label, ariaLabel, value, onChange, variant }: P
       value={asValue(value)}
       options={options}
       variant={variant}
+      matchWidth={matchWidth}
       onChange={(next) => {
+        if (next === NEW_PROJECT) { onNewProject?.(); return; }
         const place = places.get(next);
         if (place) onChange(place);
       }}

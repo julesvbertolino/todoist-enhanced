@@ -25,6 +25,145 @@
      showed the bug. */
   grid-template-rows:minmax(0,1fr);
 }
+/* ---------- The frame (v2) ----------
+   Two ways to draw the same navigation, chosen in Settings → Appearance and
+   written on <html> as `data-layout`:
+
+     page-float     the window's background carries the sidebar, and the page
+                    is a rounded card laid on it (the default);
+     sidebar-float  the page fills the window, and the sidebar is a rounded
+                    card above it.
+
+   `data-background` says what that background is: neutral, or a gradient of
+   the accent (`--back-gradient`, worked out in App.tsx so its lightest end
+   still carries white text). A phone has no sidebar and no frame, so none of
+   this applies at 720px and below. */
+:root{
+  --frame-gap:12px;
+  --frame-r:20px;
+  --frame-app:#f5f5f5;
+  --frame-card:#f3f3f4;
+  --frame-back:var(--frame-app);
+  --frame-shadow:0 1px 3px rgba(0,0,0,.07),0 8px 30px rgba(0,0,0,.06);
+}
+:root[data-theme="dark"]{--frame-app:#101012;--frame-card:#17171a;--frame-shadow:0 1px 3px rgba(0,0,0,.4),0 8px 30px rgba(0,0,0,.35)}
+:root[data-background="colored"]{
+  --frame-back:var(--back-gradient,var(--accent));
+  --frame-shadow:0 14px 44px rgba(40,0,0,.32);
+}
+
+@media (min-width:721px){
+  .app{position:relative;background:var(--frame-back)}
+  .sidebar{background:transparent;border-right:0}
+  .workspace{
+    margin:var(--frame-gap) var(--frame-gap) var(--frame-gap) 0;
+    border-radius:var(--frame-r);background:var(--surface);box-shadow:var(--frame-shadow);
+  }
+  .app.collapsed .workspace{margin-left:var(--frame-gap)}
+
+  /* Sidebar float: the page is the window, the sidebar a card over its edge. */
+  :root[data-layout="sidebar-float"] .app{background:var(--surface)}
+  :root[data-layout="sidebar-float"] .sidebar{
+    position:absolute;z-index:5;top:var(--frame-gap);bottom:var(--frame-gap);left:var(--frame-gap);
+    /* The last row, so the demo banner above the app is not covered. */
+    grid-row:-2 / -1;grid-column:1;
+    width:calc(var(--sidebar-w) - var(--frame-gap));border-radius:var(--frame-r);
+    background:var(--frame-card);box-shadow:0 0 0 1px rgba(0,0,0,.05),0 12px 36px -8px rgba(0,0,0,.18);
+  }
+  :root[data-layout="sidebar-float"][data-background="colored"] .sidebar{background:var(--frame-back)}
+  :root[data-layout="sidebar-float"] .workspace{margin:0;border-radius:0;box-shadow:none;
+    grid-column:1 / -1;padding-left:calc(var(--sidebar-w) + var(--frame-gap))}
+  :root[data-layout="sidebar-float"] .app.collapsed .workspace{padding-left:0}
+}
+
+/* On a coloured background the sidebar is ink on the accent: white, softened
+   for the secondary text, with the selected row as a lighter wash. Done by
+   re-pointing the text tokens inside the sidebar, which every rule there
+   already reads; the profile menu is a white card again and puts them back. */
+@media (min-width:721px){
+  :root[data-background="colored"] .sidebar{
+    --text:#fff;--muted:rgba(255,255,255,.82);--faint:rgba(255,255,255,.62);
+    --hover:rgba(255,255,255,.14);--subtle:rgba(255,255,255,.1);--border:rgba(255,255,255,.2);
+    --border-strong:rgba(255,255,255,.3);--field-muted:rgba(255,255,255,.82);--field-hover:rgba(255,255,255,.24);
+    --kbd:rgba(255,255,255,.18);--accent-soft:rgba(255,255,255,.26);--accent-dark:#fff;
+    color:#fff;
+  }
+  :root[data-background="colored"] .sidebar .searchbtn{background:rgba(255,255,255,.18)}
+  :root[data-background="colored"] .sidebar .side-foot .addbtn{background:#fff;color:var(--accent)}
+  :root[data-background="colored"] .sidebar .side-foot .addbtn .ic{color:var(--accent)}
+  :root[data-background="colored"] .sidebar .menu{
+    --text:#202020;--muted:#666;--faint:#808080;--hover:#f0efee;--subtle:#f9f8f7;--border:#f0f0f0;
+    --border-strong:#dcdcdc;color:#202020;
+  }
+  :root[data-background="colored"][data-theme="dark"] .sidebar .menu{
+    --text:#e6e6e6;--muted:#ababab;--faint:#8c8c8c;--hover:#2d2d2d;--subtle:#262626;--border:#393939;
+    --border-strong:#4b4b4b;color:#e6e6e6;
+  }
+}
+
+/* Folding the sidebar slides it out and the page across, like a right panel
+   (0.4s on the column and the opacity); the button that brings it back
+   arrives with a small bounce. The sidebar keeps its width while it goes, so
+   its contents leave as they are rather than reflowing. */
+@media (min-width:721px){
+  .app{transition:grid-template-columns .4s cubic-bezier(.32,.72,0,1)}
+  .app.collapsed{grid-template-columns:0 minmax(0,1fr)}
+  .sidebar{
+    width:var(--sidebar-w);
+    transition:opacity .3s ease,transform .4s cubic-bezier(.32,.72,0,1),visibility 0s;
+  }
+  .app.collapsed .sidebar{
+    opacity:0;transform:translateX(-32px);pointer-events:none;visibility:hidden;
+    transition:opacity .3s ease,transform .4s cubic-bezier(.32,.72,0,1),visibility 0s .4s;
+  }
+  :root[data-layout="sidebar-float"] .workspace{transition:padding-left .4s cubic-bezier(.32,.72,0,1)}
+  .app.collapsed .expand-wrap{animation:expandIn .45s .2s cubic-bezier(.34,1.56,.64,1) both}
+}
+@keyframes expandIn{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  .app,.sidebar,.app.collapsed .sidebar,:root[data-layout="sidebar-float"] .workspace{transition:none}
+  .app.collapsed .expand-wrap{animation:none}
+}
+
+/* Right-hand panels take the sidebar's shape: a rounded card floating inside
+   the frame's margin, in from the right in 160ms and out in 130ms. On a phone
+   the panel is the page, and none of this applies. */
+@keyframes panelIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+@keyframes panelOut{from{opacity:1;transform:none}to{opacity:0;transform:translateX(20px)}}
+@media (min-width:721px){
+  .side-sheet,
+  .timepanel{
+    top:var(--frame-gap);right:var(--frame-gap);bottom:var(--frame-gap);height:auto;
+    border:0;border-radius:var(--frame-r);
+    box-shadow:0 0 0 1px rgba(0,0,0,.05),0 12px 36px -8px rgba(0,0,0,.18);
+  }
+  .side-sheet{transform:none;transition:none;animation:panelIn .16s ease-out}
+  .overlay.leaving .side-sheet{animation:panelOut .13s ease-in forwards}
+  .overlay.leaving .scrim{opacity:0}
+  .timepanel{animation:panelIn .16s ease-out}
+}
+@media (prefers-reduced-motion:reduce){
+  .side-sheet,.timepanel,.overlay.leaving .side-sheet{animation:none}
+}
+
+/* A task opened as a panel (Settings → Open a task in): the window's two
+   columns become one, the header stays put and the body is what scrolls. */
+.side-sheet:has(> .detail-top){
+  width:min(460px,100%);padding:0;overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.side-sheet:has(> .detail-top) .detail-body{
+  flex:1;min-height:0;overflow:auto;grid-template-columns:minmax(0,1fr);
+  align-content:start;
+}
+.side-sheet:has(> .detail-top) .detail-side{
+  border-left:0;border-top:1px solid var(--border);background:var(--surface);
+}
+/* The headline below says the task's name; in a column this narrow the trail
+   spends a second line repeating it. */
+.side-sheet:has(> .detail-top) .crumbself{display:none}
+.side-sheet:has(> .detail-top) .detail-top{border-radius:var(--frame-r) var(--frame-r) 0 0}
+
 /* A grid item's minimum height is its content's unless it is told otherwise. */
 .sidebar,
 .workspace{min-height:0}
@@ -189,7 +328,8 @@
 .drag{left:-30px}
 
 /* ---------- Sidebar ---------- */
-.sidebar{border-right:1px solid var(--border)}
+/* The hairline between sidebar and page is the frame's job above 720px. */
+@media (max-width:720px){.sidebar{border-right:1px solid var(--border)}}
 .navitem{border-radius:var(--r-sm);min-height:32px;font-size:var(--fs-14)}
 .navitem[aria-current="page"]{
   background:var(--accent-soft);
@@ -342,6 +482,9 @@
 /* Subtask progress (#156): the ring sits in the icon's box beside "1/3".
    Muted while in progress, the success colour once every subtask is done. */
 .subprog{display:inline-flex;align-items:center;gap:4px}
+button.subprog{padding:1px 6px 1px 4px;margin:-1px -2px;border-radius:var(--r-full);color:inherit;font:inherit;cursor:pointer}
+button.subprog:hover{background:var(--hover);color:var(--text)}
+button.subprog[aria-expanded="false"]{background:var(--subtle)}
 .progressring{color:var(--muted)}
 .progressring.complete{color:var(--ok)}
 
@@ -439,24 +582,39 @@
 .side-foot{display:grid;gap:var(--s2);padding:var(--s3) var(--s2) var(--s3)}
 .side-foot .addbtn{
   width:100%;min-height:36px;justify-content:center;
-  background:var(--accent);color:#fff;font-weight:600;border-radius:var(--r-sm);
+  background:var(--accent);color:var(--on-accent,#fff);font-weight:600;border-radius:var(--r-sm);
 }
 .side-foot .addbtn:hover{background:var(--accent-dark)}
-.side-foot .addbtn .ic{color:#fff}
+.side-foot .addbtn .ic{color:var(--on-accent,#fff)}
 .footrow{
   display:flex;align-items:center;justify-content:space-between;
   gap:var(--s2);min-height:28px;
 }
 .footrow .syncstatus{padding:0 6px;min-width:0;flex:1 1 auto;text-align:left}
-.footicons{display:flex;align-items:center;gap:2px;flex:0 0 auto}
+/* Notifications and conflicts: the dot says there is something behind the
+   bell, not how much. */
+.bellbtn{position:relative}
+.belldot{position:absolute;top:6px;right:7px;width:8px;height:8px;border-radius:var(--r-full);background:var(--accent)}
+:root[data-background="colored"] .sidebar .belldot{background:#fff}
+.nav-gap{height:var(--s3)}
 
-/* The badge sits on the icon, not beside it, in every context. */
-.issuesbtn{position:relative;overflow:visible}
-.issuesbtn .badge{
-  position:absolute;top:-2px;right:-2px;min-width:15px;height:15px;padding:0 3px;
-  display:grid;place-items:center;border-radius:var(--r-full);
-  background:var(--accent);color:#fff;font-size:9px;font-weight:700;line-height:1;
-}
+/* Settings: the sidebar's entries as a list to arrange. */
+.navedit{display:grid;gap:var(--s2);margin-top:var(--s2)}
+.navedit-title{margin:var(--s2) 0 0;color:var(--muted);font-size:var(--fs-12);font-weight:600}
+.navedit-list{display:grid;gap:2px}
+.navedit-row{display:flex;align-items:center;gap:var(--s2);min-height:36px;padding:0 var(--s2) 0 4px;
+  border-radius:var(--r-sm);background:var(--surface)}
+.navedit-row:hover{background:var(--hover)}
+.navedit-row.dragging{position:relative;z-index:2;background:var(--surface);box-shadow:var(--sh-md)}
+.navedit-row.off .navedit-label{color:var(--faint)}
+.navedit-grip{flex:0 0 auto;display:grid;place-items:center;width:24px;height:28px;border-radius:var(--r-sm);
+  color:var(--faint);cursor:grab;touch-action:none}
+.navedit-grip:hover{color:var(--text)}
+.navedit-label{position:relative;flex:1;display:flex;align-items:center;gap:var(--s2);min-height:36px;
+  font-size:var(--fs-13);cursor:pointer}
+.navedit-label input{left:0;top:11px}
+.navedit-label .checkbox{margin-top:0}
+
 
 /* ==========================================================================
    List refinements
@@ -505,8 +663,6 @@
 /* Row controls, with the subtask chevron at the end where it cannot break
    the reading line. */
 .trow-end{display:flex;align-items:center;gap:2px;justify-self:end;align-self:center}
-.subcaret{width:26px;height:26px;margin:0;vertical-align:0;color:var(--muted)}
-.subcaret:hover{color:var(--text);background:var(--hover)}
 
 /* "Add task" stands at the end of a section instead of unfolding when the
    pointer comes near. A control you only meet by moving over the page is one
@@ -751,15 +907,14 @@
 .deadlinerow:hover .deadlinename{color:var(--accent-dark)}
 .deadlinename{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-/* Collapsing actually removes the column, and leaves one button to bring it back.
-   The sidebar is not rendered at all when collapsed, and the button that brings
-   it back is taken out of flow, so the grid must drop to a single track or the
-   workspace inherits the old sidebar column. */
-.app.collapsed{grid-template-columns:minmax(0,1fr)}
+/* Folded, the sidebar slides away (see the frame, above) and one button is
+   left to bring it back, fixed over the page's corner. */
 .app.collapsed .expand-wrap{
-  position:fixed;top:10px;left:10px;z-index:40;display:block;
+  /* Placed in the app's last row, so the demo banner above it is not covered. */
+  position:absolute;grid-row:-2 / -1;grid-column:1 / -1;
+  top:calc(var(--frame-gap) + 10px);left:calc(var(--frame-gap) + 10px);z-index:40;display:block;
   background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-sm);box-shadow:var(--sh-sm);
+  border-radius:var(--r-ctl);box-shadow:var(--sh-sm);
 }
 .app.collapsed .workspace .page,
 .app.collapsed .workspace .page.wide{padding-left:64px}
@@ -979,6 +1134,18 @@
   white-space:normal;line-height:1.45;
 }
 
+/* A task and its subtasks are one block: no rule between them, and the rule
+   that closes the block runs the full width, from under the parent's edge. */
+.task:has(+ .task[data-depth]){border-bottom-color:transparent}
+.task[data-depth]:not(:has(+ .task[data-depth]))::after{
+  content:"";position:absolute;left:calc(var(--depth) * -26px);right:0;bottom:0;
+  border-bottom:1px solid var(--border);pointer-events:none;
+}
+.group.accent-late .task[data-depth]::after,
+.group.accent-quick .task[data-depth]::after,
+.group.accent-dust .task[data-depth]::after{border-bottom-color:var(--row-line-on-wash)}
+.col .task[data-depth]::after{display:none}
+
 /* An indented subtask row shrinks rather than sliding, so it never reaches
    past the right edge of the column. */
 .task[data-depth]{
@@ -1000,7 +1167,7 @@
 .confirmbox h2{font-size:var(--fs-16);font-weight:700;line-height:1.3}
 .confirmbody{color:var(--muted);font-size:var(--fs-13);line-height:1.55}
 .confirmactions{display:flex;justify-content:flex-end;gap:var(--s2);margin-top:var(--s2)}
-.btn.danger{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.btn.danger{background:var(--accent);border-color:var(--accent);color:var(--on-accent,#fff);font-weight:600}
 .btn.danger:hover{background:var(--accent-dark);border-color:var(--accent-dark)}
 
 /* ==========================================================================
@@ -1287,7 +1454,7 @@
   display:grid;grid-template-columns:16px minmax(0,1fr) auto;align-items:center;
   gap:10px;min-height:32px;font-size:var(--fs-13);
 }
-.composer-sub .check{width:14px;height:14px;border-radius:var(--r-full);border-style:dashed}
+.composer-sub .check{width:14px;height:14px;border-radius:5px;border-width:1.25px}
 .composer-sub input{
   border:0;background:transparent;font:inherit;font-size:var(--fs-13);
   color:var(--text);padding:4px 0;
@@ -1615,6 +1782,8 @@
   border-radius:var(--r-xs);color:var(--faint);
   opacity:0;transition:opacity .12s ease-out;
 }
+/* The caret is always there (v2): it is the one thing that says a group folds. */
+.gcaret{opacity:1}
 .sectiondrag{margin-left:-48px;cursor:grab;position:absolute;left:0}
 .gcaret{margin-left:-24px;position:absolute;left:0}
 .gcaret .ic{transition:transform .15s ease}
@@ -1662,7 +1831,9 @@
    Both live in the same slot so nothing moves when they swap.
    ========================================================================== */
 .navrow{position:relative;display:flex;align-items:center}
-.navrow .navitem{padding-right:34px}
+.navrow .navitem{padding-right:32px}
+/* A real folder has no count or ⋯ of its own: its caret takes the column. */
+.navrow:not(.folderlike) .navitem.folderitem{padding-right:6px}
 /* The disclosure for a project that holds projects, in the left gutter where
    a tree expects it rather than competing with the count on the right. */
 .navtwist{
@@ -1672,9 +1843,9 @@
 }
 .navtwist:hover{background:var(--hover);color:var(--text)}
 .navtwist .ic{width:12px;height:12px}
-.navrow.folderlike .navitem{padding-right:62px}
-.navrow.folderlike .navend{right:34px}
-.navtwist.foldertoggle{left:auto;right:8px;width:24px;height:24px}
+.navrow.folderlike .navitem{padding-right:58px}
+.navrow.folderlike .navend{right:30px}
+.navtwist.foldertoggle{left:auto;right:6px;width:22px;height:22px}
 .navtwist.foldertoggle .ic{width:14px;height:14px}
 /* The gutter only exists where the sidebar has room for it. */
 .side-group{padding-left:14px}
@@ -1960,6 +2131,28 @@
 .themecard.selected .themelabel .ic{color:var(--accent)}
 .themecard:not(.selected) .themelabel .ic{display:none}
 
+/* The frame, in miniature: a sidebar and a page, arranged as the layout
+   arranges them, on the background it is shown with. */
+.framepreview{
+  position:relative;display:block;height:76px;overflow:hidden;
+  border:1px solid var(--border);border-radius:var(--r-sm);background:var(--frame-app);
+}
+.framepreview.back-colored{background:var(--back-gradient,var(--accent))}
+.framenav,.framepage{position:absolute;display:block}
+.framenav{top:6px;bottom:6px;left:6px;width:26%;border-radius:6px;background:var(--frame-card)}
+.framepage{top:6px;bottom:6px;left:calc(26% + 12px);right:6px;border-radius:6px;background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.framepreview.back-colored .framenav{background:rgba(255,255,255,.3)}
+/* Floating sidebar: the page is the window; the card sits over it. */
+.framepreview.sidebar-float{background:var(--surface)}
+.framepreview.sidebar-float .framepage{top:0;bottom:0;right:0;left:0;border-radius:0;box-shadow:none;background:var(--surface)}
+.framepreview.sidebar-float .framenav{z-index:1;background:var(--frame-card);box-shadow:0 0 0 1px rgba(0,0,0,.08),0 4px 10px -3px rgba(0,0,0,.25)}
+/* Page float: the sidebar is the background itself. */
+.framepreview.page-float .framenav{background:transparent;box-shadow:inset 0 0 0 0 transparent}
+.framepreview.page-float .framenav::before,
+.framepreview.page-float .framenav::after{content:"";position:absolute;left:5px;right:5px;height:4px;border-radius:2px;background:rgba(128,128,128,.35)}
+.framepreview.page-float .framenav::before{top:8px}
+.framepreview.page-float .framenav::after{top:17px;right:12px}
+
 .accentchoice{display:flex;gap:var(--s3);margin-top:var(--s3);flex-wrap:wrap}
 .accentcard{
   flex:0 1 132px;display:grid;gap:8px;padding:10px;
@@ -2070,7 +2263,7 @@
 /* Where you are. Filled, so the one you are on is never mistaken for one of
    the others whatever state it is in. */
 .reviewpip.current{background:var(--accent-soft);color:var(--accent-dark)}
-.reviewpip.current .reviewpip-dot{border-color:var(--accent);background:var(--accent);color:#fff}
+.reviewpip.current .reviewpip-dot{border-color:var(--accent);background:var(--accent);color:var(--on-accent,#fff)}
 
 /* ---------- The question ---------- */
 .reviewstep h2{font-size:var(--fs-20);font-weight:700;letter-spacing:-.015em}
@@ -2140,7 +2333,7 @@
 .reviewactions .btn.on,
 .reviewrow:hover .reviewactions .btn.on,
 .reviewactions .btn.on:hover{
-  border-color:var(--accent);background:var(--accent);color:#fff;opacity:1;
+  border-color:var(--accent);background:var(--accent);color:var(--on-accent,#fff);opacity:1;
 }
 .reviewest{justify-self:end}
 .reviewquiet{color:var(--faint);font-size:var(--fs-12);white-space:nowrap}
@@ -2298,7 +2491,7 @@
 .dateday.outside{color:var(--faint)}
 /* Today is named by a ring; the chosen day is filled. The two can coincide. */
 .dateday.today{box-shadow:inset 0 0 0 1px var(--border-strong);font-weight:700}
-.dateday.chosen{background:var(--accent);color:#fff;font-weight:700;box-shadow:none}
+.dateday.chosen{background:var(--accent);color:var(--on-accent,#fff);font-weight:700;box-shadow:none}
 .dateday.chosen:hover{background:var(--accent-dark)}
 /* The day the keyboard is on. Outside the cell, so it still reads on the
    filled chosen day and beside today's ring. */
@@ -2468,7 +2661,7 @@
 .wt-head p{margin-top:4px;max-width:58ch;color:var(--muted);font-size:var(--fs-13);line-height:1.55}
 .wt-mark{
   width:44px;height:44px;flex:0 0 auto;display:grid;place-items:center;
-  border-radius:14px;color:#fff;background:var(--accent);
+  border-radius:14px;color:var(--on-accent,#fff);background:var(--accent);
 }
 .wt-mark .ic{width:22px;height:22px;stroke-width:2}
 .wt-skip{
@@ -2693,7 +2886,7 @@
   position:absolute;top:-9px;right:-9px;z-index:1;
   min-width:22px;height:22px;padding:0 6px;border-radius:999px;
   display:grid;place-items:center;
-  background:var(--accent);color:#fff;font-size:var(--fs-12);font-weight:700;
+  background:var(--accent);color:var(--on-accent,#fff);font-size:var(--fs-12);font-weight:700;
   font-variant-numeric:tabular-nums;box-shadow:0 0 0 2px var(--surface);
 }
 .carrying-selection .task.picked{opacity:.45}
@@ -2716,3 +2909,133 @@ html.desktop-app .app.collapsed .expand-wrap{top:8px;left:84px;-webkit-app-regio
 html.desktop-app.quickadd body::before{display:none}
 /* The demo banner sits under that strip; its button has to stay clickable. */
 html.desktop-app .demobanner button{-webkit-app-region:no-drag;app-region:no-drag}
+
+/* Display (v2): Reset all is the one destructive control, so it is red; the
+   "Show on each task" block says it is not about this page; its chips can be
+   dragged by the five in the middle. */
+.displaypanel .resetbtn{color:var(--late-dark)}
+.displaypanel h5 .global{margin-left:6px;color:var(--faint);font-style:normal;font-weight:500}
+.detailschips{display:flex;flex-wrap:wrap;gap:6px;margin-top:var(--s2)}
+.detailschips .chip.movable{cursor:grab;touch-action:none}
+.detailschips .chip.movable.dragging{position:relative;z-index:2;box-shadow:var(--sh-md);cursor:grabbing}
+.detailschips .chip .ic{color:var(--muted)}
+.detailschips .chip[aria-pressed="true"] .ic{color:inherit}
+
+/* Board cards (v2): lighter. The description stays in the task, the estimate
+   moves up beside the title, and the details are one line that does not wrap. */
+.col .task{position:relative}
+.col .task .tdesc{display:none}
+.col .task .tmain{position:relative}
+.col .task .ttitle{padding-right:58px}
+.col .task .meta{flex-wrap:nowrap;overflow:hidden;margin-top:6px}
+.col .task .meta > .est{position:absolute;top:0;right:0;margin:0}
+.col .task .meta > *{flex:0 0 auto}
+
+/* Priority in the open task: four soft pills in place of a list, the chosen
+   one tinted with its own colour. */
+.priopills{display:flex;gap:6px;flex-wrap:wrap}
+.priopill{
+  display:inline-flex;align-items:center;gap:6px;padding:5px 12px;
+  border-radius:99999px;border:0;background:var(--btn-soft,var(--surface-2));
+  color:var(--muted);font-size:var(--fs-13);font-weight:500;cursor:pointer;
+}
+.priopill .ic{color:var(--pc)}
+.priopill.p1{--pc:var(--p1)}.priopill.p2{--pc:var(--p2)}.priopill.p3{--pc:var(--p3)}.priopill.p4{--pc:var(--p4)}
+.priopill:hover{color:var(--text)}
+.priopill[aria-checked="true"]{
+  color:var(--pc);background:color-mix(in srgb,var(--pc) 14%,var(--surface));
+}
+/* The cross of a tag is centred on the line of its text, not on its box. */
+.prop .pill > .ic{display:block;flex:0 0 auto}
+.prop .pill > .ic:last-child{align-self:center;margin-top:0}
+
+/* Settings, 2.0: the account's two actions, and the coffee card that is always there. */
+.setactions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.setactions .btn{border:0;background:var(--btn-soft,var(--surface-2))}
+.setactions-row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.setactions-row .btn{border:0;background:var(--btn-soft,var(--surface-2))}
+.setvalue a{color:var(--accent-dark);text-decoration:none}
+.setvalue a:hover{text-decoration:underline}
+.coffee-callout .btn.coffee-btn{
+  display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 20px;margin-top:10px;
+  border:0;border-radius:var(--r-ctl);background:#ffdd00;color:#241f00;font-weight:650;
+}
+.coffee-callout .btn.coffee-btn:hover{background:#ffd500}
+
+/* Connect, 2.0: the pitch beside the form, on a wide window. The card keeps
+   its floating bubble shape; on a narrow one the pitch gives way to the form. */
+.connect-card{display:grid;grid-template-columns:minmax(0,1fr);max-width:531px}
+.connect-pitch{display:none}
+.connect-brand{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s3);margin-top:var(--s5);padding-top:var(--s3);border-top:1px solid var(--border);color:var(--faint);font-size:var(--fs-12)}
+.connect-brand strong{color:var(--muted);font-weight:650}
+@media (min-width:900px){
+  .connect-card{grid-template-columns:minmax(0,1fr) minmax(0,1fr);max-width:980px;padding:0;overflow:hidden}
+  .connect-form{padding:58px 56px}
+  .connect-pitch{
+    display:grid;align-content:center;gap:var(--s5);padding:58px 52px;
+    background:color-mix(in srgb,var(--accent) 9%,var(--surface));
+  }
+  .connect-pitch h2{font-size:clamp(28px,3vw,38px);line-height:1.1;font-weight:700;letter-spacing:-.035em;color:var(--accent-dark,var(--accent))}
+  .connect-pitch ul{display:grid;gap:var(--s3);list-style:none;margin:0;padding:0}
+  .connect-pitch li{display:flex;align-items:flex-start;gap:10px;font-size:var(--fs-14);line-height:1.45}
+  .connect-pitch li .ic{flex:0 0 auto;margin-top:2px;color:var(--accent)}
+}
+
+/* Changelog, 2.0: a wide window, a version picker drawn by the app, badges that say
+   what kind of change a line is, and a foot with the tour on the left. */
+.whatsnew-versions{padding:0 24px 8px}
+.whatsnew-change{align-items:baseline}
+.whatsnew-badge{
+  flex:0 0 auto;padding:1px 8px;border-radius:99999px;font-size:var(--fs-11);font-weight:650;
+  background:var(--btn-soft,var(--surface-2));color:var(--muted);
+}
+.whatsnew-change.new .whatsnew-badge{background:color-mix(in srgb,var(--ok,#2f7d32) 12%,var(--surface));color:var(--ok,#2f7d32)}
+.whatsnew-change.design .whatsnew-badge{background:color-mix(in srgb,var(--info,#246fe0) 12%,var(--surface));color:var(--info,#246fe0)}
+.whatsnew-change.fix .whatsnew-badge{background:color-mix(in srgb,var(--p2) 14%,var(--surface));color:var(--p2)}
+.whatsnew-change .whatsnew-mark{display:none}
+.whatsnew-foot{justify-content:space-between}
+.whatsnew-end{display:flex;gap:8px;align-items:center}
+.whatsnew-release + .whatsnew-release{margin-top:28px}
+
+/* Insights, 2.0: one quiet line of controls under the title. */
+.periodbar{align-items:center;gap:12px}
+.periodbar .pager{display:inline-flex;align-items:center;gap:4px}
+.pagerlabel{min-width:9ch;text-align:center;font-size:var(--fs-14);font-weight:600;font-variant-numeric:tabular-nums}
+.spanbar{width:auto}
+.logbar{align-items:center;gap:16px;flex-wrap:wrap}
+.logcontrol{display:inline-flex;align-items:center;gap:8px}
+.logcontrol-label{font-size:var(--fs-12);color:var(--muted)}
+.logday h4 .gtime{margin-left:6px;font-weight:500;font-size:var(--fs-12);color:var(--muted)}
+
+/* Reviews, 2.0: the actions of a row are one segmented control, the chosen one
+   filled with the accent; the rail's line fills with the accent up to the step
+   you are on, and a ring marks that step. */
+.reviewactions{
+  display:inline-flex;flex-wrap:nowrap;gap:2px;padding:2px;border-radius:var(--r-ctl);
+  background:var(--seg,var(--surface-2));
+}
+.reviewactions .btn{border:0;background:transparent;border-radius:calc(var(--r-ctl) - 2px);box-shadow:none}
+.reviewactions .btn.on,
+.reviewrow:hover .reviewactions .btn.on,
+.reviewactions .btn.on:hover{background:var(--accent);color:var(--on-accent,#fff);border:0}
+.reviewrail > li:not(:last-child)::after{height:2px;top:17px}
+.reviewrail > li.seen:not(:last-child)::after{background:var(--accent)}
+.reviewrail .reviewpip.current .reviewpip-dot{
+  box-shadow:0 0 0 3px var(--subtle),0 0 0 5px color-mix(in srgb,var(--accent) 45%,transparent);
+}
+
+/* Notifications, 2.0 */
+.notifswitch{margin:0 24px 8px;width:auto}
+.notiflist ul{list-style:none;margin:0;padding:0;display:grid}
+.notiflist li{display:grid;grid-template-columns:10px 1fr auto;gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--border)}
+.notiflist li p{margin:2px 0;color:var(--muted);font-size:var(--fs-13);overflow-wrap:anywhere}
+.notiflist li small{color:var(--faint)}
+.notifdot{width:8px;height:8px;margin-top:6px;border-radius:50%;background:transparent}
+.notiflist li.unread .notifdot{background:var(--accent)}
+.notifbar{display:flex;justify-content:flex-end;padding-bottom:4px}
+.shareinvite{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.shareinvite input{flex:1 1 200px}
+.sharelist{list-style:none;margin:0;padding:0}
+.sharelist li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--border)}
+.sharelist small{display:block;color:var(--muted)}
+

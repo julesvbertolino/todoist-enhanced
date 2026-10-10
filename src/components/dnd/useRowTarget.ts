@@ -32,6 +32,7 @@ export function useRowTarget(itemId: string, { nestable }: { nestable: boolean }
   const open = useStore((s) => (
     s.draggingTaskId !== null && s.draggingTaskId !== itemId
       && ((nestable && s.nesting) || (!s.nesting && (list !== null || (nestable && !!s.snapshot.items[s.draggingTaskId]?.parent_id))))
+      && !(list?.closed && !s.nesting && !list.ids.includes(s.draggingTaskId))
   ));
   const ownParentSeam = useStore((s) => !landingBefore && !s.outdenting && !!s.draggingTaskId && s.snapshot.items[s.draggingTaskId]?.parent_id === itemId);
   const allowed = useStore((s) => (

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useT } from '@/hooks/useT';
-import { parseDurationInput } from '@/domain/estimates';
+import { formatDuration, parseDurationInput } from '@/domain/estimates';
 
 interface EstimateFieldProps {
   /** Current value in minutes, or null when the task has no estimate. */
@@ -33,15 +33,18 @@ interface EstimateFieldProps {
 export function EstimateField({
   minutes, onCommit, onCancel, autoFocus, placeholder, onChange, onAdvance, unitLabel, inputMode = 'numeric',
 }: EstimateFieldProps) {
-  const { t } = useT();
-  const [draft, setDraft] = useState(minutes === null ? '' : String(minutes));
+  const { t, locale } = useT();
+  /* Said as a duration ("45 min", "1 h 30") and typed as one, so there is no unit to put beside it. */
+  const show = (value: number | null) => (value === null ? '' : formatDuration(value, locale));
+  const [draft, setDraft] = useState(show(minutes));
   const ref = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Not while it is being filled in — see EditableTitle for the same guard.
     if (document.activeElement === ref.current) return;
-    setDraft(minutes === null ? '' : String(minutes));
-  }, [minutes]);
+    setDraft(show(minutes));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `show` only reads the locale
+  }, [minutes, locale]);
 
   const parsed = parseDurationInput(draft);
   const invalid = draft.trim() !== '' && parsed === null;
@@ -103,7 +106,7 @@ export function EstimateField({
                clicking away would. Either way it stops here: there is no
                reading of Escape in a field that means "close the dialog". */
             if (onCancel) {
-              setDraft(minutes === null ? '' : String(minutes));
+              setDraft(show(minutes));
               onCancel();
               return;
             }
@@ -112,7 +115,7 @@ export function EstimateField({
           }
         }}
       />
-      <span className="estunit" aria-hidden="true">{unitLabel ?? t('common.minutes')}</span>
+      {unitLabel && <span className="estunit" aria-hidden="true">{unitLabel}</span>}
     </span>
   );
 }

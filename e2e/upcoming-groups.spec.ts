@@ -12,7 +12,7 @@ test('#98 Upcoming groups by day, week or month, in the list and on the board', 
   await expect(page.locator('.screen.active')).toContainText(/This week|Next week|Week of/);
 
   const display = page.getByRole('button', { name: 'Display' });
-  const board = page.getByRole('button', { name: 'Board' }).first();
+  const board = page.getByRole('button', { name: 'Board', exact: true }).first();
   if (!(await board.isVisible())) await display.click();
   await board.click();
   await page.keyboard.press('Escape');

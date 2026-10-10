@@ -91,7 +91,9 @@
   font:inherit;white-space:nowrap;
 }
 .summary-time b{color:var(--text)}
-.summary-time:not(:disabled):hover{color:var(--text);text-decoration:underline dotted;text-underline-offset:3px}
+/* Dotted while there is something behind it: tasks still to estimate. */
+.summary-time:not(:disabled){text-decoration:underline dotted;text-decoration-color:var(--faint);text-underline-offset:3px}
+.summary-time:not(:disabled):hover{color:var(--text);text-decoration-color:currentColor}
 .summary-time:disabled{cursor:default;opacity:1}
 .summary-time:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .summary-time.warn,.summary-time.warn b,.summary-time.warn .ic{color:var(--warn)}
@@ -275,7 +277,7 @@
 .preview-person{display:flex;align-items:center;gap:7px;padding:2px 4px 8px;font-size:10px;font-weight:600}
 .preview-person b{
   display:grid;place-items:center;width:22px;height:22px;border-radius:50%;
-  background:var(--accent);color:#fff;font-size:8px;
+  background:var(--accent);color:var(--on-accent,#fff);font-size:8px;
 }
 .preview-search,.preview-nav,.preview-add{
   display:flex;align-items:center;gap:7px;min-height:26px;padding:3px 6px;
@@ -324,7 +326,7 @@
   display:flex;justify-content:flex-end;align-items:center;gap:14px;
   margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;
 }
-.preview-primary{padding:7px 14px;border-radius:var(--r-sm);background:var(--accent);color:#fff}
+.preview-primary{padding:7px 14px;border-radius:var(--r-sm);background:var(--accent);color:var(--on-accent,#fff)}
 .polish-preview[data-stage="accent"] .preview-summary{display:none}
 
 /* ---------- Settings (#177) ---------- */
@@ -427,6 +429,40 @@
   .setup-actions .btn{flex:1;justify-content:center}
 }
 
+/* ---------- Setup, 2.0 ----------
+   Two columns for the scenes that have a picture (the picture, then the
+   controls), one centred column for the greeting and the end. The controls
+   scroll on their own so Back and Continue never leave the window. */
+.setup{height:min(700px,calc(100vh - 56px));min-height:0}
+.setup-body{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);align-items:stretch;overflow:hidden;min-height:0}
+.setup-preview{height:auto;min-height:0}
+.setup-controls{min-height:0;overflow-y:auto;padding:2px 4px 36px 2px}
+.setup-stack{display:grid;gap:22px}
+.setup-controls[data-motion="forward"]{animation:setup-from-right .42s cubic-bezier(.2,.8,.2,1) both}
+.setup-controls[data-motion="back"]{animation:setup-from-left .42s cubic-bezier(.2,.8,.2,1) both}
+.setup-controls[data-motion="enter"]{animation:setup-in .22s ease-out both}
+.setup-title{animation:setup-in .22s ease-out both}
+@keyframes setup-from-right{from{opacity:0;transform:translateX(48px)}to{opacity:1;transform:none}}
+@keyframes setup-from-left{from{opacity:0;transform:translateX(-48px)}to{opacity:1;transform:none}}
+@keyframes setup-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.setup[data-step="welcome"],.setup[data-step="end"]{
+  grid-template-rows:minmax(0,1fr);place-items:center;text-align:center;
+}
+.setup-welcome{display:grid;justify-items:center;gap:10px;max-width:46ch;animation:setup-in .5s ease-out both}
+.setup-hello{margin:0;font-size:clamp(28px,5vw,40px);font-weight:500;letter-spacing:-.03em;color:var(--muted)}
+.setup-name{margin:0;font-size:clamp(40px,7vw,64px);font-weight:700;letter-spacing:-.04em;color:var(--accent)}
+.setup-lead{margin:8px 0 14px;color:var(--muted);font-size:var(--fs-14);line-height:1.6}
+.setup-go{width:auto}
+.setup-endactions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.setup-foot{position:relative;border-top:0;padding-top:18px;
+  background:linear-gradient(to top,var(--surface) 62%,transparent)}
+@media (prefers-reduced-motion:reduce){
+  .setup-controls,.setup-title,.setup-welcome{animation:none !important}
+}
+@media (max-width:720px){
+  .setup-body{grid-template-columns:minmax(0,1fr);overflow:auto}
+}
+
 /* ---------- Checklist (#157) ----------
    Task-list lines of a description as small rounded boxes, 14px with a 4px
    radius: not the round box of a task and not the circle of a subtask. A done
@@ -440,7 +476,7 @@
   border:1.5px solid var(--border-strong);border-radius:4px;background:var(--surface);color:transparent;
 }
 .checkbox .ic{width:10px;height:10px;stroke-width:3}
-:is(.checkitem, .checkboxwrap) input:checked + .checkbox{border-color:var(--accent);background:var(--accent);color:#fff}
+:is(.checkitem, .checkboxwrap) input:checked + .checkbox{border-color:var(--accent);background:var(--accent);color:var(--on-accent,#fff)}
 :is(.checkitem, .checkboxwrap) input:focus-visible + .checkbox{outline:2px solid var(--accent);outline-offset:2px}
 .checkitem.done .checktext{color:var(--muted);text-decoration:line-through}
 .checktext.empty{color:var(--faint);font-style:italic}
@@ -494,7 +530,7 @@
   display:inline-flex;align-items:center;width:1.7em;height:1.6em;vertical-align:top;text-indent:0;cursor:pointer;
 }
 .mdedit .md-check .checkbox{margin:0}
-.mdedit .md-check[aria-checked="true"] .checkbox{border-color:var(--accent);background:var(--accent);color:#fff}
+.mdedit .md-check[aria-checked="true"] .checkbox{border-color:var(--accent);background:var(--accent);color:var(--on-accent,#fff)}
 .mdedit .md-done{color:var(--muted);text-decoration:line-through}
 .mdedit .md-task{position:relative;padding-right:28px}
 .mdedit .checkdel{
@@ -521,11 +557,6 @@
 .reviewrail > li{flex:1 1 72px;min-width:64px}
 .reviewrail{overflow:hidden}
 .chipschoice{grid-template-columns:repeat(2,minmax(0,1fr))}
-:root[data-chips="minimal"] .task .meta{display:none}
-:root[data-chips="minimal"] .task{grid-template-columns:18px minmax(0,1fr) 0 auto}
-.minimal-date{font-size:var(--fs-12);color:var(--muted);white-space:nowrap;align-self:start;padding-top:2px}
-.minimal-date.late{color:var(--late-dark)}
-.chipssample[data-chips="minimal"] .meta > :not(.at){display:none}
 @media(max-width:720px){.chipschoice{grid-template-columns:1fr}}
 
 .subtasks{border-left:0}
@@ -538,13 +569,9 @@
 .mdedit.composer .md-toolbar button{min-height:24px;padding:2px 8px}
 
 .task[data-tour="subtasks"]{border-bottom:0}
-:root[data-chips="minimal"] .task .minimal-date{grid-column:4}
-:root[data-chips="minimal"] .preview-task .meta{display:none}
-:root[data-chips="minimal"] .chipssample .task .meta{display:flex}
 
 /* Each comparison is independent of the active page preference. */
 .chipssample .sample-title{display:block;margin-bottom:6px;font-weight:500;color:var(--text);text-align:left}
-:root .chipssample[data-chips="minimal"] .task .meta > :not(.at){display:none}
 :root .chipssample[data-chips="inherited"] .task .meta > .tag{--chip-fg:#299438;--chip-bg:color-mix(in srgb,#299438 8%,var(--surface))}
 :root .chipssample[data-chips="neutral"] .task .meta > .tag{--chip-fg:var(--muted);--chip-bg:var(--subtle)}
 
@@ -560,9 +587,6 @@
 :root .chipssample[data-chips="classic"] .task .meta > *{background:none;padding:0;border-radius:0;color:var(--muted)}
 :root .chipssample[data-chips="classic"] .task .meta > .at{color:var(--info)}
 :root .chipssample[data-chips="classic"] .task .meta > :is(.proj,.tag){color:var(--marker,var(--muted))}
-:root[data-chips="minimal"] .task .minimal-date{grid-column:4;grid-row:1;justify-self:end}
-:root[data-chips="minimal"] .task .trow-end{position:static;grid-column:3;grid-row:1;width:max-content;justify-self:end;align-self:start;margin-right:8px;background:none}
-:root[data-chips="minimal"] .task .tmain{padding-right:0}
 .md-toolbar{position:fixed;z-index:120;display:flex;align-items:center;gap:2px;padding:7px;border-radius:9px;background:#262626;color:#fff;box-shadow:var(--sh-lg);max-width:calc(100vw - 16px);overflow-x:auto;transform:translate(-50%,-100%)}
 .md-toolbar button{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:0 0 auto;min-width:32px;height:36px;padding:4px 7px;border-radius:5px;font-size:16px;white-space:nowrap}
 .md-toolbar button:hover,.md-toolbar button:focus-visible{background:#484848;outline:1px solid #aaa}
@@ -580,17 +604,10 @@
 :root .preview-task .meta .ic{width:10px;height:10px}
 :root .chipssample .task .meta > *{font-size:12px;line-height:18px}
 /* A single action menu keeps the date at the edge without covering the title. */
-:root[data-chips="minimal"] .task{grid-template-columns:18px minmax(0,1fr) auto auto;align-items:start;--minimal-title-height:calc(var(--fs-14) * 1.4)}
-:root[data-chips="minimal"] .task .trow-end{align-self:start;margin-right:4px;margin-top:calc((var(--minimal-title-height) - 28px) / 2)}
-:root[data-chips="minimal"] .task .tmain{align-self:start}
-:root[data-chips="minimal"] .task .minimal-date{align-self:start;padding-top:0;line-height:var(--minimal-title-height)}
-:root[data-chips="minimal"] .task .titleline{display:flex;align-items:center;gap:6px;max-width:100%}
-:root[data-chips="minimal"] .task .titleline > .ic{width:14px;height:14px;flex:none;color:var(--muted)}
 .dashboard-card-content{display:flex;flex-direction:column;flex:1;min-width:0}
 .dashboard-bento .dashboard-card-content > .donut{flex:1;margin-block:0;align-items:center}
 :root[data-chips] .polish-preview .preview-task .meta > :is(.at,.late,.deadline,.est,.proj,.tag,.sect){font-size:11px;line-height:1.4}
 :root[data-chips] .polish-preview .preview-task .meta > :is(.at,.late,.deadline,.est,.proj,.tag,.sect) .ic{width:10px;height:10px}
-:root[data-chips="minimal"] .task > .check{align-self:start;margin-top:calc((var(--minimal-title-height) - 16px) / 2)}
 
 .dashboard-bento .stat-value{white-space:nowrap}
 

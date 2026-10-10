@@ -48,7 +48,7 @@ test('#116 a task ticked off from its panel leaves the review step it was opened
 test('#108 a project board adds a section from its last column', async ({ demo: page }) => {
   await go(page, '#/project/site');
   await page.getByRole('button', { name: 'Display' }).click();
-  await page.getByRole('button', { name: 'Board' }).click();
+  await page.getByRole('button', { name: 'Board', exact: true }).click();
   await page.keyboard.press('Escape');
 
   const board = page.locator('.screen.active .board');
@@ -56,12 +56,16 @@ test('#108 a project board adds a section from its last column', async ({ demo: 
   await add.click();
   // Escape makes nothing.
   await page.keyboard.press('Escape');
-  await expect(board.locator('.col:not(.accent-quick) .chead strong')).toHaveText(['To do', 'In progress', 'To review']);
+  // A section's name is a field in its column's heading, so it can be renamed there.
+  const names = () => board.locator('.col:not(.accent-quick) .chead-title').evaluateAll((titles) => titles.map(
+    (title) => title.querySelector('input')?.value ?? title.querySelector('.gnamewrap, strong')?.textContent ?? '',
+  ));
+  await expect.poll(names).toEqual(['To do', 'In progress', 'To review']);
 
   await add.click();
   await page.keyboard.type('Launch');
   await page.keyboard.press('Enter');
-  await expect(board.locator('.col:not(.accent-quick) .chead strong')).toHaveText(['To do', 'In progress', 'To review', 'Launch']);
+  await expect.poll(names).toEqual(['To do', 'In progress', 'To review', 'Launch']);
 
   // The same section in the list.
   await page.getByRole('button', { name: 'Display' }).click();
@@ -105,10 +109,10 @@ test('#115 the changelog opens from Settings, in the app', async ({ demo: page }
   await expect(dialog).toBeVisible();
   await expect(dialog.locator('.whatsnew-release').first()).toContainText('Version');
   await expect(dialog.locator('.whatsnew-change.new').first()).toContainText('🆕');
-  await expect(dialog.getByRole('button', { name: 'Continue' })).toBeFocused();
-  // A pill per release jumps to it.
-  await dialog.getByRole('button', { name: '1.12.0', exact: true }).click();
-  await expect(dialog.getByRole('button', { name: '1.12.0', exact: true })).toHaveAttribute('aria-current', 'true');
+  await expect(dialog.getByRole('button', { name: 'Got it' })).toBeFocused();
+  // A version picker jumps to a release.
+  await dialog.getByRole('button', { name: 'Versions' }).click();
+  await page.getByRole('option', { name: 'Version 1.12.0', exact: true }).click();
   await expect(dialog.getByRole('region', { name: 'Version 1.12.0' })).toBeInViewport();
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);

@@ -51,6 +51,7 @@ export function DraggableTask({
         /* A board card is moved sideways between columns all the time; a
            drift to the right there must not read as "put it inside". */
         nestable={!card}
+        lifted={isDragging}
       />
     </div>
   );

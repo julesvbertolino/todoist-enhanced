@@ -17,6 +17,8 @@ describe('splitQuick', () => {
     ['no date', { id: 'a', labels: ['est-3'] }],
     ['the week label', { id: 'a', labels: ['est-3', 'week'] }],
     ['tagged quick, no estimate', { id: 'a', labels: ['quick'] }],
+    ['estimated at exactly five minutes', { id: 'a', labels: ['est-5'] }],
+    ['tagged quick and estimated at five minutes', { id: 'a', labels: ['quick', 'est-5'] }],
   ])('takes a quick task that is %s', (_name, task) => {
     expect(ids(splitQuick([item(task)], NOW).quick)).toEqual(['a']);
   });
@@ -34,7 +36,7 @@ describe('splitQuick', () => {
     const tasks = [
       item({ id: 'long', labels: ['est-30'] }),
       item({ id: 'none' }),
-      item({ id: 'five', labels: ['est-5'] }),
+      item({ id: 'six', labels: ['est-6'] }),
       item({ id: 'late', labels: ['est-30'], due: due('2026-10-01') }),
     ];
     expect(ids(splitQuick(tasks, NOW).quick)).toEqual([]);

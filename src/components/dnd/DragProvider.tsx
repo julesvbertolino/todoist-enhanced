@@ -355,6 +355,12 @@ export function DragProvider({ children }: { children: ReactNode }) {
     const block = isSection || isProject || id.startsWith('subtask:') ? [] : carriedWith(taskIdOf(id));
     setCarrying(block);
     document.documentElement.classList.toggle('carrying-selection', block.length > 1);
+    /* The rows around the landing spot make room for what is carried, the way
+       the Settings navigation list does, so the gap is the carried row's. */
+    const height = event.active.rect.current.initial?.height
+      ?? document.querySelector<HTMLElement>(`[data-task-id="${taskIdOf(id)}"]`)?.offsetHeight ?? 0;
+    document.documentElement.style.setProperty('--drag-gap', `${Math.round(height)}px`);
+    document.documentElement.classList.add('dragging-row');
   }
 
   /** The picked tasks a drag of `id` takes along, top to bottom as drawn. */
@@ -385,7 +391,8 @@ export function DragProvider({ children }: { children: ReactNode }) {
     setDraggingProject(null);
     setDraggingTag(null);
     setCarrying([]);
-    document.documentElement.classList.remove('carrying-selection');
+    document.documentElement.classList.remove('carrying-selection', 'dragging-row');
+    document.documentElement.style.removeProperty('--drag-gap');
   }
 
   /* The indent has to be visible while it is being made, not discovered on
@@ -413,7 +420,8 @@ export function DragProvider({ children }: { children: ReactNode }) {
     setDraggingTag(null);
     const carried = carrying;
     setCarrying([]);
-    document.documentElement.classList.remove('carrying-selection');
+    document.documentElement.classList.remove('carrying-selection', 'dragging-row');
+    document.documentElement.style.removeProperty('--drag-gap');
 
     /* Pulled out to the left, a subtask leaves its parent and stays where it
        is otherwise: same project, same section, now at the top level. The
@@ -673,6 +681,7 @@ export function DragProvider({ children }: { children: ReactNode }) {
         return;
       }
       if (!list || descendantsOf(snapshot.items, item.id).includes(row.id)) return;
+      if (list.closed && !list.ids.includes(item.id)) return;
       if (row.parent_id && item.parent_id !== row.parent_id && !canNest(snapshot.items, item.id, row.parent_id)) return;
       /* A task put into a place by hand is a view arranged by hand. Views open
          sorted by priority, and a drop used to be refused rather than obeyed

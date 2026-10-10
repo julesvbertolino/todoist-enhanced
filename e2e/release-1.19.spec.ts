@@ -97,7 +97,7 @@ test('#154 a board leads with a blue read-only Quick column, and My week looks a
 
   await go(page, '#/project/site');
   await page.getByRole('button', { name: 'Display' }).click();
-  await page.getByRole('button', { name: 'Board' }).click();
+  await page.getByRole('button', { name: 'Board', exact: true }).click();
   await page.keyboard.press('Escape');
   const board = page.locator('.screen.active .board');
   await expect(board).toBeVisible();
@@ -107,11 +107,11 @@ test('#154 a board leads with a blue read-only Quick column, and My week looks a
   await expect(board.locator('.col').first()).toHaveClass(/accent-quick/);
   await expect(quick.locator('.chead strong')).toHaveText('Quick Tasks');
   await expect(quick.locator('.sect').first()).toBeVisible();
-  // Listed once, and not somewhere to drop or add a task.
+  // Listed once; and, like every column of a board, it ends with the line that adds a task.
   await expect(board.locator('.col').filter({ hasText: 'Reply to the printer' })).toHaveCount(1);
-  await expect(quick.locator('.coladd')).toHaveCount(0);
+  await expect(quick.locator('.coladd')).toHaveCount(1);
   const colour = await quick.locator('.chead strong').evaluate((el) => getComputedStyle(el).color);
-  expect(colour).not.toBe(await board.locator('.col:not(.accent-quick) .chead strong').first().evaluate((el) => getComputedStyle(el).color));
+  expect(colour).not.toBe(await board.locator('.col:not(.accent-quick) .chead-title').first().locator('strong, input, .gnamewrap').first().evaluate((el) => getComputedStyle(el).color));
 });
 
 test('#154 an empty section offers the add line in place, without saying nothing is here', async ({ demo: page }) => {
@@ -151,7 +151,7 @@ test('#154 the Quick group stays on top whatever the page is grouped by', async 
 
 test('#154 the switch in Settings turns the Quick group off everywhere', async ({ demo: page }) => {
   await go(page, '#/settings');
-  const quickSwitch = switchOf(page, 'Show the quick group');
+  const quickSwitch = switchOf(page, 'Show the quick tasks group');
   await expect(quickSwitch).toHaveAttribute('aria-checked', 'true');
   await quickSwitch.click();
 
@@ -161,7 +161,7 @@ test('#154 the switch in Settings turns the Quick group off everywhere', async (
   }
 
   await go(page, '#/settings');
-  await switchOf(page, 'Show the quick group').click();
+  await switchOf(page, 'Show the quick tasks group').click();
   await go(page, '#/project/site');
   await expect(page.locator('.screen.active .group.accent-quick')).toHaveCount(1);
   await go(page, '#/week');
@@ -185,8 +185,7 @@ test('#154 the keyboard walks through the Quick group and on into the next group
 
 test('#154 in French the group and the settings hint say where it appears', async ({ demo: page }) => {
   await go(page, '#/settings');
-  await page.getByRole('button', { name: 'Language' }).click();
-  await page.getByRole('option', { name: 'Français' }).click();
+  await page.getByRole('radiogroup', { name: 'Language' }).getByRole('radio', { name: 'Français' }).click();
   await go(page, '#/project/site');
   await expect(page.locator('.screen.active .group.accent-quick .gname')).toHaveText('Tâches rapides');
   await expect(page.locator('.screen.active .group.accent-quick .sect').first()).toBeVisible();
@@ -312,8 +311,7 @@ test('#161 the keyboard reaches the actions, and Shift+K keeps the task under th
 
 test('#161 in French the group has its name and its ages', async ({ demo: page }) => {
   await go(page, '#/settings');
-  await page.getByRole('button', { name: 'Language' }).click();
-  await page.getByRole('option', { name: 'Français' }).click();
+  await page.getByRole('radiogroup', { name: 'Language' }).getByRole('radio', { name: 'Français' }).click();
   await go(page, '#/someday');
   const dust = group(page, 'Elles prennent la poussière');
   await expect(dust).toHaveCount(1);
@@ -360,16 +358,18 @@ test('#159 choosing 15 minutes lists what fits and leaves the page behind alone'
   await expect(panel(page).locator('.timerow')).toHaveCount(0);
 
   await panel(page).getByRole('button', { name: '15 min', exact: true }).click();
-  await expect(pill(page)).toContainText('≤ 15 min');
+  // The pill always reads "I have time" (#30): the duration lives in the panel.
+  await expect(pill(page)).toContainText('I have time');
   await expect(panel(page).locator('.timesummary')).toContainText('3 tasks of 15 min or less');
 
-  const today = panel(page).locator('.timegroup').filter({ has: page.getByRole('heading', { name: 'Today' }) });
-  await expect(today.locator('.timerow')).toHaveCount(3);
+  // One list, each row saying when it is due (v2): the three due today.
+  await expect(panel(page).locator('.timegroup')).toHaveCount(0);
+  await expect(panel(page).locator('.timerow').filter({ has: page.locator('.timewhere', { hasText: /^Today/ }) })).toHaveCount(3);
   // A task above the limit is not listed.
   await expect(panel(page).locator('.timerow').filter({ hasText: 'Read the quarterly report' })).toHaveCount(0);
   // Where it lives, as a second line, and its time on the right.
   const water = panel(page).locator('.timerow').filter({ hasText: 'Water the plants' });
-  await expect(water.locator('.timewhere')).toHaveText('Home');
+  await expect(water.locator('.timewhere')).toHaveText('Today · Home');
   await expect(water.locator('.timeest')).toHaveText('5 min');
 
   // The page behind is exactly as it was.
@@ -397,7 +397,7 @@ test('#159 completing a result removes it and updates the summary', async ({ dem
   await pill(page).getByRole('button', { name: 'I have time' }).click();
   await panel(page).getByRole('button', { name: '15 min', exact: true }).click();
   await expect(panel(page).locator('.timesummary')).toContainText('3 tasks');
-  const subtotal = panel(page).locator('.timegroup .gtime').first();
+  const subtotal = panel(page).locator('.timesummary');
   const before = await subtotal.innerText();
 
   await panel(page).locator('.timerow').filter({ hasText: 'Water the plants' }).getByRole('checkbox').click();
@@ -437,20 +437,19 @@ test('#159 it can be typed, cleared, and closed with the pill, the cross and Esc
   const custom = panel(page).getByLabel('Another duration');
   await custom.fill('1h15');
   await custom.press('Enter');
-  await expect(pill(page)).toContainText('≤ 1 h 15');
+  await expect(panel(page).locator('.timesummary')).toBeVisible();
 
-  // The pill again closes the panel and keeps the duration.
+  // Closing ends the choice (#30): the pill reads "I have time" and the next
+  // opening starts with no duration.
   await pill(page).locator('.timepill-main').click();
   await expect(panel(page)).toHaveCount(0);
-  await expect(pill(page)).toContainText('≤ 1 h 15');
-  // Reopened in the same session, it is where it was left.
+  await expect(pill(page)).toContainText('I have time');
   await pill(page).locator('.timepill-main').click();
-  await expect(panel(page).getByLabel('Another duration')).toHaveValue('1 h 15');
+  await expect(panel(page).getByLabel('Another duration')).toHaveValue('');
 
-  // Escape closes it, and the cross clears the duration without opening it.
+  // Escape closes it.
   await page.keyboard.press('Escape');
   await expect(panel(page)).toHaveCount(0);
-  await pill(page).getByRole('button', { name: 'Clear the time filter' }).click();
   await expect(pill(page)).toContainText('I have time');
 
   // Something that is not a duration is refused, not guessed at.
@@ -461,18 +460,18 @@ test('#159 it can be typed, cleared, and closed with the pill, the cross and Esc
   await expect(pill(page)).toContainText('I have time');
 });
 
-test('#159 going to a page with no pill puts the panel away and keeps the duration', async ({ demo: page }) => {
+test('#159 going to a page with no pill puts the panel away and forgets the duration', async ({ demo: page }) => {
   await go(page, '#/week');
   await pill(page).getByRole('button', { name: 'I have time' }).click();
   await panel(page).getByRole('button', { name: '15 min', exact: true }).click();
   await go(page, '#/upcoming');
   await expect(panel(page)).toHaveCount(0);
-  // The question follows you to the next page that can answer it, closed.
+  // Put away, the choice is over (#30).
   await go(page, '#/inbox');
   await expect(panel(page)).toHaveCount(0);
-  await expect(pill(page)).toContainText('≤ 15 min');
+  await expect(pill(page)).toContainText('I have time');
   await pill(page).locator('.timepill-main').click();
-  await expect(panel(page).locator('.timesummary')).toBeVisible();
+  await expect(panel(page).locator('.timechoice.on')).toHaveCount(0);
 });
 
 test('#159 one right-hand panel at a time, and a reload forgets the duration', async ({ demo: page }) => {
@@ -528,8 +527,7 @@ test('#159 on a phone the panel is a full-screen sheet with 44px choices', async
 
 test('#159 in French and in dark', async ({ demo: page }) => {
   await go(page, '#/settings');
-  await page.getByRole('button', { name: 'Language' }).click();
-  await page.getByRole('option', { name: 'Français' }).click();
+  await page.getByRole('radiogroup', { name: 'Language' }).getByRole('radio', { name: 'Français' }).click();
   await page.emulateMedia({ colorScheme: 'dark' });
   await go(page, '#/week');
   await expect(pill(page)).toContainText('J’ai du temps');
@@ -543,7 +541,7 @@ test('#159 in French and in dark', async ({ demo: page }) => {
 
 test('#159 the tour of a new account has a stop for I have time', async ({ demo: page }) => {
   await go(page, '#/settings');
-  await page.evaluate(() => window.dispatchEvent(new Event('enhanced:replay-onboarding')));
+  await page.evaluate(() => window.dispatchEvent(new Event('enhanced:tour')));
   const card = page.locator('.tour-card');
   await expect(card).toBeVisible();
   const seen: string[] = [];
@@ -576,12 +574,13 @@ test('#159 Show me, after an update, runs the tour over what the update brought'
   await expect(page.getByRole('dialog', { name: 'Setting up' })).toHaveCount(0);
 });
 
-test('#159 the history in Settings has no Show me', async ({ demo: page }) => {
+test('#159 the history in Settings offers the whole tour, not Show me', async ({ demo: page }) => {
   await go(page, '#/settings');
   await page.evaluate(() => window.dispatchEvent(new Event('enhanced:changelog')));
   const dialog = page.getByRole('dialog', { name: 'Changelog' });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByRole('button', { name: 'Show me' })).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: 'Show me', exact: true })).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: 'Show me the tour' })).toBeVisible();
 });
 
 /* The list rows still open their task from the group, and the group completes. */
@@ -632,15 +631,15 @@ test('#159 the pill is lit only while the panel is open, and a new session start
 
   // Leaving the demo and coming back asks nothing of the new account.
   await page.getByRole('button', { name: 'Leave demo' }).click();
-  await page.getByRole('button', { name: 'Explore with demo data instead' }).click();
+  await page.getByRole('button', { name: 'Explore with demo data' }).click();
   await expect(pill(page)).toContainText('I have time');
 });
 
-test('#159 each group can be ordered by duration or by priority', async ({ demo: page }) => {
+test('#159 the list can be ordered by duration or by priority', async ({ demo: page }) => {
   await go(page, '#/week');
   await pill(page).getByRole('button', { name: 'I have time' }).click();
   await panel(page).getByRole('button', { name: '30 min', exact: true }).click();
-  const first = () => panel(page).locator('.timegroup').first().locator('.timeest').allInnerTexts();
+  const first = () => panel(page).locator('.timelist .timeest').allInnerTexts();
   const byDuration = (await first()).map((t) => parseInt(t, 10));
   expect([...byDuration].sort((a, b) => a - b)).toEqual(byDuration);
   await panel(page).getByRole('button', { name: 'Priority first' }).click();

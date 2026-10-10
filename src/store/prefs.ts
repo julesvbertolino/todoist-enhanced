@@ -5,6 +5,10 @@ import { defaultConflictSettings, type ConflictSettings } from '@/domain/conflic
 import { defaultCapacity, type DailyCapacity } from '@/domain/load';
 import { DATE_FORMATS, type DateFormat } from '@/domain/dates';
 import { DEFAULT_DUST_MONTHS, isDustMonths, type DustMonths } from '@/domain/views';
+import { defaultSidebarNav, readSidebarNav, type SidebarNav } from '@/domain/sidebar';
+import {
+  defaultDetailOrder, defaultTaskFields, readDetailOrder, readTaskFields, type DetailChip, type TaskFields,
+} from '@/domain/taskDetails';
 
 /**
  * The Todoist task that held the settings up to 1.12.
@@ -35,8 +39,8 @@ export interface SyncedView {
   sort: ViewPrefs['sort'];
   showSubtasks: boolean;
   showCompleted: boolean;
-  /** A board as wide as the page (ViewPrefs.wide). */
-  wide?: boolean;
+  /* A `wide` written by a 1.x build is still in some comments and is ignored:
+     a board is always the width of the page now. */
 }
 
 /**
@@ -64,7 +68,6 @@ export function syncedPreferences(prefs: Preferences): SyncedPreferences {
       sort: view.sort,
       showSubtasks: view.filters.showSubtasks,
       showCompleted: view.filters.showCompleted,
-      ...(view.wide ? { wide: true } : {}),
     }]);
   return { ...rest, views: Object.fromEntries(projectViews) };
 }
@@ -129,7 +132,6 @@ export function mergeSynced(
       mode: shared.mode ?? mine.mode,
       group: shared.group ?? mine.group,
       sort: shared.sort ?? mine.sort,
-      wide: shared.wide === true,
       filters: {
         ...mine.filters,
         showSubtasks: shared.showSubtasks ?? mine.filters.showSubtasks,
@@ -182,12 +184,48 @@ export const isTheme = (value: unknown): value is Theme =>
  */
 export const ACCENTS = [
   'red', 'orange', 'amber', 'green', 'teal', 'blue', 'indigo', 'purple', 'pink',
+  'cocoa', 'graphite',
 ] as const;
 export type Accent = (typeof ACCENTS)[number] | 'custom';
 
 export const isAccent = (value: unknown): value is Accent =>
   typeof value === 'string'
   && (value === 'custom' || (ACCENTS as readonly string[]).includes(value));
+
+/**
+ * How the app is framed (v2).
+ *
+ * 'sidebar-float': the page fills the window and the sidebar is a rounded card
+ * above it. 'page-float': the window background carries the sidebar and the
+ * page is the rounded card laid on it. Two ways to draw the same navigation,
+ * so both are offered rather than one being guessed at.
+ */
+export const LAYOUTS = ['sidebar-float', 'page-float'] as const;
+export type Layout = (typeof LAYOUTS)[number];
+
+export const isLayout = (value: unknown): value is Layout =>
+  typeof value === 'string' && (LAYOUTS as readonly string[]).includes(value);
+
+/**
+ * What sits behind the frame: neutral grey, or a gradient drawn from the
+ * accent. Only visible where the layout leaves background showing.
+ */
+export const BACKGROUNDS = ['neutral', 'colored'] as const;
+export type Background = (typeof BACKGROUNDS)[number];
+
+export const isBackground = (value: unknown): value is Background =>
+  typeof value === 'string' && (BACKGROUNDS as readonly string[]).includes(value);
+
+/**
+ * Where an opened task appears: a window over the list, or a panel on the
+ * right that takes the shape of the other right-hand panels. A matter of
+ * taste rather than of the device, so it travels with the account.
+ */
+export const TASK_OPENS = ['window', 'panel'] as const;
+export type TaskOpen = (typeof TASK_OPENS)[number];
+
+export const isTaskOpen = (value: unknown): value is TaskOpen =>
+  typeof value === 'string' && (TASK_OPENS as readonly string[]).includes(value);
 
 /** A hex colour, as typed or picked. Only the hue and saturation are used. */
 export const isHexColour = (value: unknown): value is string =>
@@ -216,7 +254,7 @@ export type WeekLayout = (typeof WEEK_LAYOUTS)[number];
  * every chip grey. One preference, read by Settings and by the first-run
  * setup alike, and kept with the account's other settings.
  */
-export const TASK_CHIPS = ['classic', 'neutral', 'inherited', 'minimal'] as const;
+export const TASK_CHIPS = ['classic', 'neutral', 'inherited'] as const;
 export type TaskChips = (typeof TASK_CHIPS)[number];
 
 export const isTaskChips = (value: unknown): value is TaskChips =>
@@ -279,6 +317,22 @@ export interface Preferences {
   theme: Theme;
   /** The brand colour. Every accent exists in both schemes. */
   accent: Accent;
+  /** How the app is framed: a floating sidebar or a floating page. */
+  layout: Layout;
+  /** Neutral grey or a gradient of the accent behind the frame. */
+  background: Background;
+  /** Whether an opened task is a window over the list or a panel beside it. */
+  taskOpen: TaskOpen;
+  /** Which entries the sidebar lists, in what order (domain/sidebar). */
+  sidebarNav: SidebarNav;
+  /** The search field at the top of the sidebar. ⌘K opens search either way. */
+  sidebarSearch: boolean;
+  /** The numbers beside each list. */
+  sidebarCounts: boolean;
+  /** What a task row shows, for every list (domain/taskDetails). */
+  taskFields: TaskFields;
+  /** The order of the chips beneath a task's title. */
+  detailOrder: DetailChip[];
   /** Whether the chips on a task's metadata wear their own colours (#175). */
   taskChips: TaskChips;
   /**
@@ -338,6 +392,13 @@ export interface Preferences {
    * the device also remembers it on its own (domain/onboarding.ts).
    */
   onboarded: boolean;
+  /**
+   * The 2.0 setup (look, sidebar, what a task shows) has been through. Asked
+   * of every account once, including those that were set up long before it.
+   */
+  setupDone: boolean;
+  /** The order of the project groups in the sidebar: 'personal' and workspace ids. Empty is Todoist's. */
+  workspaceOrder: string[];
   /** Whether a release that brings something new says so once, after the update (#115). */
   whatsNew: boolean;
   /**
@@ -364,6 +425,14 @@ export const defaultPreferences = (locale: Locale): Preferences => ({
   density: 'comfortable',
   theme: 'system',
   accent: 'red',
+  layout: 'page-float',
+  background: 'neutral',
+  taskOpen: 'window',
+  sidebarNav: defaultSidebarNav(),
+  sidebarSearch: true,
+  sidebarCounts: true,
+  taskFields: defaultTaskFields(),
+  detailOrder: defaultDetailOrder(),
   taskChips: 'classic',
   dashboardOrder: [],
   accentCustom: '#d1453b',
@@ -381,6 +450,8 @@ export const defaultPreferences = (locale: Locale): Preferences => ({
   eisenhowerIncludeSomeday: false,
   eisenhowerWorkspace: null,
   onboarded: false,
+  setupDone: false,
+  workspaceOrder: [],
   whatsNew: true,
   seenVersion: null,
 });
@@ -416,6 +487,15 @@ export function hydratePreferences(stored: unknown, locale: Locale): Preferences
     density: isDensity(s.density) ? s.density : base.density,
     theme: isTheme(s.theme) ? s.theme : base.theme,
     accent: isAccent(s.accent) ? s.accent : base.accent,
+    // Settings written by a 1.x build have neither: they get the defaults.
+    layout: isLayout(s.layout) ? s.layout : base.layout,
+    background: isBackground(s.background) ? s.background : base.background,
+    taskOpen: isTaskOpen(s.taskOpen) ? s.taskOpen : base.taskOpen,
+    sidebarNav: readSidebarNav(s.sidebarNav),
+    sidebarSearch: s.sidebarSearch !== false,
+    sidebarCounts: s.sidebarCounts !== false,
+    taskFields: readTaskFields(s.taskFields),
+    detailOrder: readDetailOrder(s.detailOrder),
     // A missing choice is the published text layout, for an old account as much as a new one.
     taskChips: isTaskChips(s.taskChips) ? s.taskChips : base.taskChips,
     dashboardOrder: Array.isArray(s.dashboardOrder)
@@ -452,6 +532,10 @@ export function hydratePreferences(stored: unknown, locale: Locale): Preferences
     // Only the delays the Settings offers: anything else reads as the default.
     dustAfterMonths: isDustMonths(s.dustAfterMonths) ? s.dustAfterMonths : base.dustAfterMonths,
     onboarded: s.onboarded === true,
+    setupDone: s.setupDone === true,
+    workspaceOrder: Array.isArray(s.workspaceOrder)
+      ? s.workspaceOrder.filter((id): id is string => typeof id === 'string')
+      : [],
     whatsNew: s.whatsNew !== false,
     seenVersion: typeof s.seenVersion === 'string' && /^\d+\.\d+\.\d+$/.test(s.seenVersion)
       ? s.seenVersion

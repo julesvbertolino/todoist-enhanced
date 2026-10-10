@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon, type IconName } from './Icon';
 import { useT } from '@/hooks/useT';
@@ -17,12 +17,14 @@ import type { TranslationKey } from '@/i18n';
 import { SyncStatus } from './SyncStatus';
 import { Droppable } from './dnd/Droppable';
 import { ProjectDropRow, ProjectRowSortable } from './dnd/ProjectRowSortable';
-import { COFFEE_URL, FEEDBACK_URL } from '@/app-info';
+import { COFFEE_URL } from '@/app-info';
+import { Feedback } from './overlays/Feedback';
 import { ProjectMenu } from './ProjectMenu';
 import { DraggableTag } from './dnd/DraggableTag';
 import { dragClock } from './dnd/DragProvider';
 import type { ProjectSheetTarget } from './overlays/ProjectSheet';
 import { byChildOrder, byLabelOrder } from '@/domain/orderKey';
+import { visibleSidebarNav, type SidebarItemId } from '@/domain/sidebar';
 
 interface SidebarProps {
   route: Route;
@@ -70,9 +72,13 @@ export function Sidebar({
   const setPrefs = useStore((s) => s.setPrefs);
   const weekLayout = useStore((s) => s.prefs.weekLayout);
   const eisenhowerEnabled = useStore((s) => s.prefs.eisenhowerEnabled);
+  const sidebarNav = useStore((s) => s.prefs.sidebarNav);
+  const showSearch = useStore((s) => s.prefs.sidebarSearch);
+  const showCounts = useStore((s) => s.prefs.sidebarCounts);
   const disconnect = useStore((s) => s.disconnect);
   const draggingProjectId = useStore((s) => s.draggingProjectId);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
@@ -162,27 +168,13 @@ export function Sidebar({
   const toggleGroup = (key: string) =>
     setOpenGroups((prev) => ({ ...prev, [key]: !(prev[key] ?? true) }));
 
-  const workspaces = useMemo(() => projectTree(snapshot), [snapshot]);
+  const workspaceOrder = useStore((s) => s.prefs.workspaceOrder);
+  const workspaces = useMemo(() => projectTree(snapshot, workspaceOrder), [snapshot, workspaceOrder]);
   const user = snapshot.user;
   const avatar = avatarUrl(user);
   const karma = karmaStanding(user?.karma);
   const initials = (user?.full_name ?? '?')
     .split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase();
-
-  if (collapsed) {
-    return (
-      <div className="expand-wrap">
-        <button
-          className="iconbtn"
-          aria-label={t('nav.showSidebar')}
-          title={t('nav.showSidebar')}
-          onClick={() => setPrefs({ sidebarCollapsed: false })}
-        >
-          <Icon name="sidebar" />
-        </button>
-      </div>
-    );
-  }
 
   const navItem = (
     view: ViewId,
@@ -190,12 +182,14 @@ export function Sidebar({
     labelKey: TranslationKey,
     count: number,
     dropTarget?: DropTarget,
+    /* Dashboard and Logbook are two entries of the one insights route. */
+    page?: { id?: string; current: boolean },
   ) => {
     const button = (isOver: boolean) => (
       <button
         className={`navitem${isOver ? ' dropping' : ''}`}
-        data-tour={view === 'review' ? 'review' : undefined}
-        aria-current={route.view === view ? 'page' : undefined}
+        data-tour={view === 'week' ? 'week' : view === 'someday' ? 'someday' : view === 'review' ? 'review' : view === 'matrix' ? 'matrix' : labelKey === 'nav.dashboard' ? 'dashboard' : labelKey === 'insights.logbook' ? 'logbook' : undefined}
+        aria-current={(page ? page.current : route.view === view) ? 'page' : undefined}
         /* The key that gets here, once the pointer has actually rested on the
            row. Nobody goes looking for a shortcuts sheet, and a hint that
            appears the instant you pass over a row is a column of flashing
@@ -204,11 +198,11 @@ export function Sidebar({
         onMouseLeave={hideHint}
         onFocus={(event) => showHint(event.currentTarget, GO_KEYS[view])}
         onBlur={hideHint}
-        onClick={() => navigate(view)}
+        onClick={() => navigate(view, page?.id)}
       >
         <Icon name={icon} />
         <span className="label">{t(labelKey)}</span>
-        {count > 0 && <span className="count">{count}</span>}
+        {showCounts && count > 0 && <span className="count">{count}</span>}
       </button>
     );
     if (!dropTarget) return button(false);
@@ -230,12 +224,42 @@ export function Sidebar({
         >
           <Icon name="tag" className="taglabel" style={markerStyle(color, false)} />
           <span className="label">{name}</span>
-          {count !== undefined && count > 0 && <span className="count">{count}</span>}
+          {showCounts && count !== undefined && count > 0 && <span className="count">{count}</span>}
         </button>
         </DraggableTag>
       )}
     </Droppable>
   );
+
+  const visibleNav = visibleSidebarNav(sidebarNav, {
+    splitToday: weekLayout !== 'unified',
+    matrix: eisenhowerEnabled,
+  });
+  const insightsOnLogbook = route.view === 'insights' && route.id === 'logbook';
+
+  /** One entry of the nav, by id; the order and the switches are the user's. */
+  const navEntry = (id: SidebarItemId): JSX.Element => {
+    switch (id) {
+      case 'inbox':
+        // Dropping on Inbox means filing there, which is a plain project move.
+        return navItem('inbox', 'inbox', 'nav.inbox', counts.inbox,
+          inboxId ? { kind: 'project', projectId: inboxId } : undefined);
+      case 'today': return navItem('today', 'calendar', 'nav.today', counts.today, { kind: 'today' });
+      case 'week': return navItem('week', 'week', 'nav.week', counts.week, { kind: 'anytime' });
+      case 'upcoming': return navItem('upcoming', 'upcoming', 'nav.upcoming', counts.upcoming);
+      case 'someday': return navItem('someday', 'someday', 'nav.someday', counts.someday, { kind: 'someday' });
+      case 'review': return navItem('review', 'check', 'nav.review', 0);
+      case 'dashboard':
+        return navItem('insights', 'trend', 'nav.dashboard', 0, undefined,
+          { current: route.view === 'insights' && !insightsOnLogbook });
+      case 'logbook':
+        return navItem('insights', 'tasks', 'insights.logbook', 0, undefined,
+          { id: 'logbook', current: insightsOnLogbook });
+      case 'matrix': return navItem('matrix', 'dashboard', 'nav.matrix', 0);
+      case 'labels': return navItem('labels', 'tag', 'nav.labels', 0);
+    }
+  };
+  const navBlock = (ids: SidebarItemId[]) => ids.map((id) => <Fragment key={id}>{navEntry(id)}</Fragment>);
 
   /** A project row, or a folder that discloses the projects inside it. */
   const projectNode = (node: ProjectNode, keyPrefix = '', depth = 0): JSX.Element => {
@@ -322,7 +346,7 @@ export function Sidebar({
             {/* The count gives up its place to the actions under the pointer,
                 which is where Todoist puts them and where the eye looks. */}
             <span className="navend">
-              {count > 0 && <span className="count">{count}</span>}
+              {showCounts && count > 0 && <span className="count">{count}</span>}
               <button
                 className="navmore"
                 aria-label={t('project.actions')}
@@ -386,7 +410,17 @@ export function Sidebar({
   };
 
   return (
-    <aside className={`sidebar${sheet ? ' sidebar-sheet' : ''}`}>
+    <>
+    <Feedback open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
+    {/* Folded, the sidebar is still here and still drawn: it slides out
+        (theme.css), and `inert` takes it out of the tab order and out of reach
+        of a screen reader while it is away. */}
+    <aside
+      className={`sidebar${sheet ? ' sidebar-sheet' : ''}`}
+      // React 18's types do not know `inert` yet; the browser does.
+      {...({ inert: collapsed ? '' : undefined } as object)}
+      aria-hidden={collapsed || undefined}
+    >
       <div className="side-top" ref={menuRef}>
         <button
           className="profile"
@@ -417,22 +451,40 @@ export function Sidebar({
           <Icon name="caret" size="sm" />
         </button>
 
+        {/* Notifications and conflicts, one door. The dot says there is
+            something behind it, and says nothing about how much. */}
+        <button
+          className="iconbtn bellbtn"
+          data-tour="notifications"
+          aria-label={t('issues.title')}
+          title={t('issues.title')}
+          onClick={onIssues}
+        >
+          <Icon name="bell" />
+          {issuesCount > 0 && <span className="belldot" aria-hidden="true" />}
+        </button>
+        {!sheet && (
+          <button
+            className="iconbtn"
+            aria-label={t('nav.collapseSidebar')}
+            title={t('nav.collapseSidebar')}
+            onClick={() => setPrefs({ sidebarCollapsed: true })}
+          >
+            <Icon name="sidebar" />
+          </button>
+        )}
+
         {menuOpen && (
           <div className="menu" style={{ display: 'block' }}>
-            <button onClick={() => { setMenuOpen(false); navigate('insights'); }}>
-              <Icon name="trend" />
-              {t('nav.dashboard')}
-            </button>
-            <button onClick={() => { setMenuOpen(false); navigate('insights', 'logbook'); }}>
-              <Icon name="tasks" />
-              {t('insights.logbook')}
-            </button>
             <button onClick={() => { setMenuOpen(false); navigate('settings'); }}>
               <Icon name="settings" />
               {t('nav.settings')}
             </button>
-            <hr />
-            <button onClick={() => window.open(FEEDBACK_URL, '_blank', 'noopener,noreferrer')}>
+            <button onClick={() => { setMenuOpen(false); window.dispatchEvent(new Event('enhanced:changelog')); }}>
+              <Icon name="sparkles" />
+              {t('nav.whatsNew')}
+            </button>
+            <button onClick={() => { setMenuOpen(false); setFeedbackOpen(true); }}>
               <Icon name="comment" />
               {t('nav.feedback')}
             </button>
@@ -445,7 +497,7 @@ export function Sidebar({
               <Icon name="external" />
               {t('nav.openTodoist')}
             </button>
-            <button onClick={() => { setMenuOpen(false); void disconnect(); }}>
+            <button className="danger" onClick={() => { setMenuOpen(false); void disconnect(); }}>
               <Icon name="logout" />
               {t('nav.signOut')}
             </button>
@@ -454,26 +506,18 @@ export function Sidebar({
       </div>
 
       <div className="side-scroll">
-        <button className="searchbtn" onClick={onSearch}>
-          <Icon name="search" />
-          <span>{t('nav.search')}</span>
-          <kbd>⌘K</kbd>
-        </button>
+        {showSearch && (
+          <button className="searchbtn" onClick={onSearch}>
+            <Icon name="search" />
+            <span>{t('nav.search')}</span>
+            <kbd>⌘K</kbd>
+          </button>
+        )}
 
         <nav aria-label={t('nav.projects')}>
-          {navItem(
-            'inbox', 'inbox', 'nav.inbox', counts.inbox,
-            // Dropping on Inbox means filing there, which is a plain project move.
-            inboxId ? { kind: 'project', projectId: inboxId } : undefined,
-          )}
-          {weekLayout !== 'unified' &&
-            navItem('today', 'calendar', 'nav.today', counts.today, { kind: 'today' })}
-          {navItem('week', 'week', 'nav.week', counts.week, { kind: 'anytime' })}
-          {navItem('upcoming', 'upcoming', 'nav.upcoming', counts.upcoming)}
-          {navItem('someday', 'someday', 'nav.someday', counts.someday, { kind: 'someday' })}
-          {navItem('review', 'check', 'nav.review', 0)}
-          {eisenhowerEnabled && navItem('matrix', 'dashboard', 'nav.matrix', 0)}
-          {navItem('labels', 'tag', 'nav.labels', 0)}
+          {navBlock(visibleNav.main)}
+          {visibleNav.main.length > 0 && visibleNav.other.length > 0 && <div className="nav-gap" />}
+          {navBlock(visibleNav.other)}
         </nav>
 
         {(favourites.labels.length > 0 || favourites.projects.length > 0) && (
@@ -499,6 +543,7 @@ export function Sidebar({
             <SideGroup
               key={key}
               title={workspace.name ?? t('nav.myProjects')}
+              logo={workspace.workspaceId ? snapshot.workspaces[workspace.workspaceId]?.logo_big ?? null : null}
               open={openGroups[key] ?? true}
               onToggle={() => toggleGroup(key)}
               onAdd={() => onProjectSheet({
@@ -507,7 +552,9 @@ export function Sidebar({
               })}
               addLabel={t('nav.addProject')}
             >
-              {workspace.roots.map((node) => projectNode(node))}
+              {workspace.roots.length > 0
+                ? workspace.roots.map((node) => projectNode(node))
+                : <p className="side-empty">{t('nav.noProjectsYet')}</p>}
             </SideGroup>
           );
         })}
@@ -518,43 +565,10 @@ export function Sidebar({
           {t('nav.addTask')}
           <Icon name="plus" />
         </button>
-        {/* An icon with a dot on it is exactly as loud whether it is telling
-            you about nothing or about fourteen contradictions. When there is
-            something in it, it says so in words and takes a line of its own;
-            when there is not, it goes back to being a quiet icon. */}
-        {issuesCount > 0 && (
-          <button className="issuesline" onClick={onIssues}>
-            <Icon name="warning" size="sm" />
-            <span>{t('issues.title')}</span>
-            <span className="count">{issuesCount > 99 ? '99+' : issuesCount}</span>
-          </button>
-        )}
         <div className="footrow">
           <SyncStatus />
-          <div className="footicons">
-            {issuesCount === 0 && (
-              <button
-                className="iconbtn issuesbtn"
-                aria-label={t('issues.title')}
-                title={t('issues.title')}
-                onClick={onIssues}
-              >
-                <Icon name="warning" />
-              </button>
-            )}
-            {!sheet && (
-              <button
-                className="iconbtn"
-                aria-label={t('nav.collapseSidebar')}
-                title={t('nav.collapseSidebar')}
-                onClick={() => setPrefs({ sidebarCollapsed: true })}
-              >
-                <Icon name="sidebar" />
-              </button>
-            )}
-          </div>
         </div>
-      </div>
+            </div>
 
       {hint && createPortal(
         <span className="gohint" style={{ top: hint.top, left: hint.left }} role="presentation">
@@ -565,6 +579,19 @@ export function Sidebar({
         document.body,
       )}
     </aside>
+    {collapsed && (
+      <div className="expand-wrap">
+        <button
+          className="iconbtn"
+          aria-label={t('nav.showSidebar')}
+          title={t('nav.showSidebar')}
+          onClick={() => setPrefs({ sidebarCollapsed: false })}
+        >
+          <Icon name="sidebar" />
+        </button>
+      </div>
+    )}
+    </>
   );
 }
 
@@ -576,9 +603,11 @@ export function Sidebar({
  * resting sidebar stays quiet.
  */
 function SideGroup({
-  title, open, onToggle, onAdd, addLabel, dropTarget, children,
+  title, logo, open, onToggle, onAdd, addLabel, dropTarget, children,
 }: {
   title: string;
+  /** A workspace's own picture, when Todoist has one. */
+  logo?: string | null;
   open: boolean;
   onToggle: () => void;
   onAdd?: () => void;
@@ -590,6 +619,7 @@ function SideGroup({
   const head = () => (
     <div className="side-head">
         <button className="side-headbtn" aria-expanded={open} onClick={onToggle}>
+          {logo && <img className="side-logo" src={logo} alt="" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
           <span>{title}</span>
         </button>
         {onAdd && (

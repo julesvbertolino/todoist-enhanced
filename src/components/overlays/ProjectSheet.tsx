@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Overlay } from './Overlay';
 import { Icon } from '../Icon';
 import { Select } from '../Select';
@@ -7,13 +7,14 @@ import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
 import { colorValue, markerStyle } from '@/domain/colors';
 import { readProjectIcon, stripProjectIcon, withProjectIcon } from '@/domain/projectIcons';
+import { parentChoices } from '@/domain/projectParents';
 import type { TranslationKey } from '@/i18n';
 
 /** Todoist's own project palette, in Todoist's own order. */
 const CHOICES = [
   'berry_red', 'red', 'orange', 'yellow', 'olive_green', 'lime_green',
   'green', 'mint_green', 'teal', 'sky_blue', 'light_blue', 'blue',
-  'grape', 'violet', 'lavender', 'magenta', 'salmon', 'charcoal',
+  'grape', 'violet', 'lavender', 'magenta', 'salmon', 'charcoal', 'grey', 'taupe',
 ];
 
 /** The value the destination select uses for the personal space. */
@@ -27,7 +28,12 @@ const PERSONAL = 'personal';
  * it reaches the store: a position among the siblings.
  */
 export type ProjectSheetTarget =
-  | { mode: 'create'; workspaceId: string | null; anchor?: { siblingId: string; position: 'above' | 'below' } }
+  | {
+      mode: 'create'; workspaceId: string | null;
+      anchor?: { siblingId: string; position: 'above' | 'below' };
+      /** Told the new project's id, for a caller that was in the middle of something else (the composer). */
+      onCreated?: (projectId: string) => void;
+    }
   | { mode: 'edit'; projectId: string }
   | null;
 
@@ -48,6 +54,10 @@ export function ProjectSheet({ target, onClose }: ProjectSheetProps) {
   const { t } = useT();
   const createProject = useStore((s) => s.createProject);
   const updateProjectFields = useStore((s) => s.updateProjectFields);
+  const nestProject = useStore((s) => s.nestProject);
+  const moveProjectToWorkspace = useStore((s) => s.moveProjectToWorkspace);
+  const setViewPrefs = useStore((s) => s.setViewPrefs);
+  const prefs = useStore((s) => s.prefs);
   const snapshot = useStore((s) => s.snapshot);
 
   const editing = target?.mode === 'edit' ? snapshot.projects[target.projectId] : undefined;
@@ -59,6 +69,12 @@ export function ProjectSheet({ target, onClose }: ProjectSheetProps) {
   const [destination, setDestination] = useState(PERSONAL);
   const [saving, setSaving] = useState(false);
   const [icon, setIcon] = useState<string | null>(null);
+  /** The project it is filed under; '' is the top level. */
+  const [parent, setParent] = useState('');
+  const [iconOpen, setIconOpen] = useState(false);
+  /** How the project opens. Enhanced keeps its own mode per project; Todoist's `view_style` follows it. */
+  const [view, setView] = useState<'list' | 'board'>('list');
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   const workspaces = useMemo(
     () => Object.values(snapshot.workspaces).sort((a, b) => a.name.localeCompare(b.name)),
@@ -77,6 +93,11 @@ export function ProjectSheet({ target, onClose }: ProjectSheetProps) {
       setIcon(readProjectIcon(project?.description));
       setFavourite(project?.is_favorite ?? false);
       setDestination(project?.workspace_id ?? PERSONAL);
+      setParent(project?.parent_id ?? '');
+      /* Enhanced's own choice wins; before one is made, Todoist's decides. */
+      const own = prefs.views[`project:${target.projectId}`]?.mode;
+      setView(own === 'board' || own === 'list' ? own : project?.view_style === 'board' ? 'board' : 'list');
+      setIconOpen(false);
       return;
     }
     setName('');
@@ -85,6 +106,10 @@ export function ProjectSheet({ target, onClose }: ProjectSheetProps) {
     setIcon(null);
     setFavourite(false);
     setDestination(target.workspaceId ?? PERSONAL);
+    // Added next to a project, it starts in that project's branch.
+    setParent((target.anchor && snapshot.projects[target.anchor.siblingId]?.parent_id) || '');
+    setView('list');
+    setIconOpen(false);
     // Reading the project once, on opening, is the point: later edits are ours.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Seed fields only when opening; later project updates must preserve the draft.
   }, [target]);
@@ -96,6 +121,32 @@ export function ProjectSheet({ target, onClose }: ProjectSheetProps) {
     ],
     [workspaces, t],
   );
+
+  /* Where it can be filed depends on the workspace it is in, so a different
+     destination empties the choice rather than keeping one that cannot hold. */
+  const workspaceId = destination === PERSONAL ? null : destination;
+  const parents = useMemo(
+    () => parentChoices(snapshot.projects, workspaceId, target?.mode === 'edit' ? target.projectId : undefined),
+    [snapshot.projects, workspaceId, target],
+  );
+  const parentOptions = useMemo(
+    () => [
+      { value: '', label: t('project.parentNone') },
+      ...parents.map((choice) => ({
+        value: choice.id, label: choice.name, marker: snapshot.projects[choice.id]?.color, sub: choice.depth > 0,
+      })),
+    ],
+    [parents, snapshot.projects, t],
+  );
+
+  /* The description grows with what is typed, so it reads as a line of the
+     card until there is more than a line to say. */
+  useLayoutEffect(() => {
+    const box = descriptionRef.current;
+    if (!box) return;
+    box.style.height = 'auto';
+    box.style.height = `${box.scrollHeight}px`;
+  }, [description, target]);
 
   async function submit() {
     if (!name.trim() || saving || !target) return;
@@ -112,15 +163,22 @@ export function ProjectSheet({ target, onClose }: ProjectSheetProps) {
         color,
         description: finalDescription,
         is_favorite: favourite,
+        view_style: view,
       });
+      setViewPrefs(`project:${target.projectId}`, { mode: view });
+      const movedSpace = (editing?.workspace_id ?? null) !== (destination === PERSONAL ? null : destination);
+      if (movedSpace) await moveProjectToWorkspace(target.projectId, destination === PERSONAL ? null : destination);
+      else if (parent !== (editing?.parent_id ?? '')) await nestProject(target.projectId, parent || null);
     } else {
-      await createProject(
+      const id = await createProject(
         name.trim(),
         color,
         destination === PERSONAL ? null : destination,
         target.anchor ?? null,
-        { description: finalDescription, favourite },
+        { description: finalDescription, favourite, parentId: parent || null, viewStyle: view },
       );
+      if (view !== 'list') setViewPrefs(`project:${id}`, { mode: view });
+      target.onCreated?.(id);
     }
     onClose();
   }
@@ -142,53 +200,67 @@ export function ProjectSheet({ target, onClose }: ProjectSheetProps) {
       </div>
 
       <div className="sheet-body projectform">
-        {/* The marker the sidebar will show, updating as the fields do. */}
-        <div className="projectpreview">
-          <span className="hash" style={markerStyle(color)}>
-            {icon ? <ProjectIcon iconId={icon} size="sm" style={{ color: 'inherit' }} /> : '#'}
+        {/* The card is the form: what the project will look like in the
+            sidebar is what is being typed into. */}
+        <div className="pcx" style={{ '--c': colorValue(color) } as React.CSSProperties}>
+          <button
+            type="button"
+            className={`pcx-icon${iconOpen ? ' open' : ''}`}
+            aria-label={t('project.changeIcon')}
+            title={t('project.changeIcon')}
+            aria-expanded={iconOpen}
+            onClick={() => setIconOpen((v) => !v)}
+          >
+            <span className="hash" style={markerStyle(color)}>
+              {icon ? <ProjectIcon iconId={icon} size="sm" style={{ color: 'inherit' }} /> : '#'}
+            </span>
+          </button>
+          <div className="pcx-main">
+            <input
+              className="pcx-name"
+              data-autofocus
+              value={name}
+              placeholder={t('project.name')}
+              aria-label={t('project.name')}
+              autoComplete="off"
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') void submit(); }}
+            />
+            <textarea
+              ref={descriptionRef}
+              className="pcx-desc"
+              rows={1}
+              value={description}
+              placeholder={t('project.descriptionPlaceholder')}
+              aria-label={t('project.description')}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+          <button
+            type="button"
+            className={`starbtn${favourite ? ' on' : ''}`}
+            aria-pressed={favourite}
+            title={t(favourite ? 'project.removeFavourite' : 'project.favourite')}
+            aria-label={t('project.favourite')}
+            onClick={() => setFavourite((v) => !v)}
+          >
+            <Icon name="star" size="sm" />
+          </button>
+        </div>
+
+        {/* React 18's types do not know `inert` yet; the browser does. */}
+        <div className={`iconfold${iconOpen ? ' open' : ''}`} {...({ inert: iconOpen ? undefined : '' } as object)}>
+          <div className="iconfold-in">
+            <ProjectIconGrid value={icon} onPick={setIcon} />
+            <p className="menuhint">{t('project.iconHint')}</p>
+          </div>
+        </div>
+
+        <div className="formfield">
+          <span className="fieldlabel" id="project-colour">
+            {t('project.colour')}
+            <b className="cname">{t(`colour.${color}` as TranslationKey)}</b>
           </span>
-          <span className="projectpreview-name">{name.trim() || t('project.name')}</span>
-          {favourite && (
-            <Icon name="star" size="sm" className="projectpreview-star" />
-          )}
-          <span className="projectpreview-where">
-            {isEdit
-              ? (editing?.workspace_id
-                  ? snapshot.workspaces[editing.workspace_id]?.name
-                  : t('nav.myProjects'))
-              : destinations.find((d) => d.value === destination)?.label}
-          </span>
-        </div>
-
-        <div className="formfield">
-          <label className="fieldlabel" htmlFor="project-name">{t('project.name')}</label>
-          <input
-            id="project-name"
-            className="textfield"
-            data-autofocus
-            value={name}
-            placeholder={t('project.namePlaceholder')}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') void submit(); }}
-          />
-        </div>
-
-        <div className="formfield">
-          <label className="fieldlabel" htmlFor="project-description">
-            {t('project.description')}
-          </label>
-          <textarea
-            id="project-description"
-            className="textfield textarea"
-            rows={2}
-            value={description}
-            placeholder={t('project.descriptionPlaceholder')}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
-
-        <div className="formfield">
-          <span className="fieldlabel" id="project-colour">{t('project.colour')}</span>
           <div className="swatches" role="radiogroup" aria-labelledby="project-colour">
             {CHOICES.map((choice) => (
               <button
@@ -208,37 +280,42 @@ export function ProjectSheet({ target, onClose }: ProjectSheetProps) {
           </div>
         </div>
 
-        <div className="formfield">
-          <span className="fieldlabel">{t('project.icon')}</span>
-          <ProjectIconGrid value={icon} onPick={setIcon} />
-          <p className="menuhint">{t('project.iconHint')}</p>
-        </div>
-
-        {/* Only worth asking when there is somewhere else for it to go, and
-            never when the project is already somewhere: moving between
-            workspaces is a different act from editing one. */}
-        {!isEdit && workspaces.length > 0 && (
-          <div className="formfield">
+        <div className="pjrows">
+          {/* Only worth asking when there is somewhere else for it to go. In an
+              edit, changing it moves the project, with its tasks. */}
+          {workspaces.length > 0 && (
+            <div className="pjrow">
+              <span>{t('project.workspace')}</span>
+              <Select
+                value={destination}
+                options={destinations}
+                ariaLabel={t('project.workspace')}
+                onChange={(next) => { setDestination(next); setParent(''); }}
+              />
+            </div>
+          )}
+          <div className="pjrow">
+            <span>{t('project.parent')}</span>
             <Select
-              label={t('project.destination')}
-              value={destination}
-              options={destinations}
-              onChange={setDestination}
+              value={parent}
+              options={parentOptions}
+              ariaLabel={t('project.parent')}
+              onChange={setParent}
             />
           </div>
-        )}
+        </div>
 
-        {/* A new project can be a favourite from the start, the same as an
-            existing one. There was no reason for the two to differ. */}
-        <button
-          type="button"
-          className={`favtoggle${favourite ? ' on' : ''}`}
-          aria-pressed={favourite}
-          onClick={() => setFavourite((v) => !v)}
-        >
-          <Icon name="star" size="sm" />
-          <span>{t('project.favourite')}</span>
-        </button>
+        <div className="formfield">
+          <span className="fieldlabel" id="project-view">{t('project.view')}</span>
+          <div className="segmented" role="group" aria-labelledby="project-view">
+            {(['list', 'board'] as const).map((mode) => (
+              <button key={mode} type="button" aria-pressed={view === mode} onClick={() => setView(mode)}>
+                <Icon name={mode} size="sm" />
+                <small>{t(`toolbar.${mode}` as TranslationKey)}</small>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="sheet-foot">

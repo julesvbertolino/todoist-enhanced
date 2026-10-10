@@ -14,8 +14,8 @@ export type EisenhowerQuadrant =
 
 export const EISENHOWER_QUADRANTS: EisenhowerQuadrant[] = [
   'urgent-important',
-  'urgent-not-important',
   'not-urgent-important',
+  'urgent-not-important',
   'not-urgent-not-important',
 ];
 

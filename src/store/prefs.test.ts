@@ -129,3 +129,110 @@ describe('estimate storage preference', () => {
     expect(mergeSynced(prefs({ estimateStorage: 'duration' }), legacy, 'en').estimateStorage).toBeNull();
   });
 });
+
+describe('the v2 look settings', () => {
+  const comment = (stored: object) => `${SETTINGS_COMMENT_MARKER}\n\n${JSON.stringify(stored)}`;
+
+  it('gives a v1 comment, which has neither, the defaults', () => {
+    const { layout: _l, background: _b, ...v1 } = syncedPreferences(prefs());
+    const stored = readSettingsComment(comment(v1));
+    const merged = mergeSynced(prefs(), stored!, 'en');
+    expect(merged.layout).toBe('page-float');
+    expect(merged.background).toBe('neutral');
+  });
+
+  it('reads back what it wrote', () => {
+    const wrote = prefs({ layout: 'sidebar-float', background: 'colored', accent: 'graphite' });
+    const stored = readSettingsComment(settingsCommentContent(wrote));
+    const merged = mergeSynced(prefs(), stored!, 'en');
+    expect(merged).toMatchObject({ layout: 'sidebar-float', background: 'colored', accent: 'graphite' });
+  });
+
+  it('ignores a value it does not know instead of keeping it', () => {
+    const hydrated = hydratePreferences({ layout: 'overlay', background: 'rainbow', accent: 'mauve' }, 'en');
+    expect(hydrated).toMatchObject({ layout: 'page-float', background: 'neutral', accent: 'red' });
+  });
+
+  it('opens a task in a window unless the account says otherwise', () => {
+    const { taskOpen: _t, ...v1 } = syncedPreferences(prefs());
+    const merged = mergeSynced(prefs(), readSettingsComment(comment(v1))!, 'en');
+    expect(merged.taskOpen).toBe('window');
+    expect(hydratePreferences({ taskOpen: 'drawer' }, 'en').taskOpen).toBe('window');
+
+    const wrote = prefs({ taskOpen: 'panel' });
+    const back = mergeSynced(prefs(), readSettingsComment(settingsCommentContent(wrote))!, 'en');
+    expect(back.taskOpen).toBe('panel');
+  });
+
+  it('keeps every accent id a 1.x account may have stored', () => {
+    for (const accent of ['red', 'orange', 'amber', 'green', 'teal', 'blue', 'indigo', 'purple', 'pink', 'custom']) {
+      expect(hydratePreferences({ accent }, 'en').accent).toBe(accent);
+    }
+  });
+
+  it('carries keys it has not heard of through a merge, so an older build does not wipe them', () => {
+    const stored = readSettingsComment(comment({ ...syncedPreferences(prefs()), later: 'kept' }));
+    const merged = mergeSynced(prefs(), stored!, 'en') as unknown as Record<string, unknown>;
+    expect(merged.later).toBe('kept');
+  });
+});
+
+describe('the sidebar settings', () => {
+  it('give a v1 account the full sidebar it always had', () => {
+    const hydrated = hydratePreferences({ homepage: 'week' }, 'en');
+    expect(hydrated.sidebarSearch).toBe(true);
+    expect(hydrated.sidebarCounts).toBe(true);
+    expect(hydrated.sidebarNav.main.map((e) => e.id)).toEqual(['inbox', 'today', 'week', 'upcoming', 'someday']);
+    expect(hydrated.sidebarNav.other.map((e) => e.id)).toContain('logbook');
+  });
+
+  it('survive a round trip through the settings comment', () => {
+    const nav = hydratePreferences({
+      sidebarNav: {
+        main: ['week', 'inbox', 'today', 'upcoming', 'someday'].map((id) => ({ id, on: true })),
+        other: [{ id: 'review', on: false }],
+      },
+      sidebarSearch: false, sidebarCounts: false,
+    }, 'en');
+    const stored = readSettingsComment(settingsCommentContent(prefs(nav)));
+    const merged = mergeSynced(prefs(), stored!, 'en');
+    expect(merged.sidebarSearch).toBe(false);
+    expect(merged.sidebarCounts).toBe(false);
+    expect(merged.sidebarNav.main[0].id).toBe('week');
+    expect(merged.sidebarNav.other.find((e) => e.id === 'review')?.on).toBe(false);
+  });
+
+  it('read a damaged list as the default instead of throwing', () => {
+    expect(hydratePreferences({ sidebarNav: 42 }, 'en').sidebarNav).toEqual(prefs().sidebarNav);
+  });
+});
+
+describe('what a task row shows', () => {
+  it('is everything, in the default order, for an account that never set it', () => {
+    const hydrated = hydratePreferences({}, 'en');
+    expect(Object.values(hydrated.taskFields).every(Boolean)).toBe(true);
+    expect(hydrated.detailOrder).toEqual(['estimate', 'date', 'deadline', 'labels', 'project']);
+  });
+
+  it('travels with the account, and a damaged value is the default', () => {
+    const set = hydratePreferences({ taskFields: { description: false }, detailOrder: ['project', 'x'] }, 'en');
+    const stored = readSettingsComment(settingsCommentContent(prefs(set)));
+    const merged = mergeSynced(prefs(), stored!, 'en');
+    expect(merged.taskFields.description).toBe(false);
+    expect(merged.detailOrder[0]).toBe('project');
+    expect(hydratePreferences({ taskFields: 'x', detailOrder: 3 }, 'en').detailOrder).toHaveLength(5);
+  });
+
+  it('reads a comment from before the 2.0 setup as not yet set up, and keeps a stored answer', () => {
+    const { setupDone: _s, ...v1 } = syncedPreferences(prefs());
+    expect(mergeSynced(prefs({ setupDone: true }), v1 as never, 'en').setupDone).toBe(true);
+    expect(hydratePreferences({ setupDone: 'yes' }, 'en').setupDone).toBe(false);
+    expect(hydratePreferences({ setupDone: true }, 'en').setupDone).toBe(true);
+  });
+
+  it('reads a missing or malformed group order as Todoist\'s own', () => {
+    expect(hydratePreferences({}, 'en').workspaceOrder).toEqual([]);
+    expect(hydratePreferences({ workspaceOrder: 'w1' }, 'en').workspaceOrder).toEqual([]);
+    expect(hydratePreferences({ workspaceOrder: ['w1', 3, 'personal'] }, 'en').workspaceOrder).toEqual(['w1', 'personal']);
+  });
+});

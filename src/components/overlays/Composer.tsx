@@ -7,6 +7,7 @@ import { Icon } from '../Icon';
 import { EstimateField } from '../EstimateField';
 import { PlacementField } from '../PlacementField';
 import { Select } from '../Select';
+import { ProjectSheet } from './ProjectSheet';
 import { DateField } from '../DateField';
 import { TaskNameField } from '../TaskNameField';
 import { useT } from '@/hooks/useT';
@@ -52,6 +53,11 @@ export function Composer({
   const naturalDates = useStore((s) => s.prefs.naturalDates);
   const dateFormat = useStore((s) => s.prefs.dateFormat);
 
+  /* Where a task goes when nothing else says: the account's Inbox, however it is found. */
+  const inboxId = snapshot.user?.inbox_project_id
+    || Object.values(snapshot.projects).find((p) => p.inbox_project && !p.is_deleted)?.id
+    || '';
+
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [projectId, setProjectId] = useState('');
@@ -64,6 +70,8 @@ export function Composer({
   const [labels, setLabels] = useState<string[]>([]);
   const [minutes, setMinutes] = useState<number | null>(null);
   const [tagsOpen, setTagsOpen] = useState(false);
+  /** The project sheet, opened from the project chip's "New project…". */
+  const [newProject, setNewProject] = useState(false);
   const [tagQuery, setTagQuery] = useState('');
   const newTag = useCreateTag(tagQuery);
   const [subtasks, setSubtasks] = useState<string[]>([]);
@@ -84,7 +92,7 @@ export function Composer({
     setSubtasks([]);
     setSubtaskDraft('');
     setRefusals([]);
-    setProjectId(defaultProjectId ?? snapshot.user?.inbox_project_id ?? '');
+    setProjectId(defaultProjectId || inboxId);
     setSectionId(defaultSectionId ?? '');
     setDate(defaultDate ?? '');
     setRecurrence(null);
@@ -92,7 +100,7 @@ export function Composer({
     /* eslint-disable-next-line react-hooks/exhaustive-deps -- the array is
        built fresh by the caller on every render; its contents are the dep. */
   }, [open, defaultProjectId, defaultSectionId, defaultDate, defaultPriority, defaultLabels?.join('\u0000'),
-    snapshot.user?.inbox_project_id]);
+    inboxId]);
 
   const tags = Object.values(snapshot.labels)
     .filter((l) => !l.is_deleted && !l.name.startsWith('est-'))
@@ -140,7 +148,7 @@ export function Composer({
   /* The default the project field falls back to, which is where a refused
      `#project` leaves it: the composer was opened on somewhere, and "nowhere"
      is not a project a task can be created in. */
-  const fallbackProject = defaultProjectId ?? snapshot.user?.inbox_project_id ?? '';
+  const fallbackProject = defaultProjectId || inboxId;
 
   /**
    * A reading turned down takes its value back out of the field it filled.
@@ -184,6 +192,29 @@ export function Composer({
    * the second word marked. The refusal empties the field; the effect fills it
    * again from whatever is still being read, and runs after it.
    */
+  /* What the name said a moment ago. When a reading disappears because the
+     words were deleted, the field it filled lets go of it too — unless the
+     field was changed by hand since, which is then left alone. */
+  const wasRead = useRef<{
+    date: string | null; repeat: string | null; project: string | null; section: string | null;
+    priority: DisplayPriority | null; minutes: number | null;
+  }>({ date: null, repeat: null, project: null, section: null, priority: null, minutes: null });
+  useEffect(() => {
+    const was = wasRead.current;
+    if (was.date && !readDate) setDate((now) => (now === was.date ? (defaultDate ?? '') : now));
+    if (was.repeat && !readRepeat) setRecurrence((now) => (now?.string === was.repeat ? null : now));
+    if (was.project && !readProject) {
+      setProjectId((now) => (now === was.project ? fallbackProject : now));
+      setSectionId((now) => (now === was.section ? (defaultSectionId ?? '') : now));
+    }
+    if (was.priority && !readPriority) setPriority((now) => (now === was.priority ? (defaultPriority ?? 4) : now));
+    if (was.minutes !== null && readMinutes === null) setMinutes((now) => (now === was.minutes ? null : now));
+    wasRead.current = {
+      date: readDate ?? null, repeat: readRepeat?.string ?? null, project: readProject ?? null,
+      section: readSection ?? null, priority: readPriority ?? null, minutes: readMinutes ?? null,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the readings themselves, not on the fallbacks.
+  }, [readDate, readRepeat?.string, readProject, readSection, readPriority, readMinutes]);
   useEffect(() => { if (readDate) setDate(readDate); }, [readDate, refusals]);
   /* Depends on the rule's text, not on the object: the parser builds a new one
      on every keystroke and the effect would never stop firing. */
@@ -288,7 +319,7 @@ export function Composer({
     /* `||`, not `??`: an unset picker is an empty string, not null, and an
        empty string sent as project_id is what Todoist answers "invalid
        argument value" to — which is a task that never gets created. */
-    const targetProject = projectId || snapshot.user?.inbox_project_id;
+    const targetProject = projectId || inboxId;
     const dueDate = date;
     const repeat = recurrence;
     const pending = subtaskDraft.trim();
@@ -324,6 +355,7 @@ export function Composer({
   }
 
   return (
+    <>
     <Overlay open={open} onClose={onClose} label={t('nav.addTask')} size="sm">
       <div
         className="composerbox"
@@ -399,19 +431,6 @@ export function Composer({
             label={t('detail.deadline')}
           />
 
-          {/* One chip for both: a section is a place, not a setting applied
-              to the project chosen before it. The Inbox is a project like any
-              other, so this chip is never empty. */}
-          <PlacementField
-            variant="chip"
-            label={t('composer.project')}
-            value={{ projectId, sectionId: sectionId || null }}
-            onChange={(place) => {
-              setProjectId(place.projectId);
-              setSectionId(place.sectionId ?? '');
-            }}
-          />
-
           <Select
             variant="chip"
             label={t('composer.priority')}
@@ -426,8 +445,6 @@ export function Composer({
               label: `P${p}`,
             }))}
           />
-
-          <EstimateChip minutes={minutes} onChange={setMinutes} />
 
           {allTags.map((label) => {
             const known = tags.find((l) => l.name === label);
@@ -455,7 +472,7 @@ export function Composer({
               return !openNow;
             })}
           >
-            <Icon name="plus" size="sm" />
+            <Icon name="tag" size="sm" />
             <span className="fselect-value">{t('composer.tag')}</span>
           </button>
 
@@ -502,6 +519,21 @@ export function Composer({
               ))}
             </div>
           )}
+          <EstimateChip minutes={minutes} onChange={setMinutes} />
+
+          {/* One chip for both: a section is a place, not a setting applied
+              to the project chosen before it. The Inbox is a project like any
+              other, so this chip is never empty. */}
+          <PlacementField
+            variant="chip"
+            label={t('composer.project')}
+            value={{ projectId: projectId || inboxId, sectionId: sectionId || null }}
+            onNewProject={() => setNewProject(true)}
+            onChange={(place) => {
+              setProjectId(place.projectId);
+              setSectionId(place.sectionId ?? '');
+            }}
+          />
         </div>
 
         {/* Level 3, subtasks: open, with a heading and a count, one of the
@@ -583,6 +615,17 @@ export function Composer({
         </div>
       </div>
     </Overlay>
+    <ProjectSheet
+      target={newProject
+        ? {
+            mode: 'create',
+            workspaceId: null,
+            onCreated: (id) => { setProjectId(id); setSectionId(''); },
+          }
+        : null}
+      onClose={() => setNewProject(false)}
+    />
+    </>
   );
 }
 
@@ -630,7 +673,7 @@ function EstimateChip({
       className={`fselect-face chipface${minutes === null ? ' unset' : ''}`}
       onClick={() => setEditing(true)}
     >
-      <Icon name={minutes === null ? 'plus' : 'clock'} size="sm" />
+      <Icon name="clock" size="sm" />
       <span className="fselect-value">
         {minutes === null ? t('composer.duration') : formatDuration(minutes, locale)}
       </span>

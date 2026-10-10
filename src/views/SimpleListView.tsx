@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { ProjectMenu } from '@/components/ProjectMenu';
 import { PageHeader } from '@/components/PageHeader';
 import { SubtasksProvider } from '@/components/TaskRow';
 import { DisplayMenu } from '@/components/DisplayMenu';
@@ -25,6 +26,8 @@ interface SimpleListViewProps {
   onInsights: () => void;
   onUnestimated: (items?: Item[]) => void;
   onAddTaskTo: (placement: TaskPlacement) => void;
+  /** Opens the project sheet; the Inbox page's menu edits through it. */
+  onProjectSheet?: (target: { mode: 'edit'; projectId: string }) => void;
 }
 
 /**
@@ -47,9 +50,13 @@ const priorityOf = (key: string): 1 | 2 | 3 | 4 | undefined => {
 };
 
 function SimpleListBody({
-  kind, labelName, onOpen, onInsights, onUnestimated, onAddTaskTo,
+  kind, labelName, onOpen, onInsights, onUnestimated, onAddTaskTo, onProjectSheet,
 }: SimpleListViewProps) {
   const { t } = useT();
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const inboxProject = kind === 'inbox'
+    ? Object.values(useStore.getState().snapshot.projects).find((p) => p.inbox_project && !p.is_deleted)
+    : undefined;
   const timePill = useTimePill();
   const { snapshot, items, childrenOf } = useData();
   const prefs = useStore((s) => s.prefs);
@@ -199,6 +206,32 @@ function SimpleListBody({
               <Icon name="trend" />
               {t('toolbar.insights')}
             </button>
+            {inboxProject && (
+              <span className="pmenu-wrap">
+                <button
+                  className="iconbtn"
+                  aria-label={t('project.actions')}
+                  title={t('project.actions')}
+                  aria-expanded={menuAnchor !== null}
+                  aria-haspopup="menu"
+                  onClick={(event) => {
+                    const button = event.currentTarget;
+                    setMenuAnchor((current) => (current ? null : button));
+                  }}
+                >
+                  <Icon name="more" />
+                </button>
+                {menuAnchor && (
+                  <ProjectMenu
+                    project={inboxProject}
+                    align="right"
+                    anchor={menuAnchor}
+                    onClose={() => setMenuAnchor(null)}
+                    onEdit={() => onProjectSheet?.({ mode: 'edit', projectId: inboxProject.id })}
+                  />
+                )}
+              </span>
+            )}
           </>
         }
         load={load}
@@ -250,7 +283,6 @@ function SimpleListBody({
             : undefined}
           childrenOf={childrenOf}
           mode={current.mode}
-          wide={current.wide}
           group={current.group}
           sort={current.sort}
           onOpen={onOpen}

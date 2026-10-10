@@ -14,10 +14,10 @@ export const test = base.extend<{ demo: Page }>({
 
     // The demo account has been through the first run, so no tour stands in front.
     await page.addInitScript(() => {
-      localStorage.setItem('onboarded', JSON.stringify(['demo-user']));
+      localStorage.setItem('skipSetup', '1');
     });
     await page.goto('/');
-    await page.getByRole('button', { name: 'Explore with demo data instead' }).click();
+    await page.getByRole('button', { name: 'Explore with demo data' }).click();
     await expect(rows(page).first()).toBeVisible();
 
     await use(page);

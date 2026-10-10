@@ -1,29 +1,41 @@
 import { EstimateConversion } from '@/components/overlays/EstimateConversion';
 import { canStoreDurations } from '@/domain/estimates';
 import { useEffect, useState } from 'react';
-import { Icon } from '@/components/Icon';
+import { Icon, type IconName } from '@/components/Icon';
 import { Select } from '@/components/Select';
-import { AccentChoice, DensityChoice, ThemeChoice, EstimateStorageChoice, TaskChipsChoice } from '@/components/Choosers';
+import { GroupOrderEditor, SidebarNavEditor } from '@/components/SidebarNavEditor';
+import { AccentChoice, BackgroundChoice, ThemeChoice, LayoutChoice, DensityChoice, EstimateStorageChoice, TaskChipsChoice, TaskOpenChoice } from '@/components/Choosers';
 import { WorkspacePreview } from '@/components/WorkspacePreview';
+import { GroupPreview } from '@/components/GroupPreview';
 import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
 import { avatarUrl } from '@/domain/colors';
 import { formatDuration, parseDurationInput } from '@/domain/estimates';
 import { defaultCapacity, weeklyCapacity, type DailyCapacity } from '@/domain/load';
 import { DATE_FORMATS, formatDay, type DateFormat } from '@/domain/dates';
-import { HOME_VIEWS, WEEK_LAYOUTS, type HomeView, type WeekLayout } from '@/store/prefs';
+import { HOME_VIEWS, type HomeView } from '@/store/prefs';
 import { DEFAULT_WEEK_LABEL } from '@/domain/types';
 import { DUST_MONTHS, isDustMonths } from '@/domain/views';
 import type { Locale, TranslationKey } from '@/i18n';
-import { APP_NAME, AUTHOR, AUTHOR_AVATAR_URL, COFFEE_URL, GITHUB_URL, SITE_URL, VERSION } from '@/app-info';
+import { APP_NAME, AUTHOR, AUTHOR_AVATAR_URL, COFFEE_URL, GITHUB_URL, VERSION } from '@/app-info';
 import { karmaStanding } from '@/domain/karma';
+import { projectTree } from '@/store/selectors';
 
-const SECTIONS = ['account', 'general', 'features', 'appearance', 'conflicts', 'about'] as const;
+/** Where the things this app only reads are changed. */
+const TODOIST_ACCOUNT_URL = 'https://app.todoist.com/app/settings/account';
+
+const SECTIONS = ['account', 'general', 'appearance', 'sidebar', 'lists', 'features', 'conflicts', 'about'] as const;
 
 /** A date with two digits in the day and a month that is short in both
  *  languages, so every option in the list is the same length. */
 const SAMPLE_DATE = new Date(2026, 8, 12);
 type Section = (typeof SECTIONS)[number];
+
+/** The glyph beside each entry of the menu. */
+const SECTION_ICON: Record<Section, IconName> = {
+  account: 'user', general: 'settings', appearance: 'palette', sidebar: 'sidebar',
+  lists: 'list', features: 'sparkles', conflicts: 'warning', about: 'info',
+};
 
 /**
  * Settings.
@@ -40,10 +52,6 @@ export function SettingsView() {
   const disconnect = useStore((s) => s.disconnect);
   const user = useStore((s) => s.snapshot.user);
   const karma = karmaStanding(user?.karma);
-  const calloutKey = `coffee-callout:${user?.id ?? 'anonymous'}`;
-  const [showCoffeeCallout, setShowCoffeeCallout] = useState(
-    () => localStorage.getItem(calloutKey) !== 'dismissed',
-  );
 
   const current = useCurrentSection();
   const avatar = avatarUrl(user);
@@ -71,6 +79,8 @@ export function SettingsView() {
   const toggle = (key: keyof typeof prefs.conflicts) =>
     setPrefs({ conflicts: { ...prefs.conflicts, [key]: !prefs.conflicts[key] } });
 
+  const groupsInSidebar = projectTree(useStore((s) => s.snapshot), prefs.workspaceOrder);
+
   const weekly = weeklyCapacity(prefs.dailyCapacity, prefs.weeklyCapacityOverride);
 
   return (
@@ -96,6 +106,7 @@ export function SettingsView() {
                 document.getElementById(section)?.scrollIntoView({ behavior: 'smooth' });
               }}
             >
+              <Icon name={SECTION_ICON[section]} size="sm" />
               {t(`settings.${section}` as TranslationKey)}
             </a>
           ))}
@@ -106,75 +117,81 @@ export function SettingsView() {
           <section className="setsection" id="account">
             <h2>{t('settings.account')}</h2>
 
-            <div className="setrow account">
-              <span className="setavatar">
-                {avatar
-                  ? <img src={avatar} alt="" width={56} height={56} referrerPolicy="no-referrer" />
-                  : <span>{(user?.full_name ?? '?').slice(0, 1).toUpperCase()}</span>}
-              </span>
-              <div>
-                <strong>{user?.full_name ?? '—'}</strong>
-                <span>{user?.email ?? t('settings.connected')}</span>
-              </div>
-              <button className="btn outline" onClick={() => void disconnect()}>
-                <Icon name="logout" size="sm" />
-                {t('settings.disconnect')}
-              </button>
-            </div>
-            <p className="sethint">{t('settings.disconnectHint')}</p>
-            {karma && (
-              <div className="karma-detail">
-                <div className="karma-scale">
-                  <span className="karma-progress" aria-label={`${karma.progress}%`}>
-                    <i style={{ width: `${karma.progress}%` }} />
-                    <small>{karma.rank.from.toLocaleString(intl)}</small>
-                    <strong>
-                      {t(`karma.${karma.rank.key}` as TranslationKey)} ·{' '}
-                      {karma.karma.toLocaleString(intl)}/{karma.rank.to?.toLocaleString(intl) ?? '∞'}
-                    </strong>
-                    <small>{karma.rank.to?.toLocaleString(intl) ?? '∞'}</small>
-                  </span>
+            <div className="setfcard">
+              <div className="setarow">
+                <span className="setavatar">
+                  {avatar
+                    ? <img src={avatar} alt="" width={56} height={56} referrerPolicy="no-referrer" />
+                    : <span>{(user?.full_name ?? '?').slice(0, 1).toUpperCase()}</span>}
+                </span>
+                <div className="setwho">
+                  <strong>{user?.full_name ?? '—'}</strong>
+                  <small>{user?.email ?? t('settings.connected')}</small>
                 </div>
-                {karma.remaining !== null && karma.next && (
-                  <p>{t('settings.karmaRemaining', {
-                    remaining: karma.remaining,
-                    next: t(`karma.${karma.next.key}` as TranslationKey),
-                  })}</p>
-                )}
+                <span className="setactions">
+                  <a className="btn" href={TODOIST_ACCOUNT_URL} target="_blank" rel="noreferrer noopener">
+                    <Icon name="external" size="sm" />
+                    {t('settings.manageTodoist')}
+                  </a>
+                  <button className="btn danger" title={t('settings.disconnectHint')} onClick={() => void disconnect()}>
+                    {t('settings.disconnect')}
+                  </button>
+                </span>
               </div>
-            )}
-          </section>
+              {karma && (
+                <div className="karma-in">
+                  <div className="karma-top">
+                    <div>
+                      <small>{t('settings.karmaRank')}</small>
+                      <strong>{t(`karma.${karma.rank.key}` as TranslationKey)}</strong>
+                    </div>
+                    {karma.remaining !== null && karma.next && (
+                      <div className="end">
+                        <small>{t('settings.karmaTo', { remaining: karma.remaining.toLocaleString(intl) })}</small>
+                        <strong>{t(`karma.${karma.next.key}` as TranslationKey)}</strong>
+                      </div>
+                    )}
+                  </div>
+                  <div className="karma-track" role="img" aria-label={`${karma.progress}%`}>
+                    <i style={{ width: `${karma.progress}%` }} />
+                    <span className="karma-mark" style={{ left: `${karma.progress}%` }}>
+                      <b>{karma.karma.toLocaleString(intl)}</b>
+                    </span>
+                  </div>
+                  <div className="karma-ends">
+                    <span>{t(`karma.${karma.rank.key}` as TranslationKey)} · {karma.rank.from.toLocaleString(intl)}</span>
+                    {karma.next && karma.rank.to !== null && (
+                      <span>{t(`karma.${karma.next.key}` as TranslationKey)} · {karma.rank.to.toLocaleString(intl)}</span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
-          {showCoffeeCallout && (
-            <aside className="coffee-callout">
-              <img className="coffee-callout-avatar" src={AUTHOR_AVATAR_URL} alt="Jules-Valentin Bertolino" referrerPolicy="no-referrer" />
+            {/* Always there, and not dismissible: it is the one way the project
+                is paid for. */}
+            <aside className="setfcard coffee-callout">
+              <img className="coffee-callout-avatar" src={AUTHOR_AVATAR_URL} alt="Jules-Valentin Bertolino" width={96} height={96} decoding="async" />
               <div>
                 <strong>{t('settings.coffeeCalloutTitle')}</strong>
                 <span>{t('settings.coffeeCalloutBody')}</span>
-                <a className="btn" href={COFFEE_URL} target="_blank" rel="noreferrer noopener">
-                  {t('settings.coffeeCalloutAction')}
-                </a>
               </div>
-              <button
-                className="coffee-callout-close"
-                aria-label={t('common.close')}
-                onClick={() => {
-                  localStorage.setItem(calloutKey, 'dismissed');
-                  setShowCoffeeCallout(false);
-                }}
-              ><Icon name="close" size="sm" /></button>
+              <a className="btn coffee-btn" href={COFFEE_URL} target="_blank" rel="noreferrer noopener">
+                <Icon name="coffee" size="sm" />
+                {t('settings.coffeeCalloutAction')}
+              </a>
             </aside>
-          )}
+          </section>
 
           {/* ---------------------------------------------------- General */}
           <section className="setsection" id="general">
             <h2>{t('settings.general')}</h2>
 
             <Row title={t('settings.language')} hint={t('settings.languageHint')}>
-              <Select
+              <Choice
+                label={t('settings.language')}
                 value={prefs.locale}
                 onChange={(value) => setLocale(value as Locale)}
-                ariaLabel={t('settings.language')}
                 options={[
                   { value: 'en', label: 'English' },
                   { value: 'fr', label: 'Français' },
@@ -183,10 +200,10 @@ export function SettingsView() {
             </Row>
 
             <Row title={t('settings.timeFormat')} hint={t('settings.timeFormatHint')}>
-              <Select
+              <Choice
+                label={t('settings.timeFormat')}
                 value={prefs.hour12 ? '12' : '24'}
                 onChange={(value) => setPrefs({ hour12: value === '12' })}
-                ariaLabel={t('settings.timeFormat')}
                 options={[
                   { value: '24', label: t('settings.time24') },
                   { value: '12', label: t('settings.time12') },
@@ -208,15 +225,6 @@ export function SettingsView() {
               />
             </Row>
 
-            {/* Read from the account, so it is stated rather than offered. */}
-            <Row title={t('settings.weekStart')} hint={t('settings.weekStartHint')}>
-              <span className="setvalue">{dayNames[((user?.start_day ?? 1) + 6) % 7]}</span>
-            </Row>
-          </section>
-
-          {/* Settings that shape the product rather than its formatting. */}
-          <section className="setsection" id="features">
-            <h2>{t('settings.features')}</h2>
             <Row title={t('settings.homepage')} hint={t('settings.homepageHint')}>
               <Select
                 value={prefs.homepage}
@@ -232,23 +240,81 @@ export function SettingsView() {
               <Switch checked={prefs.includeSectionsInSearch} onChange={() => setPrefs({ includeSectionsInSearch: !prefs.includeSectionsInSearch })} label={t('settings.searchSections')} />
             </Row>
 
+            {/* Read from the account, so it is stated rather than offered. */}
+            <Row title={t('settings.weekStart')} hint={t('settings.weekStartHint')}>
+              <span className="setvalue">
+                {dayNames[((user?.start_day ?? 1) + 6) % 7]}
+              </span>
+            </Row>
+          </section>
+
+          {/* ------------------------------------------------ Appearance */}
+          <section className="setsection" id="appearance">
+            <h2>{t('settings.appearance')}</h2>
+            <Row title={t('settings.theme')} hint={t('settings.themeHint')} wide>
+              <ThemeChoice value={prefs.theme} onChange={(value) => setPrefs({ theme: value })} />
+            </Row>
+            <Row title={t('settings.layout')} hint={t('settings.layoutHint')} wide>
+              <LayoutChoice value={prefs.layout} onChange={(value) => setPrefs({ layout: value })} />
+            </Row>
+            <Row title={t('settings.background')} hint={t('settings.backgroundHint')} wide>
+              <BackgroundChoice value={prefs.background} onChange={(value) => setPrefs({ background: value })} />
+            </Row>
+            <WorkspacePreview stage="appearance" />
+            <Row title={t('settings.accent')} hint={t('settings.accentHint')} wide>
+              <AccentChoice
+                value={prefs.accent}
+                custom={prefs.accentCustom}
+                onChange={(value) => setPrefs({ accent: value })}
+                onCustom={(value) => setPrefs({ accent: 'custom', accentCustom: value })}
+              />
+            </Row>
+          </section>
+
+          {/* --------------------------------------------------- Sidebar */}
+          <section className="setsection" id="sidebar">
+            <h2>{t('settings.sidebar')}</h2>
+            <Row title={t('settings.sidebarSearch')} hint={t('settings.sidebarSearchHint')}>
+              <Switch checked={prefs.sidebarSearch} onChange={() => setPrefs({ sidebarSearch: !prefs.sidebarSearch })} label={t('settings.sidebarSearch')} />
+            </Row>
+            <Row title={t('settings.sidebarCounts')} hint={t('settings.sidebarCountsHint')}>
+              <Switch checked={prefs.sidebarCounts} onChange={() => setPrefs({ sidebarCounts: !prefs.sidebarCounts })} label={t('settings.sidebarCounts')} />
+            </Row>
+            {groupsInSidebar.length > 1 && (
+              <Row title={t('settings.workspaceOrder')} hint={t('settings.workspaceOrderHint')} wide>
+                <div className="wsgroups"><GroupOrderEditor
+                  groups={groupsInSidebar.map((g) => ({ id: g.workspaceId ?? 'personal', name: g.name ?? t('nav.myProjects') }))}
+                  onChange={(workspaceOrder) => setPrefs({ workspaceOrder })}
+                /></div>
+              </Row>
+            )}
+            <Row title={t('settings.sidebarArrange')} hint={t('settings.sidebarArrangeHint')} wide>
+              <SidebarNavEditor nav={prefs.sidebarNav} onChange={(sidebarNav) => setPrefs({ sidebarNav })} />
+            </Row>
+          </section>
+
+          {/* ----------------------------------------------------- Lists */}
+          <section className="setsection" id="lists">
+            <h2>{t('settings.lists')}</h2>
+            <Row title={t('settings.taskChips')} hint={t('settings.taskChipsHint')} wide>
+              <TaskChipsChoice value={prefs.taskChips} onChange={(value) => setPrefs({ taskChips: value })} />
+            </Row>
+            <WorkspacePreview stage="metadata" />
+            <Row title={t('settings.density')} hint={t('settings.densityHint')} wide>
+              <DensityChoice value={prefs.density} onChange={(value) => setPrefs({ density: value })} />
+            </Row>
+            <Row title={t('settings.taskOpen')} hint={t('settings.taskOpenHint')} wide>
+              <TaskOpenChoice value={prefs.taskOpen} onChange={(value) => setPrefs({ taskOpen: value })} />
+            </Row>
+          </section>
+
+          {/* Settings that shape the product rather than its formatting. */}
+          <section className="setsection" id="features">
+            <h2>{t('settings.features')}</h2>
             {/* How the pages are laid out, in one place, with a picture of it. */}
             <h3 className="setsubhead">{t('settings.groupOrganisation')}</h3>
             <p className="setgroup-hint">{t('settings.groupOrganisationHint')}</p>
-            <Row title={t('settings.weekLayout')} hint={t('settings.weekLayoutHint')}>
-              <Select
-                value={prefs.weekLayout}
-                onChange={(value) => setPrefs({ weekLayout: value as WeekLayout })}
-                ariaLabel={t('settings.weekLayout')}
-                options={WEEK_LAYOUTS.map((layout) => ({
-                  value: layout,
-                  label: t(`settings.weekLayout.${layout}` as TranslationKey),
-                }))}
-              />
-            </Row>
-            <Row title={t('settings.eisenhower')} hint={t('settings.eisenhowerHint')}>
-              <Switch checked={prefs.eisenhowerEnabled} onChange={() => setPrefs({ eisenhowerEnabled: !prefs.eisenhowerEnabled })} label={t('settings.eisenhower')} />
-            </Row>
+            {/* The matrix is turned on and off from its entry in Sidebar → Entries (#16). */}
             <Row title={t('settings.showQuick')} hint={t('settings.showQuickHint')}>
               <Switch
                 checked={prefs.showQuickGroup}
@@ -256,6 +322,7 @@ export function SettingsView() {
                 label={t('settings.showQuick')}
               />
             </Row>
+            <GroupPreview kind="quick" />
             {/* The tag is a name on the user's own board, not a setting this
                 app invented, so it is typed rather than chosen from a list:
                 the tag it should read may not exist here yet. */}
@@ -271,7 +338,6 @@ export function SettingsView() {
                 }}
               />
             </Row>
-            <WorkspacePreview stage="organisation" />
 
             <h3 className="setsubhead">{t('settings.groupSomeday')}</h3>
             <Row title={t('settings.showDust')} hint={t('settings.showDustHint')}>
@@ -281,6 +347,7 @@ export function SettingsView() {
                 label={t('settings.showDust')}
               />
             </Row>
+            <GroupPreview kind="dust" />
             <Row title={t('settings.dustAfter')} hint={t('settings.dustAfterHint')}>
               <Select
                 value={String(prefs.dustAfterMonths)}
@@ -409,30 +476,6 @@ export function SettingsView() {
             </Row>
           </section>
 
-          {/* ------------------------------------------------ Appearance */}
-          <section className="setsection" id="appearance">
-            <h2>{t('settings.appearance')}</h2>
-            <Row title={t('settings.density')} hint={t('settings.densityHint')} wide>
-              <DensityChoice value={prefs.density} onChange={(value) => setPrefs({ density: value })} />
-            </Row>
-            <Row title={t('settings.theme')} hint={t('settings.themeHint')} wide>
-              <ThemeChoice value={prefs.theme} onChange={(value) => setPrefs({ theme: value })} />
-            </Row>
-            <WorkspacePreview stage="appearance" />
-            <Row title={t('settings.accent')} hint={t('settings.accentHint')} wide>
-              <AccentChoice
-                value={prefs.accent}
-                custom={prefs.accentCustom}
-                onChange={(value) => setPrefs({ accent: value })}
-                onCustom={(value) => setPrefs({ accent: 'custom', accentCustom: value })}
-              />
-            </Row>
-            <Row title={t('settings.taskChips')} hint={t('settings.taskChipsHint')} wide>
-              <TaskChipsChoice value={prefs.taskChips} onChange={(value) => setPrefs({ taskChips: value })} />
-            </Row>
-            <WorkspacePreview stage="metadata" />
-          </section>
-
           {/* ------------------------------------------------- Conflicts */}
           <section className="setsection" id="conflicts">
             <h2>{t('settings.conflicts')}</h2>
@@ -472,37 +515,31 @@ export function SettingsView() {
             <Row title={t('settings.whatsNew')} hint={t('settings.whatsNewHint')}>
               <Switch checked={prefs.whatsNew} onChange={() => setPrefs({ whatsNew: !prefs.whatsNew })} label={t('settings.whatsNew')} />
             </Row>
-            <Row title={t('settings.changelog')} hint={t('settings.changelogHint')}>
-              <button className="btn outline" onClick={() => window.dispatchEvent(new Event('enhanced:changelog'))}>
+            <div className="alinks">
+              <button className="btn soft" onClick={() => window.dispatchEvent(new Event('enhanced:changelog'))}>
+                <Icon name="star" size="sm" />
                 {t('settings.changelogAction')}
               </button>
-            </Row>
-            <Row title={t('settings.replayWalkthrough')} hint={t('settings.replayWalkthroughHint')}>
-              <button className="btn outline" onClick={() => window.dispatchEvent(new Event('enhanced:replay-onboarding'))}>
+              <button className="btn soft" onClick={() => window.dispatchEvent(new Event('enhanced:tour'))}>
+                <Icon name="week" size="sm" />
+                {t('settings.startTour')}
+              </button>
+              <button className="btn soft" onClick={() => window.dispatchEvent(new Event('enhanced:replay-onboarding'))}>
+                <Icon name="sliders" size="sm" />
                 {t('settings.replayWalkthroughAction')}
               </button>
-            </Row>
-            <p className="setlegal">
-              {t('connect.legal', { author: AUTHOR })}
-            </p>
-            <div className="setlinks">
-              <a href={SITE_URL} target="_blank" rel="noreferrer noopener">
-                <Icon name="external" size="sm" />
-                {t('settings.aboutSite')}
-              </a>
-              <a href={GITHUB_URL} target="_blank" rel="noreferrer noopener">
+              <a className="btn soft" href={GITHUB_URL} target="_blank" rel="noreferrer noopener">
                 <Icon name="external" size="sm" />
                 {t('settings.aboutCode')}
               </a>
-              <a href={`${GITHUB_URL}/blob/main/CHANGELOG.md`} target="_blank" rel="noreferrer noopener">
-                <Icon name="external" size="sm" />
-                {t('settings.aboutChangelog')}
-              </a>
-              <a href={COFFEE_URL} target="_blank" rel="noreferrer noopener">
-                <Icon name="external" size="sm" />
+              <a className="btn soft" href={COFFEE_URL} target="_blank" rel="noreferrer noopener">
+                <Icon name="coffee" size="sm" />
                 {t('settings.aboutCoffee')}
               </a>
             </div>
+            <p className="setlegal">
+              {t('connect.legal', { author: AUTHOR })}
+            </p>
           </section>
         </div>
       </div>
@@ -578,4 +615,29 @@ function useCurrentSection(): Section {
   }, []);
 
   return current;
+}
+
+/** Two or three ways to answer, side by side: a track with the chosen one lifted. */
+function Choice({ label, value, options, onChange }: {
+  label: string;
+  value: string;
+  options: Array<{ value: string; label: string }>;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="segmented choice" role="radiogroup" aria-label={label}>
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          role="radio"
+          aria-checked={value === option.value}
+          aria-pressed={value === option.value}
+          onClick={() => onChange(option.value)}
+        >
+          <small>{option.label}</small>
+        </button>
+      ))}
+    </div>
+  );
 }

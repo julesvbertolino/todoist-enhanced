@@ -10,7 +10,7 @@
     "moduleDetection": "force",
     "noEmit": true,
     "strict": true,
-    "types": ["node"]
+    "types": ["node", "vite/client"]
   },
   "include": ["vite.config.ts", "vitest.config.ts", "playwright.config.ts", "e2e"]
 }

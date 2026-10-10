@@ -7,7 +7,7 @@ import { Icon, type IconName } from './Icon';
 import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
 import {
-  formatDay, formatDayOrName, formatTime, toApiDate, weekdayName, type DateFormat,
+  formatDay, formatDayOrName, formatTime, toApiDate, weekdayName, weekStartsOnOf, type DateFormat,
 } from '@/domain/dates';
 import { dateSuggestions, type DateSuggestion } from '@/domain/dateWords';
 import { readNaturalDate } from '@/domain/nlp';
@@ -93,6 +93,7 @@ export function DatePicker({
 }: DatePickerProps) {
   const { t, locale } = useT();
   const dateFormat = useStore((s) => s.prefs.dateFormat);
+  const weekStartsOn = weekStartsOnOf(useStore((s) => s.snapshot.user?.start_day));
   const hour12 = useStore((s) => s.prefs.hour12);
   const selected = parse(value);
   const [month, setMonth] = useState(() => startOfMonth(selected ?? new Date()));
@@ -171,17 +172,17 @@ export function DatePicker({
     onPick(withTime && reading.hasTime ? reading.date : toApiDate(day));
   }
 
-  /* Six weeks from the Monday on or before the first: always the same number
+  /* Six weeks from the week's first day on or before the first: always the same number
      of rows, so the picker never changes height as you page. */
   const days = useMemo(() => {
-    const first = startOfWeek(startOfMonth(month), { weekStartsOn: 1 });
+    const first = startOfWeek(startOfMonth(month), { weekStartsOn });
     return Array.from({ length: 42 }, (_, offset) => addDays(first, offset));
-  }, [month]);
+  }, [month, weekStartsOn]);
   const weekdays = useMemo(() => {
-    const first = startOfWeek(new Date(), { weekStartsOn: 1 });
+    const first = startOfWeek(new Date(), { weekStartsOn });
     const fmt = new Intl.DateTimeFormat(locale, { weekday: 'narrow' });
     return Array.from({ length: 7 }, (_, offset) => fmt.format(addDays(first, offset)));
-  }, [locale]);
+  }, [locale, weekStartsOn]);
 
   /* The cursor while it is on the month shown and can be picked; otherwise
      the month's first day that can. It is the grid's one tab stop. */
@@ -213,8 +214,8 @@ export function DatePicker({
       ArrowRight: () => addDays(anchor, 1),
       ArrowUp: () => addDays(anchor, -7),
       ArrowDown: () => addDays(anchor, 7),
-      Home: () => startOfWeek(anchor, { weekStartsOn: 1 }),
-      End: () => endOfWeek(anchor, { weekStartsOn: 1 }),
+      Home: () => startOfWeek(anchor, { weekStartsOn }),
+      End: () => endOfWeek(anchor, { weekStartsOn }),
       PageUp: () => (event.shiftKey ? addYears(anchor, -1) : addMonths(anchor, -1)),
       PageDown: () => (event.shiftKey ? addYears(anchor, 1) : addMonths(anchor, 1)),
     };

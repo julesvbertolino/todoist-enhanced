@@ -1,0 +1,1657 @@
+/* ==========================================================================
+   2.0 — the screens as the design file draws them. Loaded last, so where a
+   rule here meets an older one for the same thing, this one is the answer.
+   ========================================================================== */
+
+/* The design file's two grey tokens, named after what the app already calls them.
+   Rules written against them used to fall through to nothing. */
+:root{--seg:var(--btn-soft);--surface-2:var(--subtle)}
+
+/* Sign-in, from the design file: a floating bubble that says what the app is
+   for, a plain right side that only asks to log in, the brand grey at its foot. */
+.signin{
+  position:relative;display:grid;grid-template-columns:minmax(0,1fr);min-height:100dvh;
+  background:var(--surface);color:var(--text);
+}
+.signin-lang{position:absolute;top:18px;right:22px;z-index:3}
+.seg2{display:inline-flex;gap:0;padding:3px;border-radius:999px;background:var(--btn-soft)}
+.seg2 button{padding:5px 13px;border:0;border-radius:999px;background:transparent;color:var(--muted);font:inherit;font-size:12.5px;cursor:pointer}
+.seg2 button[aria-pressed="true"]{background:var(--surface);color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.signin-bubble{display:none}
+.signin-main{display:flex;flex-direction:column;align-items:center;padding:64px 30px 22px;min-width:0}
+.signin .connect-form{width:min(430px,100%);display:grid;gap:12px;margin:auto 0;padding:0}
+.signin .connect-form h1{margin:0 0 2px;font-size:28px;letter-spacing:-.02em}
+.signin .btn.lg{width:100%;height:46px;justify-content:center;font-size:14px}
+.signin .btn.soft{border-color:transparent;background:var(--btn-soft);color:var(--text)}
+.signin .btn.soft:hover{background:var(--btn-soft-hover)}
+.signin .connect-demo,.signin .connect-submit{margin-top:0}
+.signin .connect-intro{margin:0;color:var(--muted)}
+.signin .connect-token{margin:4px 0 0;padding-top:0;border-top:0}
+.signin .connect-token a{margin-top:2px}
+.signin .connect-privacy{
+  display:flex;gap:10px;align-items:flex-start;margin:6px 0 0;padding:12px 14px;border-radius:14px;
+  background:var(--subtle);color:var(--muted);font-size:12.5px;line-height:1.5;
+}
+.signin .connect-privacy>.ic{margin-top:2px;flex:none}
+.signin .connect-privacy a{color:var(--accent-dark,var(--accent));font-weight:600}
+.signin .connect-privacy a .ic{display:none}
+.signin .connect-legal{max-width:none;margin:4px 0 0;color:var(--faint);font-size:12.5px;line-height:1.5;text-align:left}
+.signin-brand{margin-top:auto;padding-top:26px;display:grid;justify-items:center;gap:3px;color:var(--faint)}
+.signin-brand strong{font-weight:600;font-size:13px}
+.signin-brand small{font-size:11.5px;opacity:.85}
+@media (min-width:900px){
+  .signin{grid-template-columns:minmax(440px,1fr) 1fr}
+  .signin-bubble{
+    margin:14px;border-radius:30px;padding:60px 44px 0;display:flex;flex-direction:column;gap:20px;
+    overflow:hidden;position:relative;color:#fff;
+    background:linear-gradient(165deg,color-mix(in srgb,var(--accent) 78%,#fff),var(--accent) 42%,color-mix(in srgb,var(--accent) 66%,#000));
+  }
+  .signin-bubble h2{margin:6px 0 0;font-size:40px;line-height:1.08;letter-spacing:-.03em;font-weight:700;color:#fff}
+  .signin-checks{list-style:none;margin:0;padding:0;display:grid;gap:9px;font-size:14.5px}
+  .signin-checks li{display:flex;gap:10px;align-items:center}
+  .signin-check{
+    width:18px;height:18px;border-radius:6px;display:grid;place-items:center;flex:none;
+    background:rgba(255,255,255,.95);color:var(--accent);
+  }
+  .signin-check .ic{width:12px;height:12px;stroke-width:3}
+  .signin-mock{
+    margin-top:auto;height:min(560px,calc(100vh - 300px));border-radius:20px 20px 0 0;overflow:hidden;
+    box-shadow:0 -10px 40px rgba(0,0,0,.25);margin-bottom:-2px;
+  }
+  .signin-mock .polish-preview{border:0;border-radius:0}
+}
+
+/* Settings → Account, from the design file: one card for the person and their
+   karma, one for the coffee. */
+.setfcard{
+  background:var(--subtle);border:1px solid var(--border);border-radius:22px;
+  padding:20px;margin:0 0 14px;box-shadow:none;
+}
+.setarow{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.setwho{flex:1;min-width:170px}
+.setwho strong{display:block;font-size:var(--fs-16);font-weight:700}
+.setwho small{color:var(--faint);font-size:var(--fs-13)}
+.setarow .setactions{margin-left:auto}
+.setactions .btn.danger{color:var(--late-dark,#d1453b)}
+.karma-in{border-top:1px solid var(--border);margin-top:18px;padding-top:12px}
+.karma-top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.karma-top small{display:block;color:var(--faint);font-size:var(--fs-12)}
+.karma-top strong{font-size:20px;letter-spacing:-.01em;font-weight:700}
+.karma-top .end{text-align:right}
+.karma-track{position:relative;height:12px;border-radius:12px;background:var(--btn-soft);margin:40px 0 8px}
+.karma-track>i{display:block;height:100%;border-radius:12px;background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 55%,var(--surface)),var(--accent))}
+.karma-mark{position:absolute;top:-3px;transform:translateX(-50%)}
+.karma-mark::before{content:"";display:block;width:18px;height:18px;border-radius:50%;background:var(--surface);border:4px solid var(--accent);box-sizing:border-box}
+.karma-mark b{position:absolute;top:-31px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--surface);padding:2px 9px;border-radius:99px;font-size:11px;font-weight:600;white-space:nowrap}
+.karma-ends{display:flex;justify-content:space-between;font-size:var(--fs-12);color:var(--faint)}
+.setfcard.coffee-callout{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 var(--s6);padding:20px;
+  background:var(--accent-wash);border:1px solid var(--accent-line);color:var(--text);
+}
+.setfcard.coffee-callout>div{flex:1;min-width:200px;display:block;padding:0}
+.setfcard.coffee-callout>div strong{display:block}
+.setfcard.coffee-callout>div span{display:block;margin-top:2px;color:var(--muted);opacity:1}
+.setfcard.coffee-callout .btn.coffee-btn{
+  height:46px;min-height:0;margin:0;padding:0 24px;border-radius:14px;font-size:15px;font-weight:700;gap:9px;
+  box-shadow:0 4px 14px rgba(255,221,0,.35);flex:none;
+}
+
+/* Settings: the picture choices fill the width in two columns, as in the design file. */
+.setbody .themechoice,.setbody .denschoice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.setbody .themecard,.setbody .denscard{width:auto;min-width:0}
+.setrow .seg2{flex:none;max-width:100%}
+.seg2 button{white-space:nowrap}
+
+/* Dashboard: the controls under the title sit on the left, the group titles
+   are small capitals, and each figure is read label first. */
+.page .periodbar{justify-content:flex-start;gap:14px 18px;margin-top:18px;margin-bottom:6px}
+.periodbar .pagerlabel{min-width:128px;font-size:14px;letter-spacing:-.005em}
+.dashboard-bento .dashboard-group-label{
+  margin:30px 0 -2px;font-size:11.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);
+}
+.dashboard-bento .dashboard-group-label:first-child{margin-top:12px}
+.dashboard-bento .card{border-radius:22px;padding:22px 24px}
+.dashboard-bento .metric-card{min-height:0;padding:20px 22px;border-radius:22px}
+.dashboard-bento .metric-icon{
+  right:22px;top:20px;width:18px;height:18px;padding:0;border-radius:0;background:transparent;color:var(--faint);
+}
+.dashboard-bento .stat{gap:0}
+.dashboard-bento .stat-label{order:-1;margin-bottom:16px;padding-right:30px;font-size:13px;font-weight:500;color:var(--muted)}
+.dashboard-bento .stat-topline{flex-direction:column;flex-wrap:nowrap;align-items:flex-start;gap:16px;padding-right:0}
+.dashboard-bento .stat-value{font-size:34px;line-height:1;font-weight:700;letter-spacing:-.03em}
+.dashboard-bento .chead-row h3{font-size:15px;font-weight:700;letter-spacing:-.005em}
+.dashboard-bento .chead-row .psub{margin-top:4px;font-size:12.5px}
+.dashboard-bento .bar{background:#c9ced8;opacity:1;border-radius:8px 8px 4px 4px}
+.dashboard-bento .bar.current{background:var(--accent)}
+:root[data-theme="dark"] .dashboard-bento .bar{background:#4a4f5a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .dashboard-bento .bar{background:#4a4f5a}}
+:root:not([data-theme="dark"]) .dashboard-bento .bar.current,:root[data-theme="dark"] .dashboard-bento .bar.current{background:var(--accent)}
+
+/* Review: the step is a card, its rows are lighter cards inside it, and the
+   rail of steps stands on the page rather than in a box of its own. */
+.reviewrail{background:transparent;padding:4px 0;margin-bottom:0}
+.reviewrail > li:not(:last-child)::after{top:19px;height:2px;border-radius:2px;background:var(--btn-soft)}
+.reviewrail > li.seen:not(:last-child)::after{background:var(--accent)}
+.reviewrail .reviewpip-dot{width:30px;height:30px;font-size:12px;box-shadow:0 0 0 4px var(--surface)}
+.reviewrail .reviewpip-dot{border:0;background:var(--btn-soft);color:var(--muted)}
+.reviewrail .reviewpip.seen .reviewpip-dot{background:var(--accent-soft);color:var(--accent-dark)}
+.reviewrail .reviewpip.current .reviewpip-dot{
+  background:var(--accent);color:var(--on-accent,#fff);
+  box-shadow:0 0 0 4px var(--surface),0 0 0 6px color-mix(in srgb,var(--accent) 28%,transparent);
+}
+.reviewrail .reviewpip{color:var(--faint);font-size:11.5px}
+.reviewrail .reviewpip.current{color:var(--text)}
+.reviewstep{margin-top:22px;padding:22px 24px 18px;border-radius:22px;background:var(--subtle);border:1px solid var(--border)}
+.reviewstep h2{font-size:21px;letter-spacing:-.01em}
+.reviewask{margin:6px 0 16px;max-width:64ch;line-height:1.5}
+.reviewbody{min-height:0}
+.reviewlist{gap:6px;border-top:0}
+.reviewlist.scrolls{border-bottom:0}
+.reviewrow{padding:10px 14px;border-radius:14px;background:var(--surface);border-bottom:0}
+.reviewrow.filled{background:var(--surface)}
+.reviewactions{border-radius:999px;padding:3px}
+.reviewactions .btn{border-radius:999px}
+.reviewfoot{border-top:0}
+
+/* Setup: a page of its own, not a window. The dots lead, the title is centred,
+   the picture and the controls share the width, Back and Continue are pinned. */
+.sheet:has(> .setup){width:100vw;height:100dvh;max-height:100dvh;border-radius:0;box-shadow:none;background:var(--surface)}
+.setup{
+  position:relative;display:flex;flex-direction:column;gap:0;width:100%;max-width:1240px;height:100%;min-height:0;
+  margin:0 auto;padding:30px 24px 0;box-sizing:border-box;
+}
+.setup-progress{position:absolute;top:30px;left:0;right:0;display:flex;gap:6px;justify-content:center;z-index:2}
+.setup-progress button{display:grid;place-items:center;width:28px;height:12px}
+.setup-progress i{width:28px;height:4px;border-radius:4px;background:var(--border-strong)}
+.setup-progress button.on i{background:var(--accent)}
+.setup[data-step="end"] .setup-progress{display:none}
+.setup-head{display:block;position:relative;margin-top:30px;text-align:center}
+.setup-head h2{font-size:30px;letter-spacing:-.02em;font-weight:700}
+.setup-head p{max-width:none;margin:6px 0 26px;font-size:var(--fs-14)}
+.setup-skip{position:absolute;right:0;top:-2px}
+.setup-body{flex:1;grid-template-columns:minmax(0,1.55fr) minmax(320px,1fr);gap:30px}
+.setup-foot{display:block;padding:0 0 24px;border-top:0;background:none}
+.setup-actions{width:100%;justify-content:space-between}
+.setup[data-step="welcome"],.setup[data-step="end"]{align-items:center;justify-content:center;text-align:center}
+.setup-welcome{max-width:520px;gap:10px}
+.setup-avatar{
+  width:104px;height:104px;display:grid;place-items:center;overflow:hidden;border-radius:50%;
+  color:#fff;font-size:40px;font-weight:700;background:linear-gradient(145deg,#2d5961,#d87c62);
+}
+.setup-avatar img{width:100%;height:100%;object-fit:cover}
+.setup-greeting{margin:8px 0 0;font-size:40px;font-weight:700;letter-spacing:-.03em;color:var(--text)}
+.setup-greeting .setup-hello,.setup-greeting .setup-name{font-size:inherit;font-weight:inherit;letter-spacing:inherit}
+.setup-greeting .setup-name{color:var(--text)}
+.setup-rank{display:grid;justify-items:center;gap:10px;margin-top:6px}
+.setup-rank strong{color:var(--accent-dark);font-weight:700}
+.setup-rankbar{display:block;width:300px;max-width:100%;height:10px;border-radius:10px;background:var(--btn-soft);overflow:hidden}
+.setup-rankbar i{display:block;height:100%;border-radius:10px;background:var(--accent)}
+.setup-rank small{color:var(--muted)}
+.setup .setup-go{min-width:150px;height:42px;padding:0 30px;margin-top:22px}
+@media (max-width:720px){.setup-body{grid-template-columns:minmax(0,1fr)}}
+.setup-end .setup-name{font-size:34px;letter-spacing:-.02em;color:var(--text)}
+
+/* The open task, as the prototype draws it: a 980 px window, a 270 px column
+   of properties on a neutral ground, and fields without rules between them. */
+.sheet:has(> .detail-top){width:min(980px,calc(100vw - 56px))}
+.detail-top{height:57px}
+.detail-body{grid-template-columns:minmax(0,1fr) 270px}
+.detail-main{padding:20px 26px}
+.detail-side{background:var(--surface-2);padding:20px 18px}
+.detail-side .prop{padding:0;margin-bottom:16px;border-bottom:0}
+.detail-side .prop > span:first-child,.detail-side .prop .proplabel{margin-bottom:5px;font-size:11.5px;color:var(--faint)}
+.detail-side .priopills{flex-wrap:nowrap;gap:4px}
+.detail-side .priopill{flex:1;justify-content:center;gap:4px;padding:0;height:30px;font-size:12px;font-weight:600}
+.detail-side .priopill[aria-checked="true"]{box-shadow:0 0 0 1.5px var(--pc) inset;font-weight:700}
+@media (max-width:820px){.detail-body{grid-template-columns:minmax(0,1fr)}}
+/* The sub-tasks sit in a rounded card across the whole column; the comments
+   follow without one, as the prototype has them. */
+.detail-main .detail-section{padding-left:0}
+.detail-main .detail-section.boxed{
+  margin-top:20px;padding:12px 14px;border:1px solid var(--border-strong);border-radius:16px;
+}
+.detail-main .detail-section.comments{margin-top:22px}
+.detail-main .detail-section .sectionlabel{font-size:12px;font-weight:700;color:var(--muted)}
+.detail-main .detail-section .sectionlabel .count{font-weight:500;color:var(--faint)}
+.detail-main .detail-section.boxed .subtaskrow:last-of-type{border-bottom:0}
+.titlefield{font-size:21px}
+
+/* The composer: a value that is not set is a round icon, as the prototype
+   draws it, and says what it is to a screen reader and in a tooltip only. A
+   value that is set stays a pill. */
+.composer-chips .fselect-face.chipface.unset{
+  position:relative;width:30px;min-width:30px;height:30px;min-height:30px;padding:0;justify-content:center;
+  border-style:solid;border-color:transparent;background:var(--btn-soft);
+}
+.composer-chips .fselect-face.chipface.unset .fselect-value{
+  position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;
+}
+.composer-chips .fselect-face.chipface.unset:hover{background:var(--hover)}
+.sheet.sheet-sm:has(> .composerbox){width:min(600px,calc(100vw - 56px))}
+
+/* The project sheet: 520 px, the name a size smaller, and no grey flash while
+   it is being typed. */
+.sheet.sheet-sm:has(.projectform){width:min(520px,calc(100vw - 32px))}
+.pcx-name{font-size:16px;font-weight:600}
+.pcx-name:focus,.pcx-desc:focus{background:transparent}
+
+/* ==========================================================================
+   Buttons, as the design file draws them: pills, and round icon buttons.
+   ========================================================================== */
+.btn,.btn.primary,.btn.lg,.btn.sm{border-radius:var(--pill,999px)}
+.btn{min-height:34px;padding:0 15px;font-weight:600;font-size:13px}
+.btn.sm{min-height:28px;padding:0 11px;font-size:12px}
+.btn.lg{min-height:46px;font-size:14px}
+.iconbtn,.ghost,.tb.iconbtn{border-radius:50%}
+.iconbtn:hover{background:var(--hover)}
+
+/* ==========================================================================
+   The sidebar. A white pill for the open page, a round Add task that floats
+   over the list on a blur, a taller profile with its karma bar.
+   ========================================================================== */
+:root[data-layout="page-float"]{--sidebar-w:248px}
+:root[data-layout="sidebar-float"]{--sidebar-w:268px}
+:root:not([data-layout="sidebar-float"]) .sidebar{position:relative}
+.sidebar{--side-sel:var(--surface);--side-sel-shadow:0 1px 2px rgba(0,0,0,.08),0 0 0 1px rgba(0,0,0,.04);--side-icon-sel:var(--accent);--side-hover:rgba(0,0,0,.045);--side-bar:rgba(0,0,0,.1);--side-blur:rgba(241,241,242,.55)}
+:root[data-theme="dark"] .sidebar{--side-sel:#2c2c30;--side-sel-shadow:0 0 0 1px rgba(255,255,255,.06);--side-hover:rgba(255,255,255,.06);--side-bar:rgba(255,255,255,.14);--side-blur:rgba(23,23,26,.55)}
+:root[data-background="colored"] .sidebar{--side-sel:rgba(255,255,255,.26);--side-sel-shadow:none;--side-icon-sel:#fff;--side-hover:rgba(255,255,255,.13);--side-bar:rgba(255,255,255,.3);--side-blur:rgba(255,255,255,.04)}
+.sidebar .side-top{gap:2px;padding:16px 12px 10px 14px}
+.sidebar .profile{gap:10px;padding:4px 6px 4px 4px;border-radius:10px}
+.sidebar .profile:hover,.sidebar .profile[aria-expanded="true"]{background:var(--side-hover)}
+.sidebar .profile .avatar{width:36px;height:36px}
+.sidebar .identity{line-height:1.15}
+.sidebar .identity strong{font-size:15px;letter-spacing:-.01em}
+.sidebar .karma{gap:4px;margin-top:3px}
+.sidebar .karma small{font-size:11px;line-height:1;color:var(--muted)}
+.sidebar .karmabar{height:3px;width:78px;background:var(--side-bar)}
+.sidebar .side-top .iconbtn{width:30px;height:30px;border-radius:50%}
+.sidebar .side-top .iconbtn:hover{background:var(--side-hover)}
+.sidebar .side-scroll{padding:0 10px 96px;scroll-padding-bottom:96px}
+.sidebar .searchbtn{height:34px;min-height:34px;border-radius:999px;margin:2px 0 14px;padding:0 13px}
+.sidebar .navitem{height:32px;min-height:32px;gap:10px;padding-block:0;padding-left:10px;border-radius:12px;font-size:13.5px;font-weight:400}
+.sidebar .navitem:hover{background:var(--side-hover)}
+.sidebar .navitem[aria-current="page"]{background:var(--side-sel);box-shadow:var(--side-sel-shadow);color:var(--text);font-weight:600}
+.sidebar .navitem[aria-current="page"] .ic{color:var(--side-icon-sel)}
+.sidebar .navitem[aria-current="page"] .count{color:var(--faint)}
+.sidebar .navitem .count{font-size:12px;font-weight:400;color:var(--faint)}
+.sidebar .nav-gap{height:14px}
+.sidebar .side-head{display:flex;padding:20px 6px 4px 10px;font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.01em}
+.sidebar .side-head > span{padding-left:0;font-size:inherit}
+.sidebar .side-foot{position:absolute;left:0;right:0;bottom:0;z-index:3;display:flex;flex-direction:column;align-items:center;gap:8px;padding:40px 14px 12px;pointer-events:none}
+.sidebar .side-foot::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--side-blur);backdrop-filter:blur(10px) saturate(1.1);-webkit-backdrop-filter:blur(10px) saturate(1.1);-webkit-mask-image:linear-gradient(to top,#000 55%,transparent);mask-image:linear-gradient(to top,#000 55%,transparent);border-radius:0 0 var(--frame-r) var(--frame-r)}
+.sidebar .side-foot > *{pointer-events:auto}
+.sidebar .side-foot .addbtn{width:100%;height:40px;min-height:40px;border-radius:999px;font-size:13.5px;box-shadow:0 6px 18px -4px rgba(0,0,0,.28),0 1px 2px rgba(0,0,0,.12)}
+.sidebar .side-foot .addbtn:hover{filter:brightness(1.05);background:var(--accent)}
+.sidebar .footrow{width:100%;justify-content:center}
+.sidebar .footrow .syncstatus{flex:0 1 auto;font-size:11.5px;color:var(--muted)}
+
+/* ==========================================================================
+   Shared controls, as the design file draws them: a pill track with a white
+   pill on it, selects with a ring and a 12px corner, grey chips, a 40px switch.
+   ========================================================================== */
+.segmented{gap:0;padding:3px;border-radius:999px;background:var(--btn-soft)}
+.segmented button{min-height:27px;padding:5px 6px;border-radius:999px;font-size:12px}
+.segmented.small button{min-height:27px}
+.segmented button[aria-pressed="true"]{box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.segmented button small{font-size:12px}
+
+.fselect-face{min-height:34px;border:0;border-radius:12px;font-weight:400;font-size:13.5px;
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--border-strong) 55%,transparent) inset}
+.fselect-face:hover{border:0;background:var(--surface);box-shadow:0 0 0 1px var(--faint) inset}
+.fselect-face.open{border:0;background:var(--surface);box-shadow:0 0 0 2px var(--accent) inset}
+.fselect-label{font-size:11.5px}
+
+.chip{min-height:28px;padding:0 11px;border:0;background:var(--btn-soft);color:var(--muted);font-size:12.5px;font-weight:400}
+.chip:hover{border:0;background:var(--btn-soft-hover);color:var(--text)}
+.chip[aria-pressed="true"]{border:0;background:var(--accent-soft);color:var(--accent-dark);font-weight:600}
+.detailschips .chip{min-height:30px;padding:0 12px;background:var(--surface);color:var(--faint);
+  box-shadow:0 0 0 1px var(--border-strong) inset}
+.detailschips .chip[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-dark);
+  box-shadow:0 0 0 1px var(--accent-line) inset}
+
+.switch{width:40px;height:24px;padding:3px}
+.switch[aria-checked="true"]::after{margin-left:16px}
+
+.displaypanel,.popover.displaypanel{width:350px;padding:14px 16px;border-radius:18px;border:1px solid var(--border-strong);
+  box-shadow:0 12px 40px rgba(0,0,0,.16),0 2px 6px rgba(0,0,0,.05);max-height:calc(100vh - 140px)}
+.displaypanel .panelhead h5{margin:0;font-size:15px;font-weight:700;color:var(--text);text-transform:none;letter-spacing:0}
+.displaypanel .resetbtn{padding:4px 8px;border-radius:8px;font-size:12.5px;color:var(--late-dark,var(--accent))}
+.displaypanel .resetbtn:hover{text-decoration:none;background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.displaypanel .segmented:first-of-type{margin-top:10px}
+
+/* ==========================================================================
+   Pages and lists: a 980 px page with 44 px sides (892 px of content, 1092 on
+   a wide page), a 27 px title, rows 11 px tall, callouts 14 px round.
+   ========================================================================== */
+.page,.page.wide{padding:38px 44px 120px}
+.page > .phead,.page > .metrics,.page > .viewbar,.page > .tabs,.page > .mode,.page > .bento,.page > .logday,.page > .logbook,.page > .reviewhead,.page > .reviewrail,.page > .reviewstep,.page > .reviewfoot,.page > .reviewdone,.page > .empty{max-width:1092px}
+.page.wide > .phead,.page.wide > .metrics,.page.wide > .viewbar,.page.wide > .tabs,.page.wide > .mode,.page.wide > .bento,.page.wide > .logday,.page.wide > .logbook,.page.wide > .reviewhead,.page.wide > .reviewrail,.page.wide > .reviewstep,.page.wide > .reviewfoot,.page.wide > .reviewdone,.page.wide > .empty{max-width:1092px}
+@media (min-width:721px){.ptitle,[data-density="compact"] .ptitle{font-size:27px;letter-spacing:-.02em}}
+.group{margin-top:26px}
+.group.accent-late,.group.accent-quick,.group.accent-dust{padding:14px 28px 6px;margin-inline:-28px;border-radius:14px}
+.task{padding-top:11px;padding-bottom:11px;--task-pt:11px}
+.ttitle{font-weight:400}
+.check{border-radius:5px}
+.gcount{min-width:22px;padding:1px 7px;text-align:center;background:var(--btn-soft)}
+
+/* ==========================================================================
+   The board: 320 px columns that are cards of their own, a title with its
+   count under it, and each task on a white card.
+   ========================================================================== */
+.board{gap:14px;padding:2px 2px 16px;margin:8px -2px 0}
+.board > *{flex:0 0 var(--colw,320px);min-width:0}
+.col{padding:14px 12px 8px;border:0;border-radius:20px;background:var(--frame-card)}
+.col.accent-quick{background:var(--wash-quick-deep)}
+.col.accent-late{background:var(--late-wash)}
+.col.accent-late .chead strong{color:var(--late-dark)}
+.chead{padding:0 6px 8px;margin-bottom:0}
+.chead-title{display:block}
+.chead strong{font-size:14px}
+.chead-title small{display:block;margin-top:1px;color:var(--faint);font-size:12px}
+.cload{margin:0 6px 6px;color:var(--muted)}
+.cload.over{color:var(--accent);font-weight:600}
+.col .taskwrap{padding:0 14px;border:0;border-radius:14px;box-shadow:0 0 0 1px var(--border),0 1px 2px rgba(0,0,0,.04);margin-bottom:8px}
+.col .taskwrap:hover{border:0;box-shadow:0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent),0 10px 22px -10px rgba(0,0,0,.28)}
+.col .task{padding:12px 0 11px}
+
+.chead{display:flex;align-items:flex-start;justify-content:space-between}
+.chead .linklike{color:var(--accent);font-size:12.5px;font-weight:600;padding:0}
+.chead .linklike:hover{text-decoration:underline}
+/* On a board the title, the figures and the controls start where the first column starts. */
+.page:has(.board.fullwidth) > :is(.phead,.metrics,.viewbar){max-width:none}
+
+/* ==========================================================================
+   The workspace picture (Setup, Settings, sign-in): the app drawn at a laptop
+   window's size and scaled down. Nothing in it takes the pointer.
+   ========================================================================== */
+.pvframe{display:block;border:0;border-radius:0;background:transparent;overflow:visible;pointer-events:none;user-select:none}
+.pvframe.preview-inline{max-width:760px}
+.pvwrap{position:relative;width:100%;overflow:hidden;border-radius:14px}
+.pvscale{position:absolute;left:0;top:0;transform-origin:0 0}
+.pvscale .app{position:relative;display:grid;grid-template-columns:var(--sidebar-w) minmax(0,1fr);width:100%;height:100%;margin:0;overflow:hidden}
+.pvscale .workspace{position:relative;overflow:hidden;height:calc(100% - 24px)}
+:root[data-layout="sidebar-float"] .pvscale .workspace{height:100%}
+.pvscale .sidebar{height:100%}
+.pvscale .side-foot{position:absolute}
+.pvscale .page{padding:30px 40px}
+.pvscale .page > *{max-width:none}
+.pvscale .avatar{display:grid;place-items:center;background:var(--accent);color:var(--on-accent,#fff);font-size:13px}
+.pvscale .navitem{pointer-events:none}
+.pvscale .board > *{flex:0 0 320px}
+.pvscale .preview-composer{width:520px;margin:0;padding:20px 24px;font-size:15px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.pvscale .preview-composer p{font-size:13px}
+.pvscale .preview-composer footer{font-size:13px}
+.pvscrim{position:absolute;inset:0;display:grid;place-items:center;background:rgba(0,0,0,.28);border-radius:inherit;z-index:3}
+@media (min-width:900px){
+  .signin-mock{height:auto;margin-bottom:-2px}
+  .signin-mock .pvframe{display:block}
+}
+
+/* ==========================================================================
+   Setup, as the design file animates it: each scene rises in, the old one
+   leaves in a breath, the picture slides between the sidebar and the content.
+   ========================================================================== */
+@keyframes rise{from{opacity:0;transform:translateY(12px)}}
+@keyframes pop{from{opacity:0;transform:scale(.4)}}
+@keyframes fill{from{width:0}}
+@keyframes leave{to{opacity:0;transform:translateY(-8px)}}
+
+/* The greeting: dots over the avatar, then the words one after another. */
+.setup[data-step="welcome"],.setup[data-step="end"]{display:flex;flex-direction:column;align-items:center;justify-content:center}
+.setup[data-step="welcome"] .setup-progress{position:static;margin-bottom:26px}
+.setup-welcome{display:grid;justify-items:center;gap:10px;text-align:center;animation:none}
+.setup-welcome > *{animation:rise .6s both}
+.setup-avatar{width:104px;height:104px;animation:pop .7s cubic-bezier(.2,1.4,.4,1) both !important}
+.setup-greeting{animation:none !important;margin:8px 0 0}
+.setup-greeting .setup-hello{display:inline-block;color:var(--muted);animation:rise .7s .5s both}
+.setup-greeting .setup-name{display:inline-block;animation:rise .7s 1.15s both}
+.setup-welcome .setup-lead{max-width:440px;margin:0;animation-delay:1.5s}
+.setup-rank > *{animation:rise .6s both}
+.setup-rank strong{animation-delay:1.8s;margin-top:16px}
+.setup-rankbar{animation-delay:1.9s}
+.setup-rankbar i{animation:fill 1.5s 2.1s cubic-bezier(.2,.8,.2,1) both}
+.setup-rank small{animation-delay:2.4s}
+.setup-welcome .setup-go{animation-delay:2.6s;margin-top:22px}
+.setup-end .setup-name{animation:rise .6s .2s both}
+.setup-end .setup-lead{animation-delay:.5s}
+.setup-end .setup-endactions{animation:rise .6s .8s both}
+
+/* Buttons at the foot sit on a fade of the page, always in view. */
+.setup-foot{position:absolute;left:0;right:0;bottom:0;z-index:5;pointer-events:none;padding:90px 24px 24px;background:none}
+.setup-foot::before{content:"";position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(to top,var(--surface) 0%,color-mix(in srgb,var(--surface) 92%,transparent) 38%,color-mix(in srgb,var(--surface) 55%,transparent) 70%,transparent 100%);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  -webkit-mask-image:linear-gradient(to top,#000 0%,#000 40%,rgba(0,0,0,.6) 70%,transparent 100%);
+  mask-image:linear-gradient(to top,#000 0%,#000 40%,rgba(0,0,0,.6) 70%,transparent 100%)}
+.setup-foot .setup-actions{max-width:1192px;margin:0 auto;display:flex;justify-content:space-between}
+.setup-foot .setup-actions > *{pointer-events:auto}
+.setup-actions .btn.soft{background:var(--btn-soft);border-color:transparent;height:34px}
+.setup-actions .btn.primary{height:34px}
+.setup.leave > *:not(.setup-progress){animation:leave .17s ease-in both !important}
+
+/* Entering a scene: the title, then the picture, then each control. */
+.setup-title,.setup-controls,.setup-controls[data-motion]{animation:none}
+.setup-title h2{animation:rise .5s .05s both}
+.setup-title p{animation:rise .5s .12s both}
+.setup-body .setup-preview{animation:rise .6s .2s both}
+.setup-body .setup-stack > *{animation:rise .5s both}
+.setup-body .setup-stack > :nth-child(1){animation-delay:.22s}
+.setup-body .setup-stack > :nth-child(2){animation-delay:.28s}
+.setup-body .setup-stack > :nth-child(3){animation-delay:.34s}
+.setup-body .setup-stack > :nth-child(4){animation-delay:.4s}
+.setup-view[data-motion="enter"] .setup-heads{animation:rise .5s .05s both}
+.setup-view[data-motion="enter"] .setup-preview{animation:rise .6s .2s both}
+.setup-view[data-motion="enter"] .setup-controls .setup-stack > *{animation:rise .5s both}
+.setup-view[data-motion="enter"] .setup-controls .setup-stack > :nth-child(1){animation-delay:.22s}
+.setup-view[data-motion="enter"] .setup-controls .setup-stack > :nth-child(2){animation-delay:.3s}
+
+/* The sidebar and the content: one picture that slides, two sets of controls. */
+.setup-heads{display:grid}
+.setup-heads .hh{grid-area:1/1;transition:opacity .45s,transform .6s cubic-bezier(.2,.8,.2,1)}
+.setup-heads[data-pos="a"] .hh.b{opacity:0;transform:translateY(10px);pointer-events:none}
+.setup-heads[data-pos="b"] .hh.a{opacity:0;transform:translateY(-10px);pointer-events:none}
+.setup-view{flex:1;min-height:0;container-type:inline-size;overflow:hidden;margin:0 -8px;padding:0 8px}
+.setup-track{display:grid;grid-template-columns:min(390px,40cqw) calc(100cqw - min(390px,40cqw) - 30px) min(390px,40cqw);gap:30px;height:100%;
+  transition:transform .8s cubic-bezier(.65,.05,.25,1)}
+.setup-track[data-pos="b"]{transform:translateX(calc(-1 * (min(390px,40cqw) + 30px)))}
+.setup-track > .setup-preview{align-self:start;height:auto}
+.setup-track > .setup-controls{transition:opacity .5s;height:100%;overflow-y:auto;padding:2px 14px 120px 2px}
+.setup-track[data-pos="a"] > .setup-controls.b,.setup-track[data-pos="b"] > .setup-controls.a{opacity:0;pointer-events:none}
+.setup-body{padding-bottom:0}
+.setup-body .setup-controls{height:100%;overflow-y:auto;padding:2px 14px 120px 2px}
+.setup-body .setup-preview{align-self:start;padding:0;background:none;height:auto}
+
+/* The choices: pills with a dot for the colour, cards with a line of words. */
+.setup-controls h3{margin:18px 0 8px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.setup-stack > :first-child h3{margin-top:0}
+.accentchoice{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:8px}
+.accentcard{display:flex;align-items:center;gap:9px;height:38px;min-height:38px;padding:0 12px;border:0;border-radius:12px;
+  background:var(--surface);box-shadow:0 0 0 1px var(--border-strong) inset}
+.accentcard:hover{background:var(--hover)}
+.accentcard .accentpreview{display:none}
+.accentcard .accentlabel{flex:1;justify-content:flex-start;gap:9px;font-size:13px;font-weight:400;color:var(--text)}
+.accentcard .accentlabel::before{content:"";width:18px;height:18px;flex:none;border-radius:50%;background:var(--accent);box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.accentcard.custom .accentlabel::before{background:conic-gradient(#d1453b,#d9a200,#4c8631,#246fe0,#7656bb,#d1453b)}
+.accentcard .accentlabel .ic{display:none}
+.accentcard.selected{box-shadow:0 0 0 2px var(--accent) inset;background:var(--accent-wash);font-weight:600}
+.accentcard.selected .accentlabel{color:var(--text);font-weight:600}
+.themechoice{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.themecard{display:block;padding:12px;border:2px solid var(--border-strong);border-radius:18px;background:var(--surface);box-shadow:none}
+.themecard .framepreview{height:84px;margin-bottom:9px}
+.themecard .themelabel{font-size:13.5px;font-weight:700;color:var(--text)}
+.themecard .themelabel .ic{display:none}
+.themehint{display:block;margin-top:2px;color:var(--faint);font-size:12px;font-weight:400;line-height:1.4}
+.themecard.selected{border-color:var(--accent);background:var(--accent-wash);box-shadow:none}
+.themecard.selected .themelabel{color:var(--text)}
+.setup-controls :is(.themecard, .accentcard, .denscard, .chipscard).selected,.setbody :is(.themecard, .accentcard).selected{border-color:var(--accent)}
+@media (prefers-reduced-motion:reduce){
+  .setup *,.setup-welcome > *{animation-duration:.01ms !important;animation-delay:0s !important;transition-duration:.01ms !important}
+}
+
+/* Settings: the menu with its glyphs, and answers as tracks rather than lists. */
+.settings{grid-template-columns:200px 1fr}
+.setnav a{gap:10px;min-height:36px;padding:0 14px;border-radius:999px;font-weight:500;letter-spacing:0}
+.setnav a .ic{flex:none;color:currentColor}
+.segmented.choice{display:inline-grid;width:auto;min-width:0}
+.segmented.choice button{padding:5px 14px}
+.setrow .segmented.choice{flex:none;width:auto}
+a.btn,a.btn:hover{text-decoration:none}
+.menu{border-radius:16px;padding:5px}
+.menu button{border-radius:11px}
+.menu button.danger,.menu button.danger .ic{color:#e5384f}
+.menu button.danger:hover{background:#fdf0f1}
+
+/* Eisenhower: coloured quadrants, ordinary rows. */
+.eisenhower-grid{gap:14px}
+.eisenhower-grid .quadrant{padding:12px 18px 6px;border:0;border-radius:14px;box-shadow:none}
+.quadrant.urgent-important{background:#fff1f0}
+.quadrant.not-urgent-important{background:#fdf5e8}
+.quadrant.urgent-not-important{background:#eef4fd}
+.quadrant.not-urgent-not-important{background:#f4f4f3}
+.quadrant.urgent-important .gname{color:#b03830}
+.quadrant.not-urgent-important .gname{color:#a4650c}
+.quadrant.urgent-not-important .gname{color:#3972bf}
+:root[data-theme="dark"] .quadrant.urgent-important{background:#2e1c1b}
+:root[data-theme="dark"] .quadrant.not-urgent-important{background:#2e2616}
+:root[data-theme="dark"] .quadrant.urgent-not-important{background:#1b2638}
+:root[data-theme="dark"] .quadrant.not-urgent-not-important{background:var(--subtle)}
+
+/* Notifications hang from the bell: a card of rows, each with a round initial. */
+@media (min-width:721px){
+  .overlay.hung .scrim{background:transparent;backdrop-filter:none}
+  .overlay.hung .sheet{width:400px;max-width:calc(100vw - 16px);min-height:0;max-height:min(640px,calc(100vh - 90px));
+    border-radius:22px;border:1px solid var(--border-strong);box-shadow:0 12px 40px rgba(0,0,0,.16),0 2px 6px rgba(0,0,0,.05);
+    display:flex;flex-direction:column;overflow:hidden;margin:0;transform:none}
+  .overlay.hung .sheet-head{padding:16px 22px 10px}
+  .overlay.hung .sheet-head h2{font-size:15px}
+  .overlay.hung .sheet-head .iconbtn{display:none}
+  .overlay.hung .notifswitch{margin:0 22px 8px}
+  .overlay.hung .notiflist{padding:0 22px 14px;overflow-y:auto}
+  .overlay.hung .notifbar{display:none}
+  .overlay.hung .headmark{display:inline-flex;margin-left:auto;color:var(--accent);font-size:12.5px;font-weight:600}
+}
+.notiflist li{grid-template-columns:34px 1fr auto 10px;gap:12px;border-top:0;padding:10px 0}
+.notifav{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;color:#fff;font-size:12px;font-weight:700}
+.notiflist li strong{font-weight:700}
+.notiflist li .notifread{opacity:0}
+.notiflist li:hover .notifread,.notiflist li:focus-within .notifread{opacity:1}
+.notiflist li .notifdot{margin-top:12px}
+.notiflist li .opts{display:flex;gap:8px;margin-top:8px}
+
+.headmark{display:none}
+
+/* What's new: a chip for the kind of change, then the words. */
+.whatsnew-change{grid-template-columns:92px minmax(0,1fr);gap:14px;align-items:start}
+.whatsnew-badge{justify-self:start;margin-top:1px;padding:2px 9px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+.whatsnew-change.new .whatsnew-badge{background:var(--accent-soft);color:var(--accent-dark)}
+.whatsnew-change.design .whatsnew-badge{background:color-mix(in srgb,var(--info) 12%,var(--surface));color:var(--info)}
+.whatsnew-change.fix .whatsnew-badge{background:color-mix(in srgb,var(--ok) 14%,var(--surface));color:var(--ok)}
+.whatsnew-release ul{gap:14px}
+
+/* The tour card: where you are, a line that fills, then the words and one button. */
+.tour-top{display:flex;align-items:center;justify-content:space-between;color:var(--faint);font-size:12px}
+.tour-line{display:block;height:3px;border-radius:3px;background:var(--btn-soft);overflow:hidden}
+.tour-line i{display:block;height:100%;border-radius:3px;background:var(--accent);transition:width .3s ease}
+.tour-foot{justify-content:flex-end}
+.tour-foot .btn{min-height:30px;padding:0 14px;font-size:12.5px}
+.tour-card{border-radius:18px}
+
+/* Item 5. No ring on a field you are typing in, nor around the list options
+   (the active one is shown by its background). Buttons keep the keyboard ring. */
+input:focus,input:focus-visible,textarea:focus,textarea:focus-visible,select:focus-visible,
+[contenteditable]:focus-visible,.connect-card input:focus,.estinput:focus,.capday input:focus,
+.md-link-dialog input:focus,.descedit:focus-within,.pickersearch input:focus-visible,
+.popover [role="listbox"] :focus-visible,.popover button.opt:focus-visible,.bulkpop .opt:focus-visible{
+  outline:none;box-shadow:none}
+.descedit:focus-within{border-color:var(--border)}
+.popover button.opt.active,.popover button.opt[data-active]{background:var(--hover)}
+
+/* Items 22, 38. Where a dragged task will land, the rows part to make room for
+   it (as in the Settings navigation) instead of drawing a bar. */
+html.dragging-row .task,html.dragging-row .subtaskrow{transition:margin .16s ease}
+.task.landing{margin-bottom:var(--drag-gap,0)}
+.task.landing.landing-before{margin-bottom:0;margin-top:var(--drag-gap,0)}
+.task.landing::after{display:none}
+.dropbar{height:var(--drag-gap,2px);margin:0;background:transparent;transition:height .16s ease}
+
+/* Sunflower is a real yellow, so what sits on it is dark ink, not white. */
+[data-accent="amber"] .addbtn,[data-accent="amber"] .btn.primary,[data-accent="amber"] .btn.danger,
+[data-accent="amber"] .tb .num,[data-accent="amber"] .preview-primary,[data-accent="amber"] .preview-person b,
+[data-accent="amber"] .reviewactions .btn.on,[data-accent="amber"] .reviewrail .reviewpip.current .reviewpip-dot,
+[data-accent="amber"] .dateday.chosen,[data-accent="amber"] .wt-mark,
+[data-accent="amber"] :is(.checkitem,.checkboxwrap) input:checked + .checkbox,
+[data-accent="amber"] .pvscale .avatar{color:#2a2000}
+:root[data-background="colored"][data-accent="amber"] .sidebar{--side-text:#2a2000}
+
+/* The custom colour: a square, a hue bar, a hex field (as the reference). */
+.cpanel{display:grid;grid-template-columns:minmax(110px,150px) minmax(0,1fr);gap:16px;align-items:stretch;
+  margin-top:12px;padding:16px;border-radius:20px;background:var(--surface-2);border:1px solid var(--border)}
+.sv{position:relative;height:150px;border-radius:14px;cursor:crosshair;touch-action:none;
+  background:linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,hsl(calc(var(--h)*1deg) 100% 50%))}
+.hue{position:relative;height:14px;border-radius:99px;cursor:pointer;touch-action:none;
+  background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
+.cpanel .knob{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;border:3px solid #fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none}
+.hue .knob{top:50%}
+.cside{display:grid;gap:12px;align-content:start;min-width:0}.cside small{color:var(--faint);font-size:12px}
+.crow{display:flex;gap:12px;align-items:center;min-width:0}
+.bigswatch{width:52px;height:52px;border-radius:14px;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.cinfo{display:grid;gap:6px;min-width:0}.cinfo strong{font-size:16px}
+.hexrow{display:flex;align-items:center;border-radius:12px;padding:0 12px;height:36px;gap:2px;width:100%;max-width:150px;
+  background:var(--surface);box-shadow:0 0 0 1px var(--border-strong) inset;color:var(--faint)}
+.hexrow input{border:0;width:100%;min-width:0;font-family:ui-monospace,Menlo,monospace;background:transparent;
+  color:var(--text);font-size:14px;text-transform:uppercase;padding:0}
+
+/* Setup, colours: three to a row so every name is read whole, and a shorter chip. */
+.setup-controls .accentchoice{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.setup-controls .accentcard{height:34px;min-height:34px;padding:0 10px;gap:8px}
+.setup-controls .accentcard .accentlabel{font-size:12.5px;gap:8px;white-space:nowrap;overflow:hidden;text-overflow:clip}
+.setup-controls .accentcard .accentlabel::before{width:16px;height:16px}
+@media (max-width:520px){.setup-controls .accentchoice{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* About: one row of soft pill buttons, as in the reference. */
+.alinks{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.alinks .btn.soft{height:36px;border:0;background:var(--btn-soft);color:var(--text)}
+.alinks .btn.soft:hover{background:var(--btn-soft-hover,var(--hover))}
+/* Account: soft pills; the danger one reads on hover instead of vanishing. */
+.setactions a.btn,.setactions .btn{color:var(--text)}
+.setactions .btn.danger{background:var(--btn-soft);border:0;color:var(--late-dark,#d1453b)}
+.setactions .btn.danger:hover{background:var(--accent-soft);color:var(--accent-dark)}
+
+/* Sidebar: no dot before the sync line; a plain white search field with ⌘K as text. */
+.sidebar .syncdot{display:none}
+.sidebar .searchbtn{background:var(--surface);border:1px solid var(--border);color:var(--muted)}
+.sidebar .searchbtn kbd{border:0;background:transparent;padding:0;font:inherit;font-size:11px;color:var(--faint)}
+
+/* The profile menu hangs below the profile, narrower, like the reference. */
+.sidebar .side-top .menu{top:calc(100% - 2px);left:4px;width:max-content;min-width:198px;max-width:240px}
+.sidebar .side-top .menu button{white-space:nowrap}
+
+/* Count and time on one line: "4 tasks · 5 h 30", in a group header and a column header. */
+.gcount{min-width:0;height:auto;padding:0;border-radius:0;background:transparent;box-shadow:none;
+  color:var(--muted);font-size:12.5px;font-weight:400}
+.gtime::before{content:"·";margin-right:6px}
+.group.late .gcount{color:var(--late-dark,var(--muted))}
+.chead-title small.over{color:var(--accent);font-weight:600}
+
+/* Priorities in Display start grey and take their colour once chosen. */
+.chip:not([aria-pressed="true"]) .flagdot{background:var(--faint)!important;opacity:.7}
+
+/* A little less between the checkbox and the title. */
+.task{column-gap:8px}
+
+/* Sign-in: Todoist's mark in the button and the footer; a tighter left column;
+   the token area as in the reference (a pill field, a soft button, a quiet link). */
+.tdlogo{width:19px;height:19px;vertical-align:-4px;flex:none}
+.signin .btn.primary .tdlogo{margin:0 2px;box-shadow:none}
+.signin-brand-name{display:inline-flex;align-items:center;gap:8px}
+.signin-brand-name .tdlogo{width:18px;height:18px;vertical-align:0}
+@media (min-width:900px){
+  .signin-bubble{padding:48px 44px 0;gap:14px}
+  .signin-bubble h2{margin:0;font-size:36px}
+  .signin-checks{gap:8px}
+}
+.signin .connect-token{display:grid;gap:8px}
+.signin .connect-token summary{cursor:pointer;color:var(--muted);font-size:12.5px;margin:4px 0 0}
+.signin .connect-token[open] summary{margin-bottom:0}
+.signin .connect-token input{height:40px;border:1px solid var(--border-strong);border-radius:99px;padding:0 14px;
+  margin-top:8px;background:var(--surface);color:var(--text);width:100%;box-sizing:border-box}
+.signin .connect-token .connect-token-submit{margin-top:0;background:var(--btn-soft);border-color:transparent;color:var(--text)}
+.signin .connect-token .connect-token-submit:hover{background:var(--btn-soft-hover)}
+.signin .connect-token .connect-apikey{font-size:12px;color:var(--accent-dark);margin-top:2px}
+.signin .connect-token .connect-apikey{justify-self:start;text-align:left}
+.group .gcount,.group.accent-late .gcount,.group.accent-dust .gcount{background:transparent;display:inline}
+.group.accent-late .gcount{color:var(--late-dark)}
+.group.accent-dust .gcount{color:var(--dust-dark)}
+
+/* What's new, as the reference: the version pill beside the title, soft tour
+   button, yellow coffee, red "Got it", a "Latest" pill on the newest release. */
+.whatsnew-head{display:flex;align-items:center;gap:10px}
+.whatsnew-head h2{flex:1;margin:0}
+.whatsnew-head .fselect-face{height:32px;min-height:32px;padding:0 12px;border-radius:99px;background:var(--btn-soft);
+  box-shadow:none;font-size:12.5px;font-weight:500}
+.whatsnew-head .fselect-label{display:none}
+.whatsnew-versions{display:none}
+.whatsnew-latest{margin-left:10px;padding:1px 9px;border-radius:99px;background:var(--accent-soft);color:var(--accent-dark);
+  font-size:11.5px;font-weight:700}
+.whatsnew-foot .btn.soft{height:36px;border:0;background:var(--btn-soft);color:var(--text)}
+.whatsnew-foot .btn.coffee{height:36px;background:#ffdd00;color:#202020;border:0;font-weight:600}
+.whatsnew-foot .btn.coffee:hover{background:#ffd500}
+.whatsnew-foot .btn.coffee .ic{color:#202020}
+:root[data-theme="dark"] .whatsnew-foot .btn.coffee{background:#ffdd00;color:#202020}
+
+/* Task panel: the estimate is the same field as the two dates above it. */
+.detail-side .estfield{position:relative;width:100%}
+.detail-side .estinput{height:34px;width:100%;border:0;border-radius:12px;padding:0 44px 0 10px;font-size:13.5px;
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--border-strong) 55%,transparent) inset;background:var(--surface);color:var(--text)}
+.detail-side .estinput:hover{box-shadow:0 0 0 1px var(--faint) inset}
+.detail-side .estunit{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--faint);font-size:12.5px;pointer-events:none}
+
+/* What the composer recognises is tinted behind the words as you type (no outline), a duration as well. */
+.nmark.duration{--mark:var(--muted)}
+
+/* Share: a pill field and a pill button, the same height, on one line. */
+.shareinvite{gap:8px;align-items:center}
+.shareinvite input{height:40px;border:1px solid var(--border-strong);border-radius:99px;padding:0 16px;background:var(--surface);
+  color:var(--text);font-size:14px;min-width:0}
+.shareinvite input::placeholder{color:var(--faint)}
+.shareinvite .btn.primary{height:40px;padding:0 20px}
+.shareinvite .fselect-face{height:40px;min-height:40px;border-radius:99px;padding:0 14px}
+.sharelist li{padding:12px 2px}
+
+/* The chips you can move carry a visible grip; the hint says so in words. */
+.detailschips .chipgrip{margin-left:-4px;opacity:.5;width:12px;height:12px}
+.detailschips .chip.movable:hover .chipgrip{opacity:.9}
+.detailschips .mhint{flex-basis:100%;margin-top:4px;color:var(--faint);font-size:12px}
+.preview-list{display:grid;gap:18px;padding:6px 4px}
+.preview-list .group{padding:6px 14px 8px}
+.preview-list .ghead{display:flex;align-items:baseline;gap:10px;margin-bottom:2px}
+.preview-list .gname{font-weight:700;font-size:15px}
+
+/* "All set" is not a blank page: a wash of the accent from above, the title in accent. */
+.setup[data-step="end"]{
+  background:
+    radial-gradient(900px 520px at 50% -10%,color-mix(in srgb,var(--accent) 22%,transparent),transparent 70%),
+    radial-gradient(700px 400px at 50% 110%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 70%),
+    var(--surface);
+}
+.setup[data-step="end"] .setup-name{color:var(--accent-dark)}
+.setup-end .setup-endactions .btn:not(.primary){background:var(--btn-soft);border-color:transparent}
+
+/* Tour: the description sits right under its title. */
+.tour-card h3{margin:0 0 3px}
+.tour-card p{margin:0}
+
+/* The list picture of the setup has no sidebar: it is about the rows. */
+.pvframe[data-stage="metadata"] .pvscale .sidebar{display:none}
+.pvframe[data-stage="metadata"] .pvscale .app{grid-template-columns:minmax(0,1fr)}
+.pvframe[data-stage="metadata"] .pvscale .workspace{height:100%}
+.pvframe[data-stage="metadata"] .pvscale .page{padding:24px 28px}
+.setup-controls .chipschoice{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+/* Insights follows the layout. With a floating page, the panel sits on the
+   frame at the right, as the sidebar does at the left, and the page makes room.
+   With a floating sidebar it is a floating card of its own. */
+.overlay:has(.side-sheet .icard) .scrim{background:transparent}
+.side-sheet:has(.icard){border:0;border-radius:20px;margin:12px;height:calc(100% - 24px);width:min(400px,calc(100% - 24px));
+  box-shadow:0 0 0 1px rgba(0,0,0,.05),0 18px 50px rgba(0,0,0,.18)}
+:root[data-layout="page-float"] .side-sheet:has(.icard){background:transparent;box-shadow:none;margin:12px 12px 12px 0}
+:root[data-layout="page-float"].insights-open .app{padding-right:412px;box-sizing:border-box}
+@media (max-width:1100px){:root[data-layout="page-float"].insights-open .app{padding-right:0}}
+
+/* Dashboard and Logbook: the date and its arrows at the left, the span at the
+   right; with Custom, the span moves left to make room for the two dates. */
+.periodbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.periodright{display:flex;align-items:center;gap:12px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+.periodright .rangefields{display:flex;align-items:center;gap:10px}
+.compare{display:inline-flex;align-items:baseline;gap:6px}
+.compare-vs{color:var(--faint);font-size:11.5px;font-weight:400}
+
+/* Notifications: the same place whichever list you are on, no rule across the top. */
+.notifswitch{margin:0 20px 10px}
+.notifbar{border:0;padding:0 0 6px;display:flex;justify-content:flex-end}
+.notifsub{margin:18px 0 6px;font-size:13px;color:var(--muted)}
+.notiflist,.sheet-body{padding-top:0}
+
+/* A project's title: its mark in front, a little indented; the rest stays aligned. */
+.ptitle-row{display:flex;align-items:center;gap:10px}
+.ptitle-icon{position:relative;flex:none}
+.ptitle-mark{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:20px;font-weight:700}
+.ptitle-mark:hover{background:var(--hover)}
+.ptitle-mark .hash{width:24px;height:24px;font-size:20px}
+.ptitle-icons{position:absolute;top:calc(100% + 6px);left:0;width:340px;padding:12px;z-index:50}
+
+/* New project: the mark is bigger. */
+.pcx-icon{width:48px;height:48px;border-radius:14px}
+.pcx-icon .hash{width:30px;height:30px;font-size:24px}
+.pcx-icon .ic{width:22px;height:22px}
+
+/* The page menu (three dots) on Upcoming and Tags. */
+.pagemenu{position:relative;display:inline-flex}
+.pagemenu-list{position:absolute;top:calc(100% + 6px);right:0;min-width:210px;padding:5px;z-index:60}
+.pagemenu-list .opt{width:100%;display:flex;align-items:center;gap:10px;min-height:34px;padding:0 10px;border-radius:11px;text-align:left}
+.pagemenu-list .opt > span{flex:1}
+.tagcard.landing{margin-bottom:var(--drag-gap,0)}
+.tagcard.landing::after{display:none}
+.tagcard{transition:margin .16s ease}
+
+
+/* Sign-in, feedback pass: the page is exactly the window tall, the right column scrolls by
+   itself, so the brand line follows the content up when the window gets short. */
+.signin{height:100dvh;min-height:0;overflow:hidden}
+.signin-main{overflow:auto}
+.signin-brand-name{display:inline}
+@media (min-width:900px){
+  .signin-bubble{min-height:0}
+  .signin-checks{margin-bottom:30px}
+  .signin-mock{flex:none;margin-top:auto}
+}
+.signin .connect-token summary{list-style:none;text-align:center;margin:4px 0 0}
+.signin .connect-token summary::-webkit-details-marker{display:none}
+.signin .connect-token summary::marker{content:''}
+.signin .connect-token{gap:16px}
+.signin .connect-token input{margin:14px 0}
+.signin .connect-token .connect-apikey{display:block;margin-top:14px;text-align:center}
+
+
+/* Settings, feedback pass: more air between two settings, no rule between the blocks of one
+   section, a visual theme card, and the coffee button in the colour of the selected menu entry. */
+.setbody .setrow{min-height:96px}
+.setbody .setrow-wide{min-height:0;padding-top:22px}
+.setbody .setrow-wide + .setrow-wide{border-top:0}
+.setbody .setrow .estinput,.setbody .setrow .fselect{margin-block:0}
+.setbody .themechoice.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.setfcard.coffee-callout{padding:26px 28px;gap:18px}
+.setfcard.coffee-callout .btn.coffee-btn{
+  height:48px;padding:0 30px;background:var(--accent-soft);color:var(--accent-dark);box-shadow:none;border:0;
+}
+.setfcard.coffee-callout .btn.coffee-btn:hover{background:var(--accent-soft);filter:brightness(.96)}
+
+/* The hex field is the row's own border, not a second one inside it. */
+.hexrow input.accenthex,.hexrow input.accenthex:focus,.hexrow input.accenthex:focus-visible{
+  border:0;height:100%;padding:0;border-radius:0;background:transparent;box-shadow:none;outline:none;
+}
+
+/* Setup, end screen: the main button centred, "skip" a quiet line of text under it. */
+.setup-end .setup-endactions{display:grid;justify-items:center;gap:14px;margin-top:22px}
+.setup-end .setup-endactions .btn{min-width:240px;justify-content:center}
+.setup-skiplink{border:0;background:transparent;color:var(--muted);font:inherit;font-size:13px;cursor:pointer;padding:4px 8px;border-radius:8px}
+.setup-skiplink:hover{color:var(--text);text-decoration:underline}
+.setup:focus,.setup:focus-visible{outline:none}
+
+/* The picture in the setup and the settings keeps its own edge whatever sits behind it
+   (white on white in a floating-sidebar layout, dark on dark in the dark theme). */
+.pvwrap{box-shadow:0 0 0 1px var(--border-strong),0 10px 30px -14px rgba(0,0,0,.35)}
+.pvframe:not([data-stage="organisation"]) .pvscale .board > *{flex:1 1 0;min-width:0}
+
+/* Setup, sidebar step: the icons of the two switches sit in the same column as the entries below. */
+.setup-switch{padding-left:0}
+.setup-switch > .ic{margin-left:0}
+
+/* Leaving and entering a step: a fade with a short, even drift, no jump between the two. */
+@keyframes leave{to{opacity:0;transform:translateY(-6px)}}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}}
+.setup.leave > *:not(.setup-progress){animation:leave .2s ease-in-out both !important}
+.setup-body .setup-preview,.setup-view[data-motion="enter"] .setup-preview{animation:rise .55s .1s cubic-bezier(.2,.7,.2,1) both}
+.setup-title h2,.setup-view[data-motion="enter"] .setup-heads{animation:rise .5s cubic-bezier(.2,.7,.2,1) both}
+.setup-title p{animation:rise .5s .06s cubic-bezier(.2,.7,.2,1) both}
+.pvframe[data-stage="organisation"] .pvscale .pactions{display:none}
+/* The list picture has no sidebar, so the page is not pushed over to make room for one. */
+.pvframe[data-stage="metadata"] .pvscale .workspace{padding-left:0;padding-right:0}
+.pvframe[data-stage="metadata"] .pvscale .page{padding:24px 40px}
+
+/* Tour card: air between the bar and the title, the description close under it. */
+.tour-line{margin-bottom:8px}
+.tour-card h3{margin:0 0 -3px}
+.tour-card{gap:8px}
+
+/* Segmented controls: one thumb that slides to the chosen option (src/lib/segSlider.ts). */
+.seg-slide{position:relative}
+/* The language switch floats in the corner; the thumb's positioning context must not pull it into the flow. */
+.signin-lang.seg-slide{position:absolute}
+.seg-slide::before{
+  content:"";position:absolute;left:var(--seg-x);top:var(--seg-y);width:var(--seg-w);height:var(--seg-h);
+  border-radius:999px;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.12);pointer-events:none;
+}
+.seg-slide.seg-ready::before{transition:left .26s cubic-bezier(.3,.7,.2,1),width .26s cubic-bezier(.3,.7,.2,1),top .26s,height .26s}
+.seg-slide > button{position:relative;z-index:1;background:transparent !important;box-shadow:none !important}
+.seg-slide > button[aria-pressed="true"],.seg-slide > button[aria-checked="true"]{color:var(--text);font-weight:600}
+@media (prefers-reduced-motion:reduce){.seg-slide.seg-ready::before{transition:none}}
+
+/* List callouts take the page's own edges, as a board's columns do, instead of reaching past them. */
+.group.accent-late,.group.accent-quick,.group.accent-dust{margin-inline:0;padding:14px 18px 6px}
+
+/* Board cards follow Display like every other row: the description shows when it is switched on,
+   the details wrap and keep the order chosen, the duration is one of them (not pinned to the right). */
+.col .task .tdesc{display:block}
+.col .task .ttitle{padding-right:0}
+.col .task .meta{flex-wrap:wrap;overflow:visible}
+.col .task .meta > .est{position:static;margin:0}
+
+/* Board cards: the hover actions are one small pill, centred on the title's line, not a gradient
+   hanging off the corner. */
+.col .trow-end{
+  top:6px;right:0;padding:2px 3px;gap:1px;border-radius:10px;
+  background:var(--card-bg);box-shadow:0 0 0 1px var(--border),0 4px 12px -4px rgba(0,0,0,.25);
+}
+.col .trow-end .trow-actions > button{width:26px;height:26px;border-radius:8px}
+.col .taskwrap .task ~ .task .trow-end{top:0}
+
+/* Drag and drop, same everywhere: what is carried leaves a faint, dashed place behind, and the
+   rows (cards, in a board) part where it will land. */
+.task.dragging{opacity:.4;background:var(--subtle);outline:1.5px dashed var(--border-strong);outline-offset:-2px;border-radius:10px}
+.col .taskwrap:has(.task.dragging){opacity:.4;background:var(--subtle);box-shadow:0 0 0 1.5px var(--border-strong) inset}
+.col .taskwrap:has(.task.dragging) .task.dragging{opacity:1;background:transparent;outline:0}
+html.dragging-row .col .taskwrap{transition:margin .16s ease}
+.col .task.landing,.col .task.landing.landing-before{margin:0}
+.col .taskwrap:has(> .task.landing:not(.landing-before)){margin-bottom:calc(8px + var(--drag-gap,0px))}
+.col .taskwrap:has(> .task.landing.landing-before){margin-top:var(--drag-gap,0px)}
+.col .taskwrap:has(.task.landing)::after{display:none}
+
+/* Right-hand panels (Insights, I have time, a task opened as a panel): smaller, with room at the
+   sides, and they slide out as they slid in instead of fading. */
+@keyframes panelIn{from{transform:translateX(calc(100% + 28px))}to{transform:none}}
+@keyframes panelOut{from{transform:none}to{transform:translateX(calc(100% + 28px))}}
+@media (min-width:721px){
+  .side-sheet{animation:panelIn .32s cubic-bezier(.2,.8,.2,1) both}
+  .overlay.leaving .side-sheet{animation:panelOut .32s cubic-bezier(.8,0,.8,.2) forwards}
+  .timepanel{animation:panelIn .32s cubic-bezier(.2,.8,.2,1) both}
+  .overlay.leaving .scrim{transition:opacity .2s}
+}
+.side-sheet:has(.icard){width:min(380px,calc(100% - 24px));padding:16px 14px 16px}
+.side-sheet:has(.icard) .icard{padding:14px 16px;border-radius:18px;margin-bottom:10px}
+.side-sheet:has(.icard) .ibig{font-size:22px}
+.side-sheet:has(.icard) .psub{font-size:12px}
+.side-sheet:has(.icard) > div:first-child{padding:0 6px}
+:root[data-layout="page-float"] .app{transition:padding-right .3s cubic-bezier(.2,.8,.2,1)}
+@media (prefers-reduced-motion:reduce){
+  .side-sheet,.timepanel,.overlay.leaving .side-sheet{animation:none !important}
+}
+
+/* Dashboard. Charts breathe (2px between bars was a comb), the focus score is a bar and four names,
+   and the heatmap is drawn in the accent, with steps far enough apart to read. */
+.chart-plot{gap:6px}
+.chart-axis{gap:6px}
+.dashboard-bento .focus-metric .legend.inline{display:flex;flex-wrap:wrap;gap:6px 14px}
+.contribution-day.level-1{background:color-mix(in srgb,var(--accent) 24%,var(--subtle));box-shadow:none}
+.contribution-day.level-2{background:color-mix(in srgb,var(--accent) 48%,var(--subtle));box-shadow:none}
+.contribution-day.level-3{background:color-mix(in srgb,var(--accent) 74%,var(--subtle));box-shadow:none}
+.contribution-day.level-4{background:var(--accent);box-shadow:none}
+.card.lifted{position:relative;z-index:4;box-shadow:0 18px 40px -12px rgba(0,0,0,.35);opacity:.96}
+.dash-grip{cursor:grab;touch-action:none}
+.dash-grip:active{cursor:grabbing}
+
+/* Sidebar. The foot is a blur only (no rule across it), the project rows sit in the same columns as
+   the entries above them (same indent, icon box and label start), and a project's mark is the bare
+   icon in its own colour, bigger, with no tile behind it. */
+.sidebar .side-foot{border-top:0}
+.side-group{padding-left:0;margin-top:14px}
+.side-group .side-head{margin-left:0}
+.hash{background:transparent}
+.navitem .hash{width:16px;height:16px;font-size:16px;line-height:1;border-radius:0}
+.navitem .hash .ic{width:16px;height:16px}
+.ptitle-mark{width:auto;height:auto;border-radius:8px;padding:2px}
+.ptitle-mark .hash{width:28px;height:28px;font-size:26px}
+.ptitle-mark .hash .ic{width:26px;height:26px}
+.pcx-icon .hash .ic{width:28px;height:28px}
+.sharesent{display:flex;align-items:center;gap:8px;margin:10px 0 0;padding:8px 12px;border-radius:12px;background:var(--accent-soft);color:var(--accent-dark);font-size:13px;font-weight:600}
+
+/* Adding a section: a quiet field, no accent ring. Dragging one: the seam it is over opens to the room
+   it will take, with a dashed place in it (the same part-to-make-room as everywhere). */
+.addsection-field:focus{outline:none;border-color:var(--border-strong);box-shadow:none}
+.addsection-slot{transition:height .16s ease}
+.addsection-slot.armed.over{height:72px;display:block}
+.addsection-slot.armed.over .addsection{display:none}
+.addsection-slot.armed.over::before{content:"";display:block;height:100%;box-sizing:border-box;border:1.5px dashed var(--border-strong);border-radius:12px;background:var(--subtle)}
+
+/* The open task. The check is a small squircle that sits on the title's first line; the blocks under the
+   title (subtasks, comments) start where the title starts, not under the check. Comments are people. */
+.detail-headline{grid-template-columns:18px minmax(0,1fr);gap:12px}
+.detail-headline .check{width:18px;height:18px;margin-top:6px;border-radius:7px}
+.detail-headline .check .ic{width:11px;height:11px}
+.detail-main .detail-section{margin-left:30px}
+.comment{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;padding:10px 0;border-bottom:0}
+.comment-avatar{width:28px;height:28px;border-radius:50%;overflow:hidden;display:grid;place-items:center;flex:none;
+  background:var(--accent);color:var(--on-accent,#fff);font-size:12px;font-weight:700}
+.comment-avatar img{width:100%;height:100%;object-fit:cover}
+.comment-body header{display:flex;align-items:baseline;gap:8px}
+.comment-body header strong{font-size:13px}
+.comment-body header time{margin:0;display:inline;font-size:12px;color:var(--faint)}
+.comment-body .md{margin-top:2px;font-size:13.5px;line-height:1.5}
+.comment-field{width:100%;min-height:36px;padding:8px 14px;border:1px solid var(--border-strong);border-radius:18px;
+  background:var(--surface);color:var(--text);font:inherit;font-size:13px;resize:none;box-sizing:border-box}
+.comment-field::placeholder{color:var(--faint)}
+.comment-new{align-items:center}
+.repeatfield{margin-top:6px}
+
+/* Search fields in menus and pickers: no accent frame while typing (focus is read by the caret). */
+.pickersearch:focus-within{border-color:var(--border-strong);box-shadow:0 0 0 var(--s2) var(--surface);outline:none}
+
+/* A task opened as a panel follows the same layout rules as Insights: a card on the frame at the
+   right (page-float) or a floating card (sidebar-float), the page making room, and no veil. */
+.overlay:has(.side-sheet > .detail-top) .scrim{background:transparent}
+.side-sheet:has(> .detail-top){border:0;border-radius:20px;margin:12px;height:calc(100% - 24px);width:min(420px,calc(100% - 24px));
+  box-shadow:0 0 0 1px rgba(0,0,0,.05),0 18px 50px rgba(0,0,0,.18)}
+:root[data-layout="page-float"] .side-sheet:has(> .detail-top){box-shadow:0 0 0 1px rgba(0,0,0,.05),0 18px 50px rgba(0,0,0,.18);margin:12px 12px 12px 0}
+:root[data-layout="page-float"].panel-open .app{padding-right:444px;box-sizing:border-box;transition:padding-right .3s cubic-bezier(.2,.8,.2,1)}
+@media (max-width:1100px){:root[data-layout="page-float"].panel-open .app{padding-right:0}}
+.side-sheet:has(> .detail-top) .detail-main{padding:16px 18px}
+.side-sheet:has(> .detail-top) .detail-side{padding:16px 18px 24px}
+
+/* The composer's tag list opens under the chips (it was anchored to the top of the box, over the title). */
+.composer-chips{position:relative}
+.composer-chips .tagpicker{top:calc(100% - 8px);bottom:auto;left:var(--s5);z-index:80;max-height:240px}
+.sheet:has(> .composerbox){overflow:visible}
+.sheet > .composerbox{border-radius:inherit}
+
+/* Notifications. A sentence for what happened, the time under it, the dot at the end; conflicts as
+   quiet cards with their choices as small pills. */
+.notiflist li{grid-template-columns:34px minmax(0,1fr) auto 10px;gap:12px;padding:12px 0;align-items:start}
+.notiflist li .notifmain{display:grid;gap:3px;min-width:0}
+.notiflist li .notifline{margin:0;color:var(--text);font-size:13.5px;line-height:1.45}
+.notiflist li small{font-size:12px;color:var(--faint)}
+.notiflist li .opts{margin-top:6px}
+.notiflist li .opts .btn{min-height:30px;font-size:12.5px}
+.conflicts{gap:10px;margin-top:6px}
+.conflict{grid-template-columns:22px minmax(0,1fr);gap:12px;padding:14px 16px;border:0;border-radius:16px;background:var(--subtle)}
+.conflict strong{font-size:13.5px;font-weight:600;line-height:1.35}
+.conflict p{margin-top:3px;font-size:12.5px}
+.conflict .opts{gap:6px;margin-top:10px}
+.conflict .opts .btn{min-height:30px;padding:0 12px;font-size:12.5px}
+.notifsub{margin:22px 0 8px;font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--muted)}
+
+/* A sheet's actions are no bar: buttons on a blur that fades into the content, as in the sidebar. */
+.sheet-foot{border-top:0;background:transparent;pointer-events:none;isolation:isolate}
+.sheet-foot > *{pointer-events:auto}
+.sheet-foot::before{
+  content:"";position:absolute;left:0;right:0;bottom:0;top:-26px;z-index:-1;pointer-events:none;
+  background:color-mix(in srgb,var(--surface) 62%,transparent);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  -webkit-mask-image:linear-gradient(to top,#000 55%,transparent);mask-image:linear-gradient(to top,#000 55%,transparent);
+}
+.sheet-foot.estfoot{padding:var(--s3) var(--s5) var(--s4)}
+.notiflist li{position:relative;grid-template-columns:34px minmax(0,1fr) 10px}
+.notiflist li .notifread{position:absolute;right:22px;top:8px;background:var(--surface);box-shadow:0 0 0 1px var(--border)}
+
+/* What's new: a pill, a title, one paragraph; room between entries. */
+.whatsnew-body{padding:6px 30px 20px}
+.whatsnew-release ul{display:grid;gap:26px;margin-top:6px}
+.whatsnew-release h3{margin:26px 0 16px}
+.whatsnew-change{grid-template-columns:96px minmax(0,1fr);gap:18px;align-items:start}
+.whatsnew-text{display:grid;gap:5px;min-width:0}
+.whatsnew-title{font-size:14.5px;font-weight:650;line-height:1.35;letter-spacing:-.005em}
+.whatsnew-text .whatsnew-para{color:var(--muted);font-size:13.5px;line-height:1.65;display:block}
+.whatsnew-mark{display:none}
+
+/* The review's choices slide too: the thumb is the accent, the chosen word sits on it. */
+.reviewactions.seg-slide::before{background:var(--accent);box-shadow:none;border-radius:calc(var(--r-ctl) - 2px)}
+.reviewactions.seg-slide > .btn.on{color:var(--on-accent,#fff)}
+
+/* Eisenhower, as the design file has it: four quadrants of the same shape, the same room on every side,
+   urgent on the left and important on top. Never folded. */
+.eisenhower-grid{gap:14px}
+.eisenhower-grid .quadrant{padding:16px 18px 10px;border-radius:18px;min-height:170px}
+.eisenhower-grid .quadrant .group{margin:0}
+.eisenhower-grid .quadrant .ghead{margin:0 0 6px;padding:0}
+.eisenhower-grid .quadrant .gtoggle{padding:0;cursor:default}
+
+/* The weekly review's list does not scroll inside the page: one scroll, the page's, down to the last row. */
+.reviewlist.scrolls{max-height:none;overflow:visible}
+.titlefield.static{margin:0;font:inherit;font-weight:inherit;font-size:inherit}
+.ptitle-mark.static{pointer-events:none}.ptitle-mark.static:hover{background:transparent}
+
+/* "I have time": cards on the panel's own ground, as the design file has it; the duration is picked on a
+   pill track whose thumb is the accent, the two options below are full-width pills. */
+.timepanel .timehead{padding:16px 14px 8px 20px}
+.timehead h2{font-size:16px}
+.timepanel .timebody{padding:4px 12px 16px;display:grid;gap:10px;align-content:start;overflow:auto}
+.timecard{background:var(--subtle);border-radius:18px;padding:14px 16px;display:grid;gap:12px}
+.timelabel{margin:0;font-size:12.5px;color:var(--muted)}
+.timechoices{border-radius:999px;background:var(--surface);gap:0}
+.timechoice,.timecustom{border-radius:999px;font-size:12.5px}
+.timechoice.on,.timecustom.on{background:var(--accent);color:var(--on-accent,#fff);box-shadow:none}
+.timechoices.seg-slide::before{background:var(--accent);box-shadow:none}
+.timechoices.seg-slide > .timechoice.on{color:var(--on-accent,#fff);background:transparent}
+.timecustom{grid-column:1 / -1;margin-top:4px;background:transparent;border:1px solid var(--border)}
+.timecustom:focus{border-color:var(--border-strong)}
+.timeoptions{display:grid;gap:8px;margin:0}
+.timescope{display:grid;grid-template-columns:1fr 1fr;width:100%;padding:3px;border-radius:999px;background:var(--surface)}
+.timescope button{border-radius:999px;text-align:center;min-height:30px}
+.timescope button.on{background:transparent;box-shadow:none;color:var(--on-accent,#fff);font-weight:600}
+.timescope.seg-slide::before{background:var(--accent);box-shadow:none}
+.timescope.seg-slide > button[aria-pressed="true"],.timescope.seg-slide > button[aria-checked="true"]{color:var(--on-accent,#fff)}
+.timesummary{margin:0;border-radius:14px}
+.timelist{display:grid;background:var(--subtle);border-radius:18px;padding:4px 12px}
+.timelist .timerow{margin-inline:0;padding:10px 0}
+.timehint,.timenothing,.timefoot{margin:0 8px;color:var(--muted);font-size:13px;line-height:1.5}
+.timefoot{text-align:center}
+
+/* A task that shows only its title (every detail switched off) loses the line or two it no longer has:
+   the rows come closer by as much. */
+.task:not(:has(.tdesc, .meta > *, .subtaskrow)){padding-top:8px;padding-bottom:8px;--task-pt:8px}
+.task .meta:empty{display:none}
+
+/* ==========================================================================
+   Lot 14 — third pass of feedback.
+   ========================================================================== */
+
+/* Tour: Back sits at the left of the foot, Next at the right. */
+.tour-foot .btn.soft{margin-right:auto}
+
+/* "25 min estimated" is underlined only while the pointer is on it: that is what says it can be clicked. */
+.summary-time:not(:disabled){text-decoration:none}
+.summary-time:not(:disabled):hover{text-decoration:underline dotted;text-decoration-color:currentColor;text-underline-offset:3px}
+
+/* Notifications: no rule under the title, a body that scrolls to its last row, and the
+   rows of the estimate list stop short of the blurred foot. */
+@media (min-width:721px){
+  .overlay.hung .sheet-head{border-bottom:0}
+  .overlay.hung .sheet > .sheet-body{overflow-y:auto;min-height:0;flex:1 1 auto;padding:0 22px 14px}
+  .overlay.hung .sheet-body .sheet-body{padding:0;overflow:visible}
+}
+.sheet-body .estlist{padding-bottom:64px}
+.sheet-body > .notifsub:first-child{margin-top:4px}
+.notifav-wrap{position:relative;display:block;width:34px;height:34px;flex:none}
+img.notifav{display:block;width:34px;height:34px;object-fit:cover}
+.notifav.todoist{background:var(--surface);color:var(--accent);box-shadow:inset 0 0 0 1px var(--border)}
+.notifmark{width:18px;height:18px}
+.notifbadge{
+  position:absolute;right:-4px;bottom:-4px;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;
+  background:var(--accent);color:var(--on-accent,#fff);box-shadow:0 0 0 2px var(--surface);
+}
+.notifbadge .ic{width:9px;height:9px}
+
+/* The changelog's foot is in the flow, so its blur must stay inside it. */
+.whatsnew-foot{position:relative}
+.overlay.hung .estfoot-hint{display:none}
+.overlay.hung .sheet-foot.estfoot{padding:var(--s3) 22px var(--s4)}
+
+/* The composer's foot: no rule across the sheet, the same fading blur as every other foot,
+   and a hint that is plain text rather than keys in boxes. */
+.composerbox .composer-actions{position:relative;isolation:isolate;border-radius:0 0 var(--r-lg) var(--r-lg)}
+.composerbox .composer-actions::before{
+  content:"";position:absolute;left:0;right:0;bottom:0;top:-22px;z-index:-1;pointer-events:none;border-radius:inherit;
+  background:color-mix(in srgb,var(--surface) 62%,transparent);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  -webkit-mask-image:linear-gradient(to top,#000 55%,transparent);mask-image:linear-gradient(to top,#000 55%,transparent);
+}
+.composer-hint kbd{min-width:0;padding:0;border:0;background:transparent;box-shadow:none;font-size:inherit}
+.composer-hint kbd + kbd{margin-left:-1px}
+
+/* ---- The open task ---- */
+.detail-content .titleview{
+  display:block;width:100%;box-sizing:border-box;margin:0 0 0 -6px;padding:2px 6px;
+  border:1px solid transparent;border-radius:var(--r-sm);
+  font-size:21px;font-weight:700;line-height:1.3;letter-spacing:-.01em;color:var(--text);
+  overflow-wrap:anywhere;cursor:text;
+}
+.detail-content .titleview:hover{border-color:var(--border)}
+.detail-content .titleview a{color:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.detail-headline.done .titleview{text-decoration:line-through;color:var(--faint)}
+
+/* Subtasks: the rule between two rows starts where the text starts, and ends with the card. */
+.detail-main .detail-section.boxed .subtaskrow{border-bottom:0}
+.detail-main .detail-section.boxed .subtaskrow::after{
+  content:"";position:absolute;left:22px;right:0;bottom:0;height:1px;background:var(--border);
+}
+.detail-main .detail-section.boxed .subtaskrow:last-of-type::after{display:none}
+.namefield .textfield.subtaskfield:focus{outline:none;border-color:var(--border-strong)}
+.progressring .ring-track{stroke:var(--border-strong)}
+.progressring .ring-arc{stroke:var(--accent)}
+.progressring.complete .ring-arc{stroke:var(--ok)}
+
+/* Comments */
+.comment{position:relative}
+.comment-new{align-items:start}
+.comment-actions{
+  position:absolute;top:6px;right:0;display:flex;gap:2px;padding:2px;border-radius:99px;
+  background:var(--surface);box-shadow:0 0 0 1px var(--border);opacity:0;transition:opacity .12s ease;
+}
+.comment:hover .comment-actions,.comment:focus-within .comment-actions,.comment-actions.open{opacity:1}
+.comment-actions .iconbtn{width:26px;height:26px}
+.comment-actions .popover{position:absolute;top:100%;right:0;margin-top:6px;z-index:30}
+.reactionpicker{display:flex;flex-wrap:wrap;gap:2px;padding:6px;width:max-content;max-width:196px}
+.reactionpicker .opt{width:32px;height:32px;padding:0;display:grid;place-items:center;font-size:18px;border-radius:50%}
+.comment-reactions{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.reactionchip{
+  display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border-radius:99px;border:0;
+  background:var(--btn-soft);color:var(--muted);font:inherit;font-size:12.5px;cursor:pointer;
+}
+.reactionchip small{font-size:12px;font-weight:600}
+.reactionchip.mine{background:var(--accent-soft);color:var(--accent-dark)}
+.comment-image{display:block;margin-top:8px;width:max-content;max-width:100%}
+.comment-image img{display:block;max-width:280px;max-height:210px;border-radius:12px;object-fit:cover}
+.comment-file{
+  display:inline-flex;align-items:center;gap:8px;margin-top:8px;padding:8px 12px;border-radius:12px;
+  background:var(--subtle);color:var(--text);font-size:13px;max-width:100%;
+}
+.comment-file small{color:var(--faint)}
+.comment-edit{display:grid;gap:8px;margin-top:4px}
+.comment-edit .comment-field{border-radius:14px}
+.comment-edit-actions{display:flex;gap:8px;justify-content:flex-end}
+
+.comment-box{
+  display:grid;gap:4px;min-width:0;padding:3px 5px 3px 15px;border:1px solid var(--border-strong);
+  border-radius:22px;background:var(--surface);
+}
+.comment-row{display:flex;align-items:flex-end;gap:6px}
+.comment-box .comment-field{
+  flex:1;min-width:0;width:auto;min-height:0;padding:7px 0;border:0;border-radius:0;background:transparent;
+  line-height:1.4;max-height:160px;field-sizing:content;outline:none;box-shadow:none;
+}
+.comment-tools{display:flex;align-items:center;gap:6px;padding-bottom:2px;flex:none}
+.comment-tools .iconbtn{width:28px;height:28px}
+.roundbtn{
+  width:28px;height:28px;border:0;border-radius:50%;display:grid;place-items:center;cursor:pointer;flex:none;
+  transition:transform .12s ease,background .12s ease;
+}
+.roundbtn:active{transform:scale(.94)}
+.roundbtn:disabled{opacity:.5;cursor:default}
+.roundbtn.send{background:var(--accent);color:var(--on-accent,#fff)}
+.roundbtn.send:hover:not(:disabled){background:var(--accent-dark,var(--accent))}
+.roundbtn.cancel{background:var(--btn-soft);color:var(--muted)}
+.roundbtn.cancel:hover{background:var(--btn-soft-hover);color:var(--text)}
+.comment-attached{
+  display:inline-flex;align-items:center;gap:8px;padding:6px 0 0;font-size:12.5px;color:var(--muted);min-width:0;
+}
+.comment-attached > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Every search field in a menu or picker is a pill. */
+.pickersearch{border-radius:999px}
+.pickersearch input{border-radius:999px}
+
+/* Insights, the floating page's way: white cards on the frame, as the design file has them. */
+:root[data-layout="page-float"] .side-sheet:has(.icard) .icard{background:var(--surface);border-color:transparent}
+:root[data-layout="page-float"] .side-sheet:has(.icard) .icard.late{background:var(--late-wash-deep)}
+
+/* "I have time" is a panel like Insights: the same size, the same place, the same ground. */
+.timepanel{
+  top:12px;right:12px;bottom:12px;width:min(380px,calc(100vw - 24px));border:0;border-radius:20px;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(0,0,0,.05),0 18px 50px rgba(0,0,0,.18);
+}
+:root[data-layout="page-float"] .timepanel{background:transparent;box-shadow:none}
+:root[data-layout="page-float"] .timecard,
+:root[data-layout="page-float"] .timelist{background:var(--surface)}
+:root[data-layout="page-float"][data-sidepanel="time"] .app{padding-right:412px;box-sizing:border-box}
+:root[data-layout="page-float"][data-sidepanel="time"] .workspace{margin-right:0}
+@media (max-width:1100px){:root[data-layout="page-float"][data-sidepanel="time"] .app{padding-right:0}}
+@media (max-width:720px){.timepanel{top:0;right:0;bottom:0;width:100vw;border-radius:0}}
+
+/* Search: a little wider, and the list stops at a fixed height: it is walked with the arrows. */
+.sheet.sheet-search{width:min(660px,calc(100vw - 32px));overflow:hidden;display:flex;flex-direction:column}
+.sheet-search .sresults{overflow-y:auto;max-height:min(380px,52vh);min-height:0}
+
+/* ---- Settings ---- */
+.setsection h2{font-size:22px;letter-spacing:-.015em;margin-bottom:var(--s4)}
+/* A sub-heading is a heading, not a rule across the page: no line above it. */
+.setbody .setsubhead{border-top:0;padding-top:0;margin-top:36px}
+.setbody .setsection > h2 + .setsubhead{margin-top:0}
+/* The three ways to colour a task's details sit on one line. */
+.setbody .chipschoice{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:720px){.setbody .chipschoice{grid-template-columns:1fr}}
+/* Where an opened task goes, drawn. */
+.openchoice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:var(--s3)}
+.openpreview{
+  position:relative;display:flex;flex-direction:column;justify-content:center;gap:12px;
+  height:96px;padding:8px 10px;overflow:hidden;border-radius:var(--r-sm);background:var(--subtle);
+}
+.openpreview .densrow{max-width:46%}
+.openpreview.panel .densrow{max-width:38%}
+.openpreview .openwindow{position:absolute;border-radius:8px;background:var(--surface);box-shadow:0 0 0 1px var(--border),0 8px 22px rgba(0,0,0,.16)}
+.openpreview.window .openwindow{left:34%;right:12%;top:14%;bottom:14%}
+.openpreview.panel .openwindow{right:8px;top:8px;bottom:8px;width:34%}
+/* "Comfortable" gives each task a little more air. */
+.task{padding-top:13px;padding-bottom:13px;--task-pt:13px}
+/* The coffee card is yellow all the way across: no frame, a dark button. */
+.setfcard.coffee-callout{background:#ffdd00;border:0;box-shadow:none;color:#202020}
+.setfcard.coffee-callout>div span{color:rgba(32,32,32,.72)}
+.setfcard.coffee-callout .btn.coffee-btn{background:#202020;color:#fff;box-shadow:none}
+.setfcard.coffee-callout .btn.coffee-btn:hover{background:#000;filter:none}
+.setfcard.coffee-callout .btn.coffee-btn .ic{color:#ffdd00}
+
+/* Setup: the switches are rows like the navigation entries, under a heading of the same kind,
+   with the same left edge, text size and height. */
+.setup-controls .setup-switches{gap:0}
+.setup-controls .setup-switch{min-height:44px;padding:4px 4px;gap:12px;border-radius:var(--r-sm)}
+.setup-controls .setup-switch > .ic{width:16px;height:16px}
+.setup-controls .setup-switch strong{font-size:13px;font-weight:500;color:var(--text)}
+.setup-controls .setup-switch small{font-size:12px;color:var(--muted)}
+.setup-controls .navedit{margin-top:0;gap:0}
+.setup-controls .navedit-title{margin:18px 0 8px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.setup-controls .navedit > .navedit-title:first-child{margin-top:0}
+
+/* Lists: the coloured callouts reach out by their own padding, so the checks and titles inside them
+   line up with the ones in every other group; and no rule closes a task with subtasks. */
+.group.accent-late,.group.accent-quick,.group.accent-dust{margin-inline:-18px;padding:14px 18px 6px}
+@media (max-width:700px){.group.accent-late,.group.accent-quick,.group.accent-dust{margin-inline:0}}
+.task[data-depth]::after{display:none !important}
+
+/* "6 tasks · 9 h 25" is one grey pill, wherever a section shows it. */
+.gstats{
+  display:inline-flex;align-items:center;margin-left:10px;padding:2px 10px;border-radius:99px;
+  background:var(--btn-soft);color:var(--muted);font-size:12px;font-weight:500;white-space:nowrap;
+}
+.gstats .gcount,.gstats .gtime{margin:0;padding:0;background:transparent;color:inherit;font-size:inherit;font-weight:inherit}
+.gstats .gtime::before{content:"·";margin:0 6px;color:inherit;opacity:.7}
+.group.accent-late .gstats{background:var(--late-badge);color:var(--late-dark)}
+.group.accent-dust .gstats{background:var(--dust-badge);color:var(--dust-dark)}
+.group.accent-quick .gstats{background:color-mix(in srgb,var(--p3) 14%,transparent);color:var(--p3)}
+
+/* A description is cut at two lines, in a list as on a card. */
+.task .tdesc{
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  white-space:normal;text-overflow:ellipsis;line-height:1.45;
+}
+
+/* Eisenhower: each quadrant is a board column, whichever way it is laid out: a title, no rule under it,
+   and its tasks on white cards. */
+.eisenhower-list,.eisenhower-grid{margin:var(--s4) 0 0;max-width:none}
+.eisenhower-list{display:grid;gap:14px}
+.eisenhower-list .quadrant,.eisenhower-grid .quadrant{padding:14px 12px 8px;border:0;border-radius:20px;box-shadow:none;min-height:0}
+.quadrant.urgent-important{background:#fff1f0}
+.quadrant.not-urgent-important{background:#fdf5e8}
+.quadrant.urgent-not-important{background:#eef4fd}
+.quadrant.not-urgent-not-important{background:#f4f4f3}
+.quadrant .gheadblock{border-bottom:0;padding:0 6px 8px}
+.quadrant .ghead{margin:0;padding:0}
+.quadrant .taskwrap{padding:0 14px;border:0;border-radius:14px;background:var(--surface);
+  box-shadow:0 0 0 1px var(--border),0 1px 2px rgba(0,0,0,.04);margin-bottom:8px}
+.quadrant .taskwrap:hover{box-shadow:0 0 0 1px color-mix(in srgb,var(--text) 12%,transparent),0 10px 22px -10px rgba(0,0,0,.28)}
+.quadrant .task{padding:12px 0 11px;border-bottom:0;margin-left:0;width:100%}
+.quadrant .task:hover{background:transparent}
+:root[data-theme="dark"] .quadrant.urgent-important{background:#2e1c1b}
+:root[data-theme="dark"] .quadrant.not-urgent-important{background:#2e2616}
+:root[data-theme="dark"] .quadrant.urgent-not-important{background:#1b2638}
+:root[data-theme="dark"] .quadrant.not-urgent-not-important{background:var(--subtle)}
+@media (max-width:900px){.eisenhower-grid{grid-template-columns:1fr}}
+
+/* Folding the sidebar is its unfolding played backwards: the same distance and time, the curve turned round. */
+@media (min-width:721px){
+  .app.collapsed{transition:grid-template-columns .4s cubic-bezier(1,0,.68,.28)}
+  .app.collapsed .sidebar{
+    transition:opacity .3s ease-in .1s,transform .4s cubic-bezier(1,0,.68,.28),visibility 0s .4s;
+  }
+  :root[data-layout="sidebar-float"] .app.collapsed .workspace{transition:padding-left .4s cubic-bezier(1,0,.68,.28)}
+}
+/* Less air between the sidebar's groups. */
+.side-group{margin-top:8px}
+
+/* The feedback form, in a frame under its title. */
+.feedbackframe{display:block;width:100%;height:min(560px,64vh);border:0;background:transparent}
+
+/* The review's row choices: a pill with a pill-shaped thumb that slides. */
+.reviewactions.seg-slide::before{border-radius:999px}
+
+/* Dashboard, edited: the card being moved leaves a faint place, and the one in the hand is lifted. */
+.dashboard-bento .card.lifted{opacity:.35;box-shadow:none;outline:1.5px dashed var(--border-strong);outline-offset:-2px}
+.card.carried{
+  box-sizing:border-box;padding:22px;border-radius:var(--r-lg);background:var(--surface);cursor:grabbing;
+  box-shadow:0 0 0 1px var(--border),0 22px 48px -14px rgba(0,0,0,.36);
+}
+
+/* Where a carried task will land is drawn as that place: a dashed box the size of what is carried,
+   opened in the list or between the cards of a column. */
+.col .taskwrap:has(> .task.landing:not(.landing-before)){margin-bottom:calc(16px + var(--drag-gap,0px))}
+.col .taskwrap:has(> .task.landing.landing-before){margin-top:calc(8px + var(--drag-gap,0px))}
+.col .taskwrap:has(> .task.landing:not(.landing-before))::after,
+.col .taskwrap:has(> .task.landing.landing-before)::before{
+  content:"";display:block;position:absolute;left:0;right:0;height:var(--drag-gap,0px);box-sizing:border-box;
+  border:1.5px dashed var(--accent);border-radius:14px;
+  background:color-mix(in srgb,var(--accent) 7%,transparent);pointer-events:none;
+}
+.col .taskwrap:has(> .task.landing:not(.landing-before))::after{top:calc(100% + 8px)}
+.col .taskwrap:has(> .task.landing.landing-before)::before{bottom:calc(100% + 8px)}
+.task.landing:not(.landing-before)::after,
+.task.landing.landing-before::before{
+  content:"";display:block;position:absolute;left:0;right:0;box-sizing:border-box;
+  height:calc(var(--drag-gap,0px) - 4px);border:1.5px dashed var(--accent);border-radius:12px;
+  background:color-mix(in srgb,var(--accent) 7%,transparent);pointer-events:none;
+}
+.task.landing:not(.landing-before)::after{top:calc(100% + 2px)}
+.task.landing.landing-before::before{bottom:calc(100% + 2px)}
+.col .task.landing::after,.col .task.landing::before{display:none}
+.tagcard.dragging{opacity:.4;outline:1.5px dashed var(--border-strong);outline-offset:-2px}
+.tagcard{transition:transform .16s ease}
+.tagadd,.tagadd input{border-radius:999px}
+.tagadd:focus-within{border-color:var(--border-strong)}
+
+/* Project: the icon list shows that it scrolls, and the add-a-section line shows no frame when it has the focus. */
+.iconpickergrid{scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent;padding-right:4px}
+.iconpickergrid::-webkit-scrollbar{display:block;width:8px}
+.iconpickergrid::-webkit-scrollbar-thumb{border-radius:999px;background:var(--border-strong)}
+.iconpickergrid::-webkit-scrollbar-track{background:transparent}
+.addsection:focus-visible,.addsection-col:focus-visible{outline:none;box-shadow:none}
+.addsection-field:focus{border-color:var(--border-strong);box-shadow:none}
+
+/* The panels' margin is their gap to the window: the position they are given must not add a second one. */
+@media (min-width:721px){
+  .side-sheet:has(.icard),.side-sheet:has(> .detail-top){top:0;right:0;bottom:auto}
+}
+.side-headbtn{display:inline-flex;align-items:center;gap:7px}
+.side-logo{width:16px;height:16px;border-radius:5px;object-fit:cover;flex:none}
+.chead-title .gnamefield{display:block;width:100%;max-width:100%;padding:0;border:0;background:transparent;font-size:14px;font-weight:700;color:inherit}
+.chead-title .gnamefield:focus{outline:none;box-shadow:none}
+
+/* Over a column or a group rather than over one of its rows, the place the task would take is drawn at the end of it. */
+.dropbar{
+  box-sizing:border-box;height:var(--drag-gap,44px);margin:2px 0 8px;border:1.5px dashed var(--accent);
+  border-radius:14px;background:color-mix(in srgb,var(--accent) 7%,transparent);
+}
+.col .dropbar{margin:0 0 8px}
+.col.dropping,.group.dropping{outline:0}
+
+/* Notifications, Conflicts tab: the blurred foot sits on the window's bottom edge (the body
+   drops its bottom padding, the foot spans the full width) with the same padding above and below,
+   and every estimate field is a pill like the other v2 fields. */
+@media (min-width:721px){
+  .overlay.hung .sheet > .sheet-body:has(.estfoot){padding-bottom:0}
+  .overlay.hung .sheet-foot.estfoot{margin-inline:-22px;padding:14px 22px}
+}
+.estinput{border-radius:999px}
+
+/* Lists: the fold chevron sits inside the group's head, over the checkbox column, so it never
+   hangs out of a tinted callout; the title then lines up with the task titles. One gap between
+   groups and sections in every list view, about twice the old one, smaller in compact density. */
+:root{--group-gap:40px}
+[data-density="compact"]{--group-gap:28px}
+@media (hover:hover) and (min-width:721px){
+  .ghead .gcaret{position:static;margin:0 -1px 0 -3px;flex:0 0 22px;padding:0}
+}
+.group,.group:first-of-type,.group.collapsed{margin-top:var(--group-gap)}
+.group.collapsed{margin-bottom:0}
+.mode > .group:first-child,.mode > :first-child > .group:first-child{margin-top:var(--s4)}
+.eisenhower-grid .quadrant .group{margin:0}
+
+/* Settings → Features: a picture of the Quick and Gathering dust groups under their toggle,
+   framed like the other previews (full width, a border on all four sides). */
+.grouppreview{margin:4px 0 20px;padding:14px;border:1px solid var(--border);border-radius:16px;background:var(--surface);
+  pointer-events:none;user-select:none}
+.grouppreview .mode{padding:0}
+.grouppreview .group,.grouppreview .group:first-of-type{margin:0}
+.grouppreview .group.accent-quick,.grouppreview .group.accent-dust{margin-inline:0}
+.grouppreview .task{cursor:default}
+
+/* Composer: the @ / # list floats over everything (a portal, placed by the field), in the v2 menu
+   style, with the typed query shown as its search line and sections indented under their project. */
+.namepicker.floating{position:fixed;right:auto;z-index:110;width:280px;min-width:0;overflow-y:auto;overscroll-behavior:contain;
+  padding:5px;border-radius:16px;scrollbar-width:thin}
+.namepicker-search{position:sticky;top:-5px;z-index:1;display:flex;align-items:center;gap:8px;margin:-5px -5px 4px;padding:10px 13px 8px;
+  border-bottom:1px solid var(--border);background:var(--surface);color:var(--faint);font-size:13px}
+.namepicker-search .ic{flex:none}
+.namepicker-query{color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.namepicker.floating button{border-radius:11px;min-height:32px}
+.namepicker.floating button.namepicker-section{padding-left:30px;min-height:30px;font-size:12.5px}
+.namepicker-label{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Comment reactions: the full palette, in the v2 menu style, floating beside its button. */
+.emojipalette{position:fixed;z-index:110;width:316px;display:flex;flex-direction:column;padding:8px;
+  border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:var(--sh-lg)}
+.emojipalette-search{display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;margin-bottom:6px;
+  border:1px solid var(--border);border-radius:999px;background:var(--bg,var(--surface));color:var(--faint)}
+.emojipalette-search:focus-within{border-color:var(--border-strong)}
+.emojipalette-search input{flex:1;min-width:0;border:0;background:transparent;font-size:13px;color:var(--text);outline:none}
+.emojipalette-grid{height:300px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding-right:2px}
+.emojipalette-grid h6{position:sticky;top:0;z-index:1;margin:0;padding:8px 4px 4px;background:var(--surface);
+  color:var(--faint);font-size:11.5px;font-weight:600}
+.emojipalette-row{display:grid;grid-template-columns:repeat(8,1fr);gap:2px}
+.emojipalette-row button{height:34px;border-radius:10px;font-size:20px;line-height:1;display:grid;place-items:center}
+.emojipalette-row button[aria-selected="true"]{background:var(--hover)}
+.emojipalette-empty{margin:24px 8px;color:var(--faint);font-size:13px;text-align:center}
+
+/* ── Lot 16: open issues of pass 4 ─────────────────────────────────────── */
+
+/* #12 What's new: the list scrolls under the head and the foot, both a fading
+   blur with no rule and no hard edge; the version heading large and red. */
+.whatsnew{position:relative}
+.whatsnew-head{position:absolute;top:0;left:0;right:0;z-index:2;border-bottom:0;background:transparent;isolation:isolate}
+.whatsnew-head::before{
+  content:"";position:absolute;left:0;right:0;top:0;bottom:-26px;z-index:-1;pointer-events:none;
+  background:color-mix(in srgb,var(--surface) 62%,transparent);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  -webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent);mask-image:linear-gradient(to bottom,#000 55%,transparent);
+}
+.whatsnew-foot{position:absolute;left:0;right:0;bottom:0;z-index:2;border-top:0}
+.whatsnew-body{padding-top:72px;padding-bottom:84px}
+.whatsnew-release h3{font-size:21px;line-height:1.25;font-weight:700;color:var(--accent);letter-spacing:-.01em}
+.whatsnew-release:first-child h3{margin-top:4px}
+.whatsnew-latest,.whatsnew-intro{display:none}
+
+/* #13 A space with no project yet keeps its heading; one quiet line under it. */
+.side-empty{margin:2px 0 6px;padding:4px 10px 4px 12px;font-size:12.5px;color:var(--muted)}
+:root[data-background="colored"] .sidebar .side-empty{color:color-mix(in srgb,var(--on-accent) 70%,transparent)}
+
+/* #16 Settings: one solid colour on the rank bar; a softer coffee yellow. */
+.karma-track>i{background:var(--accent)}
+.setfcard.coffee-callout,.whatsnew-foot .btn.coffee,:root[data-theme="dark"] .whatsnew-foot .btn.coffee{background:#f9dc6b}
+.whatsnew-foot .btn.coffee:hover{background:#f4d457}
+.setfcard.coffee-callout .btn.coffee-btn .ic{color:#f9dc6b}
+.whatsnew-release{scroll-margin-top:64px}
+/* #16 Previews in Settings take the width of the choices above them; the
+   metadata picture shows the page alone, with no partial coloured frame; the
+   "window" picture is centred. */
+.setsection > .pvframe.preview-inline{max-width:none;width:100%}
+.pvframe[data-stage="metadata"] .pvscale .app{background:none}
+.openpreview.window .openwindow{inset:14% 22%}
+
+/* #14 The folded sidebar comes back from one round button: no square frame
+   around it. */
+.app.collapsed .expand-wrap{background:transparent;border:0;box-shadow:none;border-radius:999px}
+.expand-wrap .iconbtn,.app.collapsed .expand-wrap .iconbtn{border-radius:999px;border:1px solid var(--border);background:var(--surface);box-shadow:var(--sh-sm)}
+.expand-wrap .iconbtn:hover{background:var(--hover)}
+
+/* #15 Search: the sidebar field is a fill, no border; a task result shows the
+   list row's checkbox, which is only a picture here. */
+.sidebar .searchbtn{border:0}
+.sresults .search-check{pointer-events:none;flex:none;margin:0}
+
+/* #22 Project page. The new-section field shows its caret, no red frame. */
+.gnamefield,.gnamefield:focus,.gnamefield:focus-visible{border-color:transparent;outline:0;box-shadow:none}
+/* The count pill sat a hair above the title: its box was centred on the
+   title's box, the eye centres on the title's lowercase letters (measured:
+   ~0.6 px lower). One pixel down puts the two on one line. */
+.group .gstats{position:relative;top:1px}
+/* The icon picker shows half a row below the fold and a thin scrollbar that
+   stays, so it reads as a list that goes on. */
+.iconpickergrid{height:138px;scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent;
+  -webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent)}
+.iconpickergrid::-webkit-scrollbar{width:6px}
+.iconpickergrid::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:6px}
+.iconpickergrid::-webkit-scrollbar-track{background:transparent}
+.iconpickergrid{padding-bottom:20px}
+
+/* #23 Eisenhower. Each quadrant's pill takes the quadrant's colour: a light
+   wash and darker ink of the same hue, like Behind schedule's. */
+.quadrant.urgent-important .gstats{background:color-mix(in srgb,#d1453b 13%,transparent);color:#b03830}
+.quadrant.not-urgent-important .gstats{background:color-mix(in srgb,#eb8909 15%,transparent);color:#a4650c}
+.quadrant.urgent-not-important .gstats{background:color-mix(in srgb,#3972bf 13%,transparent);color:#3972bf}
+.quadrant.not-urgent-not-important .gstats{background:color-mix(in srgb,#808080 14%,transparent);color:var(--muted)}
+:root[data-theme="dark"] .quadrant.urgent-important .gstats{color:#f08a80}
+:root[data-theme="dark"] .quadrant.not-urgent-important .gstats{color:#f0b35a}
+:root[data-theme="dark"] .quadrant.urgent-not-important .gstats{color:#8ab4f0}
+.quadrant .gstats .gcount{color:inherit}
+/* Pressing a card and moving the pointer is a drag, never a text selection,
+   on every board and list; text stays selectable in the task window. */
+.task,.task *,.quadrant .ghead{-webkit-user-select:none;user-select:none}
+.task :is(input,textarea,[contenteditable="true"]){-webkit-user-select:text;user-select:text}
+/* #23 List mode: the same room above a quadrant title as in the matrix. */
+.quadrant > .group{margin-top:0}
+
+/* #21 A board column's name reads whole on up to two lines, then an ellipsis;
+   it becomes a field only while it is edited. The count lines up under it. */
+.chead-title .gnamewrap{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
+  overflow-wrap:anywhere;white-space:normal;cursor:text;padding:0;line-height:1.25;font-weight:700}
+.chead-title .gnamewrap:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.chead-title .gnamefield{padding-left:0;padding-right:0;width:100%;min-width:0}
+.chead-title{min-width:0}
+.chead-title .gnamearea{display:block;width:100%;box-sizing:border-box;resize:none;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.25;min-height:1.25em;max-height:3.9em;font-family:inherit;letter-spacing:inherit}
+
+/* #19 The dashed place opens with the gap the rows make for it (same .16 s
+   ease), rather than appearing at full height over the neighbour while the
+   rows are still moving aside. */
+@keyframes landOpenDown{from{transform:scaleY(0);opacity:0}to{transform:none;opacity:1}}
+.task.landing:not(.landing-before)::after{transform-origin:top;animation:landOpenDown .16s ease both}
+.task.landing.landing-before::before{transform-origin:bottom;animation:landOpenDown .16s ease both}
+.col .taskwrap:has(> .task.landing:not(.landing-before))::after{transform-origin:top;animation:landOpenDown .16s ease both}
+.col .taskwrap:has(> .task.landing.landing-before)::before{transform-origin:bottom;animation:landOpenDown .16s ease both}
+@media (prefers-reduced-motion:reduce){
+  .task.landing::after,.task.landing::before,.col .taskwrap::after,.col .taskwrap::before{animation:none}
+}
+
+/* #30 "I have time" is one white card in every layout: its title and its
+   last line sit on white, readable whatever the background colour; inside
+   it, the choices and the list are sections, not cards of their own. */
+.timepanel,:root[data-layout="page-float"] .timepanel{background:var(--surface);box-shadow:0 0 0 1px rgba(0,0,0,.05),0 18px 50px rgba(0,0,0,.18)}
+:root[data-layout="page-float"] .timepanel{box-shadow:var(--frame-shadow,0 14px 44px rgba(0,0,0,.14))}
+.timecard,.timelist,:root[data-layout="page-float"] .timecard,:root[data-layout="page-float"] .timelist{background:transparent;border-radius:0;padding-inline:8px}
+.timelist{border-top:1px solid var(--border);padding-top:6px}
+.timescope{background:var(--btn-soft)}
+.timechoices{background:transparent;padding:0;gap:6px}
+.timechoice:not(.on){background:var(--btn-soft)}
+.timechoices .timecustom{background:var(--btn-soft);border-radius:999px;grid-column:1 / -1}
+.timepanel .timehead h2{color:var(--text)}
+
+/* #29 Right panels (Insights, I have time, a task as a panel) make room in
+   both layouts, from 1101 px up; below, they still cover the page.
+   Opening, the page narrows with the panel's entry curve; closing, it widens
+   with the exit curve, so the two arrive and leave together. Insights is a
+   little narrower (340 px) and the page keeps the width it frees. */
+.side-sheet:has(.icard){width:min(340px,calc(100% - 24px))}
+@media (min-width:1101px){
+  /* Keeps the sidebar's own .4 s fold on grid-template-columns. */
+  :root[data-layout] .app{transition:grid-template-columns .4s cubic-bezier(.32,.72,0,1),padding-right .32s cubic-bezier(.8,0,.8,.2)}
+  :root[data-layout] .app.collapsed{transition:grid-template-columns .4s cubic-bezier(1,0,.68,.28),padding-right .32s cubic-bezier(.8,0,.8,.2)}
+  :root[data-layout].insights-open .app,:root[data-layout][data-sidepanel="time"] .app,:root[data-layout].panel-open .app{box-sizing:border-box;
+    transition:grid-template-columns .4s cubic-bezier(.32,.72,0,1),padding-right .32s cubic-bezier(.2,.8,.2,1)}
+  :root[data-layout="page-float"].insights-open .app{padding-right:352px}
+  :root[data-layout="sidebar-float"].insights-open .app{padding-right:364px}
+  :root[data-layout][data-sidepanel="time"] .app{padding-right:404px}
+  :root[data-layout="sidebar-float"].panel-open .app{padding-right:444px}
+}
+@media (max-width:1100px){
+  :root.insights-open .app,:root[data-sidepanel="time"] .app,:root.panel-open .app{padding-right:0!important}
+}
+@media (prefers-reduced-motion:reduce){:root .app{transition:none!important}}
+@media (min-width:721px){.timepanel.leaving{animation:panelOut .32s cubic-bezier(.8,0,.8,.2) forwards;pointer-events:none}}
+
+/* #31 Logbook: the project and the estimate are two columns with room
+   between them, under a legend; "Sort by" fades and folds away when the
+   grouping leaves nothing to sort. */
+.logrow{grid-template-columns:16px minmax(0,1fr) minmax(0,190px) 64px;column-gap:12px}
+.logrow .logproject{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-left:12px}
+.logrow .logmeta.time{min-width:0;text-align:right}
+.loglegend{padding:0 0 6px;border-bottom:1px solid var(--border);font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.01em}
+.loglegend > span:nth-child(3){padding-left:12px}
+.loglegend .time{text-align:right}
+.logbook > .loglegend + .logday{margin-top:var(--s3)}
+.logsort{max-width:520px;overflow:hidden;white-space:nowrap;
+  transition:opacity .2s cubic-bezier(.2,.8,.2,1),max-width .2s cubic-bezier(.2,.8,.2,1),margin .2s cubic-bezier(.2,.8,.2,1)}
+.logsort.gone{opacity:0;max-width:0;margin-right:-16px;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.logsort{transition:none}}
+
+/* #33 A file waiting to be sent is a grey pill (icon, name, ×), like a chip;
+   a sent file that is not shown as a picture is a chip too. */
+.comment-attached{justify-self:start;max-width:100%;margin:6px 0 2px -9px;padding:3px 4px 3px 10px;border-radius:999px;
+  background:var(--btn-soft);color:var(--text);font-size:12.5px;gap:6px}
+.comment-attached > .ic{color:var(--muted);flex:none}
+.comment-attached .iconbtn{width:22px;height:22px;border-radius:999px}
+.comment-file{border-radius:999px;padding:6px 14px 6px 10px;background:var(--btn-soft);text-decoration:none}
+.comment-file:hover{background:var(--btn-soft-hover)}
+.comment-file > span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.comment-file .ic{color:var(--muted);flex:none}
+.comment-image img{background:var(--subtle)}
+
+/* #34 The comment ⋯ menu floats over the window, measured like the reaction palette. */
+.popover.rowmenu.comment-menu{position:fixed;z-index:110;right:auto}
+
+/* #25 Task window. Tags in the right column are drawn like a list row's tags,
+   wrapping with the same gap. */
+.detail-side .pills:has(> .tagpill){display:flex;flex-wrap:wrap;gap:6px}
+.detail-side .pill.tagpill{
+  --chip-fg:var(--muted);--chip-bg:var(--subtle);
+  display:inline-flex;align-items:center;gap:4px;height:auto;min-height:0;padding:1px 6px;border:0;border-radius:var(--r-xs);
+  background:var(--chip-bg);color:var(--chip-fg);font-size:var(--fs-12);line-height:18px;box-shadow:none;cursor:pointer;
+}
+.detail-side .pill.tagpill .ic{width:12px;height:12px;color:inherit;flex:none}
+.detail-side .pill.tagpill .ic:last-child{opacity:0;width:0;margin-left:-4px;transition:opacity .12s,width .12s,margin .12s}
+.detail-side .pill.tagpill:is(:hover,:focus-visible) .ic:last-child{opacity:.8;width:12px;margin-left:0}
+:root[data-chips="inherited"] .detail-side .pill.tagpill{
+  --chip-fg:color-mix(in srgb,var(--marker,var(--muted)) 72%,var(--text));
+  --chip-bg:color-mix(in srgb,var(--marker,var(--muted)) 8%,var(--surface));
+}
+:root[data-chips="classic"] .detail-side .pill.tagpill{background:transparent;color:var(--marker,var(--muted));padding:1px 0}
+/* The picture beside the new comment is centred on the one-line field, and
+   stays level with its first line when the field grows. */
+.comment.comment-new{align-items:start}
+.comment.comment-new > .comment-avatar{margin-top:calc((var(--comment-line,40px) - 28px) / 2)}
+/* The project field gives its focus back without the ring after a pick. */
+.detail-side [data-prop="project"] :is(button,.fselect-face):focus:not(:focus-visible){outline:0;box-shadow:none}
+/* Scrolling: the left column scrolls on its own, the right column stays. */
+@media (min-width:721px){
+  .sheet:has(> .detail-body){display:flex;flex-direction:column;overflow:hidden}
+  .sheet:has(> .detail-body) > .detail-body{flex:1 1 auto;min-height:0;grid-template-rows:minmax(0,1fr);overflow:hidden}
+  .sheet:has(> .detail-body) .detail-main,.sheet:has(> .detail-body) .detail-side{min-height:0;overflow-y:auto;overscroll-behavior:contain}
+}
+.fselect-face.quiet:focus-visible,.fselect-face.quiet:focus{outline:0;box-shadow:none}
+.notifanswered{display:block;margin-top:6px;color:var(--muted);font-size:12.5px}
+
+/* #29 Insights on a coloured frame with the page floating: the head and the bottom button sit on the frame
+   itself, not on a card, so they take the frame's ink; the cards between them stay as they are. */
+:root[data-layout="page-float"][data-background="colored"] .side-sheet:has(.icard) > div:first-child :is(h2,.psub,.iconbtn){color:var(--on-accent,#fff)}
+:root[data-layout="page-float"][data-background="colored"] .side-sheet:has(.icard) > div:first-child .psub{opacity:.8}
+:root[data-layout="page-float"][data-background="colored"] .side-sheet:has(.icard) .btn.primary{background:var(--surface);color:var(--accent);box-shadow:none}
+/* #21 The column's title box takes the column's width while its name is typed, so a long word breaks at the column's edge only. */
+.chead-title:has(.gnamearea){flex:1 1 auto;min-width:0}
+
+/* The board comes up to where a list starts: its arrows no longer take a row of their own but sit on the
+   line above it (the stats / "I have time" line), at the right, which is empty. */
+.mode:has(> .boardnav){position:relative}
+.boardnav{position:absolute;top:-52px;right:0;margin:0;height:0;z-index:3;display:block}
+.boardnav .pager{position:absolute;right:0;top:0}
+.boardnav + .board{margin-top:0}
+
+/* Setup colour buttons: grey fill, no border, pill-shaped. The selected one is told apart by a tint, not a ring. */
+.setup-controls .accentcard{border:0;border-radius:9999px;background:var(--hover);box-shadow:none}
+.setup-controls .accentcard:hover{background:var(--border)}
+.setup-controls .accentcard.selected{border:0;box-shadow:none;background:var(--accent);font-weight:600}
+.setup-controls .accentcard.selected .accentlabel{color:var(--on-accent,#fff)}
+.setup-controls .accentcard.selected .accentlabel::before{background:var(--on-accent,#fff);box-shadow:none}

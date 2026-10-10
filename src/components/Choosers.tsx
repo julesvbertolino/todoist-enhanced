@@ -1,10 +1,10 @@
 import { useStore } from '@/store/store';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Icon } from './Icon';
 import { useT } from '@/hooks/useT';
 import {
-  ACCENTS, DENSITIES, TASK_CHIPS, THEMES, isHexColour,
-  type Accent, type Density, type TaskChips, type Theme,
+  ACCENTS, BACKGROUNDS, DENSITIES, LAYOUTS, TASK_CHIPS, TASK_OPENS, THEMES, isHexColour,
+  type Accent, type Background, type Density, type Layout, type TaskChips, type TaskOpen, type Theme,
 } from '@/store/prefs';
 import { accentFamily, hexToHsl } from '@/domain/accent';
 import type { TranslationKey } from '@/i18n';
@@ -32,7 +32,7 @@ export function ThemeChoice({
 }: { value: Theme; onChange: (next: Theme) => void }) {
   const { t } = useT();
   return (
-    <div className="themechoice" role="radiogroup" aria-label={t('settings.theme')}>
+    <div className="themechoice three" role="radiogroup" aria-label={t('settings.theme')}>
       {THEMES.map((option) => (
         <button
           key={option}
@@ -60,6 +60,72 @@ export function ThemeChoice({
             {t(`settings.theme.${option}` as TranslationKey)}
             {value === option && <Icon name="check" size="sm" />}
           </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * How the app is framed, shown rather than named: a drawing of each layout,
+ * in the theme card's shell (`themechoice`, `themecard`) so it sits in the
+ * same family as the choices around it.
+ */
+export function LayoutChoice({
+  value, onChange,
+}: { value: Layout; onChange: (next: Layout) => void }) {
+  const { t } = useT();
+  return (
+    <div className="themechoice" role="radiogroup" aria-label={t('settings.layout')}>
+      {LAYOUTS.map((option) => (
+        <button
+          key={option}
+          type="button"
+          role="radio"
+          aria-checked={value === option}
+          className={`themecard${value === option ? ' selected' : ''}`}
+          onClick={() => onChange(option)}
+        >
+          <span className={`framepreview ${option}`} aria-hidden="true">
+            <i className="framenav" />
+            <i className="framepage" />
+          </span>
+          <span className="themelabel">
+            {t(`settings.layout.${option}` as TranslationKey)}
+            {value === option && <Icon name="check" size="sm" />}
+          </span>
+          <small className="themehint">{t(`settings.layout.${option}.hint` as TranslationKey)}</small>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Neutral grey or the accent's gradient behind the frame, drawn as such. */
+export function BackgroundChoice({
+  value, onChange,
+}: { value: Background; onChange: (next: Background) => void }) {
+  const { t } = useT();
+  return (
+    <div className="themechoice" role="radiogroup" aria-label={t('settings.background')}>
+      {BACKGROUNDS.map((option) => (
+        <button
+          key={option}
+          type="button"
+          role="radio"
+          aria-checked={value === option}
+          className={`themecard${value === option ? ' selected' : ''}`}
+          onClick={() => onChange(option)}
+        >
+          <span className={`framepreview page-float back-${option}`} aria-hidden="true">
+            <i className="framenav" />
+            <i className="framepage" />
+          </span>
+          <span className="themelabel">
+            {t(`settings.background.${option}` as TranslationKey)}
+            {value === option && <Icon name="check" size="sm" />}
+          </span>
+          <small className="themehint">{t(`settings.background.${option}.hint` as TranslationKey)}</small>
         </button>
       ))}
     </div>
@@ -148,41 +214,137 @@ export function AccentChoice({
       </div>
 
       {value === 'custom' && (
-        <div className="custom-colour-editor">
-          <label>
-            <span>{t('settings.accent.customPick')}</span>
-            <input
-              type="color"
-              value={isHexColour(custom) ? custom : '#d1453b'}
-              onChange={(event) => onCustom(event.target.value.toLowerCase())}
-            />
-          </label>
-          <label>
-            <span>{t('settings.accent.customHex')}</span>
-            <input
-              className="accenthex"
-              value={typed}
-              spellCheck={false}
-              aria-invalid={invalid || undefined}
-              aria-describedby={invalid ? 'accent-hex-error' : undefined}
-              onChange={(event) => { setTyped(event.target.value); setInvalid(false); }}
-              onBlur={(event) => commitTyped(event.target.value.trim())}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') { event.preventDefault(); commitTyped(typed.trim()); }
-                if (event.key === 'Escape') { setTyped(custom); setInvalid(false); }
-              }}
-            />
-          </label>
-          {invalid && (
-            <span id="accent-hex-error" className="accenthex-error" role="alert">
-              {t('settings.accent.customInvalid', { colour: custom })}
-            </span>
-          )}
-        </div>
+        <ColourPanel
+          custom={custom}
+          typed={typed}
+          invalid={invalid}
+          onCustom={onCustom}
+          onTyped={(next) => { setTyped(next); setInvalid(false); }}
+          onCommit={commitTyped}
+          onReset={() => { setTyped(custom); setInvalid(false); }}
+        />
       )}
     </div>
   );
 }
+
+/** A hex code as hue (0 to 360), saturation and value (0 to 1). */
+function hexToHsv(hex: string): [number, number, number] {
+  const n = parseInt(hex.slice(1), 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => v / 255);
+  const max = Math.max(r, g, b);
+  const d = max - Math.min(r, g, b);
+  const h = d === 0 ? 0 : max === r ? ((g - b) / d + 6) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [h * 60, max ? d / max : 0, max];
+}
+
+function hsvToHex(h: number, s: number, v: number): string {
+  const channel = (n: number) => {
+    const k = (n + h / 60) % 6;
+    return Math.round((v - v * s * Math.max(0, Math.min(k, 4 - k, 1))) * 255);
+  };
+  return `#${[channel(5), channel(3), channel(1)].map((x) => x.toString(16).padStart(2, '0')).join('')}`;
+}
+
+/**
+ * The custom colour, picked by hand: a square for the shade, a bar for the
+ * hue, and a hex field. Our own rather than the browser's, which looked like
+ * it belonged to another app.
+ */
+function ColourPanel({
+  custom, typed, invalid, onCustom, onTyped, onCommit, onReset,
+}: {
+  custom: string;
+  typed: string;
+  invalid: boolean;
+  onCustom: (next: string) => void;
+  onTyped: (next: string) => void;
+  onCommit: (raw: string) => void;
+  onReset: () => void;
+}) {
+  const { t } = useT();
+  const [hsv, setHsv] = useState<[number, number, number]>(() => hexToHsv(isHexColour(custom) ? custom : '#d1453b'));
+  const lastSent = useRef(custom);
+  const hsvRef = useRef(hsv);
+  hsvRef.current = hsv;
+
+  // Another device, or the hex field, moved the colour: follow it, but keep the
+  // hue when the new colour is a grey, which has none of its own.
+  useEffect(() => {
+    if (custom === lastSent.current || !isHexColour(custom)) return;
+    const next = hexToHsv(custom);
+    setHsv((prev) => [next[1] === 0 || next[2] === 0 ? prev[0] : next[0], next[1], next[2]]);
+  }, [custom]);
+
+  const send = (next: [number, number, number]) => {
+    setHsv(next);
+    const hex = hsvToHex(...next);
+    lastSent.current = hex;
+    onCustom(hex);
+  };
+
+  /** Drags that start inside `box` and report 0 to 1 along each axis. */
+  const drag = (apply: (x: number, y: number) => void) => (event: React.PointerEvent<HTMLDivElement>) => {
+    const box = event.currentTarget;
+    const at = (e: { clientX: number; clientY: number }) => {
+      const r = box.getBoundingClientRect();
+      apply(clamp01((e.clientX - r.left) / r.width), clamp01((e.clientY - r.top) / r.height));
+    };
+    box.setPointerCapture(event.pointerId);
+    at(event);
+    const move = (e: PointerEvent) => at(e);
+    const up = () => { box.removeEventListener('pointermove', move); box.removeEventListener('pointerup', up); };
+    box.addEventListener('pointermove', move);
+    box.addEventListener('pointerup', up);
+  };
+
+  const [h, sat, val] = hsv;
+  const hex = isHexColour(custom) ? custom : hsvToHex(h, sat, val);
+  return (
+    <div className="cpanel custom-colour-editor">
+      <div
+        className="sv"
+        style={{ '--h': h } as React.CSSProperties}
+        onPointerDown={drag((x, y) => send([hsvRef.current[0], x, 1 - y]))}
+      >
+        <i className="knob" style={{ left: `${sat * 100}%`, top: `${(1 - val) * 100}%` }} />
+      </div>
+      <div className="cside">
+        <div className="hue" onPointerDown={drag((x) => send([x * 360, hsvRef.current[1], hsvRef.current[2]]))}>
+          <i className="knob" style={{ left: `${(h / 360) * 100}%` }} />
+        </div>
+        <div className="crow">
+          <span className="bigswatch" style={{ background: hex }} />
+          <div className="cinfo">
+            <strong>{t('settings.accent.custom')}</strong>
+            <div className="hexrow">
+              <span>#</span>
+              <input
+                className="accenthex"
+                aria-label={t('settings.accent.customHex')}
+                maxLength={7}
+                value={typed.replace(/^#/, '')}
+                spellCheck={false}
+                aria-invalid={invalid || undefined}
+                onChange={(event) => onTyped(event.target.value)}
+                onBlur={(event) => onCommit(event.target.value.trim())}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') { event.preventDefault(); onCommit(typed.trim()); }
+                  if (event.key === 'Escape') onReset();
+                }}
+              />
+            </div>
+          </div>
+        </div>
+        {invalid
+          ? <small role="alert">{t('settings.accent.customInvalid', { colour: custom })}</small>
+          : <small>{t('settings.accent.customHelp')}</small>}
+      </div>
+    </div>
+  );
+}
+
+const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
 
 /** One miniature of the product, drawn entirely from the accent tokens. */
 function AccentPreview() {
@@ -262,6 +424,41 @@ export function DensityChoice({
 }
 
 /**
+ * Where an opened task appears, shown rather than described: a window over the
+ * list, or a panel beside it.
+ */
+export function TaskOpenChoice({
+  value, onChange,
+}: { value: TaskOpen; onChange: (next: TaskOpen) => void }) {
+  const { t } = useT();
+  return (
+    <div className="openchoice" role="radiogroup" aria-label={t('settings.taskOpen')}>
+      {TASK_OPENS.map((option) => (
+        <button
+          key={option}
+          type="button"
+          role="radio"
+          aria-checked={value === option}
+          className={`denscard${value === option ? ' selected' : ''}`}
+          onClick={() => onChange(option)}
+        >
+          <span className={`openpreview ${option}`} aria-hidden="true">
+            {[0, 1, 2, 3].map((row) => (
+              <span className="densrow" key={row}><i className="densdot" /><i className="densbar" /></span>
+            ))}
+            <span className="openwindow" />
+          </span>
+          <span className="denslabel">
+            {t(`settings.taskOpen.${option}` as TranslationKey)}
+            {value === option && <Icon name="check" size="sm" />}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
  * How the chips on a task's metadata are coloured, shown with two sample
  * chips each (#175). One choice for Settings and for the first run, so the
  * two can only ever say the same thing.
@@ -285,7 +482,7 @@ export function TaskChipsChoice({
               card rather than the page's own. */}
           <span className="chipssample" data-chips={option} aria-hidden="true">
             <span className="task"><span className="sample-title">{t('preview.task.homepage')}</span><span className="meta">
-              <span className="at">{option === 'minimal' ? `45min · ${t('common.today')}` : t('common.today')}</span>
+              <span className="at">{t('common.today')}</span>
               <span className="est">45 min</span>
               <span className="proj" style={{ '--marker': '#4073ff' } as React.CSSProperties}>#Website</span>
               <span className="tag" style={{ '--marker': '#299438' } as React.CSSProperties}>
@@ -304,21 +501,24 @@ export function TaskChipsChoice({
 }
 
 /** The same storage choice in first run, existing accounts and Settings. */
-export function EstimateStorageChoice({ value, allowed, onChange }: {
+export function EstimateStorageChoice({ value, allowed, onChange, neutral = false }: {
+  /** With `neutral`, a null value shows no option selected instead of the tag default. */
+  neutral?: boolean;
   value: import('@/domain/types').EstimateStorage | null;
   allowed: boolean;
   onChange: (value: import('@/domain/types').EstimateStorage) => void;
 }) {
   const { t } = useT();
   const user = useStore((s) => s.snapshot.user);
+  const shown = neutral && allowed ? value : (value ?? 'tag');
   const recommendation = !allowed ? 'tag' : user?.is_premium === true || user?.premium_status === 'teams_business_member' ? 'duration' : null;
   return (
     <div className="estimate-choice">
       <div className="estimate-toggle" role="radiogroup" aria-label={t('estimates.storage')}>
         {(['tag', 'duration'] as const).map((option) => (
-          <button type="button" key={option} role="radio" aria-label={t(`estimates.${option}`)} aria-description={t(option === 'tag' ? 'estimates.tagPlans' : 'estimates.durationPlans')} aria-checked={(value ?? 'tag') === option}
+          <button type="button" key={option} role="radio" aria-label={t(`estimates.${option}`)} aria-description={t(option === 'tag' ? 'estimates.tagPlans' : 'estimates.durationPlans')} aria-checked={shown === option}
             disabled={option === 'duration' && !allowed}
-            className={(value ?? 'tag') === option ? 'selected' : undefined}
+            className={shown === option ? 'selected' : undefined}
             onClick={() => onChange(option)}
             onKeyDown={(event) => {
               if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
@@ -333,7 +533,7 @@ export function EstimateStorageChoice({ value, allowed, onChange }: {
           </button>
         ))}
       </div>
-      <p className="estimate-choice-hint">{t(!allowed ? 'estimates.unavailable' : (value ?? 'tag') === 'tag' ? 'estimates.tagHint' : 'estimates.durationHint')}</p>
+      <p className="estimate-choice-hint">{t(!allowed ? 'estimates.unavailable' : shown === null ? 'setup.estimates.required' : shown === 'tag' ? 'estimates.tagHint' : 'estimates.durationHint')}</p>
       <details className="estimate-choice-details"><summary>{t('estimates.more')}</summary><p>{t('estimates.durationHelp')}</p><p>{t('estimates.longHelp')}</p></details>
     </div>
   );

@@ -296,6 +296,14 @@ export function flushPersist() {
 export function explainFailure(error: string, locale: Locale): string {
   const limit = /limit|maximum|quota|exceed|reached|too many/i.test(error);
   const said = error.trim();
+  /* "Item not found" on a task that is on screen (#28): Todoist does not let
+     this account write to it, typically a task of a team project it can see
+     but has not joined. Said plainly rather than as Todoist's two words. */
+  if (/^item not found$/i.test(said)) {
+    return locale === 'fr'
+      ? 'Todoist ne permet pas à ce compte de modifier cette tâche (souvent un projet d’équipe que vous voyez sans l’avoir rejoint). Rien n’a été enregistré.'
+      : 'Todoist does not let this account change this task (often a team project you can see but have not joined). Nothing was saved.';
+  }
   if (locale === 'fr') {
     /* Todoist's sentence is English, and a French message with an English
        sentence in the middle reads as a bug. A limit is named in French from
@@ -396,6 +404,16 @@ export function revertRefused(
   };
   for (const cmd of commands) {
     if (!refused.has(cmd.uuid)) continue;
+    /* An invitation answered and refused gets its buttons back (#10). */
+    if (cmd.type === 'accept_invitation' || cmd.type === 'reject_invitation') {
+      const invitation = (cmd.args as { invitation_id?: string }).invitation_id;
+      const notifications = { ...(next.notifications ?? {}) };
+      for (const [id, note] of Object.entries(before.notifications ?? {})) {
+        if (note.invitation_id === invitation) notifications[id] = note;
+      }
+      next.notifications = notifications;
+      continue;
+    }
     const collection = collectionOf(cmd.type);
     if (!collection) continue;
     const target = next[collection] as Record<string, unknown>;

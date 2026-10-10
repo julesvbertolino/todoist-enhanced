@@ -35,13 +35,39 @@ function read(): string[] {
   }
 }
 
+/** The demo's id: it has no account to remember the Setup by (#6). */
+export const DEMO_USER_ID = 'demo-user';
+const DEMO_KEY = 'demo-onboarded';
+/** Dev and e2e escape hatch: `localStorage.skipSetup = '1'` skips the demo's Setup. */
+const SKIP_KEY = 'skipSetup';
+
+/**
+ * The demo remembers its Setup for the browser tab only: a reload inside the
+ * demo does not ask again, every new "Explore with demo data" does.
+ */
+function demoOnboarded(): boolean {
+  try {
+    return sessionStorage.getItem(DEMO_KEY) === '1' || localStorage.getItem(SKIP_KEY) === '1';
+  } catch { return false; }
+}
+
+/** Called when the demo is entered from the sign-in page. */
+export function forgetDemoOnboarding(): void {
+  try { sessionStorage.removeItem(DEMO_KEY); } catch { /* storage may be blocked */ }
+}
+
 export function hasOnboarded(userId: string | null | undefined): boolean {
   if (!userId) return true;   // Nobody to ask yet; ask once the account is known.
+  if (userId === DEMO_USER_ID) return demoOnboarded();
   return read().includes(userId);
 }
 
 export function markOnboarded(userId: string | null | undefined): void {
   if (!userId) return;
+  if (userId === DEMO_USER_ID) {
+    try { sessionStorage.setItem(DEMO_KEY, '1'); } catch { /* storage may be blocked */ }
+    return;
+  }
   try {
     const next = [userId, ...read().filter((id) => id !== userId)].slice(0, LIMIT);
     localStorage.setItem(KEY, JSON.stringify(next));

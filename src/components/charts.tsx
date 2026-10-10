@@ -460,6 +460,8 @@ function foldTail<T extends { key: string; label: string; value: number; color?:
 interface SplitBarProps {
   data: SliceDatum[];
   format?: (value: number) => string;
+  /** Names only: the figures stay in the hover title, so a small card is not a table. */
+  hideValues?: boolean;
 }
 
 /**
@@ -469,7 +471,7 @@ interface SplitBarProps {
  * and the legend states it, which is what lets the grey P4 segment carry
  * meaning without relying on its hue.
  */
-export function SplitBar({ data, format }: SplitBarProps) {
+export function SplitBar({ data, format, hideValues = false }: SplitBarProps) {
   const sum = data.reduce((acc, row) => acc + row.value, 0);
   return (
     <div className="split">
@@ -494,7 +496,7 @@ export function SplitBar({ data, format }: SplitBarProps) {
           <li key={row.key}>
             <i style={{ background: row.color ?? seriesColor(index) }} />
             <span className="legendname">{row.label}</span>
-            <b>{format ? format(row.value) : row.value}</b>
+            {!hideValues && <b>{format ? format(row.value) : row.value}</b>}
           </li>
         ))}
       </ul>

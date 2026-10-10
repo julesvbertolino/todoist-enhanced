@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { SubtasksProvider } from '@/components/TaskRow';
 import { DisplayMenu } from '@/components/DisplayMenu';
+import { PageMenu } from '@/components/PageMenu';
 import { TaskGroup } from '@/components/TaskGroup';
 import { ModeSurface } from '@/components/ModeSurface';
 import { Icon } from '@/components/Icon';
@@ -11,7 +12,7 @@ import type { TaskPlacement } from '@/domain/dnd';
 import { useData } from '@/hooks/useData';
 import { useStore } from '@/store/store';
 import { viewPrefs } from '@/store/prefs';
-import { applyFilters, rootItems, sortItems } from '@/store/selectors';
+import { applyFilters, datedRoots, sortItems } from '@/store/selectors';
 import { upcomingItems } from '@/domain/views';
 import type { GroupKey } from '@/domain/types';
 import { summariseLoad } from '@/domain/load';
@@ -38,6 +39,7 @@ function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: Upcomi
   const { t, locale } = useT();
   const { snapshot, items, childrenOf } = useData();
   const prefs = useStore((s) => s.prefs);
+  const setPrefs = useStore((s) => s.setPrefs);
   const current = viewPrefs(prefs, 'upcoming');
   /* Upcoming answers "when?", so it only groups by time: a day (the
      default), a week or a month. A grouping saved before this (project,
@@ -49,7 +51,7 @@ function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: Upcomi
   const today = useToday();
 
   const scoped = useMemo(() => {
-    const roots = rootItems(items);
+    const roots = datedRoots(items, snapshot);
     const future = upcomingItems(roots);
     const limit = startOfDay(addDays(today, horizon));
     const withinHorizon = future.filter((item) => {
@@ -110,6 +112,14 @@ function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: Upcomi
               <Icon name="trend" />
               {t('toolbar.insights')}
             </button>
+            <PageMenu
+              items={[7, 15, 30, 60].map((days) => ({
+                key: `h${days}`,
+                label: t('upcoming.horizon', { days }),
+                checked: horizon === days,
+                onPick: () => { setHorizon(days); setPrefs({ upcomingHorizonDays: days }); },
+              }))}
+            />
           </>
         }
         load={load}
@@ -124,7 +134,6 @@ function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: Upcomi
           items={scoped}
           childrenOf={childrenOf}
           mode={current.mode === 'board' ? 'board' : 'list'}
-          wide={current.wide}
           group={group}
           sort={current.sort}
           order="day"
@@ -135,7 +144,6 @@ function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: Upcomi
           items={scoped}
           childrenOf={childrenOf}
           mode="board"
-          wide={current.wide}
           group="day"
           sort={current.sort}
           order="day"

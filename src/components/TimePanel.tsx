@@ -61,8 +61,9 @@ export function TimePanel({ pageItems, pageLabel, onOpen, onUnestimated }: TimeP
     [pool, minutes, childrenOf],
   );
 
-  /* Inside each group, by what the question is about: the shortest first, or
-     the most important first. The other breaks a tie. */
+  /* One list, in the order the question is about: the shortest first, or the
+     most important first, the other breaking a tie. Each row says when it is
+     due, so nothing is hidden by sorting the days together. */
   const ordered = useMemo(() => {
     if (!result) return [];
     const time = (item: Item) => countedMinutes(item, childrenOf) ?? 0;
@@ -71,7 +72,9 @@ export function TimePanel({ pageItems, pageLabel, onOpen, onUnestimated }: TimeP
     const compare = sort === 'priority'
       ? (a: Item, b: Item) => byPriority(a, b) || byTime(a, b)
       : (a: Item, b: Item) => byTime(a, b) || byPriority(a, b);
-    return result.buckets.map((bucket) => ({ ...bucket, items: [...bucket.items].sort(compare) }));
+    return result.buckets
+      .flatMap((bucket) => bucket.items.map((item) => ({ item, when: bucket.key })))
+      .sort((a, b) => compare(a.item, b.item));
   }, [result, sort, childrenOf]);
 
   /* The free field takes what the estimate field takes. It shows the value
@@ -125,13 +128,26 @@ export function TimePanel({ pageItems, pageLabel, onOpen, onUnestimated }: TimeP
     };
   }, [open]);
 
-  if (!open) return null;
+  /* Closing plays the entry backwards while the page widens back (#29): the
+     panel stays drawn for the length of its exit. */
+  const [leaving, setLeaving] = useState(false);
+  const wasOpen = useRef(open);
+  useEffect(() => {
+    if (open) { wasOpen.current = true; setLeaving(false); return; }
+    if (!wasOpen.current) return;
+    wasOpen.current = false;
+    setLeaving(true);
+    const timer = window.setTimeout(() => setLeaving(false), 320);
+    return () => window.clearTimeout(timer);
+  }, [open]);
+
+  if (!open && !leaving) return null;
 
   const next = result && result.count === 0 ? suggestDuration(result.next) : null;
 
   return createPortal(
     <aside
-      className="timepanel"
+      className={`timepanel${open ? '' : ' leaving'}`}
       ref={panelRef}
       aria-label={t('time.title')}
     >
@@ -143,6 +159,7 @@ export function TimePanel({ pageItems, pageLabel, onOpen, onUnestimated }: TimeP
       </div>
 
       <div className="timebody">
+        <div className="timecard">
         <p className="timelabel" id="time-question">{t('time.question')}</p>
         <div className="timechoices" role="group" aria-labelledby="time-question">
           {FIT_CHOICES.map((choice, at) => (
@@ -204,6 +221,8 @@ export function TimePanel({ pageItems, pageLabel, onOpen, onUnestimated }: TimeP
           </div>
         </div>
 
+        </div>
+
         {result === null || minutes === null ? (
           <p className="timehint">{t('time.pick')}</p>
         ) : (
@@ -218,18 +237,13 @@ export function TimePanel({ pageItems, pageLabel, onOpen, onUnestimated }: TimeP
               </p>
             )}
 
-            {ordered.map((bucket) => (
-              <section className="timegroup" key={bucket.key}>
-                <header>
-                  <h3>{t(BUCKET_TITLE[bucket.key])}</h3>
-                  <span className="gcount">{bucket.items.length}</span>
-                  <span className="gtime">{formatDuration(bucket.minutes, locale)}</span>
-                </header>
-                {bucket.items.map((item) => (
-                  <TimeRow key={item.id} item={item} onOpen={onOpen} />
+            {ordered.length > 0 && (
+              <div className="timelist">
+                {ordered.map(({ item, when }) => (
+                  <TimeRow key={item.id} item={item} when={when} onOpen={onOpen} />
                 ))}
-              </section>
-            ))}
+              </div>
+            )}
 
             {result.count === 0 && (
               <p className="timenothing">
@@ -263,7 +277,7 @@ export function TimePanel({ pageItems, pageLabel, onOpen, onUnestimated }: TimeP
  * picking it with Cmd or Shift, and walking the list with the arrow keys all
  * work, because the keyboard finds rows by `data-task-id` and this one has it.
  */
-function TimeRow({ item, onOpen }: { item: Item; onOpen: (id: string) => void }) {
+function TimeRow({ item, when, onOpen }: { item: Item; when: FitBucketKey; onOpen: (id: string) => void }) {
   const { t, locale } = useT();
   const { childrenOf } = useData();
   const snapshot = useStore((s) => s.snapshot);
@@ -292,7 +306,8 @@ function TimeRow({ item, onOpen }: { item: Item; onOpen: (id: string) => void })
   const computed = effectiveEstimate(item, childrenOf).computed;
   const project = snapshot.projects[item.project_id];
   const section = item.section_id ? snapshot.sections[item.section_id] : undefined;
-  const where = [project?.name, section?.name].filter(Boolean).join(' / ');
+  const where = [t(BUCKET_TITLE[when]), [project?.name, section?.name].filter(Boolean).join(' / ')]
+    .filter(Boolean).join(' · ');
 
   const pickRange = (additive: boolean) => {
     const ids = [...new Set(
@@ -311,7 +326,7 @@ function TimeRow({ item, onOpen }: { item: Item; onOpen: (id: string) => void })
     <div
       className={`timerow${settling ? ' done settling' : ''}${picked ? ' picked' : ''}`}
       role="button"
-      tabIndex={0}
+      tabIndex={-1}
       data-task-id={item.id}
       aria-selected={picked || undefined}
       onMouseDown={(e) => { if (e.shiftKey || e.metaKey || e.ctrlKey) e.preventDefault(); }}
@@ -348,7 +363,7 @@ function TimeRow({ item, onOpen }: { item: Item; onOpen: (id: string) => void })
         role="checkbox"
         aria-checked={settling}
         aria-label={t('task.complete')}
-        tabIndex={0}
+        tabIndex={-1}
         onClick={(e) => { e.stopPropagation(); complete(); }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {

@@ -110,7 +110,7 @@ test('#146 Upcoming moves its range on at midnight, without leaving the page', a
 
   await go(page, '#/upcoming');
   await page.getByRole('button', { name: 'Display' }).click();
-  await page.getByRole('button', { name: 'Board' }).first().click();
+  await page.getByRole('button', { name: 'Board', exact: true }).first().click();
   await page.keyboard.press('Escape');
 
   const heads = page.locator('.screen.active .board .col .chead strong');
@@ -264,14 +264,14 @@ test('#130 in the demo, ticking a daily 14:00 task brings it back tomorrow at 14
    `demo` fixture opens the demo itself and fails on anything logged. */
 bare('#128 with site storage blocked, the connect screen appears and the demo still opens', async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem('onboarded', JSON.stringify(['demo-user']));
+    localStorage.setItem('skipSetup', '1');
     Object.defineProperty(window, 'sessionStorage', {
       get() { throw new DOMException('The operation is insecure.', 'SecurityError'); },
     });
   });
   await page.goto('/');
   // Not stuck on "Loading…": the connect screen is there.
-  const signIn = page.getByRole('button', { name: 'Continue with Todoist' });
+  const signIn = page.getByRole('button', { name: 'Connect with Todoist' });
   await expect(signIn).toBeVisible();
 
   // Signing in cannot come back without storage: it says so, and stays.
@@ -281,16 +281,16 @@ bare('#128 with site storage blocked, the connect screen appears and the demo st
   await expect(signIn).toBeEnabled();
 
   // The demo still opens (it is only not remembered on reload).
-  await page.getByRole('button', { name: 'Explore with demo data instead' }).click();
+  await page.getByRole('button', { name: 'Explore with demo data' }).click();
   await expect(page.locator('.screen.active [data-task-id]').first()).toBeVisible();
 });
 
 bare('#128 a crash while drawing shows a message and a Reload button, not a white page', async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem('onboarded', JSON.stringify(['demo-user']));
+    localStorage.setItem('skipSetup', '1');
   });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Explore with demo data instead' }).click();
+  await page.getByRole('button', { name: 'Explore with demo data' }).click();
   await expect(page.locator('.screen.active [data-task-id]').first()).toBeVisible();
 
   // Something in the page breaks while it is being drawn.

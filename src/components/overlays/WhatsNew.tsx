@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Overlay } from './Overlay';
 import { Icon } from '../Icon';
+import { Select } from '../Select';
 import { useT } from '@/hooks/useT';
 import { renderTitle } from '@/domain/markdown';
 import {
   localisedReleases, parseChangelog, type ChangeKind, type Release,
 } from '@/domain/changelog';
 import { tourStops } from '@/domain/tour';
-import { COFFEE_URL, GITHUB_URL, VERSION } from '@/app-info';
+import { COFFEE_URL, VERSION } from '@/app-info';
 import type { TranslationKey } from '@/i18n';
 
 /**
@@ -118,15 +119,6 @@ export function WhatsNew({ scope, onClose, onShowMe }: WhatsNewProps) {
     return () => body.removeEventListener('scroll', onScroll);
   }, [history, shown]);
 
-  /* The pill of the release being read stays in the row's view. */
-  const pillsRef = useRef<HTMLElement>(null);
-  useEffect(() => {
-    if (!current) return;
-    pillsRef.current
-      ?.querySelector<HTMLElement>('[aria-current="true"]')
-      ?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-  }, [current]);
-
   const jump = (version: string) => {
     const body = bodyRef.current;
     const section = body?.querySelector<HTMLElement>(`#${anchorOf(version)}`);
@@ -139,10 +131,21 @@ export function WhatsNew({ scope, onClose, onShowMe }: WhatsNewProps) {
   };
 
   return (
-    <Overlay open={open} onClose={onClose} label={titleText} size="sm">
+    <Overlay open={open} onClose={onClose} label={titleText} size="md">
       <div className="whatsnew">
         <div className="sheet-head whatsnew-head">
           <h2>{titleText}</h2>
+          {history && shown.length > 1 && (
+            <Select
+              value={current ?? shown[0].version}
+              ariaLabel={t('whatsNew.versions')}
+              onChange={jump}
+              options={shown.map((release) => ({
+                value: release.version,
+                label: t('whatsNew.version', { version: release.version }),
+              }))}
+            />
+          )}
           <button
             className="iconbtn"
             aria-label={t('common.close')}
@@ -152,22 +155,6 @@ export function WhatsNew({ scope, onClose, onShowMe }: WhatsNewProps) {
             <Icon name="close" />
           </button>
         </div>
-
-        {history && shown.length > 1 && (
-          <nav className="whatsnew-pills" ref={pillsRef} aria-label={t('whatsNew.versions')}>
-            {shown.map((release) => (
-              <button
-                key={release.version}
-                type="button"
-                className="whatsnew-pill"
-                aria-current={current === release.version ? 'true' : undefined}
-                onClick={() => jump(release.version)}
-              >
-                {release.version}
-              </button>
-            ))}
-          </nav>
-        )}
 
         <div className="whatsnew-body" ref={bodyRef}>
           {all === null && <p className="whatsnew-loading">{t('common.loading')}</p>}
@@ -186,7 +173,6 @@ export function WhatsNew({ scope, onClose, onShowMe }: WhatsNewProps) {
                   )}
                 </h3>
               )}
-              {history && release.intro && <p className="whatsnew-intro">{release.intro}</p>}
               <ul>
                 {release.changes.map((change, at) => (
                   <li className={`whatsnew-change ${change.kind}`} key={at}>
@@ -198,37 +184,53 @@ export function WhatsNew({ scope, onClose, onShowMe }: WhatsNewProps) {
                     >
                       {change.mark}
                     </span>
-                    {/* The file is ours, and the renderer escapes it before
-                        adding the few inline tags it knows. */}
-                    <span dangerouslySetInnerHTML={{ __html: renderTitle(change.text) }} />
+                    <span className="whatsnew-badge" aria-hidden="true">{t(KIND_LABEL[change.kind])}</span>
+                    {/* A bold lead is the title; what follows it is the one paragraph that explains.
+                        The file is ours, and the renderer escapes it before adding the few inline tags it knows. */}
+                    {(() => {
+                      const lead = /^\*\*(.+?)\*\*\s*([\s\S]*)$/.exec(change.text.trim());
+                      return lead ? (
+                        <span className="whatsnew-text">
+                          <strong className="whatsnew-title" dangerouslySetInnerHTML={{ __html: renderTitle(lead[1].replace(/[.:]$/, '')) }} />
+                          {lead[2] && <span className="whatsnew-para" dangerouslySetInnerHTML={{ __html: renderTitle(lead[2]) }} />}
+                        </span>
+                      ) : (
+                        <span className="whatsnew-text">
+                          <span className="whatsnew-para" dangerouslySetInnerHTML={{ __html: renderTitle(change.text) }} />
+                        </span>
+                      );
+                    })()}
                   </li>
                 ))}
               </ul>
             </section>
           ))}
-          {history && all !== null && (
-            <p className="whatsnew-more">
-              <a href={`${GITHUB_URL}/blob/main/CHANGELOG.md`} target="_blank" rel="noreferrer noopener">
-                <Icon name="external" size="sm" />
-                {t('whatsNew.onGitHub')}
-              </a>
-            </p>
-          )}
         </div>
 
         <div className="sheet-foot whatsnew-foot">
-          <a className="btn coffee" href={COFFEE_URL} target="_blank" rel="noreferrer noopener">
-            <Icon name="coffee" size="sm" />
-            {t('coffee.offer')}
-          </a>
-          {showable && (
-            <button className="btn" onClick={() => onShowMe(scope.versions)}>
+          {showable ? (
+            <button className="btn soft" onClick={() => onShowMe(scope.versions)}>
+              <Icon name="week" size="sm" />
               {t('whatsNew.showMe')}
             </button>
+          ) : (
+            <button
+              className="btn soft"
+              onClick={() => { onClose(); window.dispatchEvent(new Event('enhanced:tour')); }}
+            >
+              <Icon name="week" size="sm" />
+              {t('whatsNew.showTour')}
+            </button>
           )}
-          <button className="btn primary" data-autofocus onClick={onClose}>
-            {t('whatsNew.continue')}
-          </button>
+          <span className="whatsnew-end">
+            <a className="btn coffee" href={COFFEE_URL} target="_blank" rel="noreferrer noopener">
+              <Icon name="coffee" size="sm" />
+              {t('coffee.offer')}
+            </a>
+            <button className="btn primary" data-autofocus onClick={onClose}>
+              {t('whatsNew.continue')}
+            </button>
+          </span>
         </div>
       </div>
     </Overlay>

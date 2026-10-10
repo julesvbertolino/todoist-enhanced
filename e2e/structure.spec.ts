@@ -27,6 +27,7 @@ test('drag a selection onto a project moves every task in it (#81)', async ({ de
   await row(page, picked[1]).hover();
   const from = (await handle.boundingBox())!;
   const target = page.locator('.sidebar').getByRole('button', { name: '# Home', exact: true }).first();
+  await target.scrollIntoViewIfNeeded();
 
   await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
   await page.mouse.down();

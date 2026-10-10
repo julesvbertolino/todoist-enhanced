@@ -33,5 +33,5 @@ test('native clipboard URL over selected words preserves the words as a link',as
  await page.mouse.dblclick(box.x,box.y);await page.keyboard.press('ControlOrMeta+v');await expect(body.locator('.md-link')).toHaveText('website');await expect(body).toHaveText('Visit website today');
 });
 test('dashboard layout uses click controls and retains widths',async({demo:page})=>{
- await go(page,'#/insights');await page.getByRole('button',{name:'This year',exact:true}).click();await page.getByRole('button',{name:'Edit layout'}).click();await expect(page.locator('.dash-grip')).toHaveCount(0);const tags=page.locator('[data-card="tags"]');await tags.getByRole('button',{name:/earlier/}).click();await expect(tags).toHaveClass(/w6/);await expect(page.locator('[data-card="heatmap"]')).toHaveClass(/w12/);
+ await go(page,'#/insights');await page.locator('.periodbar .spanbar button',{hasText:/^Year$/}).click();await page.getByRole('button',{name:'Edit layout'}).click();await expect(page.locator('.dash-grip').first()).toBeVisible();const tags=page.locator('[data-card="tags"]');await tags.getByRole('button',{name:/earlier/}).click();await expect(tags).toHaveClass(/w6/);await expect(page.locator('[data-card="heatmap"]')).toHaveClass(/w12/);
 });

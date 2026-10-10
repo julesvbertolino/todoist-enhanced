@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { Icon } from '@/components/Icon';
+import { TodoistMark } from '@/components/TodoistMark';
+import { WorkspacePreview } from '@/components/WorkspacePreview';
 import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
 import { looksLikeToken } from '@/api/auth';
 import { beginSignIn, builtForElsewhere } from '@/api/oauth';
+import type { TranslationKey } from '@/i18n';
 import { AUTHOR, GITHUB_URL, TODOIST_DEVELOPER_URL, VERSION } from '@/app-info';
 
 
@@ -48,12 +51,33 @@ export function ConnectView() {
   const legal = t('connect.legal', { author: AUTHOR }).split(AUTHOR);
 
   return (
-    <div className="connect">
-      <div className="connect-card">
-        <div className="connect-head">
-          <h1>{t('connect.appName')}</h1>
-          <span className="connect-version">{t('connect.version', { version: VERSION })}</span>
-        </div>
+    <div className="signin">
+      <div className="signin-lang seg2" role="group" aria-label={t('settings.language')}>
+        {(['en', 'fr'] as const).map((value) => (
+          <button key={value} aria-pressed={locale === value} onClick={() => setLocale(value)}>
+            {value === 'en' ? 'English' : 'Français'}
+          </button>
+        ))}
+      </div>
+
+      {/* What the app is for, on the bubble. Decorative as far as the sign-in
+          goes: nothing here needs to be read to connect. */}
+      <aside className="signin-bubble">
+        <h2>{t('connect.pitch')}</h2>
+        <ul className="signin-checks">
+          {(['week', 'estimates', 'time', 'review', 'quick', 'matrix'] as const).map((key) => (
+            <li key={key}>
+              <span className="signin-check"><Icon name="check" size="sm" /></span>
+              {t(`connect.feature.${key}` as TranslationKey)}
+            </li>
+          ))}
+        </ul>
+        <div className="signin-mock"><WorkspacePreview stage="login" layout="stage" /></div>
+      </aside>
+
+      <main className="signin-main">
+        <div className="connect-form">
+        <h1>{t('connect.login')}</h1>
         <p className="connect-intro">{t('connect.intro')}</p>
 
         <button
@@ -71,7 +95,11 @@ export function ConnectView() {
             });
           }}
         >
-          {leaving ? t('connect.oauthLeaving') : t('connect.oauth')}
+          {leaving ? t('connect.oauthLeaving') : (() => {
+            // "Connect with Todoist": the mark goes in front of the word.
+            const [before, after] = t('connect.oauth').split('Todoist');
+            return after === undefined ? t('connect.oauth') : <>{before}<TodoistMark /> Todoist{after}</>;
+          })()}
         </button>
         {signInError === 'denied' && <p className="connect-error">{t('connect.oauthDenied')}</p>}
         {signInError === 'failed' && <p className="connect-error">{t('connect.oauthFailed')}</p>}
@@ -85,19 +113,9 @@ export function ConnectView() {
           </p>
         )}
 
-        <button className="btn tint lg connect-demo" onClick={startDemo}>
-          <Icon name="bars" size="sm" />
+        <button className="btn soft lg connect-demo" onClick={startDemo}>
           {t('connect.demoInstead')}
         </button>
-
-        <p className="connect-privacy">
-          <strong>{t('connect.privacyLead')}</strong>{' '}
-          {t('connect.privacyBody')}{' '}
-          <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
-            <Icon name="external" size="sm" />
-            {t('connect.github')}
-          </a>
-        </p>
 
         <details
           className="connect-token"
@@ -139,24 +157,26 @@ export function ConnectView() {
           </a>
         </details>
 
-        <div className="connect-langs">
-          {(['en', 'fr'] as const).map((value) => (
-            <button
-              key={value}
-              className={`btn sm${locale === value ? ' primary' : ''}`}
-              onClick={() => setLocale(value)}
-            >
-              {value === 'en' ? 'English' : 'Français'}
-            </button>
-          ))}
-        </div>
-      </div>
+        <p className="connect-privacy">
+          <Icon name="eye" size="sm" />
+          <span><strong>{t('connect.privacyLead')}</strong>{' '}
+          {t('connect.privacyBody')}{' '}
+          <a href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
+            <Icon name="external" size="sm" />
+            {t('connect.github')}
+          </a></span>
+        </p>
 
-      {/* Outside the card, on the gradient: this is about the project, not
-          about signing in. */}
-      <p className="connect-legal">
-        {legal[0]}<strong>{AUTHOR}</strong>{legal[1]}
-      </p>
+        <p className="connect-legal">
+          {legal[0]}<strong>{AUTHOR}</strong>{legal[1]}
+        </p>
+        </div>
+
+        <footer className="signin-brand">
+          <strong className="signin-brand-name">{t('connect.appName')}</strong>
+          <small>{t('connect.version', { version: VERSION })}</small>
+        </footer>
+      </main>
     </div>
   );
 }

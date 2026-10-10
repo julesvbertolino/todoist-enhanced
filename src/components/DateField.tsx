@@ -59,6 +59,8 @@ export function DateField({
   const hour12 = useStore((s) => s.prefs.hour12);
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+  /** A field's picker is as wide as the field; a chip's keeps its own width. */
+  const [fitWidth, setFitWidth] = useState<number | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -77,6 +79,7 @@ export function DateField({
     const place = () => {
       const button = buttonRef.current?.getBoundingClientRect();
       if (!button || !panel) return;
+      if (!chip) setFitWidth(Math.max(224, Math.round(button.width)));
       const height = panel.offsetHeight;
       const width = panel.offsetWidth;
       const margin = 8;
@@ -98,7 +101,7 @@ export function DateField({
       observer.disconnect();
       window.removeEventListener('resize', place);
     };
-  }, [open]);
+  }, [open, chip]);
 
   useEffect(() => {
     if (!open) return;
@@ -131,6 +134,7 @@ export function DateField({
       style={{
         top: position?.top ?? -9999,
         left: position?.left ?? -9999,
+        width: fitWidth ?? undefined,
         visibility: position ? undefined : 'hidden',
       }}
     >
@@ -169,7 +173,7 @@ export function DateField({
         aria-label={label}
         onClick={() => setOpen((v) => !v)}
       >
-        <Icon name={chip && !value ? 'plus' : icon} size="sm" />
+        <Icon name={icon} size="sm" />
         <span className="fselect-value">
           {/* A date one day away has a name, and the name is what the reader
               wants: "17 sept. 2026" is a date you have to work out is

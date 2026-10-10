@@ -10,6 +10,8 @@ import { Issues } from './components/overlays/Issues';
 import { Search } from './components/overlays/Search';
 import { Shortcuts } from './components/overlays/Shortcuts';
 import { InsightsPanel } from './components/overlays/InsightsPanel';
+import { unreadCount } from './domain/notifications';
+import { ShareSheet } from './components/overlays/ShareSheet';
 import { ProjectSheet, type ProjectSheetTarget } from './components/overlays/ProjectSheet';
 import { Unestimated } from './components/overlays/Unestimated';
 import { ConfirmProvider } from './components/overlays/Confirm';
@@ -34,7 +36,7 @@ import { VERSION } from './app-info';
 import { hasOnboarded, shouldAskEstimateStorage } from './domain/onboarding';
 import { useStore } from './store/store';
 import type { Accent, Theme } from './store/prefs';
-import { ACCENT_TOKENS, accentFamily, hexToHsl } from './domain/accent';
+import { ACCENT_TOKENS, accentFamily, backdropGradient, hexToHsl } from './domain/accent';
 import { useT } from './hooks/useT';
 import { useSelectionBlocks } from './hooks/useSelectionBlocks';
 import { useKeyboard } from './hooks/useKeyboard';
@@ -60,6 +62,8 @@ export function App() {
   const accent = useStore((s) => s.prefs.accent);
   const accentCustom = useStore((s) => s.prefs.accentCustom);
   const taskChips = useStore((s) => s.prefs.taskChips);
+  const layout = useStore((s) => s.prefs.layout);
+  const background = useStore((s) => s.prefs.background);
   const userId = useStore((s) => s.snapshot.user?.id);
   const demo = useStore((s) => s.demo);
   const walkthroughOpen = useStore((s) => s.walkthrough);
@@ -69,6 +73,8 @@ export function App() {
      first-run dialog after it. */
   const [tourVersions, setTourVersions] = useState<string[] | null>(null);
   const [onboardingStarted, setOnboardingStarted] = useState(false);
+  const setupDone = useStore((s) => s.prefs.setupDone);
+  const setupAsked = useRef(false);
   const setWalkthrough = useStore((s) => s.setWalkthrough);
   const beginTourPreview = useStore((s) => s.beginTourPreview);
   const endTourPreview = useStore((s) => s.endTourPreview);
@@ -98,6 +104,11 @@ export function App() {
   /* One right-hand panel at a time (Insights, I have time): which one is open
      is the store's to say, so opening one closes the other. */
   const insightsOpen = useStore((s) => s.sidePanel === 'insights');
+  // The page makes room for Insights when the layout puts the panel beside it.
+  useEffect(() => {
+    document.documentElement.classList.toggle('insights-open', insightsOpen);
+    return () => document.documentElement.classList.remove('insights-open');
+  }, [insightsOpen]);
   const openSidePanel = useStore((s) => s.openSidePanel);
   const closeSidePanel = useStore((s) => s.closeSidePanel);
   const setInsightsOpen = (open: boolean) =>
@@ -106,10 +117,26 @@ export function App() {
      that one — is carried by the open state itself. */
   const [projectSheet, setProjectSheet] = useState<ProjectSheetTarget>(null);
   const [unestimatedOpen, setUnestimatedOpen] = useState(false);
+  const [shareProject, setShareProject] = useState<string | null>(null);
+  useEffect(() => {
+    const open = (event: Event) =>
+      setShareProject((event as CustomEvent<{ projectId: string }>).detail.projectId);
+    window.addEventListener('enhanced:share', open);
+    return () => window.removeEventListener('enhanced:share', open);
+  }, []);
   /** The sidebar, shown as a page. There is no room for a column on a phone. */
   const [browseOpen, setBrowseOpen] = useState(false);
   /** Where a newly composed task should land, when it was added from a section. */
   const [placement, setPlacement] = useState<ComposerPlacement>({});
+
+  /* A task opened as a panel behaves like Insights: beside the page, which makes room for it, not
+     over it behind a veil. */
+  const taskAsPanel = useStore((s) => s.prefs.taskOpen === 'panel');
+  useEffect(() => {
+    const on = taskAsPanel && openTaskId !== null;
+    document.documentElement.classList.toggle('panel-open', on);
+    return () => document.documentElement.classList.remove('panel-open');
+  }, [taskAsPanel, openTaskId]);
 
   useEffect(() => { void init(); }, [init]);
   useParentEstimates();
@@ -154,16 +181,41 @@ export function App() {
      written depends on the scheme that ended up resolved. */
   useEffect(() => applyAccent(accent, accentCustom), [accent, accentCustom, scheme]);
   useEffect(() => { document.documentElement.dataset.chips = taskChips; }, [taskChips]);
+  /* The frame, written on <html> like the theme and for the same reason: the
+     stylesheet decides what each choice looks like, and theme-boot.js reads
+     the copy kept in storage so the first paint is already the right one. */
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.layout = layout;
+    root.dataset.background = background;
+    try {
+      localStorage.setItem('layout', layout);
+      localStorage.setItem('background', background);
+    } catch { /* storage may be blocked */ }
+  }, [layout, background]);
   useEffect(() => (connected ? startPolling() : undefined), [connected, startPolling]);
   useEffect(() => {
-    const replay = () => {
-      setWalkthrough(false);
+    const replay = () => setWalkthrough(true);
+    const tour = () => {
       navigate('week');
-      window.setTimeout(() => setTourOpen(true), 60);
+      /* Closed first, so asking again while one is somehow still up starts it afresh rather than doing nothing. */
+      setTourOpen(false);
+      window.setTimeout(() => { setTourVersions(null); setTourOpen(true); }, 60);
     };
     window.addEventListener('enhanced:replay-onboarding', replay);
-    return () => window.removeEventListener('enhanced:replay-onboarding', replay);
+    window.addEventListener('enhanced:tour', tour);
+    return () => {
+      window.removeEventListener('enhanced:replay-onboarding', replay);
+      window.removeEventListener('enhanced:tour', tour);
+    };
   }, [setWalkthrough]);
+
+  /* Signing out does not unmount this component, so what it remembered of the
+     last session would keep the next one — the demo again, or another account —
+     from getting its own first run (#6). */
+  useEffect(() => {
+    if (!connected && !demo) { setOnboardingStarted(false); setupAsked.current = false; }
+  }, [connected, demo]);
 
   /* The first run — for a real account that has not had one, and for the demo,
      which is where most people meet this app first and is exactly where a tour
@@ -172,15 +224,28 @@ export function App() {
      Opened here and closed by the dialog, so asking for it again from Settings
      goes through the same door. */
   useEffect(() => {
-    if (!QUICK_ADD && ready && (connected || demo) && !hasOnboarded(userId) && !onboardingStarted) {
+    /* Not while the tour runs: it swaps in the demo's snapshot, whose user
+       is nobody this browser has set up, and that looked like a first run (#4). */
+    if (!QUICK_ADD && !tourOpen && ready && (connected || demo) && !hasOnboarded(userId) && !onboardingStarted) {
       setOnboardingStarted(true);
       /* Somebody meeting the app for the first time is getting the tour; a
          list of what changed since a version they never used is not news. */
       if (!demo) setPrefs({ seenVersion: VERSION });
       navigate('week');
-      window.setTimeout(() => setTourOpen(true), 100);
+      setWalkthrough(true);
     }
-  }, [ready, connected, demo, userId, onboardingStarted, setPrefs]);
+  }, [ready, connected, demo, userId, tourOpen, onboardingStarted, setPrefs, setWalkthrough]);
+
+  /* An account set up before 2.0 is asked once for the choices that came with
+     it (the look, the sidebar, what a task shows). Not the demo, which only
+     ever has the first run, and not before the account's own settings have
+     been read, or a second browser would ask what the first already did. */
+  useEffect(() => {
+    if (QUICK_ADD || tourOpen || !ready || !connected || demo || !settled || !hasOnboarded(userId)) return;
+    if (setupDone || setupAsked.current) return;
+    setupAsked.current = true;
+    setWalkthrough(true);
+  }, [ready, connected, demo, settled, userId, tourOpen, setupDone, setWalkthrough]);
 
   /* The first sync after loading is what brings the account's settings — and
      with them the version already seen on another device. Asked before it,
@@ -196,7 +261,7 @@ export function App() {
      remember having shown it. */
   useEffect(() => {
     if (QUICK_ADD || !ready || !connected || demo || !settled || !hasOnboarded(userId)) return;
-    if (tourOpen || walkthroughOpen || whatsNew) return;
+    if (tourOpen || walkthroughOpen || whatsNew || !setupDone) return;
     if (seenVersion === VERSION) return;
     let cancelled = false;
     void import('../CHANGELOG.md?raw').then(({ default: source }) => {
@@ -211,7 +276,7 @@ export function App() {
     });
     return () => { cancelled = true; };
   }, [ready, connected, demo, settled, userId, tourOpen, walkthroughOpen, whatsNew,
-    seenVersion, whatsNewOn, setPrefs]);
+    seenVersion, whatsNewOn, setPrefs, setupDone]);
 
   const storageOpen = shouldAskEstimateStorage({
     ready: ready && connected && Boolean(userId), settled, demo, quickAdd: QUICK_ADD,
@@ -241,6 +306,21 @@ export function App() {
   }
 
   if (QUICK_ADD) return <QuickAdd />;
+
+  /* Until the first sync says whether this account still owes its Setup, a
+     neutral screen rather than the views, which the Setup would then cover a
+     few seconds later (#7). An account this browser already knows as set up
+     goes straight in; a failed sync shows the app and its error. */
+  const setupUnknown = !demo && !tourOpen && !settled && !walkthroughOpen && syncState !== 'error'
+    && (!userId || !hasOnboarded(userId) || !setupDone);
+  if (setupUnknown) {
+    return (
+      <div className="connect gettingready" role="status" aria-live="polite">
+        <p>{t('common.gettingReady')}</p>
+        <div className="readybar" aria-hidden="true"><span /></div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -278,17 +358,23 @@ export function App() {
           page behind it, which is the point of showing them here. */}
       <EstimateStorageDialog onConvert={(target) => setConversionRequest((previous) => ({ target, request: previous.request + 1 }))} open={storageOpen && !demo && !tourOpen && !walkthroughOpen && !whatsNew} onClose={() => { setStorageDismissed(userId ?? null); }} />
       <EstimateConversion target={conversionRequest.target} openRequest={conversionRequest.request} hideTrigger />
+      <ShareSheet projectId={shareProject} onClose={() => setShareProject(null)} />
       <Walkthrough
         open={walkthroughOpen}
         onDone={() => setWalkthrough(false)}
+        onTour={() => {
+          /* At once, in the same breath as the setup closing: a gap between the two is
+             where "What's new" used to slip in on top of the tour. */
+          navigate('week');
+          setTourVersions(null);
+          setTourOpen(true);
+        }}
       />
       <Tour
         open={tourOpen}
         versions={tourVersions}
         onDone={() => {
           setTourOpen(false);
-          // Only a first run goes on to the first-run choices.
-          if (tourVersions === null) setWalkthrough(true);
           setTourVersions(null);
         }}
       />
@@ -447,7 +533,13 @@ function applyAccent(accent: Accent, custom: string): void {
     }
   }
 
+  /* The coloured background is drawn from whatever `--accent` ended up being,
+     read back off the page so named and custom colours go through one door. */
+  const backdrop = backdropGradient(getComputedStyle(root).getPropertyValue('--accent').trim());
+  root.style.setProperty('--back-gradient', backdrop);
+
   try {
+    localStorage.setItem('backdrop', backdrop);
     localStorage.setItem('accent', accent);
     localStorage.setItem('accentCustom', custom);
     /* Both schemes, because index.html has to write these before the first
@@ -502,9 +594,10 @@ function AppShell({
   const clearSelection = useStore((s) => s.clearSelection);
 
   const roots = useMemo(() => rootItems(items), [items]);
+  const snapshotForBell = useStore((s) => s.snapshot);
   const conflictCount = useMemo(
-    () => detectConflicts(roots, childrenOf, conflictSettings).length,
-    [roots, childrenOf, conflictSettings],
+    () => detectConflicts(roots, childrenOf, conflictSettings).length + unreadCount(snapshotForBell),
+    [roots, childrenOf, conflictSettings, snapshotForBell],
   );
 
   /** Whatever the page in front is showing, so the dialogs never describe another one. */

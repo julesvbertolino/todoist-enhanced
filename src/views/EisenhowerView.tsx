@@ -82,6 +82,8 @@ export function EisenhowerView({ onOpen, onUnestimated }: EisenhowerViewProps) {
                 showProject
                 keepWhenEmpty
                 draggable={false}
+                collapsible={false}
+                cards
               />
             </div>
           ))}

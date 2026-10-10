@@ -16,6 +16,13 @@ try {
      arrives is the same wrong first paint in a different colour. */
   var accent = localStorage.getItem('accent');
   if (accent) document.documentElement.dataset.accent = accent;
+  /* And the frame (layout and background), for the same reason. */
+  var layout = localStorage.getItem('layout');
+  if (layout) document.documentElement.dataset.layout = layout;
+  var backdrop = localStorage.getItem('backdrop');
+  if (backdrop) document.documentElement.style.setProperty('--back-gradient', backdrop);
+  var background = localStorage.getItem('background');
+  if (background) document.documentElement.dataset.background = background;
   /* A custom accent is not in the stylesheet — it is computed from one
      colour. Both schemes were worked out and stored when it was chosen,
      so the right one can be written here without repeating the recipe. */

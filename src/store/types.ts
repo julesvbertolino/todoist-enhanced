@@ -1,7 +1,7 @@
 /** The shape of the store, shared by the slices that build it (see store.ts). */
 import type { StateCreator } from 'zustand';
 import type { Command } from '@/api/commands';
-import type { CompletedItem, DisplayPriority, Item, Note, Snapshot, ViewPrefs } from '@/domain/types';
+import type { CompletedItem, DisplayPriority, Item, Note, NoteAttachment, Snapshot, ViewPrefs } from '@/domain/types';
 import type { RecurrenceReading } from '@/domain/recurrence';
 import type { Locale } from '@/i18n';
 import type { DropTarget } from '@/domain/dnd';
@@ -131,7 +131,28 @@ export interface AppState {
    */
   walkthrough: boolean;
   setWalkthrough: (open: boolean) => void;
+  /** Marks Todoist's notifications read (or unread); 'all' is every unread one. */
+  markNotifications: (ids: string[] | 'all', unread?: boolean) => Promise<void>;
+  /** Accepts or declines a project invitation carried by a notification. */
+  answerInvitation: (notificationId: string, accept: boolean) => Promise<void>;
+  /** Invites by e-mail; `role` only means something in a team workspace. */
+  shareProject: (projectId: string, email: string, role?: string) => Promise<void>;
+  removeCollaborator: (projectId: string, email: string) => Promise<void>;
+  /** Leaves a project somebody else shared: drops it from the snapshot once Todoist agrees. */
+  leaveProject: (projectId: string) => Promise<void>;
+  /** Assigns a task to a collaborator of its project, or to nobody. */
+  assignTask: (itemId: string, userId: string | null) => Promise<void>;
   updateTask: (id: string, args: Record<string, unknown>) => Promise<void>;
+  /** Posts a comment on a task, with a file already uploaded when there is one. */
+  /** False when Todoist refused it, so the field can give the draft back. */
+  addComment: (itemId: string, content: string, attachment?: NoteAttachment | null) => Promise<boolean>;
+  /** Rewrites a comment's text. */
+  updateComment: (id: string, content: string) => Promise<void>;
+  deleteComment: (id: string) => Promise<void>;
+  /** Adds or takes back the current user's reaction to a comment. */
+  toggleReaction: (id: string, emoji: string) => Promise<void>;
+  /** A copy of a task, with the subtasks still open under it, right after the original. */
+  duplicateTask: (id: string) => Promise<void>;
   /** Gives a task a repeat rule, leaving the date for Todoist to resolve. */
   /* Takes the rule and the language it was written in, which is all Todoist
      needs: where the reading came from is the caller's business. */
@@ -236,6 +257,8 @@ export interface AppState {
    * project back out to the root of its workspace.
    */
   nestProject: (id: string, parentId: string | null) => Promise<void>;
+  /** Moves a project, with its tasks, to a workspace or back to the personal space (null). */
+  moveProjectToWorkspace: (id: string, workspaceId: string | null) => Promise<void>;
   skipOccurrence: (id: string) => Promise<void>;
   /** Advances every recurring task in a mixed selection, leaving one-off tasks alone. */
   skipOccurrences: (ids: string[]) => Promise<number>;
@@ -252,7 +275,7 @@ export interface AppState {
     /** Places the new project next to an existing one instead of at the end. */
     anchor?: { siblingId: string; position: 'above' | 'below' } | null,
     /** The rest of what the sheet asks for, so creating and editing match. */
-    extra?: { description?: string; favourite?: boolean },
+    extra?: { description?: string; favourite?: boolean; parentId?: string | null; viewStyle?: 'list' | 'board' },
   ) => Promise<string>;
   /** Puts a project out of sight without destroying it. Todoist keeps the tasks. */
   archiveProject: (id: string) => Promise<void>;
@@ -341,9 +364,10 @@ export interface AppState {
 export type Slice<T> = StateCreator<AppState, [], [], T>;
 
 export type SyncSlice = Pick<AppState, 'ready' | 'connected' | 'snapshot' | 'syncState' | 'syncError' | 'pendingCount' | 'demo' | 'resolvedIds' | 'signInError' | 'init' | 'connect' | 'startDemo' | 'disconnect' | 'refresh' | 'startPolling' | 'apply'>;
+export type CollabSlice = Pick<AppState, 'markNotifications' | 'answerInvitation' | 'shareProject' | 'removeCollaborator' | 'leaveProject' | 'assignTask'>;
 export type DustSlice = Pick<AppState, 'dustKept' | 'keepInSomeday'>;
 export type PreferencesSlice = Pick<AppState, 'prefs' | 'walkthrough' | 'setPrefs' | 'setViewPrefs' | 'setLocale' | 'ensurePreferencesTask' | 'beginTourPreview' | 'endTourPreview' | 'setWalkthrough'>;
-export type TasksSlice = Pick<AppState, 'logbookEntry' | 'setLogbookEntry' | 'loadTask' | 'updateTask' | 'setRecurrence' | 'setEstimates' | 'toggleTask' | 'completeTasks' | 'removeTask' | 'removeTasks' | 'restoreTasks' | 'createTask' | 'createTasks' | 'setTaskLabels' | 'setTaskPriority' | 'skipOccurrence' | 'skipOccurrences' | 'reorderSubtasks'>;
+export type TasksSlice = Pick<AppState, 'logbookEntry' | 'setLogbookEntry' | 'loadTask' | 'updateTask' | 'addComment' | 'updateComment' | 'deleteComment' | 'toggleReaction' | 'duplicateTask' | 'setRecurrence' | 'setEstimates' | 'toggleTask' | 'completeTasks' | 'removeTask' | 'removeTasks' | 'restoreTasks' | 'createTask' | 'createTasks' | 'setTaskLabels' | 'setTaskPriority' | 'skipOccurrence' | 'skipOccurrences' | 'reorderSubtasks'>;
 export type TasksMoveSlice = Pick<AppState, 'sendTo' | 'sendManyTo' | 'updateMany' | 'moveMany' | 'nestMany' | 'moveTask'>;
-export type StructureSlice = Pick<AppState, 'createLabel' | 'setLabelFavourite' | 'reorderLabels' | 'reorderProjects' | 'nestProject' | 'createProject' | 'archiveProject' | 'deleteProject' | 'duplicateProject' | 'updateProjectFields' | 'createSection' | 'moveSection' | 'removeSection' | 'archiveSection' | 'moveSectionToProject' | 'duplicateSection' | 'updateSectionFields'>;
+export type StructureSlice = Pick<AppState, 'createLabel' | 'setLabelFavourite' | 'reorderLabels' | 'reorderProjects' | 'nestProject' | 'moveProjectToWorkspace' | 'createProject' | 'archiveProject' | 'deleteProject' | 'duplicateProject' | 'updateProjectFields' | 'createSection' | 'moveSection' | 'removeSection' | 'archiveSection' | 'moveSectionToProject' | 'duplicateSection' | 'updateSectionFields'>;
 export type UiSlice = Pick<AppState, 'toasts' | 'undoStack' | 'draggingTaskId' | 'draggingSectionId' | 'nesting' | 'outdenting' | 'draggingProjectId' | 'draggingTag' | 'selection' | 'selectionAnchor' | 'toast' | 'dismissToast' | 'pushUndo' | 'undo' | 'consumeUndo' | 'setDraggingSection' | 'setDraggingTag' | 'setNesting' | 'setOutdenting' | 'setDraggingProject' | 'sidePanel' | 'openSidePanel' | 'closeSidePanel' | 'timeFilter' | 'setTimeFilter' | 'toggleSelection' | 'setSelectionAnchor' | 'selectRange' | 'clearSelection' | 'setDragging'>;

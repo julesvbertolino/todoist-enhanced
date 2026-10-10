@@ -1,13 +1,14 @@
 import { request } from './client';
 import type {
-  Collaborator, Item, Label, Note, Project, Reminder,
+  Collaborator, CollaboratorState, Item, Label, LiveNotification, Note, Project, Reminder,
   Section, Snapshot, TodoistUser, Workspace,
 } from '@/domain/types';
 
 /** The resource types the app reads. Anything else Todoist offers is ignored. */
 export const SYNC_RESOURCE_TYPES = [
   'items', 'projects', 'sections', 'labels', 'notes', 'project_notes',
-  'reminders', 'user', 'collaborators', 'workspaces',
+  'reminders', 'user', 'collaborators', 'workspaces', 'live_notifications',
+  'collaborator_states',
 ] as const;
 
 export interface SyncResponse {
@@ -23,6 +24,8 @@ export interface SyncResponse {
   reminders?: Reminder[];
   collaborators?: Collaborator[];
   workspaces?: Workspace[];
+  live_notifications?: LiveNotification[];
+  collaborator_states?: CollaboratorState[];
   user?: TodoistUser;
   temp_id_mapping?: Record<string, string>;
   sync_status?: Record<string, 'ok' | { error_code: number; error: string }>;
@@ -72,6 +75,17 @@ function mergeCollection<T extends Keyed>(
   return next;
 }
 
+/** One state per person per project; a full sync replaces the lot. */
+function mergeStates(
+  current: CollaboratorState[], incoming: CollaboratorState[] | undefined, fullSync: boolean,
+): CollaboratorState[] {
+  if (!incoming) return fullSync ? [] : current;
+  const key = (state: CollaboratorState) => `${state.project_id}:${state.user_id}`;
+  const next = new Map((fullSync ? [] : current).map((state) => [key(state), state]));
+  for (const state of incoming) next.set(key(state), state);
+  return [...next.values()];
+}
+
 export function applySync(snapshot: Snapshot, response: SyncResponse): Snapshot {
   const full = response.full_sync;
   return {
@@ -89,6 +103,8 @@ export function applySync(snapshot: Snapshot, response: SyncResponse): Snapshot 
     reminders: mergeCollection(snapshot.reminders, response.reminders, full),
     collaborators: mergeCollection(snapshot.collaborators, response.collaborators, full),
     workspaces: mergeCollection(snapshot.workspaces, response.workspaces, full),
+    notifications: mergeCollection(snapshot.notifications ?? {}, response.live_notifications, full),
+    collaboratorStates: mergeStates(snapshot.collaboratorStates ?? [], response.collaborator_states, full),
     user: response.user ?? snapshot.user,
     syncToken: response.sync_token,
     syncedAt: Date.now(),
