@@ -2,9 +2,24 @@ import { test, expect, go, row } from './demo';
 import type { Page } from '@playwright/test';
 const task=(page:Page,id:string)=>page.locator(`.screen.active [data-task-id="${id}"]`);
 async function drop(page:Page,fromId:string,toId:string,position:'above'|'below'='below',indent=false){
- await page.waitForTimeout(350);const from=task(page,fromId);await from.hover();const a=(await from.locator('.drag').boundingBox())!;
- await page.mouse.move(a.x+a.width/2,a.y+a.height/2);await page.mouse.down();await page.mouse.move(a.x+4,a.y+18,{steps:5});
- const b=(await task(page,toId).boundingBox())!;await page.mouse.move(a.x+a.width/2+(indent?60:0),b.y+b.height*(position==='below'?.8:.2),{steps:12});await page.waitForTimeout(150);await page.mouse.up();
+ const from = task(page, fromId);
+ const to = task(page, toId);
+ await from.hover();
+ const handle = (await from.locator('.drag').boundingBox())!;
+ const x = handle.x + handle.width / 2;
+ const y = handle.y + handle.height / 2;
+ await page.mouse.move(x, y);
+ await page.mouse.down();
+ await page.mouse.move(x, y + 18, { steps: 5 });
+ await expect(from).toHaveClass(/dragging/);
+ // Indenting closes the reorder gap and moves the destination. Follow its
+ // current geometry and wait for the visible drop cue before releasing.
+ await expect.poll(async () => {
+   const box = (await to.boundingBox())!;
+   await page.mouse.move(x + (indent ? 60 : 0), box.y + box.height * (position === 'below' ? .8 : .2), { steps: 12 });
+   return await to.getAttribute('class');
+ }).toMatch(indent ? /nesttarget/ : /landing|nesttarget/);
+ await page.mouse.up();
 }
 test('new subtasks follow the upper and lower drop position; nested child can drop just below its parent',async({demo:page})=>{
  await go(page,'#/project/site');const roots=await page.locator('.screen.active [data-task-id]:not([data-depth])').evaluateAll(nodes=>nodes.map(n=>(n as HTMLElement).dataset.taskId!));

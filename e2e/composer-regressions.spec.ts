@@ -67,3 +67,18 @@ test('written durations work in parentheses and with for/pendant, without a due 
   await title.fill('Écrire (deux heures)'); await title.press('Meta+Enter'); await expect(composer).toHaveCount(0);
   await expect(rows(page).filter({ hasText: 'Écrire' }).first()).toContainText('2 h');
 });
+
+test('a project draft survives a snapshot refresh while the composer is open', async ({ demo: page }) => {
+  await page.keyboard.press('q');
+  const composer = page.getByRole('dialog', { name: 'Add task' });
+  await composer.getByRole('button', { name: 'Project', exact: true }).click();
+  await page.getByRole('option', { name: 'New project…' }).click();
+  const sheet = page.getByRole('dialog', { name: 'New project' });
+  const name = sheet.getByRole('textbox', { name: 'Project name' });
+  await name.fill('Garden shed');
+  await inboxCannotAssign(page); // A real sync also replaces the snapshot reference.
+  await expect(name).toHaveValue('Garden shed');
+  await sheet.getByRole('button', { name: 'Add project', exact: true }).click();
+  await expect(sheet).toHaveCount(0);
+  await expect(composer.getByRole('button', { name: 'Project', exact: true })).toContainText('Garden shed');
+});

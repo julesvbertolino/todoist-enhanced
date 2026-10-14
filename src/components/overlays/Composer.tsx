@@ -2,14 +2,14 @@ import { AssigneeField } from '../AssigneeField';
 import { canAssign } from '@/domain/assignees';
 import { DescriptionEditor } from '../Checklist';
 import { useCreateTag } from '@/hooks/useCreateTag';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Overlay } from './Overlay';
 import { useConfirm } from './Confirm';
 import { Icon } from '../Icon';
 import { EstimateField } from '../EstimateField';
 import { PlacementField } from '../PlacementField';
 import { Select } from '../Select';
-import { ProjectSheet } from './ProjectSheet';
+import { ProjectSheet, type ProjectSheetTarget } from './ProjectSheet';
 import { DateField } from '../DateField';
 import { TaskNameField } from '../TaskNameField';
 import { useT } from '@/hooks/useT';
@@ -92,6 +92,11 @@ export function Composer({
   }, [tagsOpen]);
   /** The project sheet, opened from the project chip's "New project…". */
   const [newProject, setNewProject] = useState(false);
+  // A store refresh must not look like reopening the sheet and erase its draft.
+  const newProjectTarget = useMemo<ProjectSheetTarget>(() => newProject ? {
+    mode: 'create', workspaceId: null,
+    onCreated: (id) => { setProjectId(id); setSectionId(''); },
+  } : null, [newProject]);
   const [tagQuery, setTagQuery] = useState('');
   const [activeTag, setActiveTag] = useState(-1);
   const newTag = useCreateTag(tagQuery);
@@ -682,13 +687,7 @@ export function Composer({
       </div>
     </Overlay>
     <ProjectSheet
-      target={newProject
-        ? {
-            mode: 'create',
-            workspaceId: null,
-            onCreated: (id) => { setProjectId(id); setSectionId(''); },
-          }
-        : null}
+      target={newProjectTarget}
       onClose={() => setNewProject(false)}
     />
     </>
