@@ -1,3 +1,5 @@
+import { InsightsButton } from '@/components/InsightsButton';
+import { LabelTitle } from '@/components/LabelTitle';
 import { HireNote } from '@/components/HireNote';
 import { useMemo, useState } from 'react';
 import { ProjectMenu } from '@/components/ProjectMenu';
@@ -251,7 +253,7 @@ function SimpleListBody({
     <div className="page">
       <PageHeader
         hireNote={!hireInList}
-        title={filter ? <FilterTitle filter={filter} /> : title}
+        title={filter ? <FilterTitle filter={filter} /> : kind === 'label' ? <LabelTitle name={title} /> : title}
         subtitle={filter ? <FilterDescription filter={filter} /> : undefined}
         actions={
           <>
@@ -261,10 +263,7 @@ function SimpleListBody({
               modes={['list', 'board']}
               groups={['none', 'project', 'priority', 'label', 'estimate']}
             />
-            <button className="btn accent" onClick={onInsights}>
-              <Icon name="trend" />
-              {t('toolbar.insights')}
-            </button>
+            <InsightsButton onClick={onInsights} />
             {filter && <FilterMenu filter={filter} onEdit={() => setFilterSheet({ mode: 'edit', filterId: filter.id })} />}
             {inboxProject && (
               <span className="pmenu-wrap">

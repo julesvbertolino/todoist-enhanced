@@ -50,6 +50,7 @@ interface DateFieldProps {
   recurrence?: { string: string; lang: string; first?: string } | null;
   onRecurrence?: (rule: RecurrenceReading) => void;
   onClearRecurrence?: () => void;
+  showRecurrenceClear?: boolean;
   /** The task's duration, offered on its own line at the picker's foot. */
   duration?: DurationControl;
 }
@@ -66,7 +67,7 @@ interface DateFieldProps {
 export function DateField({
   value, onChange, label, placeholder, min, max, clearable = true, shortcuts,
   variant = 'field', icon = 'calendar', withTime = false,
-  recurrence = null, onRecurrence, onClearRecurrence, duration,
+  recurrence = null, onRecurrence, onClearRecurrence, showRecurrenceClear = true, duration,
 }: DateFieldProps) {
   const chip = variant === 'chip';
   const { t, locale } = useT();
@@ -246,8 +247,8 @@ export function DateField({
         </span>
         {!chip && <Icon name="caret" size="sm" />}
       </button>
-      {/* The composer's repeat chip has always had its cross (#202 keeps it). */}
-      {chip && recurrence && onClearRecurrence && (
+      {/* An optional adjacent clear control; the composer keeps this action inside the picker. */}
+      {chip && showRecurrenceClear && recurrence && onClearRecurrence && (
         <button
           type="button"
           className="chipclear"

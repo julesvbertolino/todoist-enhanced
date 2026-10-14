@@ -522,6 +522,8 @@ export function placeRanks(snapshot: Snapshot): {
 export interface ProjectNode {
   project: Project;
   children: ProjectNode[];
+  /** Native team folder: never a task destination or a project mutation target. */
+  nativeFolder?: boolean;
 }
 
 export interface WorkspaceGroup {
@@ -545,6 +547,15 @@ export function projectTree(snapshot: Snapshot, order: string[] = []): Workspace
     visible.map((project) => [project.id, { project, children: [] }]),
   );
 
+  for (const folder of Object.values(snapshot.folders ?? {})) {
+    if (folder.is_deleted) continue;
+    nodes.set(folder.id, { nativeFolder: true, children: [], project: {
+      id: folder.id, name: folder.name, workspace_id: folder.workspace_id,
+      color: 'grey', child_order: folder.child_order ?? folder.default_order ?? 0,
+      parent_id: null, is_archived: false, is_deleted: false, is_favorite: false, is_folder: true,
+    } });
+  }
+
   /* Every space keeps its heading even with nothing in it yet, so its first
      project can be added from there (#13). */
   const groups = new Map<string, ProjectNode[]>([['personal', []]]);
@@ -553,9 +564,11 @@ export function projectTree(snapshot: Snapshot, order: string[] = []): Workspace
     if (!gone.is_deleted && !gone.is_archived) groups.set(workspace.id, []);
   }
 
-  for (const project of visible) {
-    const node = nodes.get(project.id)!;
-    const parent = project.parent_id ? nodes.get(project.parent_id) : undefined;
+  for (const node of nodes.values()) {
+    const project = node.project;
+    const parentId = project.folder_id ?? project.parent_id;
+    const candidate = parentId ? nodes.get(parentId) : undefined;
+    const parent = candidate && (candidate.project.workspace_id ?? null) === (project.workspace_id ?? null) ? candidate : undefined;
     if (parent) {
       parent.children.push(node);
       continue;
@@ -613,7 +626,7 @@ export function siblingOrder(snapshot: Snapshot, projectId: string): string[] {
       !other.is_archived &&
       !other.is_deleted &&
       !other.inbox_project &&
-      (other.parent_id ?? null) === (project.parent_id ?? null) &&
+      (other.folder_id ?? other.parent_id ?? null) === (project.folder_id ?? project.parent_id ?? null) &&
       (other.workspace_id ?? null) === (project.workspace_id ?? null))
     .sort(byChildOrder)
     .map((other) => other.id);

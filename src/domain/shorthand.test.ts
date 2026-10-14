@@ -131,3 +131,18 @@ describe('the estimate marked at the end of a subtask (#163)', () => {
     expect(trailingEstimate('(5)')).toBeNull();
   });
 });
+
+describe('explicit duration phrases', () => {
+  it.each(['Écrire (deux heures)', 'Write (two hours)', 'Write for two hours', 'Écrire pendant deux heures'])('takes %s as an estimate without setting a date', (text) => {
+    const value = parseShorthand(text, emptySnapshot(), true);
+    expect(value.minutes).toBe(120);
+    expect(value.date).toBeNull();
+    expect(value.content).toMatch(/^(Écrire|Write)$/);
+  });
+  it('keeps rejected duration phrases in the title', () => {
+    const text = 'Write for one hour';
+    const first = parseShorthand(text, emptySnapshot(), true);
+    const value = parseShorthand(text, emptySnapshot(), true, first.ranges);
+    expect(value.minutes).toBeNull(); expect(value.content).toBe(text);
+  });
+});

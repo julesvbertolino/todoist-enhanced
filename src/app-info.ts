@@ -8,14 +8,14 @@
  * cannot drift apart.
  */
 export const APP_NAME = 'Enhanced for Todoist';
-export const VERSION = '2.7.0';
+export const VERSION = '2.8.0';
 export const AUTHOR = 'julesbertolino';
 /* A copy served with the app: the GitHub address redirects to another host first, which is why the photo arrived late. */
 export const AUTHOR_AVATAR_URL = `${import.meta.env.BASE_URL}author.png`;
 
 /** The official site, for the About section. A self-hosted copy's own address is PUBLIC_URL (vite.config.ts). */
 export const SITE_URL = 'https://todoistenhanced.julesbertolino.fr';
-export const GITHUB_URL = 'https://github.com/julesvbertolino/todoist-enhancements';
+export const GITHUB_URL = 'https://github.com/julesvbertolino/todoist-enhanced';
 export const LINKEDIN_URL = 'https://www.linkedin.com/in/julesbertolino/';
 export const X_URL = 'https://x.com/julesvbertolino';
 export const AUTHOR_GITHUB_URL = 'https://github.com/julesvbertolino';

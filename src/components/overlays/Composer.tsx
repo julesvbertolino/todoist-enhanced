@@ -93,6 +93,7 @@ export function Composer({
   /** The project sheet, opened from the project chip's "New project…". */
   const [newProject, setNewProject] = useState(false);
   const [tagQuery, setTagQuery] = useState('');
+  const [activeTag, setActiveTag] = useState(-1);
   const newTag = useCreateTag(tagQuery);
   const [subtasks, setSubtasks] = useState<string[]>([]);
   const [subtaskDraft, setSubtaskDraft] = useState('');
@@ -437,13 +438,12 @@ export function Composer({
             dashed "+ Deadline". Every chip is the same picker it always was;
             only its closed face changed. */}
         <div className="composer-chips composer-tags" role="group" aria-label={t('composer.planning')}>
-          <AssigneeField projectId={projectId || inboxId} value={responsibleUid} onChange={setResponsibleUid} chip />
           {/* A repeat answers the same question a date does, so it stands in
               the date's own place: a task cannot be both on Tuesday and every
               Monday. */}
           {/* The chip shows the rule when there is one, and opens the same
-              picker either way: Time and Repeat at its foot (#202), the cross
-              beside it to stop repeating. Picking a plain day replaces the
+              picker either way: Time and Repeat at its foot (#202), where the
+              repeat can also be removed. Picking a plain day replaces the
               rule — a new task has no series to keep. */}
           <DateField
             variant="chip"
@@ -454,6 +454,7 @@ export function Composer({
             recurrence={recurrence}
             onRecurrence={setRecurrence}
             onClearRecurrence={() => setRecurrence(null)}
+            showRecurrenceClear={false}
             duration={{ minutes, onChange: setMinutes }}
           />
 
@@ -506,7 +507,7 @@ export function Composer({
             className="fselect-face chipface unset"
             aria-expanded={tagsOpen}
             onClick={() => setTagsOpen((openNow) => {
-              if (!openNow) setTagQuery('');
+              if (!openNow) { setTagQuery(''); setActiveTag(-1); }
               return !openNow;
             })}
           >
@@ -539,24 +540,33 @@ export function Composer({
                   value={tagQuery}
                   placeholder={t('nav.search')}
                   aria-label={t('nav.search')}
-                  onChange={(event) => setTagQuery(event.target.value)}
+                  onChange={(event) => { setTagQuery(event.target.value); setActiveTag(-1); }}
                   onKeyDown={(event) => {
                     event.stopPropagation();
-                    if (event.key === 'Enter' && newTag.available) {
+                    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                      event.preventDefault();
+                      if (filteredTags.length) {
+                        const next = event.key === 'ArrowDown' ? (activeTag + 1) % filteredTags.length : activeTag <= 0 ? filteredTags.length - 1 : activeTag - 1;
+                        setActiveTag(next);
+                        tagPickerRef.current?.querySelectorAll('.checkrow')[next]?.scrollIntoView({ block: 'nearest' });
+                      }
+                    } else if (event.key === 'Enter' && activeTag >= 0 && filteredTags[activeTag]) {
+                      event.preventDefault(); toggleTag(filteredTags[activeTag].name);
+                    } else if (event.key === 'Enter' && newTag.available) {
                       event.preventDefault(); void createAndPickTag();
                     } else if (event.key === 'Enter' && filteredTags[0]) {
                       event.preventDefault();
                       toggleTag(filteredTags[0].name);
                     }
-                    if (event.key === 'Escape') setTagsOpen(false);
+                    if (event.key === 'Escape') { setTagsOpen(false); tagButtonRef.current?.focus(); }
                   }}
                 />
               </div>
               {newTag.available && <button className="opt" disabled={newTag.busy} onClick={() => void createAndPickTag()}><Icon name="plus" size="sm" />{t('estimates.createTag', { name: newTag.name })}</button>}
               {tags.length === 0 && <p className="menuhint">{t('labels.none')}</p>}
               {tags.length > 0 && filteredTags.length === 0 && <p className="menuhint">{t('search.noResults')}</p>}
-              {filteredTags.map((label) => (
-                <label className="checkrow" key={label.id}>
+              {filteredTags.map((label, index) => (
+                <label className={`checkrow${activeTag === index ? ' active' : ''}`} key={label.id}>
                   <input
                     type="checkbox"
                     checked={allTags.some((l) => sameTag(l, label.name))}
@@ -583,6 +593,7 @@ export function Composer({
               setSectionId(place.sectionId ?? '');
             }}
           />
+          <AssigneeField projectId={projectId || inboxId} value={responsibleUid} onChange={setResponsibleUid} chip />
         </div>
 
         {/* Level 3, subtasks: open, with a heading and a count, one of the

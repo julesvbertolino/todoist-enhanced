@@ -294,7 +294,7 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
       const missingFilters = !get().snapshot.filters;
       const fromScratch = signedIn ? stale : (full || stale || missingFilters);
       const token = fromScratch ? '*' : get().snapshot.syncToken;
-      const response = await sync(token);
+      const response = await sync(token, undefined, get().snapshot.workspaces);
       const snapshot = applySync(fromScratch ? emptySnapshot() : get().snapshot, response);
       const canonical = preferencesWriteTimer
         ? null

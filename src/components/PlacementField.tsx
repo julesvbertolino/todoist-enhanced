@@ -88,6 +88,8 @@ export function PlacementField({ label, ariaLabel, value, onChange, variant, onN
       options={options}
       variant={variant}
       matchWidth={matchWidth}
+      maxPopupWidth={variant === 'chip' ? 280 : undefined}
+      popupClassName={variant === 'chip' ? 'composer-place-menu' : undefined}
       onChange={(next) => {
         if (next === NEW_PROJECT) { onNewProject?.(); return; }
         const place = places.get(next);

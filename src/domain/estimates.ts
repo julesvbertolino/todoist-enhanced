@@ -93,7 +93,8 @@ export const estimateOf = (item: EstimateSource): number | null => readEstimate(
  * "1h15", "75 min", "1:30", "2h". Returns null when nothing sensible is found.
  */
 export function parseDurationInput(input: string): number | null {
-  const s = input.trim().toLowerCase().replace(',', '.');
+  const words: Record<string, string> = { un: '1', une: '1', one: '1', deux: '2', two: '2', trois: '3', three: '3', quatre: '4', four: '4', cinq: '5', five: '5', six: '6', sept: '7', seven: '7', huit: '8', eight: '8', neuf: '9', nine: '9', dix: '10', ten: '10', onze: '11', eleven: '11', douze: '12', twelve: '12', trente: '30', thirty: '30', quinze: '15', fifteen: '15' };
+  const s = input.trim().toLowerCase().replace(',', '.').replace(/\b(un|une|one|deux|two|trois|three|quatre|four|cinq|five|six|sept|seven|huit|eight|neuf|nine|dix|ten|onze|eleven|douze|twelve|trente|thirty|quinze|fifteen)\b/g, (word) => words[word]);
   if (!s) return null;
 
   // "1:30" / "1h30" / "1 h 15" — hours and minutes together.

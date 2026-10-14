@@ -11,6 +11,22 @@ export const en = {
   "assignee.invalid": "This person cannot be assigned tasks in this project.",
   "group.assignee": "Assignee",
   "sort.assignee": "Assignee",
+  "filter.showToday": "Show Today tasks",
+  "label.renameEmpty": "Enter a tag name.",
+  "label.renameReserved": "This name is reserved for a system tag.",
+  "label.renameDuplicate": "Another tag already uses this name.",
+
+  "search.hintAll": "to see all results",
+  "search.resultsTitle": "Results for “{query}”",
+  "search.places": "Matching projects, sections and tags",
+  "label.rename": "Rename tag",
+  "label.renameInvalid": "Choose a non-empty, unique name. System tags cannot be renamed.",
+  "estimate.accepted": "Input accepted",
+  "estimate.pending": "Saving…",
+  "estimate.failed": "Could not save",
+  "upcoming.projected": "Future occurrence",
+  "upcoming.projectionHint": "Future occurrences are forecasts. Open one to edit the recurring task.",
+  "upcoming.unsupported": "Some recurrence rules cannot be projected reliably; only their current occurrence is shown.",
 
   /* Estimate storage and conversion (#151). */
   'estimates.clearFailed': 'Todoist did not clear the duration. The existing duration was kept; estimates now use tags.',

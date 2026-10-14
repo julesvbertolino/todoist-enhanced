@@ -2,6 +2,7 @@ import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode }
 import { Icon, type IconName } from './Icon';
 import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
+import { viewPrefs } from '@/store/prefs';
 import { markerStyle } from '@/domain/colors';
 import { visibleDetailChips, type DetailChip } from '@/domain/taskDetails';
 import { visibleSidebarNav, type SidebarItemId } from '@/domain/sidebar';
@@ -38,6 +39,7 @@ export function WorkspacePreview({ stage, layout = 'inline' }: {
   const { t } = useT();
   const density = useStore((s) => s.prefs.density);
   const weekLayout = useStore((s) => s.prefs.weekLayout);
+  const showToday = useStore((s) => viewPrefs(s.prefs, 'week').filters.includeScheduled);
   const eisenhower = useStore((s) => s.prefs.eisenhowerEnabled);
   const quick = useStore((s) => s.prefs.showQuickGroup);
   const counts = useStore((s) => s.prefs.sidebarCounts);
@@ -145,7 +147,7 @@ export function WorkspacePreview({ stage, layout = 'inline' }: {
                     )}
                     <div>
                       <section className="col">
-                        <PreviewHead title={split ? t('group.anytime') : t('common.today')} count={2} />
+                        <PreviewHead title={showToday ? t('common.today') : t('group.anytime')} count={2} />
                         <PreviewCard title={t('preview.task.invoice')} minutes="10 min" />
                         <PreviewCard
                           title={t('preview.task.rebuild')} minutes="2 h"

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useStore } from '@/store/store';
+import { viewPrefs } from '@/store/prefs';
 import { useConfirm } from '@/components/overlays/Confirm';
 import { useT } from './useT';
 import { navigate } from './useRoute';
@@ -395,10 +396,10 @@ export function useKeyboard(bridge: KeyboardBridge) {
         stopGoing();
         const to = GO_TO[e.key.toLowerCase()];
         if (!to) return;
-        /* Today is a page of its own only when the week is split in two. Left
-           unified it is the top of My week, and there is no Today in the
-           sidebar to have meant — so `g t` goes where Today is. */
-        const merged = to === 'today' && store.prefs.weekLayout === 'unified';
+        /* Go to My Week only when it actually includes today's tasks.
+           Hiding Today in the sidebar does not make its tasks unreachable. */
+        const merged = to === 'today' && store.prefs.weekLayout === 'unified'
+          && viewPrefs(store.prefs, 'week').filters.includeScheduled;
         navigate(merged ? 'week' : to);
         return;
       }

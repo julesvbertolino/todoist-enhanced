@@ -92,3 +92,20 @@ describe('relative calendar months and singular words', () => {
     expect(read('dans un')).toBeNull();
   });
 });
+
+
+describe('relative hours and minutes', () => {
+  const clock = new Date(2026, 9, 14, 23, 30);
+  it.each(['Appeler dans deux heures', 'Appeler dans 2 heures', 'Appeler dans 2h', 'Call in two hours'])('reads %s across midnight', (text) => {
+    const reading = readNaturalDate(text, clock);
+    expect(reading?.date).toBe('2026-10-15T01:30:00');
+    expect(reading?.hasTime).toBe(true);
+    expect(text.slice(reading!.index, reading!.index + reading!.matched.length)).toBe(reading!.matched);
+  });
+  it('reads a minute offset and leaves plain small hours as durations', () => {
+    expect(readNaturalDate('Appeler dans trente minutes', clock)).toBeNull();
+    expect(readNaturalDate('Appeler dans 30 minutes', clock)?.date).toBe('2026-10-15T00:00:00');
+    expect(readNaturalDate('Appeler dans une heure', clock)?.date).toBe('2026-10-15T00:30:00');
+    expect(readNaturalDate('Écrire 2h', clock)).toBeNull();
+  });
+});

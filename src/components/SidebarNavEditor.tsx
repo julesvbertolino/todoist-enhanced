@@ -5,6 +5,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Icon, type IconName } from './Icon';
 import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
+import { viewPrefs } from '@/store/prefs';
 import type { TranslationKey } from '@/i18n';
 import {
   moveSidebarEntry, toggleSidebarEntry, type SidebarEntry, type SidebarItemId, type SidebarNav,
@@ -37,6 +38,7 @@ export function SidebarNavEditor({
   const { t } = useT();
   const setPrefs = useStore((s) => s.setPrefs);
   const split = useStore((s) => s.prefs.weekLayout === 'split');
+  const showToday = useStore((s) => viewPrefs(s.prefs, 'week').filters.includeScheduled);
   const matrixOn = useStore((s) => s.prefs.eisenhowerEnabled);
   // The matrix page only exists while Eisenhower is on, so ticking its entry
   // here turns the page on too; otherwise the tick would do nothing.
@@ -48,17 +50,18 @@ export function SidebarNavEditor({
   return (
     <div className="navedit">
       <h3 className="navedit-title">{t('settings.sidebarNavigation')}</h3>
-      <Block block="main" entries={nav.main} nav={nav} onChange={change} split={split} matrixOn={matrixOn} />
+      <Block block="main" entries={nav.main} nav={nav} onChange={change} split={split} showToday={showToday} matrixOn={matrixOn} />
       <h3 className="navedit-title">{t('settings.sidebarOther')}</h3>
-      <Block block="other" entries={nav.other} nav={nav} onChange={change} split={split} matrixOn={matrixOn} />
+      <Block block="other" entries={nav.other} nav={nav} onChange={change} split={split} showToday={showToday} matrixOn={matrixOn} />
     </div>
   );
 }
 
 function Block({
-  block, entries, nav, onChange, split, matrixOn,
+  block, entries, nav, onChange, split, showToday, matrixOn,
 }: {
   split: boolean;
+  showToday: boolean;
   matrixOn: boolean;
   block: keyof SidebarNav;
   entries: SidebarEntry[];
@@ -91,10 +94,10 @@ function Block({
               key={entry.id}
               entry={entry}
               shown={entry.id === 'today' ? entry.on && split : entry.id === 'matrix' ? entry.on && matrixOn : entry.on}
-              split={split}
+              showToday={showToday}
               onToggle={() => {
-                // Today is a page only while the week is split from it, so its tick is
-                // that setting: ticking it splits the week, unticking merges it back.
+                // The legacy weekLayout preference controls the separate Today entry.
+                // My Week's own display filter controls whether it includes today.
                 if (entry.id === 'today') {
                   const { setPrefs } = useStore.getState();
                   if (entry.on && split) setPrefs({ weekLayout: 'unified' });
@@ -125,15 +128,12 @@ function Block({
 }
 
 function EntryRow({
-  entry, shown, split, onToggle,
-}: { entry: SidebarEntry; shown: boolean; split: boolean; onToggle: () => void }) {
+  entry, shown, showToday, onToggle,
+}: { entry: SidebarEntry; shown: boolean; showToday: boolean; onToggle: () => void }) {
   const { t } = useT();
-  /* Ticking Today splits the week, and a checkbox alone reads as "show a page":
-     an unticked Today looks like today's tasks are shown nowhere. My week says
-     whether it holds them (#195). Only that row carries a line, and it always
-     does, so the list keeps its height whichever way the tick goes. */
+  /* The hint follows My Week's display filter independently of sidebar visibility. */
   const hint = entry.id === 'week'
-    ? t(split ? 'nav.weekHintSplit' : 'nav.weekHintUnified')
+    ? t(showToday ? 'nav.weekHintUnified' : 'nav.weekHintSplit')
     : null;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: entry.id });
   const { icon, label } = ENTRY[entry.id];

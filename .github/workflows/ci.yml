@@ -39,9 +39,9 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npx playwright test
-      # Shared-project fixtures use Vite source modules and do not call Todoist.
-      - name: Assignee scenarios
-        run: npx playwright test e2e/assignees.spec.ts
+      # Controlled fixtures use Vite source modules and never call real Todoist accounts.
+      - name: Development release scenarios
+        run: npx playwright test e2e/assignees.spec.ts e2e/next-release.spec.ts e2e/release-refinements.spec.ts e2e/composer-regressions.spec.ts e2e/release-2.5.spec.ts
         env:
           PLAYWRIGHT_DEV: '1'
           PLAYWRIGHT_PORT: '4174'

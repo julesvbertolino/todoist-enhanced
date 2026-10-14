@@ -46,6 +46,8 @@ interface SelectProps {
   tint?: string;
   /** The list is exactly as wide as the control, however long its options are. */
   matchWidth?: boolean;
+  maxPopupWidth?: number;
+  popupClassName?: string;
 }
 
 /**
@@ -63,7 +65,7 @@ interface SelectProps {
  */
 export function Select({
   label, value, options, onChange, ariaLabel, placeholder, searchable: searchableProp,
-  variant = 'field', unset = false, unsetLabel, chipIcon, tint, matchWidth = false,
+  variant = 'field', unset = false, unsetLabel, chipIcon, tint, matchWidth = false, maxPopupWidth, popupClassName,
 }: SelectProps) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
@@ -110,11 +112,11 @@ export function Select({
     const top = below + height > window.innerHeight - margin
       ? Math.max(margin, button.top - height - 4)
       : below;
-    const width = Math.min(button.width, window.innerWidth - margin * 2);
-    const popupWidth = matchWidth ? width : Math.max(width, listRef.current?.offsetWidth ?? width);
+    const width = Math.min(button.width, window.innerWidth - margin * 2, maxPopupWidth ?? Infinity);
+    const popupWidth = matchWidth ? width : Math.min(maxPopupWidth ?? Infinity, Math.max(width, listRef.current?.offsetWidth ?? width));
     const left = Math.max(margin, Math.min(button.left, window.innerWidth - margin - popupWidth));
     setPosition({ top, left, width });
-  }, [open, filtered.length, searchable, matchWidth]);
+  }, [open, filtered.length, searchable, matchWidth, maxPopupWidth]);
 
   useEffect(() => {
     if (!open) return;
@@ -207,14 +209,14 @@ export function Select({
 
   const list = open && (
     <div
-      className="popover listbox"
+      className={`popover listbox${popupClassName ? ` ${popupClassName}` : ''}`}
       aria-label={ariaLabel ?? label}
       ref={listRef}
       style={{
         top: position?.top ?? -9999,
         left: position?.left ?? -9999,
         minWidth: position?.width,
-        maxWidth: 'calc(100vw - 16px)',
+        maxWidth: maxPopupWidth ? `min(${maxPopupWidth}px, calc(100vw - 16px))` : 'calc(100vw - 16px)',
         ...(matchWidth ? { width: position?.width, maxWidth: position?.width } : {}),
         visibility: position ? undefined : 'hidden',
       }}

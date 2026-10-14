@@ -13,6 +13,22 @@ export const fr: Record<TranslationKey, string> = {
   "assignee.invalid": "Cette personne ne peut pas être assignée dans ce projet.",
   "group.assignee": "Responsable",
   "sort.assignee": "Responsable",
+  "filter.showToday": "Afficher les tâches d’aujourd’hui",
+  "label.renameEmpty": "Saisis un nom d’étiquette.",
+  "label.renameReserved": "Ce nom est réservé à une étiquette système.",
+  "label.renameDuplicate": "Une autre étiquette utilise déjà ce nom.",
+
+  "search.hintAll": "pour voir tous les résultats",
+  "search.resultsTitle": "Résultats pour « {query} »",
+  "search.places": "Projets, sections et étiquettes correspondants",
+  "label.rename": "Renommer l’étiquette",
+  "label.renameInvalid": "Choisis un nom non vide et unique. Les étiquettes système ne peuvent pas être renommées.",
+  "estimate.accepted": "Saisie acceptée",
+  "estimate.pending": "Enregistrement…",
+  "estimate.failed": "Échec de l’enregistrement",
+  "upcoming.projected": "Occurrence future",
+  "upcoming.projectionHint": "Les occurrences futures sont des prévisions. Ouvre-en une pour modifier la tâche récurrente.",
+  "upcoming.unsupported": "Certaines récurrences ne peuvent pas être projetées de façon fiable ; seule leur occurrence actuelle est affichée.",
 
   /* Estimate storage and conversion (#151). */
   'estimates.clearFailed': 'Todoist n’a pas effacé la durée. La durée existante est conservée ; les estimations utilisent désormais les étiquettes.',

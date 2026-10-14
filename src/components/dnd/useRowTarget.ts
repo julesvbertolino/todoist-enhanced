@@ -18,7 +18,7 @@ import { useRowList } from './RowList';
  * drop onto it does nothing: falling through to the group would file the task
  * somewhere nobody aimed.
  */
-export function useRowTarget(itemId: string, { nestable }: { nestable: boolean }) {
+export function useRowTarget(itemId: string, { nestable, disabled = false }: { nestable: boolean; disabled?: boolean }) {
   const instance = useId();
   const targetId = `${rowTargetId(itemId)}|${instance}`;
   const list = useRowList();
@@ -44,7 +44,7 @@ export function useRowTarget(itemId: string, { nestable }: { nestable: boolean }
   ));
   const { setNodeRef, isOver } = useDroppable({
     id: targetId,
-    disabled: !open,
+    disabled: disabled || !open,
     /* Read back when the drop lands: the provider is given a row, and the row
        has to be able to say which list it was a row of. */
     data: { list },

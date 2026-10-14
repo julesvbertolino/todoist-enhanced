@@ -1,7 +1,7 @@
 {
   "name": "todoist-enhancements",
   "private": true,
-  "version": "2.7.0",
+  "version": "2.8.0",
   "engines": {
     "node": ">=20"
   },
@@ -17,7 +17,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "e2e:release": "PLAYWRIGHT_DEV=1 playwright test"
   },
   "dependencies": {
     "@codemirror/commands": "^6.11.1",

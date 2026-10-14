@@ -1,3 +1,4 @@
+import { ProjectedTask } from '../ProjectedTask';
 import { useDraggable } from '@dnd-kit/core';
 import { TaskRow } from '../TaskRow';
 import { dragClock } from './DragProvider';
@@ -28,7 +29,8 @@ interface DraggableTaskProps {
 export function DraggableTask({
   item, childrenOf, onOpen, showProject, showSection, dust, surface = 'row',
 }: DraggableTaskProps) {
-  const { setNodeRef, attributes, listeners, isDragging } = useDraggable({ id: item.id });
+  const { setNodeRef, attributes, listeners, isDragging } = useDraggable({ id: item.id, disabled: !!item.projection });
+  if (item.projection) return <ProjectedTask item={item} childrenOf={childrenOf} onOpen={onOpen} />;
   const card = surface === 'card';
 
   return (

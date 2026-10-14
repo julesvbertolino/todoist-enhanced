@@ -1,4 +1,5 @@
 import { openItems } from './store/selectors';
+import { useLabelRenames } from './hooks/useLabelRenames';
 import { seesHireNote } from '@/domain/hireNote';
 import { EstimateConversion } from '@/components/overlays/EstimateConversion';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -20,6 +21,7 @@ import { ConfirmProvider } from './components/overlays/Confirm';
 import { Overlay } from './components/overlays/Overlay';
 import { QUICK_ADD, QuickAdd } from './QuickAdd';
 import { WeekView } from './views/WeekView';
+import { SearchView } from './views/SearchView';
 import { UpcomingView } from './views/UpcomingView';
 import { SimpleListView } from './views/SimpleListView';
 import { ProjectView } from './views/ProjectView';
@@ -34,7 +36,7 @@ import { EstimateStorageDialog } from './components/overlays/EstimateStorageDial
 import { Walkthrough } from './components/overlays/Walkthrough';
 import { Tour } from './components/overlays/Tour';
 import { WhatsNew, type WhatsNewScope } from './components/overlays/WhatsNew';
-import { hasChanges, parseChangelog, unseenReleases } from './domain/changelog';
+import { compareVersions, hasChanges, parseChangelog, unseenReleases } from './domain/changelog';
 import { VERSION } from './app-info';
 import { hasOnboarded, shouldAskEstimateStorage } from './domain/onboarding';
 import { useStore } from './store/store';
@@ -49,12 +51,13 @@ import { rootItems } from './store/selectors';
 import { detectConflicts } from './domain/conflicts';
 import { placementForPage } from './domain/dnd';
 import { useParentEstimates } from './hooks/useParentEstimates';
-import { anytimeItems, bucketOf, hasLabel, somedayItems, upcomingItems, weekItems } from './domain/views';
+import { bucketOf, hasLabel, somedayItems, upcomingItems, weekItems } from './domain/views';
 import { effectiveEstimate } from './domain/estimates';
 import type { Item } from './domain/types';
 import type { TranslationKey } from './i18n';
 
 export function App() {
+  useLabelRenames();
   const { t } = useT();
   const ready = useStore((s) => s.ready);
   const connected = useStore((s) => s.connected);
@@ -273,7 +276,7 @@ export function App() {
   useEffect(() => {
     if (QUICK_ADD || !ready || !connected || demo || !settled || !hasOnboarded(userId)) return;
     if (tourOpen || walkthroughOpen || whatsNew || !setupDone) return;
-    if (seenVersion === VERSION) return;
+    if (seenVersion && compareVersions(seenVersion, VERSION) >= 0) return;
     let cancelled = false;
     void import('../CHANGELOG.md?raw').then(({ default: source }) => {
       if (cancelled) return;
@@ -626,7 +629,6 @@ function AppShell({
   const conflictSettings = useStore((s) => s.prefs.conflicts);
   const demo = useStore((s) => s.demo);
   const sidebarCollapsed = useStore((s) => s.prefs.sidebarCollapsed);
-  const weekLayout = useStore((s) => s.prefs.weekLayout);
   const density = useStore((s) => s.prefs.density);
   const leaveDemo = useStore((s) => s.disconnect);
   const clearSelection = useStore((s) => s.clearSelection);
@@ -657,7 +659,7 @@ function AppShell({
         return {
           /* The page's own scope, or the header and every dialog opened from
              it would describe a week this page is not showing. */
-          contextItems: weekLayout === 'split' ? anytimeItems(roots) : weekItems(roots),
+          contextItems: weekItems(roots),
           contextLabel: t('nav.week'),
         };
       case 'today': {
@@ -688,7 +690,7 @@ function AppShell({
       default:
         return { contextItems: roots, contextLabel: t(`nav.${route.view}` as TranslationKey) };
     }
-  }, [route, roots, snapshot.projects, snapshot.user?.inbox_project_id, t, weekLayout]);
+  }, [route, roots, snapshot.projects, snapshot.user?.inbox_project_id, t]);
 
   const unestimatedItems = useMemo(
     () => contextItems.filter((i) => effectiveEstimate(i, childrenOf).minutes === null),
@@ -713,7 +715,7 @@ function AppShell({
 
   /* A selection belongs to the page it was made on. Carrying it to the next
      one would leave a bar offering to delete tasks that are no longer shown. */
-  useEffect(() => clearSelection(), [route.view, route.id, route.sectionId, clearSelection]);
+  useEffect(() => clearSelection(), [route.view, route.id, route.sectionId, route.query, clearSelection]);
   useEffect(() => {
     const onBackground = (event: MouseEvent) => {
       if (document.querySelector('[role="dialog"]')) return;
@@ -831,9 +833,10 @@ function AppShell({
 
         <section className="screen active">
           {route.view === 'week' && (
-            <WeekView {...viewProps} scope={weekLayout === 'split' ? 'anytime' : 'all'} />
+            <WeekView {...viewProps} scope="all" />
           )}
           {route.view === 'today' && <WeekView {...viewProps} scope="today" />}
+          {route.view === 'search' && <SearchView query={route.query ?? ''} onOpen={openTask} />}
           {route.view === 'upcoming' && <UpcomingView {...viewProps} />}
           {route.view === 'someday' && <SimpleListView kind="someday" {...viewProps} />}
           {/* The Inbox is a project like the others, with sections of its own

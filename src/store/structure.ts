@@ -1,4 +1,5 @@
 /** Projects, sections and labels: creating, ordering, nesting, archiving, deleting. */
+import { labelRenameError, cleanLabelName, renamedLabelSnapshot } from '@/domain/renameLabel';
 import { command, type Command, moveItem, newUuid } from '@/api/commands';
 import type { Snapshot } from '@/domain/types';
 import { translate } from '@/i18n';
@@ -53,6 +54,17 @@ export const createStructureSlice: Slice<StructureSlice> = (_set, get) => ({
         },
       }),
     );
+  },
+  async renameLabel(id, raw) {
+    const name = cleanLabelName(raw);
+    const reason = labelRenameError(get().snapshot, id, name, get().prefs.weekLabel);
+    if (reason) {
+      const key = reason === 'empty' ? 'label.renameEmpty' : reason === 'reserved' ? 'label.renameReserved' : 'label.renameDuplicate';
+      get().toast(translate(get().prefs.locale, key), undefined, { tone: 'error' });
+      return;
+    }
+    if (get().snapshot.labels[id].name === name) return;
+    await get().apply([command('label_update', { id: get().snapshot.labels[id].id ?? id, name })], (snapshot) => renamedLabelSnapshot(snapshot, id, name));
   },
   async setLabelFavourite(id, favourite) {
     await get().apply(

@@ -426,6 +426,14 @@ export function revertRefused(
       next.filters = filters;
       continue;
     }
+    if (cmd.type === 'label_update' && typeof cmd.args.name === 'string') {
+      const id = String(cmd.args.id);
+      const old = before.labels[id]?.name;
+      const attempted = cmd.args.name;
+      if (old) for (const [key, item] of Object.entries(next.items)) {
+        next.items[key] = { ...item, labels: item.labels.map((name) => name === attempted ? old : name) };
+      }
+    }
     const collection = collectionOf(cmd.type);
     if (!collection) continue;
     const target = next[collection] as Record<string, unknown>;

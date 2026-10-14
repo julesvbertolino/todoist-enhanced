@@ -7,6 +7,7 @@ import { useData } from '@/hooks/useData';
 import { navigate } from '@/hooks/useRoute';
 import { markerStyle } from '@/domain/colors';
 import { toDisplayPriority } from '@/domain/types';
+import { foldSearch as fold, searchRank } from '@/domain/search';
 import { useStore } from '@/store/store';
 
 interface SearchProps {
@@ -22,10 +23,6 @@ interface SearchProps {
    */
   seed?: string;
 }
-
-/** Accents set aside, so "reglages" finds "Réglages". */
-const fold = (text: string): string =>
-  text.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
 /** One row of the result list, whatever kind of thing it points at. */
 interface Hit {
@@ -52,11 +49,11 @@ export function Search({ open, onClose, onOpen, seed = '' }: SearchProps) {
   const eisenhowerEnabled = useStore((s) => s.prefs.eisenhowerEnabled);
   const setPrefs = useStore((s) => s.setPrefs);
   const [query, setQuery] = useState('');
-  const [cursor, setCursor] = useState(0);
+  const [cursor, setCursor] = useState(-1);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (open) { setQuery(seed); setCursor(0); }
+    if (open) { setQuery(seed); setCursor(-1); }
     /* `seed` deliberately left out: it is read at the moment of opening, and
        nothing that changes it afterwards should retype the field under
        somebody's hands. */
@@ -113,14 +110,7 @@ export function Search({ open, onClose, onOpen, seed = '' }: SearchProps) {
        the beginning of one of its words, anywhere in it. Everything found is
        ranked on this one scale, whatever kind of thing it is, so the best
        answer is first rather than the first kind of answer. */
-    const rank = (name: string, ...others: string[]): number => {
-      const text = fold(name);
-      if (text === q) return 0;
-      if (text.startsWith(q)) return 1;
-      if (text.split(/[\s/_-]+/).some((word) => word.startsWith(q))) return 2;
-      if (text.includes(q)) return 3;
-      return others.some((other) => fold(other).includes(q)) ? 4 : -1;
-    };
+    const rank = (name: string, ...others: string[]) => searchRank(query, name, ...others);
 
     interface Ranked { hit: Hit; score: number }
     const found: Ranked[] = [];
@@ -217,7 +207,7 @@ export function Search({ open, onClose, onOpen, seed = '' }: SearchProps) {
   }, [query, items, snapshot, includeSections, onOpen, onClose, destinations]);
 
   // A new query invalidates wherever the cursor was.
-  useEffect(() => { setCursor(0); }, [query]);
+  useEffect(() => { setCursor(-1); }, [query]);
 
   // Keep the row under the cursor on screen while the arrows move it.
   useEffect(() => {
@@ -229,16 +219,17 @@ export function Search({ open, onClose, onOpen, seed = '' }: SearchProps) {
   const empty = query.trim() !== '' && hits.length === 0;
 
   const onKeyDown = (event: React.KeyboardEvent) => {
-    if (hits.length === 0) return;
+
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      setCursor((c) => (c + 1) % hits.length);
+      setCursor((c) => Math.min(c + 1, hits.length - 1));
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
-      setCursor((c) => (c - 1 + hits.length) % hits.length);
+      setCursor((c) => Math.max(-1, c - 1));
     } else if (event.key === 'Enter') {
       event.preventDefault();
-      hits[Math.min(cursor, hits.length - 1)]?.run();
+      if (cursor === -1 && query.trim()) { navigate('search', undefined, { query: query.trim() }); onClose(); }
+      else hits[cursor]?.run();
     }
   };
 
@@ -266,7 +257,6 @@ export function Search({ open, onClose, onOpen, seed = '' }: SearchProps) {
               id={hit.key}
               role="option"
               aria-selected={index === cursor}
-              onMouseEnter={() => setCursor(index)}
               onClick={hit.run}
             >
               {hit.marker ?? (hit.icon && <Icon name={hit.icon} />)}
@@ -284,7 +274,7 @@ export function Search({ open, onClose, onOpen, seed = '' }: SearchProps) {
 
       <div className="searchfoot">
         <span><kbd>↑</kbd><kbd>↓</kbd> {t('search.hintMove')}</span>
-        <span><kbd>↵</kbd> {t('search.hintOpen')}</span>
+        <span><kbd>↵</kbd> {t(cursor === -1 ? 'search.hintAll' : 'search.hintOpen')}</span>
       </div>
     </Overlay>
   );

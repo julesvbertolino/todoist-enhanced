@@ -210,12 +210,18 @@ export function parseShorthand(
      inside them — (25), (1h30), (90 min) — and anything it does not is left
      alone, because brackets in a task name are usually just brackets. */
   let durationClaim: { start: number; length: number } | null = null;
-  for (const bracket of raw.matchAll(/\(([^)]{1,12})\)/g)) {
+  for (const bracket of raw.matchAll(/\(([^)]{1,48})\)/g)) {
     if (isOff(bracket.index!, bracket[0].length)) continue;
     const value = parseDurationInput(bracket[1]);
     if (value === null) continue;
     minutes = value;
     durationClaim = { start: bracket.index!, length: bracket[0].length };
+  }
+  for (const phrase of raw.matchAll(/\b(?:for|pendant)\s+(?:(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|un|une|deux|trois|quatre|cinq|sept|huit|neuf|dix|onze|douze|fifteen|quinze|thirty|trente)\s*(?:hours?|heures?|h|minutes?|mins?|min|m))(?:\s+(?:and|et)?\s*(?:\d+|one|two|un|une|quinze|fifteen|trente|thirty)\s*(?:minutes?|mins?|min|m))?\b/gi)) {
+    if (durationClaim || isOff(phrase.index!, phrase[0].length)) continue;
+    const body = phrase[0].replace(/^(?:for|pendant)\s+/i, '').replace(/\s+(?:and|et)\s+/i, ' ');
+    const value = parseDurationInput(body);
+    if (value !== null) { minutes = value; durationClaim = { start: phrase.index!, length: phrase[0].length }; }
   }
   if (durationClaim) claim(durationClaim.start, durationClaim.length, 'duration');
 
@@ -261,7 +267,7 @@ export function parseShorthand(
     let text = mask(raw, [...ranges, ...refused, ...linkRanges]);
     let last: { at: number; length: number; date: string } | null = null;
     for (let guard = 0; guard < 8; guard += 1) {
-      const reading = readNaturalDate(text, new Date(), { dateFormat });
+      const reading = readNaturalDate(text, new Date(), { dateFormat, bareTime: guard === 0 });
       if (!reading) break;
       last = { at: reading.index, length: reading.matched.length, date: reading.date };
       text = blank(text, reading.index, reading.matched.length);
@@ -270,6 +276,16 @@ export function parseShorthand(
       date = last.date;
       claim(last.at, last.length, 'date');
     }
+  }
+
+  // Small standalone h-values are durations; explicit clock readings have already claimed their range.
+  const durationText = mask(raw, [...ranges, ...refused, ...linkRanges]);
+  for (const match of durationText.matchAll(/(?<![\p{L}\p{N}_])([1-6]\s*h(?:\s*[0-5]\d)?)(?![\p{L}\p{N}_])/giu)) {
+    if (/(?:at|à|a)\s*$/.test(durationText.slice(0, match.index))) continue;
+    const value = parseDurationInput(match[1]);
+    if (value === null || durationClaim) continue;
+    minutes = value;
+    claim(match.index!, match[0].length, 'duration');
   }
 
   /* A link is marked last. Nothing above reads inside one, so a mark can no
@@ -406,7 +422,7 @@ export function splitTrailingEstimate(text: string): { content: string; minutes:
  */
 export function trailingEstimate(text: string): { start: number; end: number; minutes: number } | null {
   const body = text.trimEnd();
-  const match = /\(([^)]{1,12})\)$/.exec(body);
+  const match = /\(([^)]{1,48})\)$/.exec(body);
   if (!match) return null;
   const minutes = parseDurationInput(match[1]);
   if (minutes === null || !body.slice(0, match.index).trim()) return null;

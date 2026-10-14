@@ -1,4 +1,5 @@
 /** The preferences, and the settings comment that carries them across devices. */
+import { latestSeenRelease, markReleaseSeen } from '@/domain/seenRelease';
 import { canStoreDurations } from '@/domain/estimates';
 import { request } from '@/api/client';
 import { command, type Command, deleteItem, newUuid } from '@/api/commands';
@@ -81,17 +82,22 @@ export function legacySettingsTask(snapshot: Snapshot) {
 export function remotePreferences(snapshot: Snapshot, local: Preferences): Preferences | null {
   const comment = settingsComments(snapshot)[0];
   const remote = comment ? readSettingsComment(comment.content) : null;
-  if (remote) return mergeSynced(local, remote, local.locale);
+  if (remote) {
+    const merged = mergeSynced(local, remote, local.locale);
+    return { ...merged, seenVersion: latestSeenRelease(snapshot.user?.id, merged.seenVersion) };
+  }
   const legacy = legacySettingsTask(snapshot);
   if (legacy?.description.trim()) {
     try {
       const old = hydratePreferences(JSON.parse(legacy.description), local.locale);
-      return mergeSynced(local, syncedPreferences(old), local.locale);
+      const merged = mergeSynced(local, syncedPreferences(old), local.locale);
+      return { ...merged, seenVersion: latestSeenRelease(snapshot.user?.id, merged.seenVersion) };
     } catch {
       return null;
     }
   }
-  return null;
+  const seen = latestSeenRelease(snapshot.user?.id, local.seenVersion);
+  return seen !== local.seenVersion ? { ...local, seenVersion: seen } : null;
 }
 
 /**
@@ -144,6 +150,7 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
   walkthrough: false,
   prefs: defaultPreferences(detectLocale()),
   setPrefs(patch) {
+    if (patch.seenVersion && !get().demo) markReleaseSeen(get().snapshot.user?.id, patch.seenVersion);
     /* During the tour a change is the account's, not the tour's: it goes to
        the preferences kept aside, and is written when the tour ends. */
     if (tourPrefsBackup) {

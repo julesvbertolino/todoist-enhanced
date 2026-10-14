@@ -1,6 +1,6 @@
 import { request } from './client';
 import type {
-  Collaborator, CollaboratorState, Filter, Item, Label, LiveNotification, Note, Project, Reminder,
+  Collaborator, CollaboratorState, Filter, Folder, Item, Label, LiveNotification, Note, Project, Reminder,
   Section, Snapshot, TodoistUser, Workspace,
 } from '@/domain/types';
 
@@ -19,6 +19,9 @@ export interface SyncResponse {
   sections?: Section[];
   labels?: Label[];
   filters?: Filter[];
+  folders?: Folder[];
+  /** Complete REST folder collections read alongside this response. */
+  refreshedFolderWorkspaces?: string[];
   notes?: Note[];
   /** Comments on projects rather than tasks; kept in the same collection as task comments. */
   project_notes?: Note[];
@@ -42,8 +45,8 @@ export interface SyncResponse {
 /** A full sync of a large account is a big download; it gets longer than the usual deadline. */
 const FULL_SYNC_TIMEOUT_MS = 60_000;
 
-export async function sync(syncToken: string, signal?: AbortSignal): Promise<SyncResponse> {
-  return request<SyncResponse>('/sync', {
+export async function sync(syncToken: string, signal?: AbortSignal, knownWorkspaces: Record<string, Workspace> = {}): Promise<SyncResponse> {
+  const response = await request<SyncResponse>('/sync', {
     method: 'POST',
     form: {
       sync_token: syncToken,
@@ -52,6 +55,24 @@ export async function sync(syncToken: string, signal?: AbortSignal): Promise<Syn
     signal,
     timeoutMs: syncToken === '*' ? FULL_SYNC_TIMEOUT_MS : undefined,
   });
+  // Folders have a separate REST resource. Read each team's complete collection
+  // so renames, deletions and existing folders reach incremental clients too.
+  const workspaces = Object.values(mergeCollection(knownWorkspaces, response.workspaces, response.full_sync));
+  const teams = workspaces.filter((w) => !w.is_deleted && !w.is_archived);
+  const folders = await Promise.all(teams.map(async (workspace) => {
+    const all: Folder[] = [];
+    let cursor: string | null = null;
+    do {
+      const query = new URLSearchParams({ workspace_id: workspace.id, limit: '200' });
+      if (cursor) query.set('cursor', cursor);
+      const page = await request<{ results: Folder[]; next_cursor: string | null }>(`/folders?${query}`, { signal });
+      all.push(...page.results);
+      cursor = page.next_cursor;
+    } while (cursor);
+    return all;
+  }));
+  return { ...response, folders: [...(response.folders ?? []), ...folders.flat()], refreshedFolderWorkspaces: [...new Set([...Object.keys(knownWorkspaces), ...workspaces.map((w) => w.id)])] };
+
 }
 
 type Keyed = { id: string; is_deleted?: boolean };
@@ -94,6 +115,8 @@ function mergeStates(
 export function applySync(snapshot: Snapshot, response: SyncResponse): Snapshot {
   const full = response.full_sync;
   return {
+    folders: mergeCollection(Object.fromEntries(Object.entries(snapshot.folders ?? {}).filter(([, folder]) =>
+      !response.refreshedFolderWorkspaces?.includes(folder.workspace_id))), response.folders, full),
     items: mergeCollection(snapshot.items, response.items, full),
     projects: mergeCollection(snapshot.projects, response.projects, full),
     sections: mergeCollection(snapshot.sections, response.sections, full),

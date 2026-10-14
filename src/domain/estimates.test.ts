@@ -230,3 +230,9 @@ describe('estimate storage (#151)', () => {
     expect(canStoreDurations({ is_premium: false })).toBe(false);
   });
 });
+
+describe('durations written in words', () => {
+  it.each([['deux heures', 120], ['one hour', 60], ['one hour thirty minutes', 90], ['quinze minutes', 15], ['une heure', 60]])('reads %s', (text, minutes) => {
+    expect(parseDurationInput(String(text))).toBe(minutes);
+  });
+});

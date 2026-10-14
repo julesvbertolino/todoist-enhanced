@@ -323,7 +323,7 @@ function BoardSurface(props: ModeSurfaceProps) {
                 group: the place follows the pointer between the cards (#20). */}
             <RowListContext.Provider value={column.dropTarget ? {
               order: props.order ?? 'project',
-              ids: column.items.map((item) => item.id),
+              ids: column.items.filter((item) => !item.projection).map((item) => item.id),
               target: column.dropTarget,
               viewKey: props.viewKey,
             } : null}>

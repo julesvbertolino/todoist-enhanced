@@ -28,7 +28,7 @@ test('a label with an emoji or an accent in its name opens its own page (#196)',
   await expect(card).toBeVisible();
   await card.click();
   // The page is the label's own, not a page for a name that does not exist.
-  await expect(page.locator('.screen.active h1')).toContainText('🏠Café');
+  await expect(page.getByRole('textbox', { name: 'Rename tag' })).toHaveValue('🏠Café');
   expect(new URL(page.url()).hash).toBe(`#/label/${encodeURIComponent('🏠Café')}`);
 });
 
@@ -41,7 +41,7 @@ test('the sidebar editor says whether My week holds today\u2019s tasks (#195)', 
   const height = (await week.boundingBox())!.height;
 
   await today.locator('input').check({ force: true });
-  await expect(week).toContainText('Does not include today\u2019s tasks');
+  await expect(week).toContainText('Includes today\u2019s tasks');
   // The list does not move when the tick is turned.
   expect((await week.boundingBox())!.height).toBe(height);
 

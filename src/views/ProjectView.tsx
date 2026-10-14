@@ -1,4 +1,5 @@
 import { useProjectPeople } from '@/hooks/useProjectPeople';
+import { InsightsButton } from '@/components/InsightsButton';
 import { HireNote } from '@/components/HireNote';
 import { useCallback, useEffect, useMemo, useRef, useState, Fragment } from 'react';
 import { PageHeader } from '@/components/PageHeader';
@@ -383,10 +384,7 @@ function ProjectBody({
               completedToggle
               showWorkspaces={false}
             />
-            <button className="btn accent" onClick={onInsights}>
-              <Icon name="trend" />
-              {t('toolbar.insights')}
-            </button>
+            <InsightsButton onClick={onInsights} />
             {/* The same menu the sidebar row carries, asked from the page it
                 is about. */}
             <span className="pmenu-wrap">

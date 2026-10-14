@@ -76,7 +76,7 @@ export function TaskRow({
   item, childrenOf, onOpen, depth = 0, showProject = true, showSection = false, dust = false, dragHandleProps,
   nestable = false, dragRef, lifted = false,
 }: TaskRowProps) {
-  const { setRowRef, nestOver, landing, landingBefore } = useRowTarget(item.id, { nestable });
+  const { setRowRef, nestOver, landing, landingBefore } = useRowTarget(item.id, { nestable, disabled: !!item.projection });
   const list = useRowList();
   const rowEl = useRef<HTMLDivElement | null>(null);
 
@@ -156,14 +156,14 @@ export function TaskRow({
   const selectionAnchor = useStore((s) => s.selectionAnchor);
   const setSelectionAnchor = useStore((s) => s.setSelectionAnchor);
   const selectRange = useStore((s) => s.selectRange);
-  const showSubtasks = useContext(ShowSubtasks);
+  const showSubtasks = useContext(ShowSubtasks) && !item.projection;
   const fields = useStore((s) => s.prefs.taskFields);
   const detailOrder = useStore((s) => s.prefs.detailOrder);
 
   const phone = usePhoneBehaviour();
   /* The two gestures a phone has in place of a pointer hovering over the row:
      pull it aside for its buttons, hold it down for their names. */
-  const gesture = useRowGesture(phone);
+  const gesture = useRowGesture(phone && !item.projection);
 
   const [expanded, setExpanded] = useState(true);
   /** Ticked here, not yet ticked at Todoist: the pause between the two. */
@@ -176,6 +176,7 @@ export function TaskRow({
      completing direction waits. A second click while it is waiting is ignored
      rather than queueing a second toggle that would undo the first. */
   const complete = () => {
+    if (item.projection) return;
     if (item.checked) { void toggleTask(item.id); return; }
     if (settling) return;
     setSettling(true);
@@ -332,10 +333,11 @@ export function TaskRow({
         ref={(node) => { rowEl.current = node; setRowRef(node); dragRef?.(node); }}
         className={`task${item.checked || settling ? ' done' : ''}${settling ? ' settling' : ''}${picked ? ' picked' : ''}${nestOver ? ' nesttarget' : ''}${landing ? ` landing${landingBefore ? ' landing-before' : ''}` : ''}${lifted ? ' dragging' : ''}${gesture.className}`}
         role="button"
-        tabIndex={-1}
+        tabIndex={item.projection ? 0 : -1}
         /* The row the keyboard is on is the row that has focus, so the walk
            needs nothing but a way to recognise a task row in the document. */
-        data-task-id={item.id}
+        data-task-id={item.projection ? undefined : item.id}
+        data-projection-id={item.projection ? item.id : undefined}
         /* Shift+K keeps it, and only a row in that group answers. */
         data-dust={dust ? '' : undefined}
         {...gesture.handlers}
@@ -364,6 +366,7 @@ export function TaskRow({
           /* A link in the title or the description is followed, in a new
              tab; it does not also open the task (#101). */
           if ((e.target as Element).closest('a[href]')) return;
+          if (item.projection) { onOpen(item.projection.sourceId); return; }
           if (e.shiftKey) {
             e.preventDefault();
             e.currentTarget.focus({ preventScroll: true });
@@ -388,6 +391,9 @@ export function TaskRow({
              of its options — is that control's own press, not a request to
              open the task. */
           if (e.target !== e.currentTarget) return;
+          if (item.projection && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault(); onOpen(item.projection.sourceId); return;
+          }
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             if (e.shiftKey) { pickRange(e.metaKey || e.ctrlKey); return; }
@@ -403,7 +409,9 @@ export function TaskRow({
           </span>
         )}
 
-        {uncompletable ? (
+        {item.projection ? (
+          <span className={`check forecast-check p${fields.priority ? priority : 4}`} role="checkbox" aria-checked="false" aria-disabled="true" aria-label={t('upcoming.projected')} onClick={(e) => e.stopPropagation()} />
+        ) : uncompletable ? (
           /* Todoist gives a "* " task no checkbox at all, so this one does
              not click, focus, or announce itself as one — it only holds the
              row's alignment. */
@@ -414,7 +422,7 @@ export function TaskRow({
             role="checkbox"
             aria-checked={item.checked || settling}
             aria-label={t('task.complete')}
-            tabIndex={-1}
+            tabIndex={item.projection ? 0 : -1}
             onClick={(e) => {
               e.stopPropagation();
               complete();
@@ -468,17 +476,17 @@ export function TaskRow({
           </span>
         </span>
 
-        <span className="trow-end">
+        {!item.projection && <span className="trow-end">
           <TaskActions
             item={item}
             childrenOf={childrenOf}
             onOpen={onOpen}
             onKeep={dust ? () => keepInSomeday(item.id) : undefined}
           />
-        </span>
+        </span>}
       </div>
 
-      {showSubtasks && expanded && <RowListContext.Provider value={{ order: 'project', ids: openChildren.map((child) => child.id), viewKey: list?.viewKey }}>
+      {showSubtasks && expanded && !item.projection && <RowListContext.Provider value={{ order: 'project', ids: openChildren.map((child) => child.id), viewKey: list?.viewKey }}>
         {openChildren.map((child) => (
           <SubtaskRow
             key={child.id}

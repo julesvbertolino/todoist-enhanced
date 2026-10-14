@@ -1,3 +1,4 @@
+import { InsightsButton } from '@/components/InsightsButton';
 import { HireNote } from '@/components/HireNote';
 import { useMemo, useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
@@ -15,6 +16,7 @@ import { useStore } from '@/store/store';
 import { viewPrefs } from '@/store/prefs';
 import { applyFilters, datedRoots, sortItems } from '@/store/selectors';
 import { upcomingItems } from '@/domain/views';
+import { projectOccurrences } from '@/domain/projectOccurrences';
 import type { GroupKey } from '@/domain/types';
 import { summariseLoad } from '@/domain/load';
 import { dueDate, daysBetween, formatRelativeDay, toApiDate } from '@/domain/dates';
@@ -23,7 +25,7 @@ import { addDays, startOfDay } from 'date-fns';
 interface UpcomingViewProps {
   onOpen: (id: string) => void;
   onInsights: () => void;
-  onUnestimated: () => void;
+  onUnestimated: (items?: import('@/domain/types').Item[]) => void;
   onAddTaskTo: (placement: TaskPlacement) => void;
 }
 
@@ -38,7 +40,7 @@ const UPCOMING_GROUPS: GroupKey[] = ['day', 'week', 'month'];
  */
 function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: UpcomingViewProps) {
   const { t, locale } = useT();
-  const { snapshot, items, childrenOf } = useData('upcoming');
+  const { snapshot, items, childrenOf: sourceChildrenOf } = useData('upcoming');
   const prefs = useStore((s) => s.prefs);
   const setPrefs = useStore((s) => s.setPrefs);
   const current = viewPrefs(prefs, 'upcoming');
@@ -52,22 +54,17 @@ function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: Upcomi
      by itself, so the range never lags behind the tasks it lets in (#146). */
   const today = useToday();
 
-  const pool = useMemo(() => {
-    const roots = datedRoots(items, snapshot);
-    const future = upcomingItems(roots);
-    const limit = startOfDay(addDays(today, horizon));
-    return future.filter((item) => {
-      const d = dueDate(item);
-      return d !== null && startOfDay(d) <= limit;
-    });
-  }, [items, today, horizon, snapshot]);
+  const forecasts = useMemo(() => projectOccurrences(datedRoots(items, snapshot), addDays(today, 1), startOfDay(addDays(today, horizon))), [items, today, horizon, snapshot]);
+  const pool = forecasts.items;
+  const sources = useMemo(() => new Map(pool.filter((item) => item.projection).map((item) => [item.id, item.projection!.sourceId])), [pool]);
+  const childrenOf = useMemo(() => (id: string) => sourceChildrenOf(sources.get(id) ?? id), [sources, sourceChildrenOf]);
   const scoped = useMemo(
-    () => applyFilters(pool, current.filters, snapshot, childrenOf),
+    () => applyFilters(pool, { ...current.filters, includeScheduled: true }, snapshot, childrenOf),
     [pool, current.filters, snapshot, childrenOf],
   );
 
   const hasMoreFuture = useMemo(() => {
-    const beyond = applyFilters(upcomingItems(datedRoots(items, snapshot)), current.filters, snapshot, childrenOf);
+    const beyond = applyFilters(upcomingItems(datedRoots(items, snapshot)), { ...current.filters, includeScheduled: true }, snapshot, childrenOf);
     const limit = startOfDay(addDays(today, horizon));
     return beyond.some((item) => { const day = dueDate(item); return day !== null && startOfDay(day) > limit; });
   }, [items, snapshot, current.filters, childrenOf, today, horizon]);
@@ -123,10 +120,7 @@ function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: Upcomi
               modes={['list', 'board']}
               groups={UPCOMING_GROUPS}
             />
-            <button className="btn accent" onClick={onInsights}>
-              <Icon name="trend" />
-              {t('toolbar.insights')}
-            </button>
+            <InsightsButton onClick={onInsights} />
             <PageMenu
               items={[7, 15, 30, 60].map((days) => ({
                 key: `h${days}`,
@@ -138,7 +132,10 @@ function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: Upcomi
           </>
         }
         load={load}
-        onOpenUnestimated={load.unestimatedCount > 0 ? onUnestimated : undefined}
+        onOpenUnestimated={load.unestimatedCount > 0 ? () => {
+          const ids = new Set(scoped.map((item) => item.projection?.sourceId ?? item.id));
+          onUnestimated(items.filter((item) => ids.has(item.id)));
+        } : undefined}
       />
 
 

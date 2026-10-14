@@ -76,6 +76,8 @@ export function DisplayMenu({
      and the reset both mean "back to how this view starts", and a view that
      starts grouped by project has to be able to say so. */
   const base = defaultViewPrefs(viewKey);
+  const scheduledToggle = viewKey !== 'today' && viewKey !== 'upcoming';
+  const scheduledLabel = viewKey === 'week' ? 'filter.showToday' : 'filter.includeScheduled';
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -111,7 +113,7 @@ export function DisplayMenu({
   assigneeIds.delete(snapshot.user?.id ?? '');
   const allAssignees = current.filters.assignees != null && [...assigneeIds].every((id) => current.filters.assignees!.includes(id));
   const changed =
-    countActiveFilters(current.filters) - Number(allWorkspaces && current.filters.workspaces.length > 0) - Number(current.filters.assignees != null)
+    countActiveFilters(scheduledToggle ? current.filters : { ...current.filters, includeScheduled: true }) - Number(allWorkspaces && current.filters.workspaces.length > 0) - Number(current.filters.assignees != null)
       + Number(JSON.stringify(allAssignees && base.filters.assignees == null ? null : current.filters.assignees) !== JSON.stringify(base.filters.assignees)) +
     (shownGroup !== base.group ? 1 : 0) +
     (current.sort !== base.sort ? 1 : 0);
@@ -248,16 +250,17 @@ export function DisplayMenu({
 
 
           <hr />
-          <div className="panelrow">
-            <span>{t('filter.includeScheduled')}</span>
+          <div className="display-toggles">
+          {scheduledToggle && <div className="panelrow">
+            <span>{t(scheduledLabel)}</span>
             <button
               className="switch"
               role="switch"
               aria-checked={current.filters.includeScheduled}
-              aria-label={t('filter.includeScheduled')}
+              aria-label={t(scheduledLabel)}
               onClick={() => setFilters({ includeScheduled: !current.filters.includeScheduled })}
             />
-          </div>
+          </div>}
           <div className="panelrow">
             <span>{t('filter.showSubtasks')}</span>
             <button
@@ -281,6 +284,7 @@ export function DisplayMenu({
             </div>
           )}
 
+          </div>
           {tags.length > 0 && <hr />}
           {tags.length > 0 && <>
               <h5>{t('filter.labels')}</h5>

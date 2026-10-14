@@ -233,3 +233,18 @@ describe('projectTree keeps empty spaces (#13)', () => {
     expect(tree.map((g) => [g.workspaceId, g.roots.length])).toEqual([[null, 0], ['w1', 0]]);
   });
 });
+
+
+describe('native team folder hierarchy', () => {
+  it('nests projects using folder_id, keeps empty folders and preserves personal project nesting', () => {
+    const data = { ...snapshot, workspaces: { team: { id: 'team', name: 'Team' } },
+      folders: { native: { id: 'native', name: 'Native', workspace_id: 'team', child_order: 1 }, empty: { id: 'empty', name: 'Empty', workspace_id: 'team', child_order: 2 } },
+      projects: { ...snapshot.projects, child: project('child', 1, { workspace_id: 'team', folder_id: 'native' }), loose: project('loose', 3, { workspace_id: 'team' }) } };
+    const tree = projectTree(data);
+    const team = tree.find((g) => g.workspaceId === 'team')!;
+    expect(team.roots.map((n) => n.project.id)).toEqual(['native', 'empty', 'loose']);
+    expect(team.roots[0].nativeFolder).toBe(true);
+    expect(team.roots[0].children.map((n) => n.project.id)).toEqual(['child']);
+    expect(tree[0].roots.find((n) => n.project.id === 'folder')?.children[0].project.id).toBe('site');
+  });
+});

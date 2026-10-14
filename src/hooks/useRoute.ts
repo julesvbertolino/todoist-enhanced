@@ -7,6 +7,7 @@ export interface Route {
   id?: string;
   /** A project section to reveal after navigation from global search. */
   sectionId?: string;
+  query?: string;
 }
 
 /**
@@ -32,9 +33,10 @@ export function parseRoute(hash: string): Route {
   if (view === 'dashboard') return { view: 'insights' };
   const known: ViewId[] = [
     'inbox', 'week', 'today', 'upcoming', 'someday', 'review',
-    'settings', 'project', 'label', 'labels', 'filter', 'filters', 'matrix', 'insights',
+    'settings', 'project', 'label', 'labels', 'filter', 'filters', 'matrix', 'insights', 'search',
   ];
   if (!known.includes(view as ViewId)) return { view: 'week' };
+  if (view === 'search') return { view: 'search', query: new URLSearchParams(query).get('q') ?? '' };
   const sectionId = view === 'project' ? new URLSearchParams(query).get('section') ?? undefined : undefined;
   return id ? { view: view as ViewId, id: readId(id), sectionId } : { view: view as ViewId };
 }
@@ -42,8 +44,9 @@ export function parseRoute(hash: string): Route {
 export const routeKey = (route: Route): string =>
   route.id ? `${route.view}:${route.id}` : route.view;
 
-export function navigate(view: ViewId, id?: string, options?: { sectionId?: string }): void {
+export function navigate(view: ViewId, id?: string, options?: { sectionId?: string; query?: string }): void {
   const base = id ? `#/${view}/${encodeURIComponent(id)}` : `#/${view}`;
+  if (view === 'search') { window.location.hash = `${base}?q=${encodeURIComponent(options?.query ?? '')}`; return; }
   window.location.hash = options?.sectionId
     ? `${base}?section=${encodeURIComponent(options.sectionId)}`
     : base;

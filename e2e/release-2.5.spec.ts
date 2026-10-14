@@ -339,3 +339,33 @@ test('after an update that did not change the tour, the window offers no tour bu
   await expect(dialog.getByRole('button', { name: 'Show me', exact: true })).toHaveCount(0);
   await expect(dialog.getByRole('button', { name: 'Got it' })).toBeVisible();
 });
+
+
+test('acknowledged changelog stays closed after stale settings sync and reload', async ({ page }) => {
+  test.skip(process.env.PLAYWRIGHT_DEV !== '1', 'Controlled Vite store fixture');
+  await openAccount(page, [], '2.6.0');
+  const dialog = page.locator('.whatsnew');
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Got it' }).click();
+  await expect(dialog).toHaveCount(0);
+  await page.route('https://api.todoist.com/api/v1/sync', async (route) => {
+    await route.fulfill({ json: { full_sync: false, sync_token: 'stale', sync_status: {}, project_notes: [{
+      id: 'old-settings', project_id: 'inbox', item_id: null, is_deleted: false, posted_at: '2026-10-14T00:00:00Z',
+      content: 'Enhanced for Todoist · settings (edited by the app, please leave as is)\n\n' + JSON.stringify({ savedAt: Date.now() + 60000, seenVersion: '2.6.0', onboarded: true, setupDone: true, estimateStorage: 'tag', hireNoteSeen: true }),
+    }] } });
+  });
+  await expect.poll(() => page.evaluate(async () => {
+    const path = performance.getEntriesByType('resource').map((entry) => entry.name).find((url) => /\/src\/store\/preferences\.ts(?:\?|$)/.test(url))!;
+    return (await import(path)).preferencesWriteTimer;
+  })).toBeNull();
+  await page.evaluate(async (version) => {
+    const path = performance.getEntriesByType('resource').map((entry) => entry.name).find((url) => /\/src\/store\/store\.ts(?:\?|$)/.test(url))!;
+    const { useStore } = await import(path);
+    await useStore.getState().refresh(); await useStore.getState().refresh();
+    if (useStore.getState().prefs.seenVersion !== version) throw new Error('Stale settings restored an older acknowledgement');
+  }, VERSION);
+  await expect(dialog).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator('.sidebar')).toBeVisible();
+  await expect(dialog).toHaveCount(0);
+});

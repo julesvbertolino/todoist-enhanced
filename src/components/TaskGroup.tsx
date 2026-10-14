@@ -1,3 +1,4 @@
+import { ProjectedTask } from './ProjectedTask';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { Icon } from './Icon';
@@ -191,7 +192,7 @@ export function TaskGroup({
       {!collapsed && lead}
 
       {!collapsed &&
-        items.map((item) => draggable ? (
+        items.map((item) => item.projection ? <ProjectedTask key={item.id} item={item} childrenOf={childrenOf} onOpen={onOpen} /> : draggable ? (
           <DraggableTask
             key={item.id}
             item={item}
@@ -251,7 +252,7 @@ export function TaskGroup({
      is in it, and what the list itself means for a task arriving from
      somewhere else. */
   const list = reorderable
-    ? { order: reorderable, ids: items.map((item) => item.id), target: dropTarget, viewKey, closed: mark === 'quick' }
+    ? { order: reorderable, ids: items.filter((item) => !item.projection).map((item) => item.id), target: dropTarget, viewKey, closed: mark === 'quick' }
     : null;
   const wrapped = (isOver: boolean) => (
     <RowListContext.Provider value={list}>{body(isOver)}</RowListContext.Provider>

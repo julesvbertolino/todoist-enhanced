@@ -29,7 +29,7 @@ const fold = (text: string): string =>
 const OPENER = '(?:every|each|tous les|toutes les|tous le|chaque)';
 const UNIT_DAY = '(?:days?|jours?)';
 const UNIT_WEEK = '(?:weeks?|semaines?)';
-const WORKDAY = '(?:weekdays?|workdays?|working days?|jours? ouvres?|jours? ouvrables?|jours? de semaine)';
+const WORKDAY = '(?:weekdays?|workdays?|working days?|jours? ouvres?|jours? ouvrables?|jours? de (?:la )?semaine)';
 /* "at 9am", "at 20:00", "à 9h30": the time of day does not move the date. */
 const TIME = '(?:\\s+(?:at|@|a|vers)\\s+[\\d:h.]+\\s*(?:am|pm)?)?';
 

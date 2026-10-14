@@ -218,6 +218,7 @@ function PropLabel({ name, prop }: { name: string; prop: string }) {
 }
 
 export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
+  const pendingWrites = useStore((s) => s.pendingCount);
   const { t, locale } = useT();
   const { snapshot, childrenOf } = useData();
   const assignTask = useStore((s) => s.assignTask);
@@ -1008,13 +1009,19 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
                 the number instead of being left to the reader to infer. */}
             <EstimateField
               minutes={computed ? null : minutes}
+              pendingWrites={pendingWrites}
               placeholder={
                 computed && minutes !== null
                   ? `${formatDuration(minutes, locale)} · ${t('task.computedEstimate')}`
                   : t('task.estimatePlaceholder')
               }
-              onCommit={(value) =>
-                void updateTask(item.id, { estimateMinutes: value })}
+              onCommit={async (value) => {
+                await updateTask(item.id, { estimateMinutes: value });
+                const state = useStore.getState();
+                const saved = state.snapshot.items[item.id];
+                if (!saved || effectiveEstimate(saved, () => []).minutes !== value) return 'failed';
+                return state.pendingCount > 0 ? 'pending' : 'accepted';
+              }}
             />
           </div>
 
