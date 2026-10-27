@@ -59,6 +59,18 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
   let content: ReactNode;
   switch (kind) {
     case null: return null;
+    case 'taskComments':
+      content = <>{title('Website')}{row('Prepare the presentation', 'checkbox', <span className="cv-comment-count"><Icon name="comment" size="sm" />3</span>)}{row('Review the copy', 'checkbox', <span className="cv-comment-count"><Icon name="comment" size="sm" />1</span>)}{row('Publish the page', 'checkbox')}</>; break;
+    case 'boardDestination':
+      content = <div className="cv-destination-board">{['To do', 'In progress', 'Done'].map((name, i) => <section key={name} className={i === 1 ? 'destination' : ''}><strong>{name}</strong>{i !== 2 && <div className="cv-board-card"><Icon name="checkbox" size="sm" />{i === 0 ? 'Review the copy' : 'Prepare the presentation'}</div>}{i === 1 && <div className="cv-board-card floating"><Icon name="checkbox" size="sm" />Publish the page</div>}</section>)}</div>; break;
+    case 'taskQuickActions':
+      content = <div className="cv-quick-menu">
+        <div className="task-quick-label">Start date</div>
+        <div className="cv-quick-dates">{(['sun', 'sofa', 'calendar-arrow-right', 'reset', 'calendar-x', 'calendar'] as IconName[]).map((icon) => <span key={icon}><Icon name={icon} /></span>)}</div>
+        <hr />{row('Deadline', 'deadline')}<hr />
+        <div className="task-quick-label">Priorities</div>
+        <div className="cv-quick-priorities">{[1, 2, 3, 4].map((p) => <span key={p} className={p === 2 ? 'selected' : ''} style={{ color: `var(--p${p})` }}><Icon name="flag" size="sm" />P{p}</span>)}</div>
+      </div>; break;
     case 'calendar':
       content = <div className="cv-cal">
         <div className="cv-cal-days">{['MON', 'TUE', 'WED'].map((day, i) => <span key={day}>{day}<b>{12 + i}</b></span>)}</div>

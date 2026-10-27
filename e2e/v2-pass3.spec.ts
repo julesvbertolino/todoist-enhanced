@@ -171,7 +171,7 @@ test.describe('the open task (third pass)', () => {
     await page.getByRole('menuitem', { name: 'Edit comment' }).click();
     const edit = comment.getByRole('textbox');
     await edit.fill('Check the new quote');
-    await edit.press('Enter');
+    await edit.press('Meta+Enter');
     await expect(comment).toContainText('Check the new quote');
 
     await comment.hover();

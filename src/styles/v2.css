@@ -284,6 +284,35 @@
 .sidebar .side-foot .addbtn:hover{filter:brightness(1.05);background:var(--accent)}
 .sidebar .footrow{width:100%;justify-content:center}
 .sidebar .footrow .syncstatus{flex:0 1 auto;font-size:11.5px;color:var(--muted)}
+/* A new version waiting: one quiet row under the sync line, never a message over the page. */
+.updatebtn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:30px;margin-top:4px;padding:0 10px;
+  border-radius:var(--r-ctl);font-size:11.5px;color:var(--muted);background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.updatebtn .ic{color:var(--accent)}
+.updatebtn strong{font-weight:600;color:var(--accent-dark)}
+.updatebtn:hover{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+:root[data-background="colored"] .sidebar .updatebtn{color:rgba(255,255,255,.82);background:rgba(255,255,255,.14)}
+:root[data-background="colored"] .sidebar .updatebtn .ic,:root[data-background="colored"] .sidebar .updatebtn strong{color:#fff}
+.hasdot{position:relative}
+/* The same new version announced once, over the line it leaves behind and pointing at it. */
+.updatewrap{position:relative;width:100%}
+.updatecard{position:absolute;z-index:5;left:0;right:0;bottom:calc(100% + 12px);display:grid;gap:3px;padding:14px 16px 12px;
+  background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-lg);
+  text-align:left;animation:updateIn .22s ease-out both}
+.updatecard strong{font-size:14px;font-weight:600;letter-spacing:-.01em}
+.updatecard p{margin:0;font-size:12.5px;line-height:1.45;color:var(--muted);text-wrap:pretty}
+.updatecard-actions{display:flex;align-items:center;gap:6px;margin-top:9px}
+.updatecard-apply{height:30px;padding:0 14px;border-radius:var(--r-full);background:var(--accent);color:var(--on-accent,#fff);font-size:12.5px;font-weight:600;white-space:nowrap}
+.updatecard-apply:hover{background:var(--accent-dark)}
+.updatecard-later{height:30px;padding:0 10px;border-radius:var(--r-full);color:var(--muted);font-size:12.5px;white-space:nowrap}
+.updatecard-later:hover{background:var(--hover);color:var(--text)}
+.updatecard:not(.floating)::after{content:"";position:absolute;left:calc(50% - 6px);bottom:-7px;width:12px;height:12px;background:var(--surface);
+  border-right:1px solid var(--border);border-bottom:1px solid var(--border);transform:rotate(45deg)}
+.updatebtn.announced{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 45%,transparent)}
+/* Phone, or a collapsed sidebar: no line to point at, so the card stands on its own. */
+.updatecard.floating{position:fixed;z-index:19;left:16px;right:auto;bottom:16px;width:300px}
+@media (max-width:720px){.updatecard.floating{left:12px;right:12px;width:auto;bottom:calc(64px + 12px + env(safe-area-inset-bottom))}}
+@keyframes updateIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.updatecard{animation:none}}
 
 /* ==========================================================================
    Shared controls, as the design file draws them: a pill track with a white
@@ -1176,20 +1205,27 @@ img.notifav{display:block;width:34px;height:34px;object-fit:cover}
   background:var(--subtle);color:var(--text);font-size:13px;max-width:100%;
 }
 .comment-file small{color:var(--faint)}
+/* Todoist's solid mark is heavier than the line icons around it: a softer grey keeps the menu even. */
+.menu-mark{color:var(--muted)}
 .comment-edit{display:grid;gap:8px;margin-top:4px}
 .comment-edit .comment-field{border-radius:14px}
+.comment-edit .comment-field:focus{outline:none;border-color:color-mix(in srgb,var(--text) 30%,var(--border-strong));box-shadow:none}
 .comment-edit-actions{display:flex;gap:8px;justify-content:flex-end}
 
 .comment-box{
   display:grid;gap:4px;min-width:0;padding:3px 5px 3px 15px;border:1px solid var(--border-strong);
   border-radius:22px;background:var(--surface);
 }
-.comment-row{display:flex;align-items:flex-end;gap:6px}
+.comment-box{position:relative;transition:border-color .12s ease}
+/* Typing darkens the frame's own grey (no extra ring), so Esc, which hands the keyboard back, is seen as the frame lightening again. */
+.comment-box:focus-within{border-color:color-mix(in srgb,var(--text) 30%,var(--border-strong))}
+/* The row scrolls, not the field: a long comment's scrollbar sits at the frame's right edge, past the buttons. */
+.comment-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;column-gap:6px;max-height:160px;overflow-y:auto;margin-right:-5px;padding-right:5px;scrollbar-width:thin}
 .comment-box .comment-field{
   flex:1;min-width:0;width:auto;min-height:0;padding:7px 0;border:0;border-radius:0;background:transparent;
-  line-height:1.4;max-height:160px;field-sizing:content;outline:none;box-shadow:none;
+  line-height:1.4;max-height:none;overflow:hidden;field-sizing:content;outline:none;box-shadow:none;
 }
-.comment-tools{display:flex;align-items:center;gap:6px;padding-bottom:2px;flex:none}
+.comment-tools{display:flex;align-items:center;gap:6px;padding-bottom:2px;flex:none;position:sticky;bottom:0}
 .comment-tools .iconbtn{width:28px;height:28px}
 .roundbtn{
   width:28px;height:28px;border:0;border-radius:50%;display:grid;place-items:center;cursor:pointer;flex:none;
@@ -2173,3 +2209,8 @@ html[data-navigation="pointer"] .task:focus-visible::after{content:none}
 .privacy-status{padding:10px 12px;border-radius:var(--r-sm);background:var(--subtle);color:var(--text)}
 .privacy-links{display:flex;flex-wrap:wrap;gap:8px 16px}
 @media(max-width:720px){.settings{grid-template-columns:minmax(0,1fr);gap:var(--s4)}.privacy-disclosure{min-width:0;width:100%}}
+
+/* An opened subtask says so above its title, with its parent one click away (#339). */
+.subtaskof{display:flex;align-items:center;gap:6px;min-width:0;margin:0 0 6px;font-size:12.5px;color:var(--muted)}
+.subtaskof .ic{color:var(--faint)}
+.subtaskof .crumblink{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--text)}

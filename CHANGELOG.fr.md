@@ -8,6 +8,30 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.20.0
+
+🆕 **Repérez les tâches avec des commentaires.** Une icône et leur nombre apparaissent dans les listes, tableaux et tables. Cliquez dessus pour ouvrir la discussion. Vous pouvez masquer ce détail depuis Affichage.
+
+🎨 **Changez les dates et priorités plus vite.** Le menu clic droit propose les priorités et les raccourcis de date en accès direct. Le calendrier reste accessible en un clic pour choisir une date précise.
+
+🎨 **Voyez où ira une carte.** Quand le tableau utilise un tri automatique, la colonne de destination se teinte pendant le déplacement. Le tri manuel conserve un indicateur de position précis.
+
+🎨 **Écrivez sans envoyer trop tôt.** Entrée passe à la ligne. Cmd+Entrée ou Ctrl+Entrée envoie le commentaire ou enregistre sa modification. Le bouton d’envoi reste disponible. Le cadre du commentaire devient plus gris pendant la saisie : vous voyez que Échap l’a quitté.
+
+🎨 **Voyez le retard d’un coup d’œil.** À partir de deux jours, une tâche en retard l’affiche (« 3 j de retard », « 45 j de retard ») au lieu de sa date. Survolez-la pour voir la date.
+
+🎨 **Repérez une sous-tâche.** Une sous-tâche ouverte affiche « Sous-tâche de » au-dessus de son titre, avec un lien vers sa tâche parente.
+
+🐛 **Sélectionnez les cartes à la souris.** Partez de n’importe quel espace vide de la page pour sélectionner plusieurs cartes sans surligner de texte. Un geste commencé sur une carte continue de la déplacer.
+
+🐛 **Refermez les menus de tâche facilement.** Un clic à côté ou Échap ferme le menu ouvert. Le clic de fermeture ne déclenche plus une action dessous et ouvrir un autre menu ferme le précédent.
+
+🐛 **Gardez la maîtrise des répétitions.** Déplacer une tâche récurrente vers À faire cette semaine ou Un jour demande désormais confirmation avant d’arrêter sa répétition. Annulez pour la conserver, ou annulez le déplacement ensuite.
+
+🐛 **Restez connecté malgré les erreurs temporaires.** Un échec temporaire de renouvellement ou un refus de permission n’efface plus votre connexion. Les requêtes d’un ancien onglet utilisent les identifiants renouvelés lorsqu’ils sont disponibles.
+
+🐛 **Mettez à jour quand vous voulez.** Quand une nouvelle version sort, une carte l’annonce en bas de la barre latérale, ou au-dessus des onglets sur téléphone. Rien ne se recharge avant « Mettre à jour » ; « Plus tard » laisse un rappel dans la barre. Sinon, elle arrive à la prochaine ouverture de l’app.
+
 ## 2.19.0
 
 🆕 **Créez des vues pour vos projets.** Appuyez sur + sous le titre d'un projet pour ajouter une vue : son nom, sa disposition, son regroupement et ses filtres. Passez d'une vue à l'autre en un clic, sans rien reconfigurer. Appuyez sur la vue ouverte pour la modifier. Vos vues suivent votre compte.

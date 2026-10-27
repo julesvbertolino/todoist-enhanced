@@ -1,3 +1,6 @@
+import { TodoistMark } from '../TodoistMark';
+import { takeCommentsRequest } from '../TaskCommentBadge';
+import { useDismissiblePopover } from '@/hooks/useDismissiblePopover';
 import { Select } from '../Select';
 import { usePhone } from '@/hooks/usePhone';
 import { useProjectPeople } from '@/hooks/useProjectPeople';
@@ -272,6 +275,15 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
   const overlayId = useId();
 
   const item = taskId ? snapshot.items[taskId] : null;
+  useEffect(() => {
+    if (!item || !takeCommentsRequest(item.id)) return;
+    const frame = requestAnimationFrame(() => {
+      const section = document.querySelector<HTMLElement>('.detail-body .comments');
+      section?.scrollIntoView({ block: 'nearest' });
+      section?.querySelector<HTMLTextAreaElement>('textarea')?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [item]);
   useProjectPeople(item?.project_id);
   const loadTask = useStore((s) => s.loadTask);
   const logbookEntry = useStore((s) => s.logbookEntry);
@@ -323,23 +335,15 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
   const [addingSubtask, setAddingSubtask] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [tagPickerOpen, setTagPickerOpen] = useState(false);
-  /* Escape puts the tag list away wherever the focus is in the panel — on a tag, on the search field, or
-     nowhere — rather than only from the search field, and the panel stays open behind it. */
-  useEffect(() => {
-    if (!tagPickerOpen) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      event.stopPropagation();
-      event.preventDefault();
-      setTagPickerOpen(false);
-    };
-    document.addEventListener('keydown', onKey, true);
-    return () => document.removeEventListener('keydown', onKey, true);
-  }, [tagPickerOpen]);
+  const tagsButton = useRef<HTMLButtonElement>(null);
+  const tagsPanel = useRef<HTMLDivElement | null>(null);
+  const moreButton = useRef<HTMLButtonElement>(null);
   const [tagQuery, setTagQuery] = useState('');
   const newTagChoice = useCreateTag(tagQuery);
   const panelRef = useRef<HTMLDivElement>(null);
   const menuRef = useMenuKeys(menuOpen, () => setMenuOpen(false));
+  useDismissiblePopover(tagPickerOpen, tagsButton, tagsPanel, () => setTagPickerOpen(false), true);
+  useDismissiblePopover(menuOpen, moreButton, menuRef, () => setMenuOpen(false), true);
   const titleRef = useRef<HTMLTextAreaElement | HTMLInputElement>(null);
   /** Asked for, then done. The one action in here that cannot be taken back. */
   const askThenDelete = useCallback(() => {
@@ -482,7 +486,11 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
 
   const project = snapshot.projects[item.project_id];
   const section = item.section_id ? snapshot.sections[item.section_id] : null;
-  const visibleLabels = item.labels.filter((l) => !l.toLowerCase().startsWith('est-'));
+  const visibleLabels = item.labels.filter((l) => !l.toLowerCase().startsWith('est-')).sort((a, b) => {
+    const left = Object.values(snapshot.labels).find((l) => l.name === a);
+    const right = Object.values(snapshot.labels).find((l) => l.name === b);
+    return (left && right ? byLabelOrder(left, right) : 0) || a.localeCompare(b);
+  });
   const allTags = Object.values(snapshot.labels)
     .filter((l) => !l.is_deleted && !l.name.startsWith('est-'))
     .sort(byLabelOrder);
@@ -745,6 +753,8 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
               className="iconbtn"
               aria-label={t('task.moreActions')}
               title={t('task.moreActions')}
+              ref={moreButton}
+              aria-haspopup="menu"
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((v) => !v)}
             >
@@ -759,7 +769,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
                     window.open(todoistTaskUrl(item.id), '_blank', 'noopener');
                   }}
                 >
-                  <span><Icon name="external" size="sm" /> {t('task.openInTodoist')}</span>
+                  <span><TodoistMark className="ic ic-sm menu-mark" /> {t('task.openInTodoist')}</span>
                 </button>
                 {!demo && !isTemporaryId(item.id) && (
                   <button
@@ -805,6 +815,17 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
                 date: new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' })
                   .format(new Date(completedOn)),
               })}
+            </p>
+          )}
+          {/* Said next to the title, not only in the breadcrumb, where it was easy
+              to miss that the task is a subtask at all (#339). */}
+          {ancestors.length > 0 && (
+            <p className="subtaskof">
+              <Icon name="subtask" size="sm" />
+              {t('detail.subtaskOf')}
+              <button className="crumblink" onClick={() => onOpen(ancestors[ancestors.length - 1].id)}>
+                {plainTitle(ancestors[ancestors.length - 1].content)}
+              </button>
             </p>
           )}
           <div className={`detail-headline${item.checked ? ' done' : ''}`}>
@@ -1128,6 +1149,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
             <span className="prophead">
               <PropLabel name={t('detail.labels')} prop="tags" />
               <button
+                ref={tagsButton}
                 className="propadd"
                 aria-label={t('composer.labels')}
                 title={t('composer.labels')}
@@ -1171,7 +1193,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
                 aria-label={t('composer.labels')}
                 /* The tags property sits at the foot of a scrolling panel, so
                    the list it opens can land below the fold. Bring it up. */
-                ref={(node) => node?.scrollIntoView({ block: 'nearest' })}
+                ref={(node) => { tagsPanel.current = node; node?.scrollIntoView({ block: 'nearest' }); }}
               >
                 <div className="pickersearch">
                   <Icon name="search" size="sm" />

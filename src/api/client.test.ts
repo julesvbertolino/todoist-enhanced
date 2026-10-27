@@ -90,11 +90,18 @@ describe('the token', () => {
 });
 
 describe('a refusal', () => {
-  it('is an auth failure on a 403 with an empty body', async () => {
+  it.each(['FORBIDDEN', 'PERMISSION_DENIED', 'INSUFFICIENT_SCOPE'])('keeps a permission refusal (%s) separate from a bad token', (error_tag) => {
+    expect(new ApiError('refused', 403, { error_tag }).isAuthError).toBe(false);
+  });
+  it('recognises Todoist’s explicit authentication code and revoked-token errors', () => {
+    expect(new ApiError('refused', 403, { error_code: 477 }).isAuthError).toBe(true);
+    expect(new ApiError('refused', 403, { error_tag: 'INVALID_TOKEN' }).isAuthError).toBe(true);
+  });
+  it('keeps the session on a 403 with an empty body', async () => {
     fetchMock.mockResolvedValue(answer(403));
     const error = await request('/x').catch((e: unknown) => e) as ApiError;
-    expect(error.isAuthError).toBe(true);
-    expect(error.isRefusal).toBe(false);
+    expect(error.isAuthError).toBe(false);
+    expect(error.isRefusal).toBe(true);
   });
 
   it('is a refusal on a 403 that names the plan, not the token', async () => {

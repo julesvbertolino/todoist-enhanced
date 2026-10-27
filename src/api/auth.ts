@@ -40,8 +40,8 @@ class Auth implements AuthProvider {
    * After a 401, one more try with a renewed access token — an hour can end
    * between the check and the request. Null when there is nothing to renew.
    */
-  async renewAfterRefusal(): Promise<string | null> {
-    return this.viaOAuth ? freshAccessToken(true) : null;
+  async renewAfterRefusal(rejectedAccessToken?: string): Promise<string | null> {
+    return this.viaOAuth ? freshAccessToken(true, rejectedAccessToken) : null;
   }
 
   isConnected(): boolean {

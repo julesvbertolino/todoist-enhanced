@@ -34,8 +34,9 @@ export class ApiError extends Error {
   get isAuthError(): boolean {
     if (this.status === 401) return true;
     if (this.status !== 403) return false;
+    if (this.parsedBody.error_code === 477) return true;
     const tag = `${this.parsedBody.error_tag ?? ''} ${this.parsedBody.error ?? ''}`.toLowerCase();
-    return /auth|token|permission|forbidden/.test(tag) || tag.trim() === '';
+    return /(?:invalid|expired|revoked|missing)[_ -]?(?:access[_ -]?)?token|not[_ -]?authenticated|authentication[_ -]?(?:failed|required)|unauthorized/.test(tag);
   }
 
   /**
@@ -206,7 +207,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
        check and the request is renewed once and the request tried again. */
     if (response.status === 401 && !renewed) {
       renewed = true;
-      const next = await auth.renewAfterRefusal();
+      const next = await auth.renewAfterRefusal(token);
       if (next) {
         token = next;
         continue;

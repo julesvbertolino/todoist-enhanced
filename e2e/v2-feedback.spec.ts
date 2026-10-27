@@ -55,7 +55,7 @@ test.describe('the open task (feedback pass)', () => {
 
     const field = dialog.getByRole('textbox', { name: 'Comment' });
     await field.fill('Call them back on Monday');
-    await field.press('Enter');
+    await field.press('Meta+Enter');
     await expect(dialog.locator('.comment-body')).toContainText('Call them back on Monday');
     await expect(field).toHaveValue('');
   });

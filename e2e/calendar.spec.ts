@@ -275,8 +275,7 @@ for (const mode of ['Calendar', 'List', 'Board']) {
     const card = mode === 'Calendar' ? calendar(page).locator('[data-calendar-task="cal-timed"]') : active(page).locator('[data-task-id="cal-timed"]');
     await card.click({ button: 'right' });
     const menu = page.locator('.rowmenu[role="menu"]');
-    for (const name of ['Edit task', 'Schedule', 'Priority', 'Deadline', 'Move to project', 'Duplicate']) await expect(menu.getByRole('button', { name, exact: true })).toBeVisible();
-    await menu.getByRole('button', { name: 'Priority', exact: true }).click();
+    for (const name of ['Edit task', 'Tomorrow', 'P2', 'Deadline', 'Move to project', 'Duplicate']) await expect(menu.getByRole('button', { name, exact: true })).toBeVisible();
     await page.locator('.rowmenu').getByRole('button', { name: 'P2', exact: true }).click();
     expect((await page.evaluate(() => (window as any).__store.getState().snapshot.items['cal-timed'].priority))).toBe(3); // eslint-disable-line @typescript-eslint/no-explicit-any
   });
@@ -328,7 +327,7 @@ test('month outside click only dismisses overflow; next click creates', async ({
 test('calendar context submenus return to actions, including the duration editor', async ({ demo: page }) => {
   await seed(page); await openCalendar(page);
   await calendar(page).locator('[data-calendar-task="cal-timed"]').click({ button: 'right' });
-  for (const name of ['Priority', 'Deadline', 'Schedule', 'Move to project', 'Set an estimate']) {
+  for (const name of ['Deadline', 'Pick a date', 'Move to project', 'Set an estimate']) {
     const menu = page.locator('.rowmenu[role="menu"]');
     await menu.getByRole('button', { name, exact: true }).click();
     await expect(menu.getByRole('button', { name: 'Back', exact: true })).toBeVisible();
@@ -400,12 +399,10 @@ test('calendar cards open from title and body without confusing clicks with drag
 test('priority and estimate context menus stay compact', async ({ demo: page }) => {
   await seed(page); await openCalendar(page);
   await calendar(page).locator('[data-calendar-task="cal-timed"]').click({ button: 'right' });
-  await page.locator('.rowmenu').getByRole('button', { name: 'Priority', exact: true }).click();
-  const priority = page.locator('.prioritymenu');
+  const priority = page.locator('.task-priority-shortcuts');
   await expect(priority.locator('h5')).toHaveCount(0);
   expect((await priority.boundingBox())!.height).toBeLessThan(220);
   await page.screenshot({ path: '../../outputs/calendar-priority-compact.png', fullPage: true });
-  await priority.getByRole('button', { name: 'Back', exact: true }).click();
   await page.locator('.rowmenu').getByRole('button', { name: 'Set an estimate', exact: true }).click();
   const estimate = page.locator('.estimatesheet');
   expect((await estimate.boundingBox())!.height).toBeLessThan(250);

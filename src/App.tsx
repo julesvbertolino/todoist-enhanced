@@ -57,6 +57,9 @@ import { bucketOf, hasLabel, somedayItems, upcomingItems, weekItems } from './do
 import { effectiveEstimate } from './domain/estimates';
 import type { Item } from './domain/types';
 import type { TranslationKey } from './i18n';
+import { useUpdateReady } from './lib/appUpdate';
+import { usePhone } from './hooks/usePhone';
+import { UpdateCard } from './components/UpdateCard';
 
 export function App() {
   useLabelRenames();
@@ -640,6 +643,8 @@ function AppShell({
   const { snapshot, items, childrenOf } = useData(route.view === 'project' ? `project:${route.id}` : route.view === 'label' ? `label:${route.id}` : route.view === 'filter' ? `filter:${route.id}` : route.view);
   const conflictSettings = useStore((s) => s.prefs.conflicts);
   const demo = useStore((s) => s.demo);
+  const updateReady = useUpdateReady();
+  const phone = usePhone();
   const sidebarCollapsed = useStore((s) => s.prefs.sidebarCollapsed);
   const density = useStore((s) => s.prefs.density);
   const clearSelection = useStore((s) => s.clearSelection);
@@ -831,11 +836,13 @@ function AppShell({
         <header className={`mobile-top${barScrolled ? ' scrolled' : ''}`}>
           {/* This opened My week, whatever it said. It opens the navigation. */}
           <button
-            className="iconbtn"
+            className="iconbtn hasdot"
             aria-label={t('nav.openNavigation')}
             onClick={() => setBrowseOpen(true)}
           >
             <Icon name="menu" />
+            {/* A new version waits at the foot of the navigation: the dot says where to look. */}
+            {updateReady && <span className="belldot" aria-hidden="true" />}
           </button>
           {/* The page names itself twice on a phone — once in this bar and once
               as the heading under it — which costs a row of a short screen to
@@ -993,6 +1000,8 @@ function AppShell({
         onOpen={openTask}
       />
       <BulkBar />
+      {/* Where the sidebar's line cannot be seen, the new version is announced on its own. */}
+      {(phone || sidebarCollapsed) && <UpdateCard floating />}
       <InstallPrompt />
 
       <InsightsPanel

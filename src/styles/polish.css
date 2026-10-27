@@ -15,8 +15,8 @@
 :root:not([data-chips="classic"]) :is(.task, .tcard, .preview-task) .meta{gap:6px;margin-top:7px;line-height:18px}
 /* `:where` for the chip list: in `:is` the `.late:not(.repeatdot)` entry gave every chip two classes of
    weight, which outranked the Inherited colours below and left them all grey. */
-:root:not([data-chips="classic"]) :is(.task, .tcard, .preview-task) .meta > :where(.at, .late:not(.repeatdot), .deadline, .est, .proj, .tag, .sect),
-.chipssample .task .meta > :where(.at, .late:not(.repeatdot), .deadline, .est, .proj, .tag, .sect){
+:root:not([data-chips="classic"]) :is(.task, .tcard, .preview-task) .meta > :where(.at, .late:not(.repeatdot), .deadline, .est, .proj, .tag, .sect, .task-comments),
+.chipssample .task .meta > :where(.at, .late:not(.repeatdot), .deadline, .est, .proj, .tag, .sect, .task-comments){
   --chip-fg:var(--muted);
   --chip-bg:var(--subtle);
   display:inline-flex;align-items:center;gap:4px;
@@ -25,7 +25,7 @@
   background:var(--chip-bg);color:var(--chip-fg);
   font-size:var(--fs-12);line-height:18px;overflow-wrap:anywhere;
 }
-:root:not([data-chips="classic"]) :is(.task, .tcard, .preview-task) .meta > :where(.at, .late:not(.repeatdot), .deadline, .est, .proj, .tag, .sect) .ic{
+:root:not([data-chips="classic"]) :is(.task, .tcard, .preview-task) .meta > :where(.at, .late:not(.repeatdot), .deadline, .est, .proj, .tag, .sect, .task-comments) .ic{
   color:inherit;width:12px;height:12px;flex:0 0 auto;
 }
 :root:not([data-chips="classic"]) :is(.task, .tcard, .preview-task) .meta > .est .ic,

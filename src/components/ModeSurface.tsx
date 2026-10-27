@@ -1,3 +1,4 @@
+import { useBoardSelection } from '@/hooks/useBoardSelection';
 import { type Step } from '@/domain/steps';
 import { TableSurface } from './TableSurface';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -191,6 +192,9 @@ const columnGap = (board: HTMLElement): number =>
 function BoardSurface(props: ModeSurfaceProps) {
   const { t, locale } = useT();
   const groups = useGrouped(props);
+  const draggingId = useStore((s) => s.draggingTaskId);
+  const selected = useStore((s) => s.selection);
+  const movingIds = draggingId ? (selected.includes(draggingId) ? selected : [draggingId]) : [];
   // Columns derived from a grouping are not drop destinations: dropping onto
   // "priority" or "tag" has no single unambiguous meaning.
   const columns: NonNullable<ModeSurfaceProps['boardColumns']> =
@@ -199,6 +203,7 @@ function BoardSurface(props: ModeSurfaceProps) {
       dropTarget: props.group === 'step' ? { kind: 'step' as const, step: g.key as Step } : undefined }));
 
   const boardRef = useRef<HTMLDivElement>(null);
+  const selectionBox = useBoardSelection(boardRef);
   const beforeAddScroll = useRef(0);
   const [reach, setReach] = useState({ left: false, right: false });
   /** Which column is in front, for the dots under a phone's board (#295). */
@@ -337,7 +342,7 @@ function BoardSurface(props: ModeSurfaceProps) {
           // An empty column has nothing to measure; "0 %" under it is noise.
           if (column.items.length === 0) parts.length = 0;
           const body = (isOver: boolean) => (
-            <section className={`col${column.accent ? ` accent-${column.accent}` : ''}${isOver ? ' dropping' : ''}`}>
+            <section className={`col${column.accent ? ` accent-${column.accent}` : ''}${isOver ? ` dropping${props.sort !== 'manual' ? ' sorted-drop' : ''}` : ''}`}>
             <div className="chead">
               <div className="chead-title">
                 {column.onRename ? (
@@ -360,7 +365,7 @@ function BoardSurface(props: ModeSurfaceProps) {
             </div>
             {/* A column is a list its cards take a place in, like a list's
                 group: the place follows the pointer between the cards (#20). */}
-            <RowListContext.Provider value={column.dropTarget ? {
+            <RowListContext.Provider value={column.dropTarget && props.sort === 'manual' ? {
               order: props.order ?? 'project',
               ids: column.items.filter((item) => !item.projection).map((item) => item.id),
               target: column.dropTarget,
@@ -378,9 +383,9 @@ function BoardSurface(props: ModeSurfaceProps) {
               />
             ))}
             </RowListContext.Provider>
-            {isOver && <div className="dropbar" aria-hidden="true" />}
+            {isOver && props.sort === 'manual' && <div className="dropbar" aria-hidden="true" />}
             {/* While a card hovers an empty column, its place stands where the text was. */}
-            {column.items.length === 0 && !isOver && <p className="empty">{t('group.empty')}</p>}
+            {column.items.length === 0 && (!isOver || props.sort !== 'manual') && <p className="empty">{t('group.empty')}</p>}
             {/* Not a card: a card is a task, and the thing that makes one is
                 the end of the column rather than something sitting in it. */}
             {(column.onAddTask ?? props.addToGroup?.(column.id)) && (
@@ -396,8 +401,8 @@ function BoardSurface(props: ModeSurfaceProps) {
           );
 
           return column.dropTarget ? (
-            <Droppable target={column.dropTarget} key={column.id}>
-              {({ isOver }) => body(isOver)}
+            <Droppable target={column.dropTarget} scope={`board:${props.viewKey}:${column.id}`} key={column.id}>
+              {({ isOver }) => body(isOver && (props.sort === 'manual' || movingIds.some((id) => !column.items.some((it) => it.id === id))))}
             </Droppable>
           ) : (
             <div key={column.id}>{body(false)}</div>
@@ -441,6 +446,7 @@ function BoardSurface(props: ModeSurfaceProps) {
           />
         )}
       </div>
+      {selectionBox}
       {/* Where the swiping is: drawn on a phone only, where the board is one column wide. */}
       {slots > 1 && (
         <div className="boarddots" aria-hidden="true">

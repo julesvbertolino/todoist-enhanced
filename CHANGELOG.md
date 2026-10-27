@@ -40,6 +40,30 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.20.0
+
+🆕 **See which tasks have comments.** A comment icon and count appear on tasks in lists, boards and tables. Click the icon to open the discussion. Hide it from Display when you prefer fewer details.
+
+🎨 **Change dates and priorities faster.** Right-click a task to choose a priority or a date shortcut directly in the menu. The calendar remains one click away for a specific date.
+
+🎨 **See where a card will go.** When a board is sorted automatically, the destination column is shaded as you drag. Manual sorting keeps the precise position indicator.
+
+🎨 **Write comments without sending too soon.** Enter starts a new line. Cmd+Enter or Ctrl+Enter sends your comment or saves an edit; the send button works as before. The comment frame turns greyer while you type, so you can tell when Escape has let go of it.
+
+🎨 **See how late a task is.** Two days late or more, a task says so ("3d late", "45d late") instead of showing its date. Hover the chip to see the date.
+
+🎨 **Spot a subtask at a glance.** An opened subtask says "Subtask of" above its title, with its parent one click away.
+
+🐛 **Select board cards with the mouse.** Drag from any empty spot on the page to select several cards without highlighting text. Starting on a card still moves it.
+
+🐛 **Close task pickers reliably.** Click outside a picker or press Escape to dismiss it. A dismissing click no longer triggers an action underneath, and opening another picker closes the first.
+
+🐛 **Keep control of repeating tasks.** Moving a recurring task to Anytime this week or Someday now asks before removing its repeat. Cancel to keep it, or undo the move afterwards.
+
+🐛 **Keep your connection through temporary errors.** Temporary token renewal failures and permission refusals no longer erase your sign-in. Requests from an older tab use renewed credentials when available.
+
+🐛 **Update when you choose.** When a new version is out, a card says so at the foot of the sidebar, or above the tabs on a phone. Nothing reloads until you press Update; Later leaves a reminder in the sidebar. Otherwise, the new version arrives the next time you open the app.
+
 ## 2.19.0
 
 🆕 **Create views for your projects.** Press + under a project's title to add a view: its own name, layout, grouping and filters. Switch between views in one click, nothing to set up again. Press the open view to change it. Your views follow your account.

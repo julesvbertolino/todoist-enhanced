@@ -24,6 +24,7 @@ const chipStrategy: SortingStrategy = (args) => {
 };
 
 const FIELD: Record<TaskField, { icon: IconName; label: TranslationKey }> = {
+  comments: { icon: 'comment', label: 'detail.comments' },
   description: { icon: 'list', label: 'details.description' },
   date: { icon: 'calendar', label: 'details.date' },
   deadline: { icon: 'deadline', label: 'details.deadline' },

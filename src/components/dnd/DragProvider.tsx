@@ -1,3 +1,4 @@
+import { confirmUndatedMove } from '@/domain/confirmUndatedMove';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   DndContext, DragOverlay, PointerSensor, pointerWithin, useSensor, useSensors,
@@ -746,6 +747,7 @@ export function DragProvider({ children }: { children: ReactNode }) {
    * in an empty section (TASK_DROP_EVENT).
    */
   async function dropOnto(item: Item, target: DropTarget) {
+    if (!await confirmUndatedMove([item], target, useStore.getState().prefs.locale)) return;
     const mutation = dropMutation(item, target);
     if (!mutation) return;
 
@@ -821,6 +823,7 @@ export function DragProvider({ children }: { children: ReactNode }) {
     );
     const after = Object.fromEntries(ids.map((id, index) => [id, index + 1]));
 
+    if (!await confirmUndatedMove(block, list.target, useStore.getState().prefs.locale)) return;
     const changes = block.map((it) => ({
       it,
       mutation: list.target ? dropMutation(it, list.target) : null,
@@ -956,6 +959,7 @@ export function DragProvider({ children }: { children: ReactNode }) {
     );
     const after = Object.fromEntries(ids.map((id, index) => [id, index + 1]));
 
+    if (!await confirmUndatedMove([item], list.target, useStore.getState().prefs.locale)) return;
     const mutation = list.target ? dropMutation(item, list.target) : null;
     const was = {
       due: item.due, labels: item.labels,

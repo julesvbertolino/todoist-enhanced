@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import {
-  Image as ImageGlyph, Table2,
+  Image as ImageGlyph, Table2, Sun, Sofa, CalendarX,
   ArrowLeft, ArrowRight, ArrowUpDown, BarChart3, Bell, Calendar, CalendarClock,
   CalendarDays, Check, ChevronDown, ChevronUp, Clock, Coffee, CornerDownRight,
   ExternalLink, Filter, Flag, Flame, Folder, GripVertical, Group, Inbox,
@@ -14,7 +14,7 @@ import {
 
 /** Every glyph in the product, named exactly as it was under the old sprite. */
 export type IconName =
-  | 'volume' | 'reset'
+  | 'sun' | 'sofa' | 'calendar-arrow-right' | 'calendar-x' | 'volume' | 'reset'
   | 'arrow-left' | 'arrow-right' | 'bars' | 'bell' | 'board' | 'calendar'
   | 'caret' | 'caret-up' | 'check' | 'clock' | 'close' | 'coffee' | 'comment'
   | 'dashboard' | 'deadline' | 'drag' | 'edit' | 'export' | 'external'
@@ -28,7 +28,7 @@ export type IconName =
 
 /** Lucide (MIT, lucide.dev) — chosen to replace the app's hand-drawn sprite. */
 const ICONS: Record<IconName, LucideIcon> = {
-  volume: Volume2,
+  sun: Sun, sofa: Sofa, 'calendar-arrow-right': Calendar, 'calendar-x': CalendarX, volume: Volume2,
   reset: RotateCcw,
   table: Table2,
   checkbox: SquareCheck, paperclip: Paperclip, react: SmilePlus, copy: Copy, trash: Trash2, 'arrow-up': ArrowUp, file: FileText, image: ImageGlyph,
@@ -97,6 +97,7 @@ interface IconProps {
 
 export function Icon({ name, size = 'md', className, style, title }: IconProps) {
   const sizeClass = size === 'sm' ? ' ic-sm' : size === 'lg' ? ' ic-lg' : '';
+  if (name === 'calendar-arrow-right') return <svg className={`ic${sizeClass}${className ? ` ${className}` : ''}`} style={style} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M16 2v4M8 2v4M3 10h18M11 22H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6M14 18h8m-3-3 3 3-3 3" /></svg>;
   const Glyph = ICONS[name];
   return (
     <Glyph
