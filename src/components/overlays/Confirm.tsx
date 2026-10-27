@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
+import { registerMoveConfirmation } from '@/domain/confirmUndatedMove';
+import { createContext, useCallback, useEffect, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Overlay } from './Overlay';
 import { useT } from '@/hooks/useT';
 
@@ -39,6 +40,8 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
       resolver.current = resolve;
     });
   }, []);
+
+  useEffect(() => registerMoveConfirmation(ask), [ask]);
 
   const settle = useCallback((value: boolean) => {
     setRequest(null);

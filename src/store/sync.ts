@@ -310,7 +310,7 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
       window.setTimeout(() => void get().ensurePreferencesTask(), 0);
     } catch (error) {
       if (error instanceof NotConnectedError) {
-        set({ connected: false, syncState: 'idle' });
+        set({ connected: false, syncState: 'idle', syncError: 'invalid' });
         return;
       }
       const offline = !navigator.onLine || !(error instanceof ApiError);
@@ -319,7 +319,7 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
         syncError: error instanceof Error ? error.message : 'unknown',
       });
       if (error instanceof ApiError && error.isAuthError) {
-        set({ connected: false });
+        set({ connected: false, syncError: 'invalid' });
         await auth.disconnect();
       }
     } finally {
@@ -414,7 +414,12 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
         ), undefined, { tone: 'error' });
       }
       return result.mapping;
-    } catch {
+    } catch (error) {
+      if (error instanceof NotConnectedError || (error instanceof ApiError && error.isAuthError)) {
+        await auth.disconnect();
+        set({ connected: false, syncState: 'idle', syncError: 'invalid' });
+        return {};
+      }
       /* Only the network can throw from here: a refusal comes back in
          `failures` above. The change stays queued and goes out on the next
          sync. */

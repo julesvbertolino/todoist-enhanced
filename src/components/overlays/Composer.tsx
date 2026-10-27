@@ -156,7 +156,7 @@ export function Composer({
     setSubtaskRefusals({});
     setDraftRefusals([]);
     setRefusals([]);
-    setProjectId(defaultProjectId || inboxId);
+    setProjectId(defaultProjectId && snapshot.projects[defaultProjectId] && !snapshot.projects[defaultProjectId].is_deleted ? defaultProjectId : inboxId);
     setSectionId(defaultSectionId ?? '');
     setDate(defaultDate ?? '');
     setRecurrence(null);
@@ -225,7 +225,7 @@ export function Composer({
   /* The default the project field falls back to, which is where a refused
      `#project` leaves it: the composer was opened on somewhere, and "nowhere"
      is not a project a task can be created in. */
-  const fallbackProject = defaultProjectId || inboxId;
+  const fallbackProject = defaultProjectId && snapshot.projects[defaultProjectId] && !snapshot.projects[defaultProjectId].is_deleted ? defaultProjectId : inboxId;
 
   /**
    * A reading turned down takes its value back out of the field it filled.
@@ -430,7 +430,7 @@ export function Composer({
     /* `||`, not `??`: an unset picker is an empty string, not null, and an
        empty string sent as project_id is what Todoist answers "invalid
        argument value" to — which is a task that never gets created. */
-    const targetProject = projectId || inboxId;
+    const targetProject = projectId && snapshot.projects[projectId] && !snapshot.projects[projectId].is_deleted ? projectId : inboxId;
     const dueDate = date;
     const repeat = recurrence;
     const pending = subtaskDraft.trim();

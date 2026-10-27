@@ -40,7 +40,7 @@ test.describe('lists (v2)', () => {
     const estimate = panel.getByRole('button', { name: 'Estimate', exact: true }).last();
     await estimate.focus();
     for (let i = 0; i < 4; i += 1) await page.keyboard.press('Alt+ArrowRight');
-    expect(await chips()).toEqual(['Description', 'Date', 'Deadline', 'Tags', 'Project', 'Estimate', 'Priority colour']);
+    expect(await chips()).toEqual(['Description', 'Date', 'Deadline', 'Tags', 'Project', 'Estimate', 'Comments', 'Priority colour']);
     expect(await kinds()).toEqual(['proj', 'est']);
 
     // The pointer: Project is dragged in front of Date.
@@ -51,7 +51,7 @@ test.describe('lists (v2)', () => {
     await page.mouse.down();
     await page.mouse.move(to!.x + 4, to!.y + to!.height / 2, { steps: 12 });
     await page.mouse.up();
-    await expect.poll(chips).toEqual(['Description', 'Project', 'Date', 'Deadline', 'Tags', 'Estimate', 'Priority colour']);
+    await expect.poll(chips).toEqual(['Description', 'Project', 'Date', 'Deadline', 'Tags', 'Estimate', 'Comments', 'Priority colour']);
   });
 
   test('a subtask pill folds the subtasks; nothing separates a task from them', async ({ demo: page }) => {

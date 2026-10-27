@@ -198,11 +198,11 @@ function CommentRow({ note, itemId }: { note: Note; itemId: string }) {
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={(event) => {
                 event.stopPropagation();
-                if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); save(); }
-                if (event.key === 'Escape') { event.preventDefault(); setEditing(false); }
+                if (event.key === 'Enter' && (event.metaKey || event.ctrlKey) && !event.nativeEvent.isComposing) { event.preventDefault(); save(); }
+                if (event.key === 'Escape') { event.preventDefault(); event.currentTarget.blur(); }
               }}
             />
-            <span className="comment-edit-actions">
+            <span className="comment-edit-actions" title={t('comment.sendHint')}>
               <button className="btn sm" onClick={() => setEditing(false)}>{t('common.cancel')}</button>
               <button className="btn sm primary" onClick={save}>{t('common.save')}</button>
             </span>
@@ -499,35 +499,19 @@ export function CommentThread({ itemId }: { itemId: string }) {
               }}
               onKeyDown={(event) => {
                 event.stopPropagation();
+                if (event.nativeEvent.isComposing) return;
                 if (mention && suggestions.length > 0) {
                   if (event.key === 'ArrowDown') { event.preventDefault(); setMentionActive((i) => (i + 1) % suggestions.length); return; }
                   if (event.key === 'ArrowUp') { event.preventDefault(); setMentionActive((i) => (i - 1 + suggestions.length) % suggestions.length); return; }
                   if (event.key === 'Enter' || event.key === 'Tab') { event.preventDefault(); pick(suggestions[mentionActive]); return; }
                 }
                 if (event.key === 'Escape' && mention) { event.preventDefault(); setMention(null); return; }
-                if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); send(); }
-                if (event.key === 'Escape' && ready) { event.preventDefault(); cancel(); }
+                if (event.key === 'Enter' && (event.metaKey || event.ctrlKey) && !event.nativeEvent.isComposing) { event.preventDefault(); send(); }
+                if (event.key === 'Escape') { event.preventDefault(); event.currentTarget.blur(); }
               }}
               onBlur={() => setTimeout(() => setMention(null), 150)}
             />
             </span>
-            {mention && suggestions.length > 0 && (
-              <div className="popover mention-list" role="listbox" aria-label={t('comment.mention')}>
-                {suggestions.map((person, index) => (
-                  <button
-                    key={person.id}
-                    type="button"
-                    role="option"
-                    aria-selected={index === mentionActive}
-                    className={`opt${index === mentionActive ? ' active' : ''}`}
-                    onMouseDown={(event) => { event.preventDefault(); pick(person); }}
-                  >
-                    <Avatar picture={person.id === me?.id ? avatarUrl(me) : avatarUrl(snapshot.collaborators[person.id] ?? null)} name={person.name} />
-                    <span>{person.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
             <span className="comment-tools">
               <input
                 ref={fileInput} type="file" hidden
@@ -554,6 +538,23 @@ export function CommentThread({ itemId }: { itemId: string }) {
               )}
             </span>
           </div>
+          {mention && suggestions.length > 0 && (
+            <div className="popover mention-list" role="listbox" aria-label={t('comment.mention')}>
+              {suggestions.map((person, index) => (
+                <button
+                  key={person.id}
+                  type="button"
+                  role="option"
+                  aria-selected={index === mentionActive}
+                  className={`opt${index === mentionActive ? ' active' : ''}`}
+                  onMouseDown={(event) => { event.preventDefault(); pick(person); }}
+                >
+                  <Avatar picture={person.id === me?.id ? avatarUrl(me) : avatarUrl(snapshot.collaborators[person.id] ?? null)} name={person.name} />
+                  <span>{person.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>

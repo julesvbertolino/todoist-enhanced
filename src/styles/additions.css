@@ -1736,3 +1736,22 @@ html.desktop-app .macapp,html.desktop-app .macapp-line{display:none}
 .popover button.opt .opt-action:hover{background:var(--hover);color:var(--text)}
 .popover button.opt .listbox-label+.ic,.popover button.opt .listbox-text+.ic{margin-left:auto}
 .popover button.opt .ic+.opt-action{margin-left:6px}
+
+/* Board destination and selection feedback (2.20). */
+.board .col.sorted-drop { background: color-mix(in srgb, var(--text) 9%, var(--frame-card)); }
+.board-selection-box { position: fixed; pointer-events: none; z-index: 1200; background: color-mix(in srgb, var(--accent) 12%, transparent); border: 1px solid var(--accent); }
+.task-comments { display: inline-flex; align-items: center; gap: 4px; color: inherit; font: inherit; background: none; border: 0; padding: 0; }
+.task-comments:hover { color: var(--accent); }
+
+.task-quick-label{padding:8px 10px 4px;color:var(--muted);font-size:12px}
+.task-date-shortcuts,.task-priority-shortcuts{display:flex;gap:4px;padding:4px 8px 8px;border-bottom:1px solid var(--border)}
+.task-date-shortcuts button,.task-priority-shortcuts button{display:flex;align-items:center;justify-content:center;gap:4px;flex:1;min-width:0;height:34px;padding:4px;border:0;border-radius:6px;background:transparent;color:var(--text);font:inherit;font-size:12px}
+.task-date-shortcuts button:hover,.task-priority-shortcuts button:hover,.task-priority-shortcuts button[aria-pressed=true]{background:var(--hover)}
+@media(pointer:coarse){.task-date-shortcuts button,.task-priority-shortcuts button{height:44px}}
+
+.task-date-shortcuts button{position:relative}
+.task-date-shortcuts button[data-tooltip]:is(:hover,:focus-visible)::after{content:attr(data-tooltip);position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);background:#202020;color:white;border-radius:5px;padding:5px 8px;white-space:nowrap;font-size:11px;pointer-events:none;z-index:5}
+.task-priority-shortcuts{margin-bottom:6px}
+.task-date-shortcuts{border-bottom:0}
+.detail-side .pill.tagpill{background:var(--surface);box-shadow:inset 0 0 0 1px var(--border);color:var(--text)}
+.detail-side .pill.tagpill .ic:last-child{width:12px;margin-left:0;transition:opacity .12s}

@@ -13,7 +13,7 @@
  */
 
 /** The chips that can be moved, in the order a row starts with. */
-export const DETAIL_CHIPS = ['estimate', 'date', 'deadline', 'labels', 'project'] as const;
+export const DETAIL_CHIPS = ['estimate', 'date', 'deadline', 'labels', 'project', 'comments'] as const;
 export type DetailChip = (typeof DETAIL_CHIPS)[number];
 
 /** Everything that can be switched off. */

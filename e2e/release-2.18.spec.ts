@@ -44,6 +44,6 @@ test('#254 typing @ in a shared task comment suggests its people, and an e-mail 
   await expect(field).toHaveValue('Hi @Alex Martin ');
   await field.pressSequentially('mail anne@example.com');
   await expect(list).toHaveCount(0);
-  await page.keyboard.press('Enter');
+  await page.keyboard.press('Meta+Enter');
   await expect(page.locator('.comment .md .mention').last()).toHaveText('@Alex Martin');
 });

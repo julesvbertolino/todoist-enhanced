@@ -1,4 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useDismissiblePopover } from '@/hooks/useDismissiblePopover';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { differenceInCalendarDays, endOfMonth, parseISO } from 'date-fns';
 import { toneOfDay } from '@/domain/dates';
@@ -145,30 +146,7 @@ export function DateField({
     };
   }, [open, chip]);
 
-  useEffect(() => {
-    if (!open) return;
-    const dismiss = (event: MouseEvent) => {
-      if (panelRef.current?.contains(event.target as Node)) return;
-      if (buttonRef.current?.contains(event.target as Node)) return;
-      /* The picker's own dialog (Repeat, Custom…) is drawn over everything
-         and belongs to it. */
-      if ((event.target as Element).closest?.('[data-picker-layer], .popover.listbox')) return;
-      setOpen(false);
-    };
-    /* The picker answers Escape itself when the focus is inside it; this is
-       for when it is not — opened with a click, the focus left elsewhere. */
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || event.defaultPrevented) return;
-      event.stopPropagation();
-      setOpen(false);
-    };
-    document.addEventListener('mousedown', dismiss);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', dismiss);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
+  useDismissiblePopover(open, buttonRef, panelRef, () => setOpen(false));
 
   const panel = open && (
     <div

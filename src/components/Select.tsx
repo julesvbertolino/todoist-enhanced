@@ -1,3 +1,4 @@
+import { useDismissiblePopover } from '@/hooks/useDismissiblePopover';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon, type IconName } from './Icon';
@@ -128,33 +129,12 @@ export function Select({
     setPosition({ top, left, width });
   }, [open, filtered.length, searchable, matchWidth, maxPopupWidth]);
 
+  useDismissiblePopover(open, buttonRef, listRef, () => setOpen(false));
   useEffect(() => {
     if (!open) return;
-    const dismiss = (event: MouseEvent) => {
-      if (listRef.current?.contains(event.target as Node)) return;
-      if (buttonRef.current?.contains(event.target as Node)) return;
-      setOpen(false);
-    };
-    /* Escape closes the list wherever the caret happens to be, and goes no
-       further: opened from inside a dialog, the list is in front of it, and
-       one Escape should put away one thing. The handler on the button below
-       only fires while the button itself has focus, which it does not once
-       the list has taken it. */
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      event.stopPropagation();
-      setOpen(false);
-      buttonRef.current?.focus();
-    };
-    document.addEventListener('mousedown', dismiss);
-    document.addEventListener('keydown', onKey);
     const close = () => setOpen(false);
     window.addEventListener('resize', close);
-    return () => {
-      document.removeEventListener('mousedown', dismiss);
-      document.removeEventListener('keydown', onKey);
-      window.removeEventListener('resize', close);
-    };
+    return () => window.removeEventListener('resize', close);
   }, [open]);
 
   // The highlighted row is kept in view as the highlight moves.

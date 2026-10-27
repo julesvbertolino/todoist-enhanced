@@ -20,12 +20,12 @@ describe('readTaskFields', () => {
 
 describe('readDetailOrder', () => {
   it('starts from the default order', () => {
-    expect(readDetailOrder(undefined)).toEqual(['estimate', 'date', 'deadline', 'labels', 'project']);
+    expect(readDetailOrder(undefined)).toEqual(['estimate', 'date', 'deadline', 'labels', 'project', 'comments']);
   });
 
   it('keeps the order given, once each, and completes it', () => {
     expect(readDetailOrder(['project', 'bogus', 'date', 'project'])).toEqual(
-      ['project', 'date', 'estimate', 'deadline', 'labels'],
+      ['project', 'date', 'estimate', 'deadline', 'labels', 'comments'],
     );
   });
 });
@@ -41,7 +41,7 @@ describe('the chips a row draws', () => {
 describe('moveDetailChip', () => {
   it('moves one chip and keeps the rest in order', () => {
     expect(moveDetailChip(defaultDetailOrder(), 'project', 0))
-      .toEqual(['project', 'estimate', 'date', 'deadline', 'labels']);
+      .toEqual(['project', 'estimate', 'date', 'deadline', 'labels', 'comments']);
   });
 });
 

@@ -223,7 +223,7 @@ describe('what a task row shows', () => {
   it('is everything, in the default order, for an account that never set it', () => {
     const hydrated = hydratePreferences({}, 'en');
     expect(Object.values(hydrated.taskFields).every(Boolean)).toBe(true);
-    expect(hydrated.detailOrder).toEqual(['estimate', 'date', 'deadline', 'labels', 'project']);
+    expect(hydrated.detailOrder).toEqual(['estimate', 'date', 'deadline', 'labels', 'project', 'comments']);
   });
 
   it('travels with the account, and a damaged value is the default', () => {
@@ -232,7 +232,7 @@ describe('what a task row shows', () => {
     const merged = mergeSynced(prefs(), stored!, 'en');
     expect(merged.taskFields.description).toBe(false);
     expect(merged.detailOrder[0]).toBe('project');
-    expect(hydratePreferences({ taskFields: 'x', detailOrder: 3 }, 'en').detailOrder).toHaveLength(5);
+    expect(hydratePreferences({ taskFields: 'x', detailOrder: 3 }, 'en').detailOrder).toHaveLength(6);
   });
 
   it('reads a comment from before the 2.0 setup as not yet set up, and keeps a stored answer', () => {

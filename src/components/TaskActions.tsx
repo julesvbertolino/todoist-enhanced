@@ -1,3 +1,6 @@
+import { TodoistMark } from './TodoistMark';
+import { addDays, nextMonday, nextSaturday, startOfDay } from 'date-fns';
+import { confirmUndatedMove } from '@/domain/confirmUndatedMove';
 import { AssigneeField } from './AssigneeField';
 import { assignees } from '@/domain/sharing';
 import { useProjectPeople } from '@/hooks/useProjectPeople';
@@ -20,7 +23,7 @@ import { effectiveEstimate, formatDuration } from '@/domain/estimates';
 import { EstimateField } from './EstimateField';
 import { DatePicker, shortDay, taskShortcuts, type RecurrenceReading } from './DatePicker';
 import { nextOccurrence } from '@/domain/nextOccurrence';
-import { formatDayOrName, formatTime, toApiDate } from '@/domain/dates';
+import { dueDate, isOverdue, formatDayOrName, formatTime, toApiDate } from '@/domain/dates';
 import { dueForDate } from '@/domain/recurrence';
 import { weekLabel } from '@/domain/types';
 import { markerStyle } from '@/domain/colors';
@@ -357,6 +360,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
    */
   async function moveTo(target: DropTarget, destination: string) {
     setMenu('none');
+    if (!await confirmUndatedMove([item], target, locale)) return;
     const mutation = dropMutation(item, target);
     if (!mutation) return;
 
@@ -477,11 +481,14 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
     });
   }
 
-  function schedule(date: Date | null) {
+  async function schedule(date: Date | null) {
+    if (!date && !await confirmUndatedMove([item], { kind: 'someday' }, locale, true)) return;
     setMenu('none');
-    void updateTask(item.id, {
-      due: date ? dueForDate(item.due, toApiDate(date)) : null,
-    });
+    if (date) { commitDate(toApiDate(date)); return; }
+    const before = { due: item.due };
+    const patch = (due: Item['due']) => (snap: Snapshot): Snapshot => ({ ...snap, items: { ...snap.items, [item.id]: { ...snap.items[item.id], due } } });
+    await apply([updateItem(item.id, { due: null })], patch(null));
+    toast(t('task.removeDate'), () => { void apply([updateItem(item.id, before)], patch(before.due)); });
   }
 
   /* Setting an estimate is a field, not a menu, and on a phone it belongs in
@@ -680,25 +687,43 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
           >
             <button className="opt" onClick={() => { setMenu('none'); onOpen(item.id); }}>
               <span><Icon name="edit" size="sm" /> {t('task.edit')}</span>
-            </button>
+            </button><hr />
             {/* On a phone this sheet is what holding the row opens, and it has
                 to be the whole of what hovering one would have shown — the
                 swipe tray is the shortcut to the three most-used of these, not
                 the only way to reach them. */}
             {(phone || contextPoint !== null) && (
               <>
-                <button className="opt" onClick={() => setMenu('schedule')}>
-                  <span><Icon name="calendar" size="sm" /> {t('task.schedule')}</span>
-                </button>
-                <button className="opt" onClick={() => setMenu('move')}>
-                  <span><Icon name="project" size="sm" /> {t('task.moveToProject')}</span>
-                </button>
-                <button className="opt" onClick={() => setMenu('priority')}>
-                  <span><Icon name="flag" size="sm" /> {t('filter.priorities')}</span>
-                </button>
+                <div className="task-quick-label">{t('task.schedule')}</div>
+                <div className="task-date-shortcuts" role="group" aria-label={t('task.schedule')}>
+                  <button type="button" data-tooltip={t('date.tomorrow')} aria-label={t('date.tomorrow')} onClick={() => commitDate(toApiDate(addDays(new Date(), 1)))}><Icon name="sun" /></button>
+                  <button type="button" data-tooltip={t('date.thisWeekend')} aria-label={t('date.thisWeekend')} onClick={() => commitDate(toApiDate(nextSaturday(new Date())))}><Icon name="sofa" /></button>
+                  <button type="button" data-tooltip={t('date.nextWeek')} aria-label={t('date.nextWeek')} onClick={() => commitDate(toApiDate(nextMonday(new Date())))}><Icon name="calendar-arrow-right" /></button>
+                  <button type="button" data-tooltip={t('task.postpone')} aria-label={t('task.postpone')} disabled={!item.due} onClick={() => {
+                    const tomorrow = addDays(startOfDay(new Date()), 1);
+                    const next = item.due?.is_recurring ? (isOverdue(item) ? tomorrow : nextOccurrence(item)) : addDays(dueDate(item) ?? new Date(), 1);
+                    if (!next) { setMenu('schedule'); return; }
+                    commitDate(toApiDate(next < tomorrow ? tomorrow : next));
+                  }}><Icon name="reset" /></button>
+                  <button type="button" data-tooltip={t('task.removeDate')} aria-label={t('task.removeDate')} disabled={!item.due} onClick={() => void schedule(null)}><Icon name="calendar-x" /></button>
+                  <button type="button" data-tooltip={t('date.pick')} aria-label={t('date.pick')} onClick={() => setMenu('schedule')}><Icon name="calendar" /></button>
+                </div>
+                <hr />
                 <button className="opt" onClick={() => setMenu('deadline')}>
                   <span><Icon name="deadline" size="sm" /> {t('detail.deadline')}</span>
                 </button>
+                <hr />
+                <div className="task-quick-label">{t('filter.priorities')}</div>
+                <div className="task-priority-shortcuts" role="group" aria-label={t('filter.priorities')}>
+                  {([1, 2, 3, 4] as const).map((priority) => <button key={priority} type="button" aria-label={`P${priority}`} title={`P${priority}`}
+                    aria-pressed={item.priority === toTodoistPriority(priority)} style={{ color: `var(--p${priority})` }} onClick={() => {
+                      setMenu('none'); void updateTask(item.id, { priority: toTodoistPriority(priority) });
+                    }}><Icon name="flag" size="sm" />P{priority}</button>)}
+                </div>
+                <button className="opt" onClick={() => setMenu('move')}>
+                  <span><Icon name="project" size="sm" /> {t('task.moveToProject')}</span>
+                </button>
+
                 <button className="opt" onClick={() => setMenu('estimate')}>
                   <span><Icon name="clock" size="sm" /> {t('task.setEstimate')}</span>
                 </button>
@@ -725,7 +750,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
                 window.open(todoistTaskUrl(item.id), '_blank', 'noopener');
               }}
             >
-              <span><Icon name="external" size="sm" /> {t('task.openInTodoist')}</span>
+              <span><TodoistMark className="ic ic-sm menu-mark" /> {t('task.openInTodoist')}</span>
             </button>
             {!isTemporaryId(item.id) && (
               <button
@@ -757,7 +782,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
                 }).then((ok) => { if (ok) void removeTask(item.id); });
               }}
             >
-              <span><Icon name="close" size="sm" /> {t('task.delete')}</span>
+              <span><Icon name="trash" size="sm" /> {t('task.delete')}</span>
             </button>
           </div>
         )}

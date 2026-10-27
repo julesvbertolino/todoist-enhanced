@@ -95,6 +95,8 @@ export default defineConfig({
   // Relative base so the build can be dropped into any subfolder on Infomaniak.
   base: './',
   preview: { headers: SECURITY_HEADERS },
+  // Trace HTML files are test artefacts, never application pages to reload.
+  server: { watch: { ignored: ['**/test-results*/**', '**/playwright-report/**'] } },
   define: APP_DEFINE,
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
@@ -104,7 +106,7 @@ export default defineConfig({
     oauthClientDocument(PUBLIC_URL),
     VitePWA({
       /* The app decides when a new build takes over (src/lib/appUpdate.ts):
-         at once, unless something is being written. */
+         only after the person chooses Reload. */
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       /* The service worker is a build artefact only. The plugin can serve a

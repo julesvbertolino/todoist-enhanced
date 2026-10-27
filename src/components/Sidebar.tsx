@@ -24,6 +24,8 @@ import type { ViewId } from '@/domain/types';
 import type { DropTarget } from '@/domain/dnd';
 import type { TranslationKey } from '@/i18n';
 import { SyncStatus } from './SyncStatus';
+import { applyUpdate, useUpdateCard, useUpdateReady } from '@/lib/appUpdate';
+import { UpdateCard } from './UpdateCard';
 import { Droppable } from './dnd/Droppable';
 import { ProjectDropRow, ProjectRowSortable } from './dnd/ProjectRowSortable';
 import { COFFEE_URL, FEEDBACK_URL } from '@/app-info';
@@ -89,6 +91,8 @@ export function Sidebar({
     return () => observer.disconnect();
   }, []);
   const { t } = useT();
+  const updateReady = useUpdateReady();
+  const announcing = useUpdateCard();
   const { snapshot, items } = useData();
   const prefs = useStore((state) => state.prefs);
   const sheet = variant === 'sheet';
@@ -631,6 +635,16 @@ export function Sidebar({
         <div className="footrow">
           <SyncStatus />
         </div>
+        {updateReady && (
+          <div className="updatewrap">
+            {!sheet && <UpdateCard />}
+            <button className={`updatebtn${announcing && !sheet ? ' announced' : ''}`} onClick={applyUpdate} title={t('update.hint')}>
+              <Icon name="sparkles" size="sm" />
+              <span>{t('update.available')}</span>
+              <strong>{t('update.apply')}</strong>
+            </button>
+          </div>
+        )}
             </div>
 
       {hint && createPortal(
@@ -646,12 +660,13 @@ export function Sidebar({
     {collapsed && (
       <div className="expand-wrap">
         <button
-          className="iconbtn"
+          className="iconbtn hasdot"
           aria-label={t('nav.showSidebar')}
           title={t('nav.showSidebar')}
           onClick={() => setPrefs({ sidebarCollapsed: false })}
         >
           <Icon name="sidebar" />
+          {updateReady && <span className="belldot" aria-hidden="true" />}
         </button>
       </div>
     )}

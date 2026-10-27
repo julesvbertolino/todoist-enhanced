@@ -1,3 +1,4 @@
+import { useDismissiblePopover } from '@/hooks/useDismissiblePopover';
 import { createPortal } from 'react-dom';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Icon, type IconName } from './Icon';
@@ -35,28 +36,16 @@ export function MultiSelect({ label, value, options, onChange, allLabel, icon, v
   }, [open, options.length]);
   useEffect(() => {
     if (!open) return;
-    const outside = (event: PointerEvent) => {
-      if (!ref.current?.contains(event.target as Node) && !popup.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const escape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      event.stopPropagation();
-      setOpen(false);
-      button.current?.focus();
-    };
-    document.addEventListener('pointerdown', outside);
-    document.addEventListener('keydown', escape);
     const dismiss = () => setOpen(false);
     const scroll = (event: Event) => { if (!popup.current?.contains(event.target as Node)) dismiss(); };
     window.addEventListener('resize', dismiss);
     window.addEventListener('scroll', scroll, true);
     return () => {
-      document.removeEventListener('pointerdown', outside);
-      document.removeEventListener('keydown', escape);
       window.removeEventListener('resize', dismiss);
       window.removeEventListener('scroll', scroll, true);
     };
   }, [open]);
+  useDismissiblePopover(open, button, popup, () => setOpen(false));
   const labels = options.filter((option) => value?.includes(option.value)).map((option) => option.label);
   const allSelected = value === null || (options.length > 0 && options.every((option) => value.includes(option.value)));
   const summary = allSelected ? (allLabel ?? t('assignee.everyone'))

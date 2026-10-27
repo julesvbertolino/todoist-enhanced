@@ -1,3 +1,4 @@
+import { confirmUndatedMove } from '@/domain/confirmUndatedMove';
 /** Tasks going somewhere: sent to a place, moved, and changed many at a time. */
 import { type Command, moveItem, reorderItems, updateItem } from '@/api/commands';
 import type { Item, Snapshot } from '@/domain/types';
@@ -11,6 +12,7 @@ export const createTasksMoveSlice: Slice<TasksMoveSlice> = (_set, get) => ({
   async sendTo(id, target, destination) {
     const item = get().snapshot.items[id];
     if (!item) return;
+    if (!await confirmUndatedMove([item], target, get().prefs.locale)) return;
     const mutation = dropMutation(item, target);
     if (!mutation) return;
 
@@ -64,6 +66,7 @@ export const createTasksMoveSlice: Slice<TasksMoveSlice> = (_set, get) => ({
    */
   async sendManyTo(ids, target, destination) {
     const snapshot = get().snapshot;
+    if (!await confirmUndatedMove(ids.map((id) => snapshot.items[id]).filter(Boolean), target, get().prefs.locale)) return;
     const changes = ids
       .map((id) => {
         const item = snapshot.items[id];

@@ -30,6 +30,7 @@ export function ConnectView() {
   const locale = useStore((s) => s.prefs.locale);
 
   const signInError = useStore((s) => s.signInError);
+  const syncError = useStore((s) => s.syncError);
 
   const [token, setToken] = useState('');
   const [status, setStatus] = useState<'idle' | 'checking' | 'invalid' | 'malformed'>('idle');
@@ -104,6 +105,7 @@ export function ConnectView() {
             return after === undefined ? t('connect.oauth') : <>{before}<TodoistMark /> Todoist{after}</>;
           })()}
         </button>
+        {syncError === 'invalid' && <p className="connect-error" role="alert">{t('connect.sessionEnded')}</p>}
         {signInError === 'denied' && <p className="connect-error">{t('connect.oauthDenied')}</p>}
         {signInError === 'failed' && <p className="connect-error">{t('connect.oauthFailed')}</p>}
         {storageBlocked && <p className="connect-error" role="alert">{t('connect.storageBlocked')}</p>}

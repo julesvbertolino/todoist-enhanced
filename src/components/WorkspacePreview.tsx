@@ -266,6 +266,7 @@ function PreviewList() {
 
   const chip = (kind: DetailChip, row: PreviewRowData): ReactNode => {
     switch (kind) {
+      case 'comments': return <span key={kind}><Icon name="comment" size="sm" />2</span>;
       case 'estimate':
         return row.minutes && <span className="est" key={kind}><Icon name="clock" size="sm" />{row.minutes}</span>;
       case 'date':

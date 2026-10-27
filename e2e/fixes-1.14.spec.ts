@@ -52,7 +52,7 @@ test('every row menu on a short board uses the whole page, never the column (#87
   // The shortest column: its last card sits near the board's own bottom edge.
   const last = board.locator('.col').last().locator('[data-task-id]').last();
   const viewport = page.viewportSize()!;
-  for (const name of ['Schedule', 'Move to project', 'More actions']) {
+  for (const name of ['Start date', 'Move to project', 'More actions']) {
     await last.hover();
     await last.getByRole('button', { name }).click();
     const menu = page.locator('.rowmenu');

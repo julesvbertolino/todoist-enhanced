@@ -1,3 +1,4 @@
+import { TaskCommentBadge } from './TaskCommentBadge';
 import { tableRowColor } from '@/domain/table';
 import { TableContext } from './TableContext';
 import { TableCells } from './TableCells';
@@ -278,8 +279,12 @@ export function TaskRow({
     return byName;
   }, [snapshot.labels]);
 
+  const lateDays = late ? overdueBy(item) : 0;
+  const lateness = lateDays >= 2 ? lateLabel(lateDays, t) : null;
+
   /* Each chip under the title, keyed so the row can draw them in any order. */
   const chips: Record<DetailChip, React.ReactNode> = {
+    comments: <TaskCommentBadge key="comments" id={item.id} onOpen={onOpen} />,
     /* On a phone the pill leaves the title line, where it would push the title
        onto a second line, and stands first here (#155). */
     date: (
@@ -287,13 +292,12 @@ export function TaskRow({
         {due && (
           <span className={late ? 'late' : `at tone-${dateTone(item) ?? 'later'}`}>
             {!late && <Icon name="calendar" />}
-            {formatRelativeDay(due, locale)}
-            {hasTime(item.due) && ` ${formatTime(due, locale, hour12)}`}
-            {/* How many days late is said in words for whoever cannot see the
-                colour, not drawn on the chip (#175). */}
-            {late && overdueBy(item) > 0 && (
-              <span className="sr">{`, ${t('task.overdueBy', { count: overdueBy(item) })}`}</span>
-            )}
+            {/* Two days late or more, the chip says how late rather than when
+                (#347): the exact date stays in the tooltip and the task panel. */}
+            {lateness ? <span title={formatRelativeDay(due, locale)}>{lateness}</span> : <>
+              {formatRelativeDay(due, locale)}
+              {hasTime(item.due) && ` ${formatTime(due, locale, hour12)}`}
+            </>}
           </span>
         )}
         {item.due?.is_recurring && (
@@ -513,7 +517,8 @@ export function TaskRow({
           )}
 
           {table && subtaskPill}
-          <span className="meta" style={table ? { display: 'none' } : undefined}>
+          {table && <span className="meta"><TaskCommentBadge id={item.id} onOpen={onOpen} /></span>}
+          {!table && <span className="meta">
             {/* The chips in the user's order (Display → Show on each task). The
                 sub-task pill is not one of them: it follows the deadline. */}
             {detailOrder.flatMap((chip) => [
@@ -531,7 +536,7 @@ export function TaskRow({
             )}
 
             {dust && <DustActions item={item} />}
-          </span>
+          </span>}
         </span>
 
         {table && <TableCells item={item} hideProject={!projectVisible} columns={table.columns} childrenOf={childrenOf} />}
@@ -585,4 +590,9 @@ function SubtaskRow(props: TaskRowProps) {
       lifted={isDragging}
     />
   );
+}
+
+/** "2d late", in days only: one unit reads at a glance which task is later (#347). */
+function lateLabel(days: number, t: ReturnType<typeof useT>['t']): string {
+  return t('task.lateDays', { count: days });
 }

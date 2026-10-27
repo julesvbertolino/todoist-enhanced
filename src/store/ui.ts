@@ -98,7 +98,7 @@ export const createUiSlice: Slice<UiSlice> = (set, get) => ({
     if (get().selectionAnchor !== id) set({ selectionAnchor: id });
   },
   selectRange(ids, additive) {
-    if (ids.length === 0) return;
+    if (ids.length === 0) { if (!additive) set({ selection: [], selectionAnchor: null }); return; }
     const next = additive ? [...new Set([...get().selection, ...ids])] : ids;
     set({ selection: next, selectionAnchor: ids[ids.length - 1] });
   },
