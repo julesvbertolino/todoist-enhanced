@@ -346,6 +346,7 @@ test('#338 a typing comment frame is greyer, a long comment scrolls past the but
 });
 
 test('a new version is announced once over the sidebar line, and floats where that line is hidden', async ({ demo: page }) => {
+  test.skip(process.env.PLAYWRIGHT_DEV !== '1', 'Controlled store scenario');
   const offer = () => page.evaluate(() => (window as unknown as { __offerUpdate: () => void }).__offerUpdate());
   const applied = () => page.evaluate(() => (window as unknown as { __updateApplied?: boolean }).__updateApplied);
   await expect(page.locator('.updatebtn, .updatecard')).toHaveCount(0);
@@ -372,6 +373,7 @@ test('a new version is announced once over the sidebar line, and floats where th
 });
 
 test('the floating announcement on a phone and with a collapsed sidebar', async ({ demo: page }) => {
+  test.skip(process.env.PLAYWRIGHT_DEV !== '1', 'Controlled store scenario');
   await page.getByRole('button', { name: 'Collapse sidebar' }).click();
   await page.evaluate(() => (window as unknown as { __offerUpdate: () => void }).__offerUpdate());
   const floating = page.locator('.updatecard.floating');
@@ -393,6 +395,7 @@ test('the floating announcement on a phone and with a collapsed sidebar', async 
 });
 
 test('#347 a task two days late or more says how late, with the date in its tooltip', async ({ demo: page }) => {
+  test.skip(process.env.PLAYWRIGHT_DEV !== '1', 'Controlled store scenario');
   const store = await page.evaluate(() => {
     const state = (window as unknown as { __store: Store }).__store.getState();
     const day = (n: number) => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
@@ -411,6 +414,7 @@ test('#347 a task two days late or more says how late, with the date in its tool
 });
 
 test('#339 an opened subtask says so above its title and opens its parent', async ({ demo: page }) => {
+  test.skip(process.env.PLAYWRIGHT_DEV !== '1', 'Controlled store scenario');
   const sub = await page.evaluate(() => {
     const items = Object.values((window as unknown as { __store: Store }).__store.getState().snapshot.items);
     const child = items.find((i) => i.parent_id && !i.checked && !items.find((p) => p.id === i.parent_id)?.parent_id)!;
