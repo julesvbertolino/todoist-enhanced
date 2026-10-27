@@ -3058,3 +3058,45 @@ html.desktop-app.quickadd body::before{display:none}
 .comment-box .comment-mirror{pointer-events:none;white-space:pre-wrap;overflow-wrap:break-word;overflow:hidden;color:transparent;width:auto}
 .comment-mirror mark{background:var(--accent-soft,var(--subtle));color:transparent;border-radius:4px;box-shadow:0 0 0 2px var(--accent-soft,var(--subtle))}
 .comment-input textarea{position:relative;background:transparent}
+
+/* #346 AMOLED: pure black for the page, the frame and the sidebar. What is
+   raised above them (cards, menus, fields, toasts) stays a step lighter so the
+   layers still read, and every border keeps its colour. */
+.themehalf.dark{background:#1e1e1e}
+.themepreview.amoled .themehalf.dark{background:#000}
+:root[data-theme="dark"][data-dark="amoled"],
+:root[data-theme="dark"][data-dark="amoled"][data-accent]{
+  --bg:#000;
+  --surface:#000;
+  --sidebar:#000;
+  --rail:#000;
+  --subtle:#141414;
+  --hover:#1c1c1c;
+  --border:#2e2e2e;
+  --border-strong:#444;
+  --raised:#121212;
+  --c-track:#262626;
+}
+:root[data-dark="amoled"] :is(.detail-top, .popover, .sheet, .card, .menu, .updatecard, .comment-box, .emojipalette, .datepanel, .timepanel, .quadrant .taskwrap, .grouppreview, .shareinvite input, input:not([type="checkbox"]):not([type="radio"]), select, textarea){
+  background-color:var(--raised);
+}
+/* On pure black the search field and the chips cannot rest on the surface they share: the field
+   takes the raised tone, and a chip is a lighter grey, or its colour mixed in more strongly. */
+:root[data-dark="amoled"] :is(.sidebar, .sidebar-sheet) .searchbtn{background:var(--raised);box-shadow:inset 0 0 0 1px var(--border)}
+:root[data-dark="amoled"] :is(.sidebar, .sidebar-sheet) .searchbtn:hover{background:var(--hover);box-shadow:inset 0 0 0 1px var(--border-strong)}
+:root[data-dark="amoled"]:not([data-chips="classic"]) :is(.task, .tcard, .preview-task) .meta > :where(.at, .late:not(.repeatdot), .deadline, .est, .proj, .tag, .sect, .task-comments){
+  --chip-bg:#1f1f1f;
+}
+:root[data-dark="amoled"][data-chips="inherited"] :is(.task, .tcard, .preview-task) .meta > .at{
+  --chip-bg:color-mix(in srgb, var(--date-fg,var(--info)) 20%, #0c0c0c);
+}
+:root[data-dark="amoled"][data-chips="inherited"] :is(.task, .tcard, .preview-task) .meta > .late:not(.repeatdot){
+  --chip-bg:color-mix(in srgb, var(--late) 22%, #0c0c0c);
+}
+:root[data-dark="amoled"][data-chips="inherited"] :is(.task, .tcard, .preview-task) .meta > .deadline{
+  --chip-bg:color-mix(in srgb, var(--deadline) 22%, #0c0c0c);
+}
+:root[data-dark="amoled"][data-chips="inherited"] :is(.task, .tcard, .preview-task) .meta > :is(.proj, .tag){
+  --chip-bg:color-mix(in srgb, var(--marker, var(--muted)) 20%, #0c0c0c);
+}
+:root[data-dark="amoled"] :is(.tag, .detail-side .pill.tagpill){background:color-mix(in srgb, var(--marker, var(--muted)) 20%, #0c0c0c)}

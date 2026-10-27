@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Icon } from './Icon';
 import { useT } from '@/hooks/useT';
 import {
-  ACCENTS, BACKGROUNDS, DENSITIES, LAYOUTS, TASK_CHIPS, TASK_OPENS, THEMES, isHexColour,
-  type Accent, type Background, type Density, type Layout, type TaskChips, type TaskOpen, type Theme,
+  ACCENTS, BACKGROUNDS, DARK_STYLES, DENSITIES, LAYOUTS, TASK_CHIPS, TASK_OPENS, THEMES, isHexColour,
+  type Accent, type Background, type DarkStyle, type Density, type Layout, type TaskChips, type TaskOpen, type Theme,
 } from '@/store/prefs';
 import { accentFamily, hexToHsl } from '@/domain/accent';
 import type { TranslationKey } from '@/i18n';
@@ -58,6 +58,39 @@ export function ThemeChoice({
           </span>
           <span className="themelabel">
             {t(`settings.theme.${option}` as TranslationKey)}
+            {value === option && <Icon name="check" size="sm" />}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Classic dark or pure black, shown as the two pages they make (#346). */
+export function DarkStyleChoice({
+  value, onChange,
+}: { value: DarkStyle; onChange: (next: DarkStyle) => void }) {
+  const { t } = useT();
+  return (
+    <div className="themechoice" role="radiogroup" aria-label={t('settings.darkStyle')}>
+      {DARK_STYLES.map((option) => (
+        <button
+          key={option}
+          type="button"
+          role="radio"
+          aria-checked={value === option}
+          className={`themecard${value === option ? ' selected' : ''}`}
+          onClick={() => onChange(option)}
+        >
+          <span className={`themepreview dark ${option}`} aria-hidden="true">
+            <span className="themehalf dark">
+              <i className="themebar" />
+              <i className="themeline" />
+              <i className="themeline short" />
+            </span>
+          </span>
+          <span className="themelabel">
+            {t(`settings.darkStyle.${option}` as TranslationKey)}
             {value === option && <Icon name="check" size="sm" />}
           </span>
         </button>

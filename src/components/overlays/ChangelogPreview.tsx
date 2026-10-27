@@ -59,6 +59,13 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
   let content: ReactNode;
   switch (kind) {
     case null: return null;
+    case 'darkAmoled':
+      content = <div className="cv-amoled">{[['Classic', ''], ['AMOLED', ' black']].map(([label, tone]) => <div key={label} className={`cv-amoled-screen${tone}`}>
+        <aside><i /><i /><i /></aside><main><b>{label}</b>{row(review, 'checkbox')}{row(task, 'checkbox')}<span className="cv-amoled-menu">Menu</span></main></div>)}</div>; break;
+    case 'nlpShorthands':
+      content = <>{title(say('Add task', 'Ajouter une tâche'))}<div className="cv-field">Pay the invoice <span className="cv-typed">tmr</span></div><div className="cv-chips">{chip(say('Tomorrow', 'Demain'), 'accent')}{chip(say('Priority', 'Priorité'))}{chip('Inbox')}{chip(say('Add task', 'Ajouter une tâche'), 'accent')}</div></>; break;
+    case 'threadOrder':
+      content = <><div className="cv-order">{chip(say('Newest first', 'Plus récents d’abord'), 'accent')}</div>{[['Anne', 'Sounds good, shipping it today.', '14:20'], ['You', 'Final copy is attached.', '11:05'], ['Anne', 'Can you send the final copy?', 'Yesterday']].map(([who, text, when]) => <div className="cv-comment" key={text}><Icon name="user" size="sm" /><span><b>{who}</b> <small>{when}</small><br />{text}</span></div>)}</>; break;
     case 'taskComments':
       content = <>{title('Website')}{row('Prepare the presentation', 'checkbox', <span className="cv-comment-count"><Icon name="comment" size="sm" />3</span>)}{row('Review the copy', 'checkbox', <span className="cv-comment-count"><Icon name="comment" size="sm" />1</span>)}{row('Publish the page', 'checkbox')}</>; break;
     case 'boardDestination':

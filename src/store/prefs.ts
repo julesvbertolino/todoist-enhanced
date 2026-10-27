@@ -190,6 +190,16 @@ export const isTheme = (value: unknown): value is Theme =>
   typeof value === 'string' && (THEMES as readonly string[]).includes(value);
 
 /**
+ * Which dark: the classic charcoal, or pure black for OLED screens (#346).
+ * Only read while the resolved scheme is dark, including when "system" lands there.
+ */
+export const DARK_STYLES = ['classic', 'amoled'] as const;
+export type DarkStyle = (typeof DARK_STYLES)[number];
+
+export const isDarkStyle = (value: unknown): value is DarkStyle =>
+  typeof value === 'string' && (DARK_STYLES as readonly string[]).includes(value);
+
+/**
  * The brand colour.
  *
  * A name, not a hex value: a theme is a family of nine tokens in two schemes,
@@ -330,6 +340,8 @@ export interface Preferences {
   density: Density;
   /** The colour scheme; "system" follows the device. */
   theme: Theme;
+  /** Classic dark or pure black, whenever the scheme is dark. */
+  darkStyle: DarkStyle;
   /** The brand colour. Every accent exists in both schemes. */
   accent: Accent;
   /** How the app is framed: a floating sidebar or a floating page. */
@@ -449,6 +461,7 @@ export const defaultPreferences = (locale: Locale): Preferences => ({
   sidebarCollapsed: false,
   density: 'comfortable',
   theme: 'system',
+  darkStyle: 'classic',
   accent: 'red',
   layout: 'page-float',
   background: 'neutral',
@@ -524,6 +537,7 @@ export function hydratePreferences(stored: unknown, locale: Locale): Preferences
     homepage: isHomeView(s.homepage) ? s.homepage : base.homepage,
     density: isDensity(s.density) ? s.density : base.density,
     theme: isTheme(s.theme) ? s.theme : base.theme,
+    darkStyle: isDarkStyle(s.darkStyle) ? s.darkStyle : base.darkStyle,
     accent: isAccent(s.accent) ? s.accent : base.accent,
     // Settings written by a 1.x build have neither: they get the defaults.
     layout: isLayout(s.layout) ? s.layout : base.layout,

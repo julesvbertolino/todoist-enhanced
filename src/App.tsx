@@ -42,7 +42,7 @@ import { compareVersions, hasChanges, parseChangelog, unseenReleases } from './d
 import { VERSION } from './app-info';
 import { hasOnboarded, shouldAskEstimateStorage } from './domain/onboarding';
 import { useStore } from './store/store';
-import type { Accent, Theme } from './store/prefs';
+import type { Accent, DarkStyle, Theme } from './store/prefs';
 import { ACCENT_TOKENS, accentFamily, backdropGradient, hexToHsl } from './domain/accent';
 import { useT } from './hooks/useT';
 import { useSelectionBlocks } from './hooks/useSelectionBlocks';
@@ -71,6 +71,7 @@ export function App() {
   const locale = useStore((s) => s.prefs.locale);
   const homepage = useStore((s) => s.prefs.homepage);
   const theme = useStore((s) => s.prefs.theme);
+  const darkStyle = useStore((s) => s.prefs.darkStyle);
   const accent = useStore((s) => s.prefs.accent);
   const accentCustom = useStore((s) => s.prefs.accentCustom);
   const taskChips = useStore((s) => s.prefs.taskChips);
@@ -188,7 +189,7 @@ export function App() {
   const [scheme, setScheme] = useState<'light' | 'dark'>(
     () => document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light',
   );
-  useEffect(() => applyTheme(theme, setScheme), [theme]);
+  useEffect(() => applyTheme(theme, darkStyle, setScheme), [theme, darkStyle]);
   /* Also on `scheme`: a custom accent is two families, and which one is
      written depends on the scheme that ended up resolved. */
   useEffect(() => applyAccent(accent, accentCustom), [accent, accentCustom, scheme]);
@@ -546,15 +547,18 @@ export interface ComposerPlacement {
  * a moment later, once preferences have loaded out of IndexedDB.
  */
 function applyTheme(
-  theme: Theme, onResolved: (scheme: 'light' | 'dark') => void,
+  theme: Theme, darkStyle: DarkStyle, onResolved: (scheme: 'light' | 'dark') => void,
 ): (() => void) | undefined {
   const root = document.documentElement;
   const media = window.matchMedia('(prefers-color-scheme: dark)');
   const apply = () => {
     const resolved = theme === 'system' ? (media.matches ? 'dark' : 'light') : theme;
     root.dataset.theme = resolved;
+    /* Pure black is a way of being dark, so it only exists while the scheme is dark (#346). */
+    if (resolved === 'dark' && darkStyle === 'amoled') root.dataset.dark = 'amoled';
+    else delete root.dataset.dark;
     onResolved(resolved);
-    try { localStorage.setItem('theme', theme); } catch { /* storage may be blocked */ }
+    try { localStorage.setItem('theme', theme); localStorage.setItem('darkStyle', darkStyle); } catch { /* storage may be blocked */ }
     paintBrowserChrome();
   };
   apply();
@@ -587,6 +591,8 @@ function applyAccent(accent: Accent, custom: string): void {
     for (const [token, value] of Object.entries(accentFamily(custom, scheme))) {
       root.style.setProperty(`--${token}`, value);
     }
+    /* The sidebar is black in AMOLED, whatever the custom accent would tint it. */
+    if (root.dataset.dark === 'amoled') root.style.setProperty('--sidebar', '#000');
   }
 
   /* The coloured background is drawn from whatever `--accent` ended up being,
@@ -623,8 +629,10 @@ function applyAccent(accent: Accent, custom: string): void {
 function paintBrowserChrome(): void {
   const meta = document.querySelector('meta[name="theme-color"]');
   if (!meta) return;
-  const accent = getComputedStyle(document.documentElement)
-    .getPropertyValue('--accent').trim();
+  /* Pure black blends the status bar into the page; otherwise it wears the accent. */
+  const accent = document.documentElement.dataset.dark === 'amoled'
+    ? '#000000'
+    : getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
   if (accent) meta.setAttribute('content', accent);
 }
 

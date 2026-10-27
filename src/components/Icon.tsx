@@ -8,7 +8,7 @@ import {
   MessageSquare, MoreHorizontal, PanelLeft, PanelTop, Pencil, Plus, Repeat,
   Search, Settings, SlidersHorizontal, Star, Tag, Target, TrendingUp,
   TriangleAlert, Upload, X, Lock, Globe, ListChecks, Bold, Italic, Strikethrough, Heading1, Heading2, Quote, Code, ListOrdered,
-  RotateCcw, Volume2, User, Eye, Sparkles, Info, Palette, Paperclip, SquareCheck, SmilePlus, Copy, Trash2, ArrowUp, FileText,
+  RotateCcw, Volume2, User, Eye, Sparkles, Info, Palette, Paperclip, SquareCheck, SmilePlus, Copy, Trash2, ArrowUp, FileText, Download,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -22,7 +22,7 @@ export type IconName =
   | 'plus' | 'project' | 'repeat' | 'search' | 'settings' | 'sidebar'
   | 'section' | 'sliders' | 'someday' | 'sort' | 'stack' | 'star' | 'subtask'
   | 'table' | 'tag' | 'tasks' | 'user' | 'eye' | 'sparkles' | 'info' | 'palette'
-  | 'checkbox' | 'paperclip' | 'react' | 'copy' | 'trash' | 'arrow-up' | 'file' | 'image'
+  | 'checkbox' | 'paperclip' | 'react' | 'copy' | 'trash' | 'arrow-up' | 'file' | 'image' | 'download'
   | 'trend' | 'upcoming' | 'warning' | 'week' | 'lock' | 'globe'
   | 'bold' | 'italic' | 'strike' | 'heading1' | 'heading2' | 'quote' | 'code' | 'list-ordered';
 
@@ -31,7 +31,7 @@ const ICONS: Record<IconName, LucideIcon> = {
   sun: Sun, sofa: Sofa, 'calendar-arrow-right': Calendar, 'calendar-x': CalendarX, volume: Volume2,
   reset: RotateCcw,
   table: Table2,
-  checkbox: SquareCheck, paperclip: Paperclip, react: SmilePlus, copy: Copy, trash: Trash2, 'arrow-up': ArrowUp, file: FileText, image: ImageGlyph,
+  checkbox: SquareCheck, paperclip: Paperclip, react: SmilePlus, copy: Copy, trash: Trash2, 'arrow-up': ArrowUp, file: FileText, image: ImageGlyph, download: Download,
   user: User, eye: Eye, sparkles: Sparkles, info: Info, palette: Palette, bold: Bold, italic: Italic, strike: Strikethrough, heading1: Heading1, heading2: Heading2, quote: Quote, code: Code, 'list-ordered': ListOrdered,
   'arrow-left': ArrowLeft,
   'arrow-right': ArrowRight,

@@ -7,7 +7,7 @@ import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } 
 import { CSS } from '@dnd-kit/utilities';
 import { Icon } from './Icon';
 import { useT } from '@/hooks/useT';
-import { tableColumnLabel, tableColumnOrder, tableColumns } from '@/domain/table';
+import { tableColumnLabel, tableColumnOrder, tableColumns, tableLayoutPatch } from '@/domain/table';
 import type { TableColumn, ViewPrefs } from '@/domain/types';
 
 type Movable = Exclude<TableColumn, 'title'>;
@@ -62,7 +62,7 @@ export function ColumnsMenu({ value, onChange }: {
 
   /** Saves a new order and which of its columns are on: the shown ones read in that same order. */
   const save = (next: Movable[], on: Movable[]) =>
-    onChange({ tableOrder: next, tableColumns: next.filter((column) => on.includes(column)) });
+    onChange(tableLayoutPatch(next, on));
   const on = shown.filter((column): column is Movable => column !== 'title');
 
   const move = (column: Movable, to: number) => {

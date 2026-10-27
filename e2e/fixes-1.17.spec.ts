@@ -378,13 +378,18 @@ test('the changelog lists every release\'s lines from the most visible to the le
   const releases = dialog.locator('.whatsnew-release');
   await expect(releases.first()).toBeVisible();
 
-  // New things, then redesigns, then fixes, even though the file could list
-  // them in any order; whichever release is on top.
+  // Pictures first, then new things, redesigns and fixes inside each group,
+  // even though the file could list them in any order; whichever release is on top.
   const rank: Record<string, number> = { new: 0, design: 1, fix: 2 };
   for (const at of [0, 1, 2]) {
-    const kinds = await releases.nth(at).locator('.whatsnew-change')
-      .evaluateAll((els) => els.map((el) => el.classList[1]));
-    expect(kinds.length).toBeGreaterThan(0);
-    expect(kinds).toEqual([...kinds].sort((x, y) => rank[x] - rank[y]));
+    const entries = await releases.nth(at).locator('.whatsnew-change')
+      .evaluateAll((els) => els.map((el) => ({ picture: el.classList.contains('whatsnew-illustrated'), kind: el.classList[1] })));
+    expect(entries.length).toBeGreaterThan(0);
+    const picture = entries.filter((entry) => entry.picture);
+    expect(entries.slice(0, picture.length)).toEqual(picture);
+    for (const group of [picture, entries.filter((entry) => !entry.picture)]) {
+      const kinds = group.map((entry) => entry.kind);
+      expect(kinds).toEqual([...kinds].sort((x, y) => rank[x] - rank[y]));
+    }
   }
 });

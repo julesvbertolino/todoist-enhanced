@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { tableColumnOrder, tableColumns } from './table';
+import { dropTableColumn, neighbourColumn, stepTableColumn, tableColumnOrder, tableColumns, toggleTableColumn } from './table';
 import { pageClass } from './pageLayout';
 import { defaultViewPrefs, type ViewPrefs } from './types';
 
@@ -35,13 +35,13 @@ describe('the order of the columns (#333)', () => {
   const prefs = (extra: Partial<ViewPrefs> = {}): ViewPrefs => ({ ...defaultViewPrefs('project:p'), ...extra });
 
   it('lists every column but the title, the shown ones first when nothing was saved', () => {
-    expect(tableColumnOrder(prefs())).toEqual(['date', 'deadline', 'priority', 'estimate', 'labels', 'description', 'project']);
+    expect(tableColumnOrder(prefs())).toEqual(['date', 'deadline', 'priority', 'estimate', 'labels', 'description', 'project', 'assignee']);
   });
 
   it('keeps a saved order, hidden columns included', () => {
     const order = tableColumnOrder(prefs({ tableOrder: ['project', 'date', 'labels'], tableColumns: ['title', 'date', 'labels'] }));
     expect(order.slice(0, 3)).toEqual(['project', 'date', 'labels']);
-    expect(order).toHaveLength(7);
+    expect(order).toHaveLength(8);
   });
 
   it('ignores the title, duplicates and columns that do not exist', () => {
@@ -49,5 +49,47 @@ describe('the order of the columns (#333)', () => {
     expect(order.filter((column) => column === 'date')).toHaveLength(1);
     expect(order).not.toContain('title');
     expect(order).not.toContain('nope');
+  });
+});
+
+describe('the column layout, from a heading or from Display (#335)', () => {
+  const view = defaultViewPrefs('inbox');
+
+  it('keeps an old layout as it was: the assignee is a column nobody has yet', () => {
+    expect(tableColumns({ ...view, tableColumns: ['date', 'priority'] })).toEqual(['title', 'date', 'priority']);
+    expect(tableColumns(view)).not.toContain('assignee');
+    expect(tableColumnOrder(view)).toContain('assignee');
+  });
+
+  it('puts a dragged column where the one it was dropped on is, hidden columns keeping their place', () => {
+    const patch = dropTableColumn(view, 'labels', 'date')!;
+    expect(patch.tableOrder!.slice(0, 3)).toEqual(['labels', 'date', 'deadline']);
+    expect(patch.tableColumns).toEqual(['labels', 'date', 'deadline', 'priority', 'estimate']);
+    expect(dropTableColumn(view, 'date', 'date')).toBeNull();
+  });
+
+  it('never moves the Title, nor moves another column in front of it', () => {
+    expect(dropTableColumn(view, 'title', 'date')).toBeNull();
+    expect(dropTableColumn(view, 'date', 'title')).toBeNull();
+    expect(stepTableColumn(view, 'title', 1)).toBeNull();
+    expect(toggleTableColumn(view, 'title')).toBeNull();
+  });
+
+  it('steps over the shown neighbour, not over a hidden column', () => {
+    const hidden = { ...view, tableColumns: ['date', 'priority'] as ViewPrefs['tableColumns'] };
+    expect(neighbourColumn(hidden, 'date', 1)).toBe('priority');
+    expect(stepTableColumn(hidden, 'date', 1)!.tableColumns).toEqual(['priority', 'date']);
+  });
+
+  it('has no step past either edge', () => {
+    expect(neighbourColumn(view, 'date', -1)).toBeNull();
+    expect(neighbourColumn(view, 'labels', 1)).toBeNull();
+  });
+
+  it('hides a column and brings it back to the place it had', () => {
+    const hidden = { ...view, ...toggleTableColumn(view, 'deadline')! };
+    expect(tableColumns(hidden)).not.toContain('deadline');
+    const back = { ...hidden, ...toggleTableColumn(hidden, 'deadline')! };
+    expect(tableColumns(back)).toEqual(tableColumns(view));
   });
 });

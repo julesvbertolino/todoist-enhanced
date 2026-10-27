@@ -8,7 +8,7 @@ import { BrandIcon, Icon, type IconName } from '@/components/Icon';
 import { Select } from '@/components/Select';
 import { COMPLETION_SOUNDS, playCompletionSound, type CompletionChoice, type CompletionSound } from '@/lib/completionSound';
 import { GroupOrderEditor, SidebarNavEditor } from '@/components/SidebarNavEditor';
-import { AccentChoice, BackgroundChoice, ThemeChoice, LayoutChoice, DensityChoice, EstimateStorageChoice, TaskChipsChoice, TaskOpenChoice } from '@/components/Choosers';
+import { AccentChoice, BackgroundChoice, DarkStyleChoice, ThemeChoice, LayoutChoice, DensityChoice, EstimateStorageChoice, TaskChipsChoice, TaskOpenChoice } from '@/components/Choosers';
 import { WorkspacePreview } from '@/components/WorkspacePreview';
 import { GroupPreview } from '@/components/GroupPreview';
 import { useT } from '@/hooks/useT';
@@ -274,6 +274,11 @@ export function SettingsView() {
             <Row title={t('settings.theme')} hint={t('settings.themeHint')} wide>
               <ThemeChoice value={prefs.theme} onChange={(value) => setPrefs({ theme: value })} />
             </Row>
+            {prefs.theme !== 'light' && (
+              <Row title={t('settings.darkStyle')} hint={t('settings.darkStyleHint')} wide>
+                <DarkStyleChoice value={prefs.darkStyle} onChange={(value) => setPrefs({ darkStyle: value })} />
+              </Row>
+            )}
             <Row title={t('settings.layout')} hint={t('settings.layoutHint')} wide>
               <LayoutChoice value={prefs.layout} onChange={(value) => setPrefs({ layout: value })} />
             </Row>

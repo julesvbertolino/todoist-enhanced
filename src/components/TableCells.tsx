@@ -11,6 +11,9 @@ import { toDisplayPriority, toTodoistPriority, type Item, type TableColumn, type
 import { tableColumnLabel } from '@/domain/table';
 import { markerStyle } from '@/domain/colors';
 import { ProjectIcon } from './ProjectIconPicker';
+import { AssigneeField } from './AssigneeField';
+import { PersonAvatar } from './PersonAvatar';
+import { assignees } from '@/domain/sharing';
 import { readProjectIcon } from '@/domain/projectIcons';
 
 /** Inline values use the same controls and store commands as task details. */
@@ -18,6 +21,7 @@ export function TableCells({ item, columns, childrenOf, hideProject = false }: {
   const { t, locale } = useT();
   const snapshot = useStore((s) => s.snapshot);
   const updateTask = useStore((s) => s.updateTask);
+  const assignTask = useStore((s) => s.assignTask);
   const setEstimates = useStore((s) => s.setEstimates);
   const setTaskLabels = useStore((s) => s.setTaskLabels);
   const setRecurrence = useStore((s) => s.setRecurrence);
@@ -63,6 +67,13 @@ export function TableCells({ item, columns, childrenOf, hideProject = false }: {
           <span className="project-section-name">{project.name}{section ? ` / ${section.name}` : ''}</span>
         </span></span>
       ) : '';
+    }
+    else if (column === 'assignee') {
+      /* The picker is the task window's own. A project nobody else is in has nobody to pick, and shows the plain unassigned mark. */
+      const inbox = snapshot.projects[item.project_id]?.inbox_project;
+      const alone = inbox || (!item.responsible_uid && assignees(snapshot, item.project_id).length === 0);
+      content = alone ? <span className="assign-alone" title={t('table.assignNeedsShare')}><PersonAvatar id={null} /></span> : <AssigneeField projectId={item.project_id} value={item.responsible_uid}
+        onChange={(next) => void assignTask(item.id, next)} iconOnly />;
     }
     else content = item.description;
     return <div key={column} className={`table-cell table-${column}${column === 'date' ? ` tone-${isOverdue(item) ? 'late' : dateTone(item) ?? 'later'}` : ''}`}

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import english from '../../CHANGELOG.md?raw';
 import french from '../../CHANGELOG.fr.md?raw';
 import {
-  changePresentation, compareVersions, hasChanges, localisedReleases, parseChangelog, unseenReleases,
+  changePresentation, compareVersions, hasChanges, localisedReleases, parseChangelog, releaseDisplay, unseenFeed, unseenReleases,
 } from './changelog';
 import { VERSION } from '@/app-info';
 
@@ -107,4 +107,70 @@ it('gives legacy entries a title without losing their description', () => {
   expect(changePresentation('A legacy feature. More detail.')).toEqual({ title: 'A legacy feature', description: 'More detail.' });
   expect(changePresentation('Support version 1.2.0. More detail.')).toEqual({ title: 'Support version 1.2.0', description: 'More detail.' });
   expect(changePresentation('A single sentence.')).toEqual({ title: 'A single sentence', description: '' });
+});
+
+describe('the post-update feed (#336)', () => {
+  const missed = parseChangelog(`## 1.2.0
+
+🆕 **New text.** Plain.
+
+🐛 **Newer fix.** Plain.
+
+## 1.1.0
+
+🐛 **Older fix.** Plain.
+
+🆕 **Older picture.** Drawn.
+
+🎨 **Older redesign.** Plain.
+`);
+  /* Entries are sorted by kind inside a release: 1.1.0 reads 🆕, 🎨, 🐛. */
+  const visualOf = (version: string, index: number) => (version === '1.1.0' && index === 0 ? 'picture' : null);
+  const titles = (feed: ReturnType<typeof unseenFeed<string>>) =>
+    feed.map((entry) => changePresentation(entry.change.text).title);
+
+  it('puts what carries a picture first, then new things, redesigns and fixes', () => {
+    expect(titles(unseenFeed(missed, visualOf))).toEqual([
+      'Older picture', 'New text', 'Older redesign', 'Newer fix', 'Older fix',
+    ]);
+  });
+
+  it('keeps a picture above everything, a fix included, and sorts the pictures by kind', () => {
+    const pictures = (version: string, index: number) =>
+      (version === '1.2.0' && index === 1) || (version === '1.1.0' && index === 0) ? 'picture' : null;
+    expect(titles(unseenFeed(missed, pictures))).toEqual([
+      'Older picture', 'Newer fix', 'New text', 'Older redesign', 'Older fix',
+    ]);
+  });
+
+  it('orders one release the same way, keeping each entry\'s own index', () => {
+    const release = missed[1];
+    const shown = releaseDisplay(release, visualOf);
+    expect(shown.map((entry) => entry.index)).toEqual([0, 1, 2]);
+    const fixPicture = releaseDisplay(release, (_v, index) => (index === 2 ? 'picture' : null));
+    expect(fixPicture.map((entry) => entry.index)).toEqual([2, 0, 1]);
+  });
+
+  it('shows every entry once and keeps its release, place and picture together', () => {
+    const feed = unseenFeed(missed, visualOf);
+    expect(feed).toHaveLength(5);
+    expect(feed[0]).toMatchObject({ version: '1.1.0', index: 0, visual: 'picture' });
+    expect(feed.filter((entry) => entry.visual !== null)).toHaveLength(1);
+  });
+
+  it('breaks ties with the newest release, then the written order, without touching the releases', () => {
+    const before = JSON.stringify(missed);
+    const feed = unseenFeed<string>(missed, () => null);
+    expect(titles(feed)).toEqual(['New text', 'Older picture', 'Older redesign', 'Newer fix', 'Older fix']);
+    expect(JSON.stringify(missed)).toBe(before);
+  });
+
+  it('carries the untranslated mark of the release an entry came from', () => {
+    const feed = unseenFeed<string>([{ ...missed[0], untranslated: true }, missed[1]], () => null);
+    expect(feed.filter((entry) => entry.untranslated).map((entry) => entry.version)).toEqual(['1.2.0', '1.2.0']);
+  });
+
+  it('is empty without releases', () => {
+    expect(unseenFeed([], () => null)).toEqual([]);
+  });
 });

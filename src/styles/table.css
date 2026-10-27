@@ -119,3 +119,39 @@
 
 
 .task-table .table-project .meta,.task-table .table-project .proj{min-width:0;max-width:100%}
+
+/* #335 A heading sorts and can be dragged; its chevron opens the column's menu. The
+   assignee column is a person icon. */
+.table-head > div{position:relative;display:flex;align-items:center;min-width:0}
+.table-head .head-sort{display:inline-flex;align-items:center;gap:5px;width:auto;max-width:100%;min-width:0;flex:0 1 auto;cursor:pointer;touch-action:none;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:var(--r-sm)}
+.table-head .head-sort:hover{color:var(--text)}
+.table-head[class] > div:not(:first-of-type) .head-sort{padding-inline:6px;margin-left:-6px}
+.table-head .head-arrow{flex:none;color:var(--accent)}
+.table-head .head-arrow.desc{transform:rotate(180deg)}
+.table-head .head-dot{flex:none;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.table-head .head-more{position:absolute;right:-4px;top:50%;transform:translateY(-50%);width:24px;min-height:24px;height:24px;padding:0;display:inline-grid;place-items:center;
+  border-radius:var(--r-sm);background:var(--surface);color:var(--muted);cursor:pointer;opacity:0;transition:opacity .12s}
+.table-head > div:hover .head-more,.table-head .head-more:focus-visible,.table-head .head-more[aria-expanded="true"],.table-head .head-filtered .head-more{opacity:1}
+.table-head .head-more:hover,.table-head .head-more[aria-expanded="true"]{background:var(--btn-soft);color:var(--text)}
+@media(hover:none){.table-head .head-more{opacity:1}}
+.table-head .head-dragging{position:relative;z-index:6;background:var(--hover);border-radius:var(--r-sm);box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.table-head .head-dragging button{cursor:grabbing}
+.table-cell.table-assignee{display:flex;align-items:center;justify-content:center}
+.table-head > div:has(.head-sort[title][aria-label]) .head-sort{justify-content:center;margin-inline:auto}
+
+/* The column menu is the app's floating menu: a Filter block, then moving and hiding. */
+.popover.rowmenu.tablemenu{position:fixed;z-index:110;right:auto;width:240px;max-width:calc(100vw - 16px);padding:6px;max-height:calc(100vh - 16px);overflow-y:auto}
+.popover.rowmenu.tablemenu .opt{display:flex;align-items:center;justify-content:flex-start;gap:8px;width:100%;min-height:34px;padding:6px 10px;border-radius:var(--r-sm);text-align:left}
+.popover.rowmenu.tablemenu .opt:disabled{opacity:.4;cursor:default}
+.tablemenu hr{margin:6px 4px}
+.tablemenu-title{display:flex;align-items:center;justify-content:space-between;padding:6px 10px 4px}
+.tablemenu-title h5{margin:0;padding:0}
+.tablemenu .tablemenu-clear{border:0;background:transparent;padding:2px 6px;margin-right:-6px;border-radius:var(--r-sm);color:var(--muted);font:inherit;font-size:var(--fs-12);cursor:pointer}
+.tablemenu .tablemenu-clear:hover{background:var(--hover);color:var(--text)}
+.tablemenu-list{display:grid;max-height:220px;overflow-y:auto}
+.tablemenu .tablemenu-empty{margin:6px 10px;color:var(--faint);font-size:var(--fs-12)}
+.tablemenu .tablemenu-check{gap:10px}
+.tablemenu .tablemenu-label{display:inline-flex;align-items:center;gap:8px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tablemenu .tablemenu-check .check{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border-strong);display:inline-grid;place-items:center;flex:none;color:transparent}
+.tablemenu .tablemenu-check .check.on{background:var(--accent);border-color:var(--accent);color:#fff}

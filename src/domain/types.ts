@@ -460,7 +460,7 @@ export const defaultFilters = (viewKey?: string): ViewFilters => ({
   showCompleted: false,
 });
 
-export type TableColumn = 'title' | 'date' | 'deadline' | 'priority' | 'estimate' | 'labels' | 'description' | 'project';
+export type TableColumn = 'title' | 'date' | 'deadline' | 'priority' | 'estimate' | 'labels' | 'description' | 'project' | 'assignee';
 
 export interface ViewPrefs {
   tableColumns?: TableColumn[];

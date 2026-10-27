@@ -1198,7 +1198,8 @@ img.notifav{display:block;width:34px;height:34px;object-fit:cover}
 }
 .reactionchip small{font-size:12px;font-weight:600}
 .reactionchip.mine{background:var(--accent-soft);color:var(--accent-dark)}
-.comment-image{display:block;margin-top:8px;width:max-content;max-width:100%}
+.comment-image{position:relative;display:block;margin-top:8px;width:max-content;max-width:100%}
+.comment-image > a:first-child{display:block}
 .comment-image img{display:block;max-width:280px;max-height:210px;border-radius:12px;object-fit:cover}
 .comment-file{
   display:inline-flex;align-items:center;gap:8px;margin-top:8px;padding:8px 12px;border-radius:12px;
@@ -2214,3 +2215,17 @@ html[data-navigation="pointer"] .task:focus-visible::after{content:none}
 .subtaskof{display:flex;align-items:center;gap:6px;min-width:0;margin:0 0 6px;font-size:12.5px;color:var(--muted)}
 .subtaskof .ic{color:var(--faint)}
 .subtaskof .crumblink{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;color:var(--text)}
+
+/* #340 Several files wait together; #344 the order switch sits beside the count. */
+.comment-attachments{display:flex;flex-wrap:wrap;gap:0 6px;min-width:0}
+.comment-order{margin-left:auto;display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;border:0;background:transparent;color:var(--muted);font:inherit;font-size:12px;font-weight:500;cursor:pointer}
+.comment-order:hover{background:var(--btn-soft);color:var(--text)}
+.comment-order[aria-pressed="true"]{color:var(--text)}
+.detail-section.comments > .sectionlabel{display:flex;align-items:center;gap:6px}
+
+/* #340 A sent picture shows a download button while the pointer or the keyboard is on it. */
+.comment-download{position:absolute;left:8px;bottom:8px;display:inline-grid;place-items:center;width:30px;height:30px;border-radius:8px;
+  background:rgba(0,0,0,.6);color:#fff;opacity:0;transition:opacity .12s}
+.comment-image:hover .comment-download,.comment-download:focus-visible{opacity:1}
+.comment-download:hover{background:rgba(0,0,0,.8)}
+@media(hover:none){.comment-download{opacity:1}}
