@@ -1,8 +1,9 @@
-import { differenceInCalendarDays } from 'date-fns';
+import { bucketOf } from './views';
+import { differenceInCalendarDays, endOfWeek, endOfMonth, addDays, endOfDay } from 'date-fns';
 import { dueDate } from './dates';
 import { toDisplayPriority, type Item } from './types';
 import type {
-  EisenhowerPriority, EisenhowerUrgencyRule,
+  EisenhowerPriority, EisenhowerUrgencyRule, MatrixHorizon,
 } from '@/store/prefs';
 import { byChildOrder } from './orderKey';
 
@@ -73,5 +74,22 @@ export function sortEisenhower(items: Item[]): Item[] {
       || toDisplayPriority(a.priority) - toDisplayPriority(b.priority)
       || byChildOrder(a, b)
       || a.id.localeCompare(b.id);
+  });
+}
+
+/** The roots visible on the matrix, shared with its sidebar count. */
+export function matrixVisibleItems(items: Item[], projects: Record<string, import('./types').Project>, horizon: MatrixHorizon, includeSomeday: boolean, workspace: string | null, startDay = 1): Item[] {
+  const now = new Date();
+  return items.filter((item) => {
+    const bucket = bucketOf(item, now);
+    if (bucket === 'upcoming') {
+      const date = dueDate(item);
+      const limit = horizon === 'today' ? endOfDay(now) : horizon === 'tomorrow' ? endOfDay(addDays(now, 1))
+        : horizon === 'week' ? endOfWeek(now, { weekStartsOn: (startDay % 7) as 0 | 1 | 2 | 3 | 4 | 5 | 6 }) : horizon === 'seven' ? endOfDay(addDays(now, 7))
+        : horizon === 'month' ? endOfMonth(now) : null;
+      if (date && limit && date > limit) return false;
+    }
+    if (!includeSomeday && bucket === 'someday') return false;
+    return !workspace || (projects[item.project_id]?.workspace_id ?? 'personal') === workspace;
   });
 }

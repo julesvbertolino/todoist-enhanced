@@ -11,8 +11,8 @@ import {
   type EisenhowerQuadrant,
 } from '@/domain/eisenhower';
 import { summariseLoad } from '@/domain/load';
-import { bucketOf } from '@/domain/views';
-import { PERSONAL_WORKSPACE, rootItems } from '@/store/selectors';
+import { matrixVisibleItems } from '@/domain/eisenhower';
+import { rootItems } from '@/store/selectors';
 import { viewPrefs } from '@/store/prefs';
 import { useStore } from '@/store/store';
 import type { TranslationKey } from '@/i18n';
@@ -29,26 +29,13 @@ export function EisenhowerView({ onOpen, onUnestimated }: EisenhowerViewProps) {
   const layout = useStore((s) => s.prefs.eisenhowerLayout);
   const urgentRules = useStore((s) => s.prefs.eisenhowerUrgent);
   const importantPriorities = useStore((s) => s.prefs.eisenhowerImportant);
-  const showFuture = useStore((s) => s.prefs.eisenhowerShowFuture);
+  const horizon = useStore((s) => s.prefs.eisenhowerHorizon);
   const includeSomeday = useStore((s) => s.prefs.eisenhowerIncludeSomeday);
   const prefs = useStore((s) => s.prefs);
   const workspaceFilter = viewPrefs(prefs, 'matrix').filters.workspaces.length ? null : prefs.eisenhowerWorkspace;
   const weekLabel = useStore((s) => s.prefs.weekLabel);
   const roots = useMemo(() => rootItems(items), [items]);
-  const visibleItems = useMemo(() => {
-    const now = new Date();
-    return roots.filter((item) => {
-      const bucket = bucketOf(item, now);
-      if (!showFuture && bucket === 'upcoming') return false;
-      if (!includeSomeday && bucket === 'someday') return false;
-      if (workspaceFilter) {
-        const workspaceId = snapshot.projects[item.project_id]?.workspace_id ?? null;
-        const bucket = workspaceId ?? PERSONAL_WORKSPACE;
-        if (bucket !== workspaceFilter) return false;
-      }
-      return true;
-    });
-  }, [roots, showFuture, includeSomeday, workspaceFilter, snapshot.projects]);
+  const visibleItems = useMemo(() => matrixVisibleItems(roots, snapshot.projects, horizon, includeSomeday, workspaceFilter, snapshot.user?.start_day ?? 1), [roots, snapshot.projects, horizon, includeSomeday, workspaceFilter, snapshot.user?.start_day]);
   const load = useMemo(
     () => summariseLoad(visibleItems, childrenOf, null),
     [visibleItems, childrenOf],

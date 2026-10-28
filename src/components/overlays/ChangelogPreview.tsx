@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, type ReactNode } from 'react';
 import { Icon, type IconName } from '../Icon';
+import { ProjectProgress } from '../ProjectProgress';
 import type { ChangelogVisual } from '@/domain/changelogVisuals';
 import './changelog-preview.css';
 
@@ -59,6 +60,11 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
   let content: ReactNode;
   switch (kind) {
     case null: return null;
+    case 'projectProgress':
+      content = <div className="cv-progress-example">
+        <div className="cv-progress-sidebar">{([['Website', 1, 3, 'purple'], ['Travel', 2, 2, 'blue'], ['Reading', 4, 0, 'green']] as const).map(([name, open, completed, color], i) => <div className={`cv-progress-project${i === 0 ? ' selected' : ''}`} key={name}><span className={`cv-progress-${color}`}><ProjectProgress open={open} completed={completed} label={name} /></span><span>{name}</span></div>)}</div>
+        <div className="cv-progress-page"><div className="cv-progress-page-title"><span className="cv-progress-purple"><ProjectProgress open={1} completed={3} label="Website" /></span><b>Website</b></div><div className="cv-progress-task done"><i />Plan the pages</div><div className="cv-progress-task done"><i />Write the copy</div><div className="cv-progress-task done"><i />Choose the images</div><div className="cv-progress-task"><i />Publish the site</div></div>
+      </div>; break;
     case 'darkAmoled':
       content = <div className="cv-amoled">{[['Classic', ''], ['AMOLED', ' black']].map(([label, tone]) => <div key={label} className={`cv-amoled-screen${tone}`}>
         <aside><i /><i /><i /></aside><main><b>{label}</b>{row(review, 'checkbox')}{row(task, 'checkbox')}<span className="cv-amoled-menu">Menu</span></main></div>)}</div>; break;
@@ -192,6 +198,8 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
       content = <>{row(task, 'checkbox', '✓')}<div className="cv-toast"><Icon name="check" size="sm" />{say('Task completed', 'Tâche terminée')}<b>{say('Undo', 'Annuler')}</b></div><div className="cv-footnote">⌘Z / Ctrl+Z</div></>; break;
     case 'sync': case 'offline':
       content = <>{title(kind === 'sync' ? say('Your settings follow you', 'Vos réglages vous suivent') : say('Keep working offline', 'Continuez hors connexion'))}<div className="cv-sync"><span>⌘</span><Icon name="repeat" /><span>▯</span></div><div className="cv-footnote">{kind === 'sync' ? say('Theme · Sidebar · Views', 'Thème · Barre latérale · Vues') : say('Changes saved locally, then synced', 'Changements enregistrés, puis synchronisés')}</div></>; break;
+    case 'focusedIcons':
+      content = <div className="cv-icon-grid">{(['project', 'comment', 'code', 'user', 'palette', 'link', 'file', 'someday'] satisfies IconName[]).map((name) => <span key={name}><Icon name={name} /></span>)}</div>; break;
     case 'projectIcons':
       content = <>{title(say('Project icon', 'Icône du projet'))}<div className="cv-icon-grid">{(['project', 'star', 'globe', 'coffee', 'calendar', 'tasks', 'someday', 'file'] satisfies IconName[]).map((name) => <span key={name}><Icon name={name} /></span>)}</div></>; break;
     case 'completed':

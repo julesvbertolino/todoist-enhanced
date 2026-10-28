@@ -133,7 +133,9 @@ export function mergeSynced(
   locale: Locale,
 ): Preferences {
   const { views: remoteViews, savedAt: _stamp, ...settings } = remote;
-  const hydrated = hydratePreferences({ ...local, ...settings, views: undefined, estimateStorage: settings.estimateStorage ?? null }, locale);
+  const legacyMatrixHorizon = settings.eisenhowerHorizon ?? (settings.eisenhowerEnabled
+    ? (settings.eisenhowerShowFuture ? 'all' : 'today') : local.eisenhowerHorizon);
+  const hydrated = hydratePreferences({ ...local, ...settings, eisenhowerHorizon: legacyMatrixHorizon, views: undefined, estimateStorage: settings.estimateStorage ?? null }, locale);
   const views = { ...local.views };
   for (const [key, shared] of Object.entries(remoteViews ?? {})) {
     if (!key.startsWith('project:') || !shared) continue;
@@ -291,6 +293,9 @@ export const EISENHOWER_URGENCY_RULES = [
 ] as const;
 export type EisenhowerUrgencyRule = (typeof EISENHOWER_URGENCY_RULES)[number];
 
+export const MATRIX_HORIZONS = ['today', 'tomorrow', 'week', 'seven', 'month', 'all'] as const;
+export type MatrixHorizon = (typeof MATRIX_HORIZONS)[number];
+
 export const EISENHOWER_PRIORITIES = [1, 2, 3, 4] as const;
 export type EisenhowerPriority = (typeof EISENHOWER_PRIORITIES)[number];
 
@@ -416,6 +421,7 @@ export interface Preferences {
   eisenhowerImportant: EisenhowerPriority[];
   /** Whether tasks dated after today are included in the matrix. */
   eisenhowerShowFuture: boolean;
+  eisenhowerHorizon: MatrixHorizon;
   /** Whether the undated Someday backlog is included in the matrix. */
   eisenhowerIncludeSomeday: boolean;
   /** Narrows the matrix to one workspace's projects; null is every workspace. */
@@ -487,6 +493,7 @@ export const defaultPreferences = (locale: Locale): Preferences => ({
   eisenhowerUrgent: ['overdue', 'today'],
   eisenhowerImportant: [1, 2],
   eisenhowerShowFuture: false,
+  eisenhowerHorizon: 'week',
   eisenhowerIncludeSomeday: false,
   eisenhowerWorkspace: null,
   onboarded: false,
@@ -578,6 +585,9 @@ export function hydratePreferences(stored: unknown, locale: Locale): Preferences
       ? s.eisenhowerImportant.filter(isEisenhowerPriority)
       : base.eisenhowerImportant,
     eisenhowerShowFuture: s.eisenhowerShowFuture === true,
+    eisenhowerHorizon: MATRIX_HORIZONS.includes(s.eisenhowerHorizon as MatrixHorizon)
+      ? s.eisenhowerHorizon as MatrixHorizon
+      : s.eisenhowerEnabled ? (s.eisenhowerShowFuture ? 'all' : 'today') : base.eisenhowerHorizon,
     eisenhowerIncludeSomeday: s.eisenhowerIncludeSomeday === true,
     eisenhowerWorkspace: typeof s.eisenhowerWorkspace === 'string' ? s.eisenhowerWorkspace : null,
     showDustGroup: s.showDustGroup !== false,

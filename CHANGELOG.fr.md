@@ -8,6 +8,18 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.22.0
+
+🆕 **Voyez la progression d’un projet.** Un cercle à côté des projets sans icône personnalisée se remplit à mesure que vous terminez des tâches.
+
+🆕 **Filtrez votre tableau de bord.** Dans Affichage, choisissez les priorités et les tags pour vous concentrer sur le travail à examiner. Les filtres s’appliquent aussi aux tâches terminées et à la période précédente.
+
+🎨 **Choisissez une icône de projet ou de filtre.** Retrouvez une sélection resserrée d’icônes familières par leur nom ou des mots associés. Les icônes déjà choisies restent en place.
+
+🎨 **Matrice d’Eisenhower affinée.** Choisissez jusqu’à quelle date afficher les tâches et définissez séparément l’urgence et l’importance. La barre latérale indique leur nombre dans la matrice ; Prochainement n’a plus de compteur.
+
+🐛 **Alignez le texte des sous-tâches.** Le champ de sous-tâche dans la fenêtre d’ajout est aligné avec sa case.
+
 ## 2.21.0
 
 🆕 **Choisissez le noir pur en mode sombre.** Dans Réglages, Apparence, réglez Style sombre sur AMOLED. Les pages et la barre latérale deviennent noires, avec n'importe quelle couleur d'accent, tandis que menus et fenêtres restent un ton plus clairs pour rester lisibles.

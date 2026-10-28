@@ -19,6 +19,7 @@ import type { ProjectSheetTarget } from '@/components/overlays/ProjectSheet';
 import { AddSectionLine } from '@/components/AddSectionLine';
 import { useConfirm } from '@/components/overlays/Confirm';
 import { Icon } from '@/components/Icon';
+import { ProjectProgress } from '@/components/ProjectProgress';
 import { ProjectIcon, ProjectIconGrid } from '@/components/ProjectIconPicker';
 import { markerStyle } from '@/domain/colors';
 import { TimePanel } from '@/components/TimePanel';
@@ -40,6 +41,7 @@ import { PROJECT_GROUPS } from '@/components/DisplayMenu';
 
 interface ProjectViewProps {
   projectId: string;
+  projectProgressCounts: { open: Record<string, number>; completed: Record<string, number> };
   revealSectionId?: string;
   onOpen: (id: string) => void;
   onInsights: () => void;
@@ -70,7 +72,7 @@ const priorityOf = (key: string): 1 | 2 | 3 | 4 | undefined => {
 };
 
 function ProjectBody({
-  projectId, revealSectionId, onOpen, onInsights, onUnestimated, onAddTaskTo, onProjectSheet,
+  projectId, projectProgressCounts, revealSectionId, onOpen, onInsights, onUnestimated, onAddTaskTo, onProjectSheet,
 }: ProjectViewProps) {
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [iconOpen, setIconOpen] = useState(false);
@@ -341,7 +343,8 @@ function ProjectBody({
                 <span className="hash" style={markerStyle(project.color)}>
                   {readProjectIcon(project.description)
                     ? <ProjectIcon iconId={readProjectIcon(project.description)!} style={{ color: 'inherit' }} />
-                    : '#'}
+                    : <ProjectProgress open={projectProgressCounts.open[projectId] ?? 0} completed={projectProgressCounts.completed[projectId]}
+                        label={projectProgressCounts.completed[projectId] === undefined ? t('project.progressUnknown') : (projectProgressCounts.open[projectId] ?? 0) + projectProgressCounts.completed[projectId] === 0 ? t('project.progressEmpty') : t('project.progressCompletedAll', { done: projectProgressCounts.completed[projectId], total: (projectProgressCounts.open[projectId] ?? 0) + projectProgressCounts.completed[projectId] })} />}
                 </span>
               </button>
               {iconOpen && (

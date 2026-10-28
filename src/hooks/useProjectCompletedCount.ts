@@ -22,7 +22,7 @@ export function useProjectCompletedCount(projectId: string | undefined, enabled:
   const connected = useStore((s) => s.connected);
   const demo = useStore((s) => s.demo);
   const locale = useStore((s) => s.prefs.locale);
-  const [loaded, setLoaded] = useState<{ key: string; count: number } | null>(null);
+  const [loaded, setLoaded] = useState<{ projectId: string; ids: string[] } | null>(null);
 
   const createdAt = projectId ? snapshot.projects[projectId]?.created_at : undefined;
   /* The open tasks of the project, as one string: it changes when a task is
@@ -45,13 +45,20 @@ export function useProjectCompletedCount(projectId: string | undefined, enabled:
        rather than from 2007: wrong by what is older, never by a whole sweep. */
     const since = createdAt ? new Date(createdAt) : new Date(Date.now() - 365 * 86_400_000);
     fetchCompleted(since, new Date(), controller.signal, { project_id: projectId })
-      .then((items) => { if (!controller.signal.aborted) setLoaded({ key, count: completedTaskCount(items) }); })
+      .then((items) => { if (!controller.signal.aborted) setLoaded({ projectId, ids: [...new Set(items.map((item) => item.task_id ?? item.id))] }); })
       .catch(() => { /* The figure stays pending; the 7-day card reports the failure. */ });
     return () => controller.abort();
   }, [demo, enabled, connected, projectId, createdAt, key]);
 
   if (demoCount !== undefined) return demoCount;
-  /* While a fresh count loads after a completion, the previous one for the
-     same project stands rather than blinking back to "pending". */
-  return loaded && loaded.key.startsWith(`${projectId}:`) ? loaded.count : undefined;
+  if (!loaded || loaded.projectId !== projectId) return undefined;
+  // Reflect local completions and reopenings immediately while the history
+  // refresh catches up. Recurring occurrences remain open and are excluded.
+  const ids = new Set(loaded.ids);
+  for (const item of Object.values(snapshot.items)) {
+    if (item.project_id !== projectId || item.is_deleted || item.due?.is_recurring) continue;
+    if (item.checked) ids.add(item.id);
+    else ids.delete(item.id);
+  }
+  return ids.size;
 }

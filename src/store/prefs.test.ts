@@ -289,3 +289,14 @@ describe('saved views of a project (#333)', () => {
     expect(hydrated.activeViews).toEqual({});
   });
 });
+
+
+describe('matrix horizon migration', () => {
+  it('preserves earlier enabled matrix settings and gives new users the week', () => {
+    expect(defaultPreferences('en').eisenhowerHorizon).toBe('week');
+    expect(hydratePreferences({ eisenhowerEnabled: true, eisenhowerShowFuture: false }, 'en').eisenhowerHorizon).toBe('today');
+    expect(hydratePreferences({ eisenhowerEnabled: true, eisenhowerShowFuture: true }, 'en').eisenhowerHorizon).toBe('all');
+    expect(mergeSynced(defaultPreferences('en'), { eisenhowerEnabled: true, eisenhowerShowFuture: true }, 'en').eisenhowerHorizon).toBe('all');
+    expect(mergeSynced(defaultPreferences('en'), { eisenhowerEnabled: true, eisenhowerShowFuture: false }, 'en').eisenhowerHorizon).toBe('today');
+  });
+});

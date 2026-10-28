@@ -54,7 +54,7 @@ import {
   Factory, FileSignature, Gavel, Martini, PaintBucket, PersonStanding,
   Podcast, Popcorn, Refrigerator, Salad, Scale, ShoppingBasket,
   Signature, Speaker, SprayCan, Swords, IdCard, Users2,
-  Vault, Volleyball, Vote, WashingMachine,
+  Vault, Volleyball, Vote, WashingMachine, ChessKnight, ThumbsUp, BookOpenText, PencilRuler, WalletCards,
 } from 'lucide-react';
 
 /**
@@ -370,9 +370,23 @@ export const PROJECT_ICONS: Record<string, LucideIcon> = {
   'volleyball': Volleyball,
   'vote': Vote,
   'washing-machine': WashingMachine,
+  'chess-knight': ChessKnight,
+  'thumbs-up': ThumbsUp,
+  'book-open-text': BookOpenText,
+  'pencil-ruler': PencilRuler,
+  'wallet-cards': WalletCards,
 };
 
-export const PROJECT_ICON_IDS = Object.keys(PROJECT_ICONS);
+/** The picker stays focused; older icons remain available for rendering saved projects. */
+export const PROJECT_ICON_IDS = [
+  'folder', 'message-circle', 'book-open-text', 'briefcase', 'target', 'code', 'mouse-pointer', 'mouse',
+  'gamepad', 'gift', 'users', 'lightbulb', 'pin', 'palette', 'thumbs-up', 'link', 'house',
+  'shopping-basket', 'shopping-cart', 'chess-knight', 'file-text', 'archive',
+  'smartphone', 'monitor', 'heart', 'pencil', 'app-window', 'wallet-cards', 'popcorn', 'truck',
+  'traffic-cone', 'sun', 'sticky-note', 'at-sign', 'calendar', 'coffee', 'construction', 'eye',
+  'chef-hat', 'bookmark', 'mic', 'map-pin', 'plane', 'map', 'navigation', 'pencil-ruler',
+  'mail', 'hourglass', 'piggy-bank', 'camera', 'video',
+];
 
 /**
  * Extra words that find an icon, for the word somebody actually reaches for
@@ -381,12 +395,42 @@ export const PROJECT_ICON_IDS = Object.keys(PROJECT_ICONS);
  * what each icon draws; this is named after what a project is about.
  */
 export const PROJECT_ICON_SYNONYMS: Record<string, string[]> = {
+  folder: ['folders', 'dossier', 'dossiers', 'organization', 'organisation', 'backlog'],
+  'message-circle': ['message', 'chat', 'discussion', 'conversation', 'bulle', 'social media', 'réseaux sociaux'],
+  book: ['books', 'reading', 'livre', 'livres', 'lecture'],
+  'book-open-text': ['book', 'books', 'reading', 'livre', 'livres', 'lecture'],
+  'wallet-cards': ['wallet', 'finance', 'money', 'portefeuille', 'carte', 'argent'],
+  'shopping-cart': ['grocery', 'groceries', 'shopping', 'cart', 'courses', 'caddie', 'chariot'],
+  'pencil-ruler': ['design', 'drawing', 'drawing tools', 'dessin', 'crayon', 'règle'],
+  'at-sign': ['email', 'at', 'arobase', 'mail'],
+  'piggy-bank': ['savings', 'finance', 'money', 'épargne', 'tirelire'],
+  'sticky-note': ['note', 'memo', 'post it', 'pense-bête'],
+  'traffic-cone': ['worksite', 'construction', 'chantier'],
+  plane: ['flight', 'travel', 'trip', 'voyage', 'avion'],
+  'map-pin': ['location', 'place', 'lieu', 'carte'],
+  pencil: ['writing', 'draw', 'écrire', 'dessin', 'crayon'],
+  camera: ['photo', 'photography', 'photographie', 'appareil photo'],
+  mic: ['microphone', 'audio', 'podcast', 'micro'],
+  video: ['film', 'movie', 'vidéo', 'cinema'],
+  briefcase: ['work', 'job', 'business', 'travail', 'métier'],
+  target: ['goal', 'objective', 'objectif', 'cible'],
+  gamepad: ['gaming', 'video game', 'jeux vidéo', 'jeu'],
+  gift: ['present', 'cadeau', 'anniversaire'],
+  lightbulb: ['idea', 'ideas', 'idée', 'inspiration'],
+  pin: ['map pin', 'location', 'lieu', 'épingle'],
+  palette: ['design', 'art', 'création', 'couleurs'],
+  'thumbs-up': ['like', 'approval', 'aime', 'j’aime'],
+  link: ['bookmark', 'website', 'lien', 'liens'],
+  house: ['home', 'maison', 'logement', 'famille'],
+  'chess-knight': ['chess', 'strategy', 'échecs', 'stratégie'],
+  'file-text': ['document', 'documents', 'fichier', 'paper'],
+  archive: ['filing cabinet', 'cabinet', 'files', 'archives', 'classement'],
   monitor: ['desktop', 'computer', 'screen', 'display'],
   laptop: ['computer', 'macbook', 'notebook'],
   'app-window': ['desktop', 'application', 'app', 'window'],
   'hard-drive': ['computer', 'storage', 'disk'],
   globe: ['website', 'web', 'internet', 'world', 'site'],
-  code: ['dev', 'developer', 'programming', 'coding'],
+  code: ['dev', 'developer', 'programming', 'coding', 'développement', 'programmation'],
   'file-code': ['code', 'script', 'dev'],
   braces: ['code', 'json', 'dev', 'api'],
   terminal: ['cli', 'console', 'shell', 'code'],
@@ -405,7 +449,7 @@ export const PROJECT_ICON_SYNONYMS: Record<string, string[]> = {
   network: ['connection', 'nodes', 'api'],
   'circuit-board': ['tech', 'electronics', 'hardware'],
   gauge: ['dashboard', 'speed', 'performance', 'metrics'],
-  'mouse-pointer': ['cursor', 'click'],
+  'mouse-pointer': ['cursor', 'click', 'pointeur', 'souris'],
   user: ['person', 'people', 'profile', 'account'],
   'user-round': ['person', 'people', 'profile'],
   'person-standing': ['person', 'people'],
@@ -432,7 +476,7 @@ export const PROJECT_ICON_SYNONYMS: Record<string, string[]> = {
   podcast: ['audio', 'show'],
   speaker: ['audio', 'music', 'sound'],
   factory: ['industry', 'manufacturing', 'work'],
-  'shopping-basket': ['groceries', 'shopping', 'market'],
+  'shopping-basket': ['groceries', 'grocery', 'shopping', 'market', 'courses', 'panier', 'alimentation'],
   candy: ['kids', 'sweets', 'treats'],
   volleyball: ['sports', 'team sport'],
   award: ['achievement', 'recognition', 'trophy'],

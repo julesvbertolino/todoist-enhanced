@@ -40,6 +40,18 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.22.0
+
+🆕 **See a project’s progress.** A circle beside projects without a custom icon fills as you complete tasks.
+
+🆕 **Filter your dashboard.** In Display, choose priorities and tags to focus the dashboard on the work you want to review. The filters apply to completed work and the previous period too.
+
+🎨 **Choose a project or filter icon.** Pick from a focused set of familiar icons, and find them by name or related words. Icons already chosen remain in place.
+
+🎨 **Eisenhower Matrix refinements.** Choose how far ahead to show dated tasks, and define urgent and important separately. The sidebar shows the matrix task count; Upcoming no longer shows one.
+
+🐛 **Align subtask text.** The subtask field in the task composer lines up with its checkbox.
+
 ## 2.21.0
 
 🆕 **Choose pure black in dark mode.** In Settings, Appearance, set Dark style to AMOLED. Pages and the sidebar turn true black with any accent colour, while menus and dialogs stay a shade lighter so they remain easy to read.
