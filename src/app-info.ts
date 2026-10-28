@@ -8,7 +8,7 @@
  * cannot drift apart.
  */
 export const APP_NAME = 'Enhanced for Todoist';
-export const VERSION = '2.21.0';
+export const VERSION = '2.22.0';
 export const AUTHOR = 'julesbertolino';
 /** Public contact already used by the maintainer in the app. */
 export const PRIVACY_EMAIL = 'jules.bertolino@alias-digital.fr';

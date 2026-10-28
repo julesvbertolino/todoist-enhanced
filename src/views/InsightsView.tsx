@@ -1,3 +1,5 @@
+import { matchesDashboardOpen } from '@/domain/dashboardFilters';
+import { viewPrefs } from '@/store/prefs';
 import { Select } from '@/components/Select';
 import { usePhone } from '@/hooks/usePhone';
 import { DashboardDisplayMenu } from '@/components/DashboardDisplayMenu';
@@ -72,6 +74,7 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
   // logbook rather than landing on the overview and asking for a second click.
   const route = useRoute();
   const [tab, setTab] = useState<Tab>(route.id === 'logbook' ? 'logbook' : 'overview');
+  const dashboardPrefs = useStore(s => s.prefs);
   const { snapshot, items } = useData(tab === 'overview' ? 'dashboard' : undefined);
 
   /* The initialiser above only runs on mount, so arriving from the menu while
@@ -84,7 +87,7 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
     () => rangeFor(period, offset, custom, startDay),
     [period, offset, custom, startDay],
   );
-  const { data: completed, previous, loading, error, retry } = useCompleted(range, true, tab === 'overview' ? 'dashboard' : undefined);
+  const { data: completed, previous, loading, error, retry, missingFilterData } = useCompleted(range, true, tab === 'overview' ? 'dashboard' : undefined);
 
   const pickPreset = (next: Period) => { setPeriod(next); setOffset(0); };
   /* Editing either date makes the range a custom one, starting from whatever
@@ -102,7 +105,12 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
   // The period after this one has not happened yet.
   const atPresent = rangeFor(period, offset + 1, custom, startDay).since > new Date();
 
-  const roots = useMemo(() => rootItems(items), [items]);
+  const roots = useMemo(() => {
+    const roots = rootItems(items);
+    if (tab !== 'overview') return roots;
+    const filters = viewPrefs(dashboardPrefs, 'dashboard').filters;
+    return roots.filter(item => matchesDashboardOpen(item, filters));
+  }, [items, tab, dashboardPrefs]);
   const summary = useMemo(
     () => summariseInsights(completed, roots, snapshot),
     [completed, roots, snapshot],
@@ -457,6 +465,7 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
         </div>
       </div>
       <HireNote />
+      {tab === 'overview' && missingFilterData > 0 && <p role="status" className="displayhelp">{t('dashboard.incompleteFilterHistory', { count: missingFilterData })}</p>}
       {tab === 'overview' && editing && <div className="dashboard-layout-tools">
         <button className="btn" disabled={isDefaultDashboardOrder(order)} onClick={resetLayout}>{t('dashboard.resetLayout')}</button>
       </div>}

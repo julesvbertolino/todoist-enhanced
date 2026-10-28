@@ -7,6 +7,8 @@ import { useStore } from '@/store/store';
 import { viewPrefs } from '@/store/prefs';
 import { defaultViewPrefs } from '@/domain/types';
 import { PERSONAL_WORKSPACE } from '@/store/selectors';
+import { MultiSelect } from './MultiSelect';
+import type { DisplayPriority } from '@/domain/types';
 import { PanelSheet } from '@/components/SheetChrome';
 
 /** Dashboard filters apply to both open tasks and completion statistics. */
@@ -19,7 +21,7 @@ export function DashboardDisplayMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const workspaceChanged = filters.workspaces.length > 0 && ![PERSONAL_WORKSPACE, ...Object.keys(snapshot.workspaces)].every((id) => filters.workspaces.includes(id));
-  const changed = Number(workspaceChanged) + Number(JSON.stringify(filters.assignees) !== JSON.stringify(defaults.assignees));
+  const changed = Number(workspaceChanged) + Number(JSON.stringify(filters.assignees) !== JSON.stringify(defaults.assignees)) + Number(filters.priorities.length > 0) + Number(filters.labels.length > 0);
   useEffect(() => {
     if (!open) return;
     const outside = (event: MouseEvent) => {
@@ -44,6 +46,14 @@ export function DashboardDisplayMenu() {
       </div>
       <WorkspaceFilter viewKey="dashboard" />
       <AssigneeFilter viewKey="dashboard" />
+      <MultiSelect icon="flag" label={t('filter.priorities')} allLabel={t('filter.anyPriority')}
+        value={filters.priorities.length ? filters.priorities.map(String) : null}
+        options={[1, 2, 3, 4].map(p => ({ value: String(p), label: `P${p}`, visual: <Icon name="flag" size="sm" style={{ color: `var(--p${p})` }} /> }))}
+        onChange={next => useStore.getState().setViewPrefs('dashboard', { filters: { ...filters, priorities: next ? next.map(Number) as DisplayPriority[] : [] } })} />
+      <MultiSelect icon="tag" label={t('filter.labels')} allLabel={t('filter.anyTag')}
+        value={filters.labels.length ? filters.labels : null}
+        options={Object.values(snapshot.labels).filter(label => !label.name.startsWith('est-')).map(label => ({ value: label.name, label: label.name }))}
+        onChange={next => useStore.getState().setViewPrefs('dashboard', { filters: { ...filters, labels: next ?? [] } })} />
     </PanelSheet>}
   </div>;
 }

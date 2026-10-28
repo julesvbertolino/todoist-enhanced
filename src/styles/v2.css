@@ -272,6 +272,7 @@
 .sidebar .navitem:hover{background:var(--side-hover)}
 .sidebar .navitem[aria-current="page"]{background:var(--side-sel);box-shadow:var(--side-sel-shadow);color:var(--text);font-weight:600}
 .sidebar .navitem[aria-current="page"] .ic{color:var(--side-icon-sel)}
+.sidebar .navitem .hash .ic,.sidebar .navitem[aria-current="page"] .hash .ic{color:inherit}
 .sidebar .navitem[aria-current="page"] .count{color:var(--faint)}
 .sidebar .navitem .count{font-size:12px;font-weight:400;color:var(--faint)}
 .sidebar .nav-gap{height:14px}
@@ -963,6 +964,7 @@ html.dragging-row .col .taskwrap{transition:margin .16s ease}
 .hash{background:transparent}
 .navitem .hash{width:16px;height:16px;font-size:16px;line-height:1;border-radius:0}
 .navitem .hash .ic{width:16px;height:16px}
+.navitem .hash .project-progress{transform:scale(1.15)}
 .ptitle-mark{width:auto;height:auto;border-radius:8px;padding:2px}
 .ptitle-mark .hash{width:28px;height:28px;font-size:26px}
 .ptitle-mark .hash .ic{width:26px;height:26px}
@@ -2229,3 +2231,7 @@ html[data-navigation="pointer"] .task:focus-visible::after{content:none}
 .comment-image:hover .comment-download,.comment-download:focus-visible{opacity:1}
 .comment-download:hover{background:rgba(0,0,0,.8)}
 @media(hover:none){.comment-download{opacity:1}}
+
+/* The sidebar project ring uses the project's own colour, including at 100% open. */
+.project-progress .project-progress-track{stroke:currentColor}
+.project-progress .project-progress-fill{fill:currentColor;stroke:none}

@@ -120,3 +120,18 @@
 .cv-comment{display:flex;gap:8px;align-items:flex-start;padding:5px 0;font-size:10px;line-height:1.45;min-width:0}
 .cv-comment>.ic{flex:none;margin-top:1px;color:var(--muted)}
 .cv-comment small{color:var(--muted);font-size:9px;margin-left:4px}
+
+.cv-progress-example{display:grid;grid-template-columns:41% 59%;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--surface);min-height:125px}
+.cv-progress-sidebar{padding:12px 7px;background:var(--subtle);border-right:1px solid var(--border)}
+.cv-progress-project{display:flex;align-items:center;gap:6px;padding:6px 7px;border-radius:6px;color:var(--text);font-size:10px;white-space:nowrap}
+.cv-progress-project.selected{background:var(--surface);font-weight:600}
+.cv-progress-purple{color:#884dff}.cv-progress-blue{color:#4073ff}.cv-progress-green{color:#299438}
+.cv-progress-project .project-progress{width:15px;height:15px;display:block}
+.cv-progress-page{padding:12px 13px;color:var(--text);min-width:0}
+.cv-progress-page-title{display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:5px}
+.cv-progress-page-title .project-progress{display:block;width:18px;height:18px}
+.cv-progress-task{display:flex;align-items:center;gap:7px;padding:4px 0;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cv-progress-task i{width:11px;height:11px;border:1px solid var(--muted);border-radius:50%;flex:none}
+.cv-progress-task.done{color:var(--muted);text-decoration:line-through}
+.cv-progress-task.done i{background:var(--muted);border-color:var(--muted);position:relative}
+.cv-progress-task.done i:after{content:'✓';position:absolute;inset:-3px 0 0;color:var(--surface);font-size:9px;text-align:center;text-decoration:none}

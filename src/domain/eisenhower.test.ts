@@ -47,3 +47,20 @@ describe('eisenhowerQuadrant', () => {
       .toBe('urgent-important');
   });
 });
+
+describe('matrix visible date horizon', () => {
+  it('includes the chosen date range, flexible week tasks and optional someday work', async () => {
+    const { matrixVisibleItems } = await import('./eisenhower');
+    const { vi } = await import('vitest');
+    vi.useFakeTimers(); vi.setSystemTime(new Date('2026-09-24T12:00:00'));
+    try {
+      const tasks = [item({ id: 'today', due: due('2026-09-24') }), item({ id: 'tomorrow', due: due('2026-09-25') }), item({ id: 'sun', due: due('2026-09-27') }), item({ id: 'next-week', due: due('2026-09-28') }), item({ id: 'later', due: due('2026-11-01') }), item({ id: 'week', labels: ['week'] }), item({ id: 'someday' })];
+      const ids = (h: 'today' | 'tomorrow' | 'week' | 'seven' | 'month' | 'all', someday = false) => matrixVisibleItems(tasks, {}, h, someday, null, 1).map(t => t.id);
+      expect(ids('today')).toEqual(['today', 'week']);
+      expect(ids('tomorrow')).toEqual(['today', 'tomorrow', 'week']);
+      expect(ids('week')).toEqual(['today', 'tomorrow', 'sun', 'week']);
+      expect(ids('seven')).toEqual(['today', 'tomorrow', 'sun', 'next-week', 'week']);
+      expect(ids('all', true)).toEqual(['today', 'tomorrow', 'sun', 'next-week', 'later', 'week', 'someday']);
+    } finally { vi.useRealTimers(); }
+  });
+});

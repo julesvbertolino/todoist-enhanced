@@ -46,7 +46,8 @@ export function ProjectIconGrid({ value, onPick, focusSearch }: ProjectIconGridP
     return () => window.clearTimeout(id);
   }, [focusSearch]);
 
-  const matches = PROJECT_ICON_IDS.filter((id) => {
+  const choices = value && PROJECT_ICONS[value] && !PROJECT_ICON_IDS.includes(value) ? [value, ...PROJECT_ICON_IDS] : PROJECT_ICON_IDS;
+  const matches = choices.filter((id) => {
     const words = [id.replace(/-/g, ' '), ...(PROJECT_ICON_SYNONYMS[id] ?? [])];
     return words.some((word) => matchesSearch(word, query));
   });

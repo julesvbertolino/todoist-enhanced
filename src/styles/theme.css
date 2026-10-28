@@ -1434,6 +1434,7 @@ button.subprog[aria-expanded="false"]{background:var(--subtle)}
   gap:10px;min-height:32px;font-size:var(--fs-13);
 }
 .composer-sub .check{width:14px;height:14px;border-radius:5px;border-width:1.25px}
+.composer-sub .namefield{min-width:0;line-height:0}
 .composer-sub input{
   border:0;background:transparent;font:inherit;font-size:var(--fs-13);
   color:var(--text);padding:4px 0;

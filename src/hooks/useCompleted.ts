@@ -6,6 +6,7 @@ import { fetchCompleted } from '@/api/completed';
 import { useStore } from '@/store/store';
 import { buildDemoCompleted } from '@/demo/demoData';
 import { previousRange, type Range } from '@/domain/periods';
+import { matchesDashboardHistory } from '@/domain/dashboardFilters';
 import type { CompletedItem } from '@/domain/types';
 
 const NONE: CompletedItem[] = [];
@@ -90,19 +91,28 @@ export function useCompleted(range: Range, enabled: boolean, viewKey?: string) {
   const error = failed?.key === key ? failed.message : null;
 
   const scoped = useMemo(() => {
+    let missingFilterData = 0;
     const inScope = (items: CompletedItem[]) => !viewKey ? items : items.filter((entry) => {
       const filters = viewPrefs(prefs, viewKey).filters;
       const projectId = entry.project_id ?? snapshot.items[entry.task_id ?? entry.id]?.project_id;
       const workspace = projectId ? snapshot.projects[projectId]?.workspace_id ?? PERSONAL_WORKSPACE : PERSONAL_WORKSPACE;
-      return (!filters.workspaces.length || filters.workspaces.includes(workspace)) &&
+      const common = (!filters.workspaces.length || filters.workspaces.includes(workspace)) &&
         matchesAssignee({ responsible_uid: entry.responsible_uid === undefined
           ? snapshot.items[entry.task_id ?? entry.id]?.responsible_uid ?? null : entry.responsible_uid }, filters.assignees, snapshot);
+      if (!common) return false;
+      if (viewKey !== 'dashboard') return true;
+      const match = matchesDashboardHistory(entry, filters);
+      if (match === 'unknown') missingFilterData++;
+      return match === 'match';
     });
-    return { data: ready ? inScope(loaded.data) : NONE, previous: ready ? inScope(loaded.previous) : NONE };
+    const data = ready ? inScope(loaded.data) : NONE;
+    const previous = ready ? inScope(loaded.previous) : NONE;
+    return { data, previous, missingFilterData };
   }, [loaded, ready, snapshot, prefs, viewKey]);
   return {
     data: scoped.data,
     previous: scoped.previous,
+    missingFilterData: scoped.missingFilterData,
     loading: enabled && connected && !ready && error === null,
     error,
     retry,

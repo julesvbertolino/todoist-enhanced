@@ -1,6 +1,7 @@
+import { ProjectProgress } from './ProjectProgress';
+import { matrixVisibleItems } from '@/domain/eisenhower';
 import { SidebarResize } from './SidebarResize';
-import { addDays, endOfDay } from 'date-fns';
-import { dueDate, isToday } from '@/domain/dates';
+import { isToday } from '@/domain/dates';
 import { viewPrefs } from '@/store/prefs';
 import { assigneeItems } from '@/domain/assignees';
 import { datedRoots, childIndex, makeChildrenOf, openItems, applyFilters } from '@/store/selectors';
@@ -15,7 +16,7 @@ import { useData } from '@/hooks/useData';
 import { useStore } from '@/store/store';
 import { navigate, type Route } from '@/hooks/useRoute';
 import { projectCounts, projectTree, rootItems, type ProjectNode } from '@/store/selectors';
-import { bucketOf, hasLabel, somedayItems, upcomingItems, weekItems } from '@/domain/views';
+import { bucketOf, hasLabel, somedayItems, weekItems } from '@/domain/views';
 import { markerStyle, avatarUrl } from '@/domain/colors';
 import { firstName, karmaStanding } from '@/domain/karma';
 import { readProjectIcon } from '@/domain/projectIcons';
@@ -38,6 +39,7 @@ import { visibleSidebarNav, type SidebarItemId } from '@/domain/sidebar';
 
 interface SidebarProps {
   route: Route;
+  projectProgressCounts: { open: Record<string, number>; completed: Record<string, number> };
   onAddTask: () => void;
   onSearch: () => void;
   onIssues: () => void;
@@ -73,7 +75,7 @@ const GO_KEYS: Partial<Record<ViewId, string>> = {
 const HINT_DELAY_MS = 550;
 
 export function Sidebar({
-  route, onAddTask, onSearch, onIssues, onProjectSheet, issuesCount, variant = 'rail',
+  route, projectProgressCounts, onAddTask, onSearch, onIssues, onProjectSheet, issuesCount, variant = 'rail',
 }: SidebarProps) {
   /* The list scrolls under the Add task area, which grows with its contents
      (the sync line, a second row of buttons). The scroller keeps as much room
@@ -146,7 +148,6 @@ export function Sidebar({
 
   const roots = useMemo(() => rootItems(items), [items]);
   const inboxId = snapshot.user?.inbox_project_id;
-
   const counts = useMemo(() => {
     const now = new Date();
     const scope = (key: string) => {
@@ -166,10 +167,13 @@ export function Sidebar({
       /* The count has to match the page. A "My week" that no longer contains
          today must not keep counting today's work. */
       week: weekItems(scope('week'), now).filter((item) => viewPrefs(prefs, 'week').filters.includeScheduled || !isToday(item, now)).length,
-      upcoming: upcomingItems(scope('upcoming')).filter((item) => {
-        const date = dueDate(item);
-        return date !== null && date <= endOfDay(addDays(now, prefs.upcomingHorizonDays));
-      }).length,
+      matrix: (() => {
+        const filters = viewPrefs(prefs, 'matrix').filters;
+        const scoped = assigneeItems(snapshot, filters.assignees);
+        const workspaceItems = filters.workspaces.length ? Object.fromEntries(Object.entries(scoped).filter(([, item]) => filters.workspaces.includes(snapshot.projects[item.project_id]?.workspace_id ?? 'personal'))) : scoped;
+        const roots = rootItems(openItems({ ...snapshot, items: workspaceItems }));
+        return matrixVisibleItems(roots, snapshot.projects, prefs.eisenhowerHorizon, prefs.eisenhowerIncludeSomeday, filters.workspaces.length ? null : prefs.eisenhowerWorkspace, snapshot.user?.start_day ?? 1).length;
+      })(),
       someday: somedayItems(scope('someday')).length,
       byProject: projectCounts(items),
     };
@@ -289,7 +293,7 @@ export function Sidebar({
           inboxId ? { kind: 'project', projectId: inboxId } : undefined);
       case 'today': return navItem('today', 'calendar', 'nav.today', counts.today, { kind: 'today' });
       case 'week': return navItem('week', 'week', 'nav.week', counts.week, { kind: 'anytime' });
-      case 'upcoming': return navItem('upcoming', 'upcoming', 'nav.upcoming', counts.upcoming);
+      case 'upcoming': return navItem('upcoming', 'upcoming', 'nav.upcoming', 0);
       case 'someday': return navItem('someday', 'someday', 'nav.someday', counts.someday, { kind: 'someday' });
       case 'review': return navItem('review', 'check', 'nav.review', 0);
       case 'dashboard':
@@ -298,7 +302,7 @@ export function Sidebar({
       case 'logbook':
         return navItem('insights', 'tasks', 'insights.logbook', 0, undefined,
           { id: 'logbook', current: insightsOnLogbook });
-      case 'matrix': return navItem('matrix', 'dashboard', 'nav.matrix', 0);
+      case 'matrix': return navItem('matrix', 'dashboard', 'nav.matrix', counts.matrix);
       case 'labels': return navItem('labels', 'tag', 'nav.labels', 0);
       case 'filters':
         return navItem('filters', 'filter', 'nav.filters', 0, undefined,
@@ -383,15 +387,15 @@ export function Sidebar({
                  instruction to go to the project. */
               onClick={() => { if (!dragClock.justEnded()) navigate('project', project.id); }}
             >
-              {folderLike
-                ? <Icon name="project" />
-                : (
+              {
                   <span className="hash" style={markerStyle(project.color)}>
                     {customIcon
                       ? <ProjectIcon iconId={customIcon} size="sm" style={{ color: 'inherit' }} />
-                      : '#'}
+                      : <ProjectProgress open={projectProgressCounts.open[project.id] ?? 0} completed={projectProgressCounts.completed[project.id]}
+                          label={projectProgressCounts.completed[project.id] === undefined ? t('project.progressUnknown') : (projectProgressCounts.open[project.id] ?? 0) + projectProgressCounts.completed[project.id] === 0 ? t('project.progressEmpty') : t('project.progressCompletedAll', { done: projectProgressCounts.completed[project.id], total: (projectProgressCounts.open[project.id] ?? 0) + projectProgressCounts.completed[project.id] })} />}
+
                   </span>
-                )}
+              }
               <span className="label">{project.name}</span>
             </button>
 
