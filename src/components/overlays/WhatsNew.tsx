@@ -1,14 +1,14 @@
 import './whatsnew.css';
 import { ChangelogPreview } from './ChangelogPreview';
-import { changelogVisual } from '@/domain/changelogVisuals';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { changelogVisual, type ChangelogVisual } from '@/domain/changelogVisuals';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Overlay } from './Overlay';
 import { Icon } from '../Icon';
 import { Select } from '../Select';
 import { useT } from '@/hooks/useT';
 import { renderTitle } from '@/domain/markdown';
 import {
-  changePresentation, localisedReleases, parseChangelog, type ChangeKind, type Release,
+  changePresentation, localisedReleases, parseChangelog, releaseDisplay, unseenFeed, type Change, type ChangeKind, type Release,
 } from '@/domain/changelog';
 import { tourStops } from '@/domain/tour';
 import { COFFEE_URL } from '@/app-info';
@@ -74,10 +74,11 @@ const anchorOf = (version: string) => `whatsnew-${version.replace(/\./g, '-')}`;
  * the release has been translated. The title and the buttons hold still while
  * the list scrolls between them.
  *
- * After an update the title says "since your last visit" and every release
- * keeps its own heading, a single one included: with several releases a
- * title naming only the latest was misleading (#227). The whole history, from
- * Settings, adds a version selector to jump from one release to the next.
+ * After an update the title says "since your last visit" and the unseen
+ * releases are one list, the most important first, each tagged with its
+ * version (#336; before, every release had its own heading, #227). The whole
+ * history, from Settings, keeps its sections and adds a version selector to
+ * jump from one release to the next.
  */
 export function WhatsNew({ scope, onClose, onShowMe, onSeeChangelog }: WhatsNewProps) {
   const { t, locale } = useT();
@@ -102,6 +103,35 @@ export function WhatsNew({ scope, onClose, onShowMe, onSeeChangelog }: WhatsNewP
   }, [all, scope]);
 
   const history = scope === 'all';
+  /* After an update the unseen releases are one list, the most important first;
+     the history keeps its sections (#336). */
+  const feed = useMemo(
+    () => (history ? null : unseenFeed(shown, changelogVisual)),
+    [history, shown],
+  );
+  const renderChange = (change: Change, visual: ChangelogVisual | null, provenance?: ReactNode) => {
+    const { title, description } = changePresentation(change.text);
+    return (
+      <>
+        <div className="whatsnew-copy">
+          <span className="whatsnew-mark" hidden>{change.mark}</span>
+          {/* A bold lead is the title; what follows it is the one paragraph that explains.
+              The file is ours, and the renderer escapes it before adding the few inline tags it knows. */}
+          <span className="whatsnew-text">
+            <span className="whatsnew-titleline">
+              <span className="whatsnew-meta">
+                <span className="whatsnew-badge">{t(KIND_LABEL[change.kind])}</span>
+                {provenance}
+              </span>
+              <strong className="whatsnew-title" dangerouslySetInnerHTML={{ __html: renderTitle(title) }} />
+            </span>
+            {description && <span className="whatsnew-para" dangerouslySetInnerHTML={{ __html: renderTitle(description) }} />}
+          </span>
+        </div>
+        <ChangelogPreview kind={visual} />
+      </>
+    );
+  };
   /* After an update only, and only when a release brought something the tour
      can point at: the history has no "since you last looked". */
   const showable = scope !== null && scope !== 'all' && onShowMe !== undefined
@@ -166,7 +196,22 @@ export function WhatsNew({ scope, onClose, onShowMe, onSeeChangelog }: WhatsNewP
 
         <div className="whatsnew-body" ref={bodyRef}>
           {all === null && <p className="whatsnew-loading">{t('common.loading')}</p>}
-          {shown.map((release) => (
+          {feed && (
+            <ul className="whatsnew-feed">
+              {feed.map((entry) => (
+                <li
+                  className={`whatsnew-change ${entry.change.kind}${entry.visual ? ' whatsnew-illustrated' : ''}`}
+                  key={`${entry.version}:${entry.index}`}
+                >
+                  {renderChange(entry.change, entry.visual, <>
+                    <small className="whatsnew-version">{t('whatsNew.version', { version: entry.version })}</small>
+                    {entry.untranslated && <small className="whatsnew-lang">{t('whatsNew.untranslated')}</small>}
+                  </>)}
+                </li>
+              ))}
+            </ul>
+          )}
+          {!feed && shown.map((release) => (
             <section
               className="whatsnew-release"
               key={release.version}
@@ -182,24 +227,9 @@ export function WhatsNew({ scope, onClose, onShowMe, onSeeChangelog }: WhatsNewP
                 )}
               </h3>
               <ul>
-                {release.changes.map((change, at) => (
-                  <li className={`whatsnew-change ${change.kind}${changelogVisual(release.version, at) ? ' whatsnew-illustrated' : ''}`} key={at}>
-                    <div className="whatsnew-copy">
-                    <span className="whatsnew-mark" hidden>{change.mark}</span>
-                    {/* A bold lead is the title; what follows it is the one paragraph that explains.
-                        The file is ours, and the renderer escapes it before adding the few inline tags it knows. */}
-                    {(() => {
-                      const { title, description } = changePresentation(change.text);
-                      return <span className="whatsnew-text">
-                        <span className="whatsnew-titleline">
-                          <span className="whatsnew-badge">{t(KIND_LABEL[change.kind])}</span>
-                          <strong className="whatsnew-title" dangerouslySetInnerHTML={{ __html: renderTitle(title) }} />
-                        </span>
-                        {description && <span className="whatsnew-para" dangerouslySetInnerHTML={{ __html: renderTitle(description) }} />}
-                      </span>;
-                    })()}
-                    </div>
-                    <ChangelogPreview kind={changelogVisual(release.version, at)} />
+                {releaseDisplay(release, changelogVisual).map(({ index, change, visual }) => (
+                  <li className={`whatsnew-change ${change.kind}${visual ? ' whatsnew-illustrated' : ''}`} key={index}>
+                    {renderChange(change, visual)}
                   </li>
                 ))}
               </ul>

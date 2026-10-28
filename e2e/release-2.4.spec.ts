@@ -1,11 +1,12 @@
 import { expect, go, test } from './demo';
 
-test('after an update, What’s new says "since your last visit" and keeps the release heading (#227)', async ({ demo: page }) => {
+test('after an update, What’s new says "since your last visit" and labels each change with its version (#227, #336)', async ({ demo: page }) => {
   await go(page, '#/inbox');
   await page.evaluate(() => window.dispatchEvent(new CustomEvent('enhanced:changelog', { detail: { versions: ['2.3.0'] } })));
   const dialog = page.getByRole('dialog', { name: 'What’s new since your last visit' });
   await expect(dialog.getByRole('heading', { name: 'What’s new since your last visit' })).toBeVisible();
-  await expect(dialog.getByRole('heading', { name: /2\.3\.0/ })).toBeVisible();
+  await expect(dialog.locator('.whatsnew-version').first()).toContainText('2.3.0');
+  await expect(dialog.locator('.whatsnew-release')).toHaveCount(0);
 });
 
 test('typing right after opening the project icon picker filters the icons (#211)', async ({ demo: page }) => {

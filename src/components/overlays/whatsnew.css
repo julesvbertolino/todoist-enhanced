@@ -37,3 +37,8 @@
 /* The coffee button's icon takes the colour of its text, in both themes. */
 :root .whatsnew-foot .btn.coffee,:root[data-theme] .whatsnew-foot .btn.coffee .ic,:root .whatsnew-foot .btn.coffee .ic{color:#202020}
 .whatsnew-refresh .whatsnew-change .whatsnew-badge{box-sizing:border-box;width:auto;text-align:center;padding-inline:9px}
+
+/* #336 The feed: the version is a quiet label beside the badge, never a heading. */
+.whatsnew-refresh .whatsnew-feed{display:grid;gap:15px;margin:0;padding:0;list-style:none}
+.whatsnew-refresh .whatsnew-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.whatsnew-refresh .whatsnew-version{font-size:var(--fs-12);font-weight:500;color:var(--faint)}

@@ -33,6 +33,7 @@ test('table keeps task actions, editable cells, column preferences and sorting',
   await expect(table).toBeVisible();
   await expect(table.locator('.table-description').first()).toBeAttached();
   const header = table.locator('.table-head');
+  /* A heading sorts, and again reverses (#335). */
   await header.getByRole('button', { name: /^Title/ }).click();
   const titles = await table.locator('.task:not([data-depth]) .ttitle').allTextContents();
   expect(titles.length).toBeGreaterThan(1);

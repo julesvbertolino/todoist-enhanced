@@ -413,7 +413,7 @@ test('priority and estimate context menus stay compact', async ({ demo: page }) 
 test('update window links to full changelog and keeps actions over a bounded blur', async ({ demo: page }) => {
   await page.evaluate(() => window.dispatchEvent(new CustomEvent('enhanced:changelog', { detail: { versions: ['2.10.0'] } })));
   const updated = page.getByRole('dialog', { name: 'What’s new since your last visit', exact: true });
-  await expect(updated.locator('.whatsnew-release')).toHaveCount(1);
+  await expect(updated.locator('.whatsnew-feed')).toHaveCount(1);
   await expect(updated.getByRole('link', { name: 'Buy me a coffee' })).toBeVisible();
   await expect(updated.getByRole('button', { name: 'Got it', exact: true })).toBeVisible();
   await page.screenshot({ path: '../../outputs/changelog-since-last-visit.png', fullPage: true, animations: 'disabled' });

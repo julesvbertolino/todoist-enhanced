@@ -203,12 +203,20 @@ export function readNaturalDate(
        time reader takes the same words a moment later. */
     [/\b(ce soir|cette nuit|ce matin|cet? apres[- ]midi|this (?:morning|afternoon|evening)|tonight)\b/, 0],
     [/\b(today|aujourd'?hui|auj)\b/, 0],
-    [/\b(tomorrow|demain)\b/, 1],
+    [/\b(tomorrow|demain|tmrw?|tmw)\b/, 1],
     [/\b(after tomorrow|apres-demain|apres demain)\b/, 2],
   ];
   for (const [pattern, offset] of plain) {
     const match = text.match(pattern);
     if (match) return found(addDays(today, offset), match);
+  }
+
+  /* Todoist's own short forms, "tod" and "tom" (#283). Those two are also first
+     names, so they only count when typed in lower case: "call Tom" stays a task
+     about Tom. */
+  const short = text.match(/\b(tod|tom)\b/);
+  if (short && raw.slice(short.index!, short.index! + short[0].length) === short[0]) {
+    return found(addDays(today, short[0] === 'tod' ? 0 : 1), short);
   }
 
   // "next week" / "la semaine prochaine" — the coming Monday

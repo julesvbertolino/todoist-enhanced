@@ -109,3 +109,24 @@ describe('relative hours and minutes', () => {
     expect(readNaturalDate('Écrire 2h', clock)).toBeNull();
   });
 });
+
+describe('Todoist short forms (#283)', () => {
+  it('reads tmr, tmrw and tmw as tomorrow', () => {
+    for (const word of ['tmr', 'tmrw', 'tmw']) expect(read(`call ${word}`)?.date).toBe('2026-09-29');
+  });
+
+  it('reads tod as today and tom as tomorrow when typed in lower case', () => {
+    expect(read('pay rent tod')?.date).toBe('2026-09-28');
+    expect(read('pay rent tom')?.date).toBe('2026-09-29');
+  });
+
+  it('leaves the first names Tod and Tom alone', () => {
+    expect(read('Call Tom')).toBeNull();
+    expect(read('Lunch with Tod')).toBeNull();
+  });
+
+  it('removes the short form from the task name', () => {
+    const reading = read('buy milk tmr')!;
+    expect(reading.matched).toBe('tmr');
+  });
+});

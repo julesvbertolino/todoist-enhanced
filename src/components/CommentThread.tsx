@@ -20,6 +20,9 @@ const EmojiPalette = lazy(() => import('./EmojiPalette').then((module) => ({ def
 
 const IMAGE = /^image\//;
 
+/** From this many comments the header offers to turn the thread over. */
+const LONG_THREAD = 4;
+
 /** "Today · 10:12", "7 Oct · 16:52": when a comment was written, to the minute. */
 function commentTime(iso: string, locale: 'en' | 'fr'): string {
   const date = new Date(iso);
@@ -43,15 +46,21 @@ const sizeLabel = (bytes?: number): string => {
  * a broken picture and a raw link (#33).
  */
 function Attachment({ file }: { file: NoteAttachment }) {
+  const { t } = useT();
   const [broken, setBroken] = useState(false);
   if (!file.file_url) return null;
   const image = IMAGE.test(file.file_type ?? '') || file.resource_type === 'image';
   const name = file.file_name ?? file.file_url.split('/').pop() ?? file.file_url;
   if (image && !broken) {
     return (
-      <a className="comment-image" href={file.file_url} target="_blank" rel="noopener noreferrer" title={name}>
-        <img src={file.image ?? file.file_url} alt={name} loading="lazy" referrerPolicy="no-referrer" onError={() => setBroken(true)} />
-      </a>
+      <span className="comment-image">
+        <a href={file.file_url} target="_blank" rel="noopener noreferrer" title={name}>
+          <img src={file.image ?? file.file_url} alt={name} loading="lazy" referrerPolicy="no-referrer" onError={() => setBroken(true)} />
+        </a>
+        <a className="comment-download" href={file.file_url} download={name} aria-label={`${t('comment.download')} (${name})`} title={t('comment.download')}>
+          <Icon name="download" size="sm" />
+        </a>
+      </span>
     );
   }
   return (
@@ -329,15 +338,20 @@ export function CommentThread({ itemId }: { itemId: string }) {
   const addComment = useStore((s) => s.addComment);
   const toast = useStore((s) => s.toast);
 
+  /* Oldest first is the thread as written. A long thread can be turned over
+     for the moment, from its header; opening a task starts it as written
+     again, so nothing is remembered (#344). */
+  const [newestFirst, setNewestFirst] = useState(false);
   const comments = useMemo(
     () => Object.values(notes)
       .filter((n) => n.item_id === itemId && !n.is_deleted)
       .sort((a, b) => a.posted_at.localeCompare(b.posted_at)),
     [notes, itemId],
   );
+  const shown = newestFirst ? [...comments].reverse() : comments;
 
   const [draft, setDraft] = useState('');
-  const [attachment, setAttachment] = useState<NoteAttachment | null>(null);
+  const [attachments, setAttachments] = useState<NoteAttachment[]>([]);
 
   /* A shared project: "@" suggests its people, and "Notify" says who hears
      about the comment (#254). A project nobody else is in shows neither. */
@@ -397,53 +411,93 @@ export function CommentThread({ itemId }: { itemId: string }) {
   const field = useRef<HTMLTextAreaElement>(null);
 
   /* A different task is a different conversation. */
-  useEffect(() => { setDraft(''); setAttachment(null); setPicked([]); setNotifyChoice(undefined); setMention(null); }, [itemId]);
+  useEffect(() => { setNewestFirst(false); setDraft(''); setAttachments([]); setPicked([]); setNotifyChoice(undefined); setMention(null); }, [itemId]);
 
-  const ready = Boolean(draft.trim() || attachment);
+  const ready = Boolean(draft.trim() || attachments.length > 0);
 
+  /* Todoist posts one comment per file: the words go with the first, and a
+     refused one comes back into the field with those after it, not lost (#28, #340). */
   const send = () => {
     if (!ready || uploading) return;
     const text = draft;
-    const file = attachment;
+    const files = attachments;
     const stored = encodeMentions(text, picked);
+    const notify = people.length > 0 ? notifyIds(stored) : [];
     setDraft('');
-    setAttachment(null);
+    setAttachments([]);
     setMention(null);
-    /* Refused, the comment comes back into the field rather than being lost (#28). */
-    void addComment(itemId, stored, file, people.length > 0 ? notifyIds(stored) : []).then((saved) => {
-      if (saved) return;
-      setDraft((now) => now || text);
-      setAttachment((now) => now ?? file);
-    });
+    void (async () => {
+      const batch: Array<NoteAttachment | null> = files.length > 0 ? files : [null];
+      for (let at = 0; at < batch.length; at += 1) {
+        const saved = await addComment(itemId, at === 0 ? stored : '', batch[at], at === 0 ? notify : []);
+        if (saved) continue;
+        if (at === 0) setDraft((now) => now || text);
+        setAttachments((now) => [...batch.slice(at).filter((file): file is NoteAttachment => file !== null), ...now]);
+        return;
+      }
+    })();
   };
 
   const cancel = () => {
     setDraft('');
-    setAttachment(null);
+    setAttachments([]);
     field.current?.blur();
   };
 
-  async function attach(file: File | undefined) {
-    if (!file) return;
+  /* Every file goes up at once; one that fails is named and the others stay. */
+  async function attach(files: File[]) {
+    if (files.length === 0) return;
     setUploading(true);
     try {
-      setAttachment(await uploadAttachment(file, demo));
-    } catch {
-      toast(t('comment.uploadFailed'));
+      const results = await Promise.allSettled(files.map((file) => uploadAttachment(file, demo)));
+      const kept: NoteAttachment[] = [];
+      results.forEach((result, at) => {
+        if (result.status === 'fulfilled') kept.push(result.value);
+        else toast(`${t('comment.uploadFailed')} (${files[at].name})`);
+      });
+      if (kept.length > 0) setAttachments((now) => [...now, ...kept]);
     } finally {
       setUploading(false);
       if (fileInput.current) fileInput.current.value = '';
     }
   }
 
+  /* A file on the clipboard — a screenshot, a GIF — goes into the comment
+     wherever the paste happens while the task is open, not only in the field.
+     The new-task sheet has its own paste and keeps it. */
+  const attachRef = useRef(attach);
+  attachRef.current = attach;
+  useEffect(() => {
+    const onPaste = (event: ClipboardEvent) => {
+      const files = Array.from(event.clipboardData?.files ?? []);
+      if (files.length === 0 || (event.target as Element | null)?.closest?.('.composerbox')) return;
+      event.preventDefault();
+      void attachRef.current(files);
+    };
+    document.addEventListener('paste', onPaste);
+    return () => document.removeEventListener('paste', onPaste);
+  }, []);
+
   return (
     <section className="detail-section comments">
       <h3 className="sectionlabel">
         {t('detail.comments')}
         {comments.length > 0 && <span className="count">{comments.length}</span>}
+        {comments.length >= LONG_THREAD && (
+          <button
+            type="button"
+            className="comment-order"
+            aria-pressed={newestFirst}
+            title={t(newestFirst ? 'comment.orderOldest' : 'comment.orderNewest')}
+            onClick={() => setNewestFirst((now) => !now)}
+          >
+            <Icon name="sort" size="sm" />
+            <span>{t('comment.newestFirst')}</span>
+          </button>
+        )}
       </h3>
 
-      {comments.map((note) => <CommentRow key={note.id} note={note} itemId={itemId} />)}
+      {shown.map((note) => <CommentRow key={note.id} note={note} itemId={itemId} />)}
 
       <div className="comment comment-new">
         <Avatar picture={avatarUrl(me)} name={me?.full_name} />
@@ -461,14 +515,23 @@ export function CommentThread({ itemId }: { itemId: string }) {
               />
             </div>
           )}
-          {attachment && (
-            <span className="comment-attached" title={attachment.file_name}>
-              <Icon name={IMAGE.test(attachment.file_type ?? '') ? 'image' : 'paperclip'} size="sm" />
-              <span>{attachment.file_name}</span>
-              <button className="iconbtn sm" aria-label={t('comment.removeFile')} onClick={() => setAttachment(null)}>
-                <Icon name="close" size="sm" />
-              </button>
-            </span>
+          {attachments.length > 0 && (
+            <div className="comment-attachments">
+              {attachments.map((file, at) => {
+                const remove = (
+                  <button className="iconbtn sm" aria-label={`${t('comment.removeFile')} (${file.file_name})`} onClick={() => setAttachments((now) => now.filter((_, index) => index !== at))}>
+                    <Icon name="close" size="sm" />
+                  </button>
+                );
+                return (
+                  <span className="comment-attached" key={`${file.file_url}-${at}`} title={file.file_name}>
+                    <Icon name="paperclip" size="sm" />
+                    <span>{file.file_name}</span>
+                    {remove}
+                  </span>
+                );
+              })}
+            </div>
           )}
           <div className="comment-row">
             {/* Enter posts it, Shift+Enter is a new line. A picked mention is
@@ -514,8 +577,8 @@ export function CommentThread({ itemId }: { itemId: string }) {
             </span>
             <span className="comment-tools">
               <input
-                ref={fileInput} type="file" hidden
-                onChange={(event) => void attach(event.target.files?.[0])}
+                ref={fileInput} type="file" multiple hidden
+                onChange={(event) => void attach(Array.from(event.target.files ?? []))}
               />
               <button
                 className="iconbtn sm"

@@ -8,6 +8,20 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.21.0
+
+🆕 **Choisissez le noir pur en mode sombre.** Dans Réglages, Apparence, réglez Style sombre sur AMOLED. Les pages et la barre latérale deviennent noires, avec n'importe quelle couleur d'accent, tandis que menus et fenêtres restent un ton plus clairs pour rester lisibles.
+
+🆕 **Joignez plusieurs fichiers à un commentaire.** Choisissez-en autant que vous voulez avec le trombone, ou collez une capture ou un GIF n'importe où dans la tâche. Les fichiers attendent sous forme de pastilles, puis chacun devient son propre commentaire, votre texte sur le premier. Cliquez sur un fichier pour l'ouvrir dans Todoist.
+
+🆕 **Retournez une longue discussion.** À partir de quatre commentaires, un bouton Plus récents d'abord affiche le dernier en haut. C'est seulement pour le moment : la tâche suivante s'ouvre comme écrite, du plus ancien au plus récent.
+
+🎨 **Tables affinées.** Cliquez sur un titre pour trier, cliquez encore pour inverser. Son chevron filtre, déplace ou masque la colonne, et vous pouvez glisser les titres pour les réordonner. Une nouvelle colonne Assignée à, dans Affichage, Colonnes, montre qui s'occupe de chaque tâche.
+
+🎨 **Écrivez les dates comme dans Todoist.** Dans le champ d'ajout, tmr, tmrw et tmw signifient demain, et tod et tom en minuscules signifient aujourd'hui et demain. Un prénom comme Tom avec une majuscule reste dans votre tâche.
+
+🎨 **Rattrapez plusieurs versions d'un coup.** Après quelques versions d'absence, Nouveautés devient une seule liste au lieu d'une page par version, les images d'abord, puis le nouveau, l'amélioré et le corrigé, chacun avec sa version. Réglages, Journal des modifications garde chaque version à part.
+
 ## 2.20.0
 
 🆕 **Repérez les tâches avec des commentaires.** Une icône et leur nombre apparaissent dans les listes, tableaux et tables. Cliquez dessus pour ouvrir la discussion. Vous pouvez masquer ce détail depuis Affichage.

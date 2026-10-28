@@ -40,6 +40,20 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.21.0
+
+🆕 **Choose pure black in dark mode.** In Settings, Appearance, set Dark style to AMOLED. Pages and the sidebar turn true black with any accent colour, while menus and dialogs stay a shade lighter so they remain easy to read.
+
+🆕 **Attach several files to a comment.** Pick as many as you like with the paperclip, or paste a screenshot or GIF anywhere in the task. Files wait as chips, then each is posted as its own comment, your words on the first. Click a file to open it in Todoist.
+
+🆕 **Turn a long thread over.** From four comments on, a Newest first button in the header shows the latest at the top. It is only for the moment: the next task you open reads as written, oldest first.
+
+🎨 **Table refinements.** Click a heading to sort, click again to reverse. Its chevron filters, moves or hides the column, and you can drag headings to reorder them. A new Assigned to column, in Display, Columns, shows who owns each task.
+
+🎨 **Type dates the Todoist way.** In the composer, tmr, tmrw and tmw mean tomorrow, and tod and tom in lower case mean today and tomorrow. A name such as Tom with a capital stays part of your task.
+
+🎨 **Catch up on several versions at once.** After a few versions away, What's new is one list instead of one page per release, pictures first, then new, better and fixed, each with its version. Settings, Changelog still keeps every release apart.
+
 ## 2.20.0
 
 🆕 **See which tasks have comments.** A comment icon and count appear on tasks in lists, boards and tables. Click the icon to open the discussion. Hide it from Display when you prefer fewer details.
