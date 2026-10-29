@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { useProjectPeople } from '@/hooks/useProjectPeople';
 import { useEffect, useMemo, useState } from 'react';
 import { Overlay } from './Overlay';
@@ -24,7 +25,7 @@ const LOOKS_LIKE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function ShareSheet({ projectId, onClose }: { projectId: string | null; onClose: () => void }) {
   const { t } = useT();
   useProjectPeople(projectId ?? undefined);
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const shareProject = useStore((s) => s.shareProject);
   const removeCollaborator = useStore((s) => s.removeCollaborator);
   const changeRole = useStore((s) => s.changeRole);

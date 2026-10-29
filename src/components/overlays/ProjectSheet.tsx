@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Overlay } from './Overlay';
 import { Icon } from '../Icon';
@@ -61,7 +62,7 @@ export function ProjectSheet({ target, onClose }: ProjectSheetProps) {
   const moveProjectToWorkspace = useStore((s) => s.moveProjectToWorkspace);
   const setViewPrefs = useStore((s) => s.setViewPrefs);
   const prefs = useStore((s) => s.prefs);
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
 
   const editing = target?.mode === 'edit' ? snapshot.projects[target.projectId] : undefined;
 

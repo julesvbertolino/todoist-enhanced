@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { useEffect, useMemo, useState } from 'react';
 import { Overlay } from './Overlay';
 import { Icon } from '../Icon';
@@ -22,7 +23,7 @@ function matches(item: Item | undefined, patch: Plan['changes'][number]['patch']
 /** Each conversion owns its command ids; unrelated queued edits cannot colour its result. */
 export function EstimateConversion({ target, openRequest = 0, hideTrigger = false }: { target: EstimateStorage; openRequest?: number; hideTrigger?: boolean }) {
   const { t } = useT();
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const demo = useStore((s) => s.demo);
   const pendingCount = useStore((s) => s.pendingCount);
   const apply = useStore((s) => s.apply);

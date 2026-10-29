@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { Icon } from './Icon';
-import { MarkdownEditor } from './MarkdownEditor';
+const MarkdownEditor = lazy(() => import('./MarkdownEditor').then((module) => ({ default: module.MarkdownEditor })));
 import { ProgressRing } from './ProgressRing';
 import { useT } from '@/hooks/useT';
 import { renderInlineMarkdown, renderMarkdown } from '@/domain/markdown';
@@ -141,20 +141,48 @@ export function DescriptionEditor({
 }: DescriptionEditorProps) {
   const { t } = useT();
   const [full, setFull] = useState(false);
+  const [fallbackFocused, setFallbackFocused] = useState(false);
+  const [pendingLink, setPendingLink] = useState<{ from: number; to: number } | null>(null);
   return (
     <div className={`descedit ${variant}`}>
-      <MarkdownEditor
+      <Suspense fallback={<textarea
+        aria-label={ariaLabel}
+        placeholder={placeholder}
+        value={value}
+        autoFocus={autoFocus}
+        onFocus={() => setFallbackFocused(true)}
+        onBlur={() => { setFallbackFocused(false); if (variant === 'detail') onCommit(); }}
+        onKeyDown={(event) => {
+          if (event.key !== 'Escape' || variant === 'detail') event.stopPropagation();
+          if (variant === 'detail' && (event.key === 'Escape' || (event.key === 'Enter' && (event.metaKey || event.ctrlKey)))) {
+            event.preventDefault();
+            event.currentTarget.blur();
+            return;
+          }
+          if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+            event.preventDefault();
+            setPendingLink({ from: event.currentTarget.selectionStart, to: event.currentTarget.selectionEnd });
+          }
+        }}
+        onChange={(event) => {
+          setPendingLink(null);
+          const next = event.target.value;
+          if (fitsDescription(next) || next.length <= value.length) { setFull(false); onChange(next); }
+          else setFull(true);
+        }}
+      />}><MarkdownEditor
         variant={variant}
         value={value}
         onChange={(next) => { setFull(false); onChange(next); }}
         onCommit={onCommit}
         placeholder={placeholder}
         ariaLabel={ariaLabel}
-        autoFocus={autoFocus}
+        autoFocus={autoFocus || fallbackFocused}
+        initialLinkSelection={pendingLink}
         removable
         accept={(next, previous) => fitsDescription(next) || next.length <= previous.length}
         onRefused={() => setFull(true)}
-      />
+      /></Suspense>
       {full && <p className="checkfull" role="alert">{t('checklist.full')}</p>}
     </div>
   );

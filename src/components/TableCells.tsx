@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { Icon } from './Icon';
 import { DateField } from './DateField';
 import { EstimateField } from './EstimateField';
@@ -19,7 +20,7 @@ import { readProjectIcon } from '@/domain/projectIcons';
 /** Inline values use the same controls and store commands as task details. */
 export function TableCells({ item, columns, childrenOf, hideProject = false }: { hideProject?: boolean; item: Item; columns: TableColumn[]; childrenOf: (id: string) => Item[] }) {
   const { t, locale } = useT();
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const updateTask = useStore((s) => s.updateTask);
   const assignTask = useStore((s) => s.assignTask);
   const setEstimates = useStore((s) => s.setEstimates);

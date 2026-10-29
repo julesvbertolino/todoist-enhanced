@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { useEffect, useRef } from 'react';
 import { useStore } from '@/store/store';
 import { childIndex, makeChildrenOf, openItems } from '@/store/selectors';
@@ -14,7 +15,7 @@ import { parentEstimateWrites } from '@/domain/estimates';
  * again on every refresh.
  */
 export function useParentEstimates() {
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const storage = useStore((s) => s.prefs.estimateStorage);
   /* Not while something is being dragged: a write landing mid-gesture
      redraws the list under the pointer and the drop goes astray. */

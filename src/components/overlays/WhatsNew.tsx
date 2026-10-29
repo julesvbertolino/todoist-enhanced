@@ -162,7 +162,7 @@ export function WhatsNew({ scope, onClose, onShowMe, onSeeChangelog }: WhatsNewP
     const section = body?.querySelector<HTMLElement>(`#${anchorOf(version)}`);
     if (!body || !section) return;
     body.scrollTo({
-      top: section.offsetTop - body.offsetTop - 8,
+      top: body.scrollTop + section.getBoundingClientRect().top - body.getBoundingClientRect().top - 8,
       behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
     });
     setCurrent(version);

@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from './Icon';
@@ -281,7 +282,7 @@ export function TimePanel({ pageItems, pageLabel, onOpen, onUnestimated }: TimeP
 function TimeRow({ item, when, onOpen }: { item: Item; when: FitBucketKey; onOpen: (id: string) => void }) {
   const { t, locale } = useT();
   const { childrenOf } = useData();
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const toggleTask = useStore((s) => s.toggleTask);
   const picked = useStore((s) => s.selection.includes(item.id));
   const toggleSelection = useStore((s) => s.toggleSelection);

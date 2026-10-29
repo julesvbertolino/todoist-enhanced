@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { useEffect, useState } from 'react';
 import { Overlay } from './Overlay';
 import { EstimateStorageChoice } from '../Choosers';
@@ -12,7 +13,7 @@ export function EstimateStorageDialog({ open, onClose, onConvert }: { open: bool
   const user = useStore((s) => s.snapshot.user);
   const setPrefs = useStore((s) => s.setPrefs);
   const [choice, setChoice] = useState<EstimateStorage>('tag');
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const count = planEstimateConversion(Object.values(snapshot.items), choice).changes.length;
   const allowed = canStoreDurations(user);
   useEffect(() => { if (open) setChoice('tag'); }, [open, user?.id]);

@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { usePhone } from '@/hooks/usePhone';
 import { useKeyboardInset } from '@/hooks/useKeyboardInset';
 import { uploadAttachment } from '@/api/uploads';
@@ -55,7 +56,7 @@ export function Composer({
   open, onClose, defaultProjectId, defaultSectionId, defaultDate, defaultMinutes, defaultLabels, defaultPriority, defaultResponsibleUid,
 }: ComposerProps) {
   const { t } = useT();
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const createTaskId = useStore((s) => s.createTaskId);
   const addComment = useStore((s) => s.addComment);
   const createTasks = useStore((s) => s.createTasks);

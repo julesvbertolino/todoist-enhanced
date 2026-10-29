@@ -93,3 +93,20 @@ describe('workspace completion totals', () => {
     expect(applySync(zero, { full_sync: true, sync_token: 'fourth', completed_info: [] }).completedProjectCounts).toEqual({});
   });
 });
+
+describe('incremental sync preserves unchanged data', () => {
+  it('keeps collection identities while advancing the cursor, and still applies real changes', () => {
+    const task = item({ id: 'a', content: 'Before' });
+    const initial = applySync(emptySnapshot(), { full_sync: true, sync_token: 'one', items: [task] });
+    const unchanged = applySync(initial, { full_sync: false, sync_token: 'two', items: [{ ...task }], folders: [], refreshedFolderWorkspaces: [] });
+    expect(unchanged.syncToken).toBe('two');
+    expect(unchanged.items).toBe(initial.items);
+    expect(unchanged.folders).toBe(initial.folders);
+    expect(unchanged.completedProjectCounts).toBe(initial.completedProjectCounts);
+    const changed = applySync(unchanged, { full_sync: false, sync_token: 'three', items: [{ ...task, content: 'After' }] });
+    expect(changed.items).not.toBe(unchanged.items);
+    expect(changed.items.a.content).toBe('After');
+    const deleted = applySync(changed, { full_sync: false, sync_token: 'four', items: [{ ...task, is_deleted: true }] });
+    expect(deleted.items.a).toBeUndefined();
+  });
+});

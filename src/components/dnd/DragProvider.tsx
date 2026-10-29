@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { confirmUndatedMove } from '@/domain/confirmUndatedMove';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
@@ -229,7 +230,7 @@ const taskIdOf = (activeId: string): string =>
  */
 export function DragProvider({ children }: { children: ReactNode }) {
   const { t, locale } = useT();
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const dateFormat = useStore((s) => s.prefs.dateFormat);
   const apply = useStore((s) => s.apply);
   const toast = useStore((s) => s.toast);

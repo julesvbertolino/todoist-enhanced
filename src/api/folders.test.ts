@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { request } from './client';
-import { applySync, sync } from './sync';
+import { applySync, sync, FOLDER_REFRESH_INTERVAL_MS } from './sync';
 import { emptySnapshot } from '@/domain/types';
 vi.mock('./client', () => ({ request: vi.fn() }));
 const team = { id: 'team', name: 'Team' };
@@ -27,4 +27,27 @@ describe('native team folder reads', () => {
     vi.mocked(request).mockResolvedValueOnce({ full_sync: true, sync_token: 'next', workspaces: [team] }).mockRejectedValueOnce(new Error('Offline'));
     await expect(sync('*')).rejects.toThrow('Offline');
   });
+  it('reuses folders between polls but refreshes after ten minutes or a workspace change', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2026-01-01T12:00:00Z'));
+      vi.mocked(request).mockResolvedValueOnce({ full_sync: true, sync_token: 'a', workspaces: [team] })
+        .mockResolvedValueOnce({ results: [folder], next_cursor: null });
+      await sync('*');
+      vi.mocked(request).mockResolvedValueOnce({ full_sync: false, sync_token: 'b' });
+      const quiet = await sync('a', undefined, { team });
+      expect(quiet.refreshedFolderWorkspaces).toBeUndefined();
+      expect(request).toHaveBeenCalledTimes(3);
+      vi.advanceTimersByTime(FOLDER_REFRESH_INTERVAL_MS);
+      vi.mocked(request).mockResolvedValueOnce({ full_sync: false, sync_token: 'c' })
+        .mockResolvedValueOnce({ results: [], next_cursor: null });
+      const refreshed = await sync('b', undefined, { team });
+      expect(refreshed.refreshedFolderWorkspaces).toEqual(['team']);
+      vi.mocked(request).mockResolvedValueOnce({ full_sync: false, sync_token: 'd', workspaces: [team] })
+        .mockResolvedValueOnce({ results: [folder], next_cursor: null });
+      const changed = await sync('c', undefined, { team });
+      expect(changed.folders).toEqual([folder]);
+    } finally { vi.useRealTimers(); }
+  });
+
 });

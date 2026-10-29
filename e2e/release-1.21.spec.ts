@@ -510,7 +510,7 @@ test.describe('#174 and #172 the dashboard', () => {
     await page.locator('.periodbar .spanbar button', { hasText: /^Quarter$/ }).click();
     await expect(page.getByRole('heading', { name: 'Completed per month' })).toBeVisible();
     const total = Number((await page.locator('.metric-card').first().locator('.stat-value').innerText()).trim());
-    const bars = await page.locator('[data-card="trend"] .slot, [data-card="trend"] [role="img"]').count();
+    const bars = await page.locator('[data-card="trend"] .barslot').count();
     expect(bars).toBeGreaterThan(0);
     expect(total).toBeGreaterThan(0);
     // Half width for a quarter's heatmap, the whole row for a year's.

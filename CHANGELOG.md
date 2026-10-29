@@ -40,6 +40,12 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.23.0
+
+🎨 **Clearer details.** Secondary text is easier to read, the project search hint is shorter, and chart columns are easier to select.
+
+🐛 **Performance improvements.** The app loads less code on startup and stays more responsive when you open a task, type or scroll. Synchronization does less work when nothing has changed, and Review no longer keeps the processor busy while idle.
+
 ## 2.22.0
 
 🆕 **See a project’s progress.** A circle beside projects without a custom icon fills as you complete tasks.

@@ -58,8 +58,8 @@ export function TableHeaderMenu({ column, anchor, current, pageItems, onChange, 
     return Object.values(labels).filter((label) => !label.is_deleted && !label.name.startsWith('est-') && used.has(label.name.toLowerCase()));
   }, [labels, pageItems, filters.labels]);
 
-  const choice = (checked: boolean, label: React.ReactNode, onClick: () => void) => (
-    <button type="button" role="menuitemcheckbox" aria-checked={checked} className="opt tablemenu-check" onClick={onClick}>
+  const choice = (key: string | number, checked: boolean, label: React.ReactNode, onClick: () => void) => (
+    <button key={key} type="button" role="menuitemcheckbox" aria-checked={checked} className="opt tablemenu-check" onClick={onClick}>
       <span className={`check${checked ? ' on' : ''}`} aria-hidden="true"><Icon name="check" size="sm" /></span>
       <span className="tablemenu-label">{label}</span>
     </button>
@@ -69,12 +69,12 @@ export function TableHeaderMenu({ column, anchor, current, pageItems, onChange, 
   let filtering = false;
   if (column === 'priority') {
     filtering = filters.priorities.length > 0;
-    filter = ([1, 2, 3, 4] as DisplayPriority[]).map((p) => choice(filters.priorities.includes(p),
+    filter = ([1, 2, 3, 4] as DisplayPriority[]).map((p) => choice(p, filters.priorities.includes(p),
       <><Icon name="flag" size="sm" style={{ color: `var(--p${p})` }} /> P{p}</>,
       () => set({ filters: { ...filters, priorities: filters.priorities.includes(p) ? filters.priorities.filter((one) => one !== p) : [...filters.priorities, p].sort() } })));
   } else if (column === 'labels') {
     filtering = filters.labels.length > 0;
-    filter = tags.length === 0 ? <p className="tablemenu-empty">{t('table.menu.noTags')}</p> : tags.map((label) => choice(filters.labels.includes(label.name),
+    filter = tags.length === 0 ? <p className="tablemenu-empty">{t('table.menu.noTags')}</p> : tags.map((label) => choice(label.name, filters.labels.includes(label.name),
       <><Icon name="tag" size="sm" className="taglabel" style={markerStyle(label.color, false)} /> {label.name}</>,
       () => set({ filters: { ...filters, labels: filters.labels.includes(label.name) ? filters.labels.filter((one) => one !== label.name) : [...filters.labels, label.name] } })));
   } else if (column === 'assignee') {
@@ -82,7 +82,7 @@ export function TableHeaderMenu({ column, anchor, current, pageItems, onChange, 
     const all = assigneeOptions.map((option) => option.value);
     const chosen = filters.assignees ?? null;
     filtering = chosen !== null;
-    filter = assigneeOptions.map((option) => choice(chosen === null || chosen.includes(option.value),
+    filter = assigneeOptions.map((option) => choice(option.value, chosen === null || chosen.includes(option.value),
       <>{option.visual} {option.label}</>,
       () => {
         const base = chosen ?? all;

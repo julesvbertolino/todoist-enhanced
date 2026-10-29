@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { useEffect, useMemo, useState } from 'react';
 import { fetchCompleted } from '@/api/completed';
 import { useStore } from '@/store/store';
@@ -18,7 +19,7 @@ import { completedTaskCount } from '@/domain/insights';
  * one of its tasks is completed or reopened here. `undefined` while it loads.
  */
 export function useProjectCompletedCount(projectId: string | undefined, enabled: boolean): number | undefined {
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const connected = useStore((s) => s.connected);
   const demo = useStore((s) => s.demo);
   const locale = useStore((s) => s.prefs.locale);

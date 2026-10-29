@@ -366,7 +366,7 @@ export function TaskNameField({
     sync();
     input.addEventListener('scroll', sync);
     return () => input.removeEventListener('scroll', sync);
-  }, [value]);
+  }, [multiline]);
 
   /* A wrapping field is exactly as tall as its text, so the mirror behind it —
      which is the height of the box — cannot end up a line short. */

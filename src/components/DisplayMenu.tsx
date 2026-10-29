@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { ME, UNASSIGNED } from '@/domain/assignees';
 import { WorkspaceFilter } from './WorkspaceFilter';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -74,7 +75,7 @@ export function DisplayMenu({
   const { t } = useT();
   const prefs = useStore((s) => s.prefs);
   const setViewPrefs = useStore((s) => s.setViewPrefs);
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const current = viewPrefs(prefs, viewKey);
   /* What this page opens as, which is not the same on every page: the count
      and the reset both mean "back to how this view starts", and a view that

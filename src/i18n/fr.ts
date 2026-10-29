@@ -549,7 +549,7 @@ export const fr: Record<TranslationKey, string> = {
   'comment.removeFile': 'Retirer le fichier',
   'comment.uploadFailed': 'Le fichier n’a pas pu être envoyé.',
   'comment.reactionFailed': 'Todoist n’a pas enregistré cette réaction. Réessayez dans un instant.',
-  'composer.searchProjects': 'Tapez pour chercher un projet ou une section',
+  'composer.searchProjects': 'Projet ou section…',
   'composer.searchPeople': "Tapez pour chercher une personne",
   'composer.searchTags': 'Tapez pour chercher une étiquette',
   'reaction.search': 'Chercher un emoji',

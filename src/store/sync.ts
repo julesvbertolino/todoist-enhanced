@@ -204,7 +204,7 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
       const snapshot = applySync(emptySnapshot(), response);
       const canonical = remotePreferences(snapshot, get().prefs);
       if (canonical) setWeekLabel(canonical.weekLabel);
-      const adopted = canonical ?? get().prefs;
+      const adopted = canonical && JSON.stringify(canonical) !== JSON.stringify(get().prefs) ? canonical : get().prefs;
       const prefs = withOnboarding(snapshot, adopted);
       set({
         connected: true, snapshot, prefs, syncState: 'idle',
@@ -300,7 +300,7 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
         ? null
         : remotePreferences(snapshot, get().prefs);
       if (canonical) setWeekLabel(canonical.weekLabel);
-      const adopted = canonical ?? get().prefs;
+      const adopted = canonical && JSON.stringify(canonical) !== JSON.stringify(get().prefs) ? canonical : get().prefs;
       const prefs = withOnboarding(snapshot, adopted);
       set({ snapshot: hidePending(snapshot), prefs, syncState: 'idle' });
       schedulePersist(snapshot);

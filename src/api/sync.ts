@@ -45,6 +45,9 @@ export interface SyncResponse {
  */
 /** A full sync of a large account is a big download; it gets longer than the usual deadline. */
 const FULL_SYNC_TIMEOUT_MS = 60_000;
+/** Folder changes have no incremental resource; refresh at most ten minutes apart. */
+export const FOLDER_REFRESH_INTERVAL_MS = 10 * 60_000;
+let lastFolderRefresh = 0;
 
 export async function sync(syncToken: string, signal?: AbortSignal, knownWorkspaces: Record<string, Workspace> = {}): Promise<SyncResponse> {
   const response = await request<SyncResponse>('/sync', {
@@ -56,6 +59,11 @@ export async function sync(syncToken: string, signal?: AbortSignal, knownWorkspa
     signal,
     timeoutMs: syncToken === '*' ? FULL_SYNC_TIMEOUT_MS : undefined,
   });
+  // A new session/full sync and workspace changes always refresh immediately.
+  // A failed read never advances the timer, so the next poll retries.
+  if (!response.full_sync && syncToken !== '*' && !response.workspaces?.length && lastFolderRefresh && Date.now() - lastFolderRefresh < FOLDER_REFRESH_INTERVAL_MS) {
+    return response;
+  }
   // Folders have a separate REST resource. Read each team's complete collection
   // so renames, deletions and existing folders reach incremental clients too.
   const workspaces = Object.values(mergeCollection(knownWorkspaces, response.workspaces, response.full_sync));
@@ -72,6 +80,7 @@ export async function sync(syncToken: string, signal?: AbortSignal, knownWorkspa
     } while (cursor);
     return all;
   }));
+  lastFolderRefresh = Date.now();
   return { ...response, folders: [...(response.folders ?? []), ...folders.flat()], refreshedFolderWorkspaces: [...new Set([...Object.keys(knownWorkspaces), ...workspaces.map((w) => w.id)])] };
 
 }
@@ -90,13 +99,17 @@ function mergeCollection<T extends Keyed>(
   fullSync: boolean,
 ): Record<string, T> {
   if (!incoming) return fullSync ? {} : current;
-
+  if (!fullSync && incoming.length === 0) return current;
   const next: Record<string, T> = fullSync ? {} : { ...current };
   for (const entry of incoming) {
     if (entry.is_deleted) delete next[entry.id];
-    else next[entry.id] = entry;
+    else {
+      const old = current[entry.id];
+      next[entry.id] = old && JSON.stringify(old) === JSON.stringify(entry) ? old : entry;
+    }
   }
-  return next;
+  const keys = Object.keys(next);
+  return keys.length === Object.keys(current).length && keys.every((id) => next[id] === current[id]) ? current : next;
 }
 
 /** One state per person per project; a full sync replaces the lot. */
@@ -104,20 +117,30 @@ function mergeStates(
   current: CollaboratorState[], incoming: CollaboratorState[] | undefined, fullSync: boolean,
 ): CollaboratorState[] {
   if (!incoming) return fullSync ? [] : current;
+  if (!fullSync && incoming.length === 0) return current;
   const key = (state: CollaboratorState) => `${state.project_id}:${state.user_id}`;
   const next = new Map((fullSync ? [] : current).map((state) => [key(state), state]));
   for (const state of incoming) {
     if (state.is_deleted) next.delete(key(state));
     else next.set(key(state), state);
   }
-  return [...next.values()];
+  const values = [...next.values()];
+  return JSON.stringify(values) === JSON.stringify(current) ? current : values;
 }
 
 export function applySync(snapshot: Snapshot, response: SyncResponse): Snapshot {
   const full = response.full_sync;
+  const removed = response.refreshedFolderWorkspaces ?? [];
+  const retained = Object.values(snapshot.folders ?? {}).filter((folder) => !removed.includes(folder.workspace_id));
+  const incomingFolders = [...retained, ...(response.folders ?? [])];
+  const folders = removed.length ? mergeCollection(snapshot.folders ?? {}, incomingFolders, true) : mergeCollection(snapshot.folders ?? {}, response.folders, full);
+  const counts = {
+    ...(full ? {} : snapshot.completedProjectCounts),
+    ...Object.fromEntries((response.completed_info ?? []).filter((info) => info.project_id && !info.section_id && !info.item_id && Number.isFinite(info.completed_items))
+      .map((info) => [info.project_id!, info.completed_items])),
+  };
   return {
-    folders: mergeCollection(Object.fromEntries(Object.entries(snapshot.folders ?? {}).filter(([, folder]) =>
-      !response.refreshedFolderWorkspaces?.includes(folder.workspace_id))), response.folders, full),
+    folders,
     items: mergeCollection(snapshot.items, response.items, full),
     projects: mergeCollection(snapshot.projects, response.projects, full),
     sections: mergeCollection(snapshot.sections, response.sections, full),
@@ -135,12 +158,8 @@ export function applySync(snapshot: Snapshot, response: SyncResponse): Snapshot 
     workspaces: mergeCollection(snapshot.workspaces, response.workspaces, full),
     notifications: mergeCollection(snapshot.notifications ?? {}, response.live_notifications, full),
     collaboratorStates: mergeStates(snapshot.collaboratorStates ?? [], response.collaborator_states ?? response.collaborators_states, full),
-    user: response.user ?? snapshot.user,
-    completedProjectCounts: {
-      ...(full ? {} : snapshot.completedProjectCounts),
-      ...Object.fromEntries((response.completed_info ?? []).filter((info) => info.project_id && !info.section_id && !info.item_id && Number.isFinite(info.completed_items))
-        .map((info) => [info.project_id!, info.completed_items])),
-    },
+    user: response.user && JSON.stringify(response.user) !== JSON.stringify(snapshot.user) ? response.user : snapshot.user,
+    completedProjectCounts: JSON.stringify(counts) === JSON.stringify(snapshot.completedProjectCounts) ? snapshot.completedProjectCounts : counts,
     syncToken: response.sync_token,
     syncedAt: Date.now(),
   };

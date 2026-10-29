@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { defaultViewPrefs } from '@/domain/types';
 import { viewPrefs } from '@/store/prefs';
 import { AssigneeFilter } from '@/components/AssigneeFilter';
@@ -29,7 +30,7 @@ export function EisenhowerDisplayMenu() {
   const { t } = useT();
   const prefs = useStore((s) => s.prefs);
   const setPrefs = useStore((s) => s.setPrefs);
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const workspaceSelection = viewPrefs(prefs, 'matrix').filters.workspaces;
