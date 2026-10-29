@@ -99,26 +99,28 @@ export function Bars({
 
   return (
     <div className="chart">
-      <div className="chart-plot" style={{ height }} role="img" aria-labelledby={id}>
+      <div className="chart-plot" style={{ height }} role="group" aria-labelledby={id}>
         {data.map((datum, index) => (
-          <span className="barslot" key={datum.key}>
+          <button
+            type="button"
+            className="barslot"
+            key={datum.key}
+            onMouseEnter={() => setHover(index)}
+            onMouseLeave={() => setHover(null)}
+            onFocus={() => setHover(index)}
+            onBlur={() => setHover(null)}
+            onClick={() => setHover(index)}
+            aria-label={`${datum.label}: ${format ? format(datum.value, datum) : datum.value}`}
+          >
             {datum.reference !== undefined && datum.reference > 0 && (
-              <i
-                className="barref"
-                style={{ bottom: `${(datum.reference / max) * 100}%` }}
-                aria-hidden="true"
-              />
+              <i className="barref" style={{ bottom: `${(datum.reference / max) * 100}%` }} aria-hidden="true" />
             )}
-            <button
+            <span
               className={`bar${datum.current ? ' current' : ''}${hover === index ? ' hovered' : ''}`}
               style={{ height: `${Math.max(2, (datum.value / max) * 100)}%` }}
-              onMouseEnter={() => setHover(index)}
-              onMouseLeave={() => setHover(null)}
-              onFocus={() => setHover(index)}
-              onBlur={() => setHover(null)}
-              aria-label={`${datum.label}: ${format ? format(datum.value, datum) : datum.value}`}
+              aria-hidden="true"
             />
-          </span>
+          </button>
         ))}
       </div>
 

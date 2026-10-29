@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { useBoardSelection } from '@/hooks/useBoardSelection';
 import { type Step } from '@/domain/steps';
 import { TableSurface } from './TableSurface';
@@ -86,7 +87,7 @@ export function ModeSurface(props: ModeSurfaceProps) {
 
 function useGrouped(props: ModeSurfaceProps) {
   const { t, locale } = useT();
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const { items, group, sort, childrenOf, order, viewKey } = props;
 
   return useMemo(() => {

@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from './Icon';
@@ -34,7 +35,7 @@ const ITEMS = '[role="menuitem"]';
 export function SectionMenu({ sectionId, name, projectId, onDelete, onEdit, anchor, onClose }: SectionMenuProps) {
   const { t } = useT();
   const confirm = useConfirm();
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const demo = useStore((s) => s.demo);
   const toast = useStore((s) => s.toast);
   const archiveSection = useStore((s) => s.archiveSection);

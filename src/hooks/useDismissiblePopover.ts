@@ -12,12 +12,19 @@ export function useDismissiblePopover(
 ) {
   const close = useRef(onClose);
   close.current = onClose;
+  const markedTrigger = useRef<HTMLElement | null>(null);
+  // The trigger may appear after the first render (for example, task detail).
   useEffect(() => {
     const button = trigger.current;
-    if (!button) return;
-    button.setAttribute('data-popover-trigger', '');
-    return () => button.removeAttribute('data-popover-trigger');
+    if (button === markedTrigger.current) return;
+    markedTrigger.current?.removeAttribute('data-popover-trigger');
+    markedTrigger.current = button;
+    button?.setAttribute('data-popover-trigger', '');
   });
+  useEffect(() => () => {
+    markedTrigger.current?.removeAttribute('data-popover-trigger');
+    markedTrigger.current = null;
+  }, []);
   useEffect(() => {
     if (!open) return;
     const token = Symbol();

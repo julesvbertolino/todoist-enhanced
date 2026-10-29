@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { TodoistMark } from '../TodoistMark';
 import { takeCommentsRequest } from '../TaskCommentBadge';
 import { useDismissiblePopover } from '@/hooks/useDismissiblePopover';
@@ -86,7 +87,7 @@ function EditableSubtask({ child, onOpen }: { child: Item; onOpen: (id: string) 
   const removeTask = useStore((s) => s.removeTask);
   const confirm = useConfirm();
   const setRecurrence = useStore((s) => s.setRecurrence);
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const naturalDates = useStore((s) => s.prefs.naturalDates);
   const dateFormat = useStore((s) => s.prefs.dateFormat);
   const [editing, setEditing] = useState(false);

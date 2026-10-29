@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { useCreateTag } from '@/hooks/useCreateTag';
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { EstimateField } from './EstimateField';
@@ -244,7 +245,7 @@ export function BulkBar() {
   const moveMany = useStore((s) => s.moveMany);
   const skipOccurrences = useStore((s) => s.skipOccurrences);
   const toast = useStore((s) => s.toast);
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const [projectQuery, setProjectQuery] = useState('');
   const [tagQuery, setTagQuery] = useState('');
   const newTag = useCreateTag(tagQuery);

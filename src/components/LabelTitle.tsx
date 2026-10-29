@@ -1,10 +1,11 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '@/store/store';
 import { useT } from '@/hooks/useT';
 import { labelRenameError, cleanLabelName, reservedLabel } from '@/domain/renameLabel';
 export function LabelTitle({ name }: { name: string }) {
   const { t } = useT();
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const week = useStore((s) => s.prefs.weekLabel);
   const rename = useStore((s) => s.renameLabel);
   const entry = Object.entries(snapshot.labels).find(([, l]) => l.name === name && !l.is_deleted);

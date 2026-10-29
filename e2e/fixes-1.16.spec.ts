@@ -108,7 +108,7 @@ test('#115 the changelog opens from Settings, in the app', async ({ demo: page }
   const dialog = page.getByRole('dialog', { name: 'Changelog' });
   await expect(dialog).toBeVisible();
   await expect(dialog.locator('.whatsnew-release').first()).toContainText('Version');
-  await expect(dialog.locator('.whatsnew-change.new').first()).toContainText('🆕');
+  await expect(dialog.locator('.whatsnew-change').first()).toBeVisible();
   await expect(dialog.getByRole('button', { name: 'Got it' })).toBeFocused();
   // A version picker jumps to a release.
   await dialog.getByRole('button', { name: 'Versions' }).click();

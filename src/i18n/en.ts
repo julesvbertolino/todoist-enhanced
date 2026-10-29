@@ -547,7 +547,7 @@ export const en = {
   'comment.removeFile': 'Remove the file',
   'comment.uploadFailed': 'The file could not be sent.',
   'comment.reactionFailed': 'Todoist did not save this reaction. Try again in a moment.',
-  'composer.searchProjects': 'Type to search projects and sections',
+  'composer.searchProjects': 'Project or section…',
   'composer.searchPeople': "Type to search people",
   'composer.searchTags': 'Type to search tags',
   'reaction.search': 'Search emoji',

@@ -1,3 +1,11 @@
+const dateFormatters = new Map<string, Intl.DateTimeFormat>();
+function dateFormatter(locale: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const key = `${locale}:${JSON.stringify(options)}`;
+  let formatter = dateFormatters.get(key);
+  if (!formatter) { formatter = new Intl.DateTimeFormat(locale, options); dateFormatters.set(key, formatter); }
+  return formatter;
+}
+
 import {
   addDays, differenceInCalendarDays, endOfWeek, format, isSameDay,
   parseISO, startOfDay, startOfWeek,
@@ -111,7 +119,7 @@ export function formatTimeAgo(date: Date, locale: 'en' | 'fr', now = new Date())
   if (seconds < 3600) return upper(relative.format(-Math.floor(seconds / 60), 'minute'));
   if (seconds < 86400) return upper(relative.format(-Math.floor(seconds / 3600), 'hour'));
   if (seconds < 7 * 86400) return upper(relative.format(-Math.floor(seconds / 86400), 'day'));
-  return new Intl.DateTimeFormat(intl, { day: 'numeric', month: 'short' }).format(date);
+  return dateFormatter(intl, { day: 'numeric', month: 'short' }).format(date);
 }
 
 /** "Today", "Tomorrow", "Mon 14", "14 Sep" depending on how far away it is. */
@@ -133,9 +141,9 @@ export function formatRelativeDay(
   const intl = locale === 'fr' ? 'fr-FR' : 'en-GB';
   // Inside the coming week a weekday name reads faster than a number.
   if (diff > 1 && diff < 7) {
-    return new Intl.DateTimeFormat(intl, { weekday: 'short' }).format(date);
+    return dateFormatter(intl, { weekday: 'short' }).format(date);
   }
-  return new Intl.DateTimeFormat(intl, { day: 'numeric', month: 'short' }).format(date);
+  return dateFormatter(intl, { day: 'numeric', month: 'short' }).format(date);
 }
 
 /**
@@ -166,7 +174,7 @@ const TEMPLATES: Record<DateFormat, (p: Record<string, string>) => string> = {
 
 /** "Tuesday", for a date whose number is already written beside it. */
 export const weekdayName = (date: Date, locale: 'en' | 'fr'): string =>
-  new Intl.DateTimeFormat(locale === 'fr' ? 'fr-FR' : 'en-GB', { weekday: 'long' })
+  dateFormatter(locale === 'fr' ? 'fr-FR' : 'en-GB', { weekday: 'long' })
     .format(date);
 
 export function formatDay(
@@ -179,7 +187,7 @@ export function formatDay(
     ? { day: '2-digit', month: '2-digit', year: 'numeric' }
     : { day: 'numeric', month: 'short', year: 'numeric' };
 
-  const parts = new Intl.DateTimeFormat(intl, options)
+  const parts = dateFormatter(intl, options)
     .formatToParts(date)
     .reduce<Record<string, string>>((acc, part) => {
       if (part.type !== 'literal') acc[part.type] = part.value;
@@ -211,7 +219,7 @@ export function formatDayOrName(
 }
 
 export function formatTime(date: Date, locale: 'en' | 'fr', hour12: boolean): string {
-  return new Intl.DateTimeFormat(locale === 'fr' ? 'fr-FR' : 'en-GB', {
+  return dateFormatter(locale === 'fr' ? 'fr-FR' : 'en-GB', {
     hour: '2-digit',
     minute: '2-digit',
     hour12,

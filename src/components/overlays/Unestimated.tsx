@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Overlay } from './Overlay';
 import { Icon } from '../Icon';
@@ -33,7 +34,7 @@ interface EstimateBulkProps {
  */
 export function EstimateBulk({ items, onOpen, onDone, resetKey }: EstimateBulkProps) {
   const { t, locale } = useT();
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const setEstimates = useStore((s) => s.setEstimates);
   const listRef = useRef<HTMLDivElement>(null);
 

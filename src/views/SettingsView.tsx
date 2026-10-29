@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { PrivacyInformation } from '@/components/PrivacyInformation';
 import { HireNote } from '@/components/HireNote';
 import { MacAppCard } from '@/components/MacApp';
@@ -83,7 +84,7 @@ export function SettingsView() {
   const toggle = (key: keyof typeof prefs.conflicts) =>
     setPrefs({ conflicts: { ...prefs.conflicts, [key]: !prefs.conflicts[key] } });
 
-  const groupsInSidebar = projectTree(useStore((s) => s.snapshot), prefs.workspaceOrder);
+  const groupsInSidebar = projectTree(useDataSnapshot(), prefs.workspaceOrder);
 
   const weekly = weeklyCapacity(prefs.dailyCapacity, prefs.weeklyCapacityOverride);
 

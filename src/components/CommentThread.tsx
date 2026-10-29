@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from './Icon';
@@ -356,7 +357,7 @@ export function CommentThread({ itemId }: { itemId: string }) {
   /* A shared project: "@" suggests its people, and "Notify" says who hears
      about the comment (#254). A project nobody else is in shows neither. */
   const item = useStore((s) => s.snapshot.items[itemId]);
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const people = useMemo(
     () => item ? assignees(snapshot, item.project_id).filter((p) => p.id !== me?.id) : [],
     [snapshot, item, me?.id],

@@ -54,6 +54,9 @@ export const oneOffTitles = (page: Page): Promise<string[]> =>
 export async function go(page: Page, hash: string): Promise<void> {
   await page.evaluate((to) => { window.location.hash = to; }, hash);
   await expect(page.locator('.screen.active')).toBeVisible();
+  if (hash === '#/settings') await expect(page.locator('.screen.active #features')).toBeVisible();
+  if (hash === '#/review') await expect(page.locator('.screen.active .reviewrail')).toBeVisible();
+  if (hash === '#/insights') await expect(page.locator('.screen.active .ptitle')).toBeVisible();
 }
 
 /**

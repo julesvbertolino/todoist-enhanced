@@ -13,7 +13,9 @@ const ON = '[aria-pressed="true"], [aria-checked="true"]';
 function place(control: HTMLElement) {
   const on = control.querySelector<HTMLElement>(ON);
   if (!on || on.offsetWidth === 0) {
-    control.classList.remove('seg-slide', 'seg-ready');
+    if (control.classList.contains('seg-slide') || control.classList.contains('seg-ready')) {
+      control.classList.remove('seg-slide', 'seg-ready');
+    }
     return;
   }
   // The control becomes the thumb's positioning context before anything is measured.

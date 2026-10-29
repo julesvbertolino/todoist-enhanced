@@ -8,6 +8,12 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.23.0
+
+🎨 **Des détails plus clairs.** Les textes secondaires sont plus lisibles, l’aide à la recherche de projet est plus courte et les colonnes des graphiques sont plus faciles à sélectionner.
+
+🐛 **Améliorations des performances.** L’application charge moins de code au démarrage et reste plus réactive quand vous ouvrez une tâche, écrivez ou faites défiler une liste. La synchronisation travaille moins quand rien n’a changé, et la Revue ne sollicite plus le processeur au repos.
+
 ## 2.22.0
 
 🆕 **Voyez la progression d’un projet.** Un cercle à côté des projets sans icône personnalisée se remplit à mesure que vous terminez des tâches.

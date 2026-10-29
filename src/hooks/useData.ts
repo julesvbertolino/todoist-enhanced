@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { assigneeItems, matchesAssignee } from '@/domain/assignees';
 import { viewPrefs } from '@/store/prefs';
 import { useEffect, useMemo } from 'react';
@@ -12,7 +13,7 @@ import type { Item } from '@/domain/types';
 export function useData(viewKey?: string) {
   const prefs = useStore((s) => s.prefs);
   const storage = useStore((s) => s.prefs.estimateStorage);
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
 
   const selected = useStore((state) => state.selection);
   const selection = viewKey ? viewPrefs(prefs, viewKey).filters.assignees : null;

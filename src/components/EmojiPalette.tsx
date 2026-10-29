@@ -41,16 +41,16 @@ export function reactionKey(unicode: string): string {
   return /^\p{Emoji_Presentation}$/u.test(bare) ? bare : unicode;
 }
 
-let loading: Promise<Data> | null = null;
+const loading: Partial<Record<'en' | 'fr', Promise<Data>>> = {};
 
 function loadData(locale: 'en' | 'fr'): Promise<Data> {
-  loading ??= Promise.all([
+  loading[locale] ??= Promise.all([
     import('emojibase-data/en/compact.json'),
-    import('emojibase-data/fr/compact.json'),
+    locale === 'fr' ? import('emojibase-data/fr/compact.json') : Promise.resolve(null),
     import(locale === 'fr' ? 'emojibase-data/fr/messages.json' : 'emojibase-data/en/messages.json'),
   ]).then(([en, fr, messages]) => {
     const french = new Map<string, { label: string; tags?: string[] }>();
-    for (const entry of fr.default as Array<{ hexcode: string; label: string; tags?: string[] }>) {
+    for (const entry of (fr?.default ?? []) as Array<{ hexcode: string; label: string; tags?: string[] }>) {
       french.set(entry.hexcode, entry);
     }
     const emojis: Emoji[] = [];
@@ -69,7 +69,7 @@ function loadData(locale: 'en' | 'fr'): Promise<Data> {
     const groups = (messages.default as { groups: Array<{ order: number; message: string }> }).groups;
     return { emojis, groups };
   });
-  return loading;
+  return loading[locale];
 }
 
 function readRecent(): string[] {

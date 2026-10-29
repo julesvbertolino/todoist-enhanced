@@ -1,10 +1,11 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { useProjectCompletionCounts } from '@/hooks/useProjectCompletionCounts';
 import { isUncompletable } from '@/domain/types';
 import { openItems } from './store/selectors';
 import { useLabelRenames } from './hooks/useLabelRenames';
 import { seesHireNote } from '@/domain/hireNote';
 import { EstimateConversion } from '@/components/overlays/EstimateConversion';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from './components/Icon';
 import { Sidebar } from './components/Sidebar';
 import { BulkBar } from './components/BulkBar';
@@ -26,14 +27,14 @@ import { WeekView } from './views/WeekView';
 import { SearchView } from './views/SearchView';
 import { UpcomingView } from './views/UpcomingView';
 import { SimpleListView } from './views/SimpleListView';
-import { WorkspaceView } from './views/WorkspaceView';
+const WorkspaceView = lazy(() => import('./views/WorkspaceView').then((module) => ({ default: module.WorkspaceView })));
 import { ProjectView } from './views/ProjectView';
-import { LabelsView } from './views/LabelsView';
-import { FiltersView } from './views/FiltersView';
-import { InsightsView } from './views/InsightsView';
-import { ReviewView } from './views/ReviewView';
-import { SettingsView } from './views/SettingsView';
-import { EisenhowerView } from './views/EisenhowerView';
+const LabelsView = lazy(() => import('./views/LabelsView').then((module) => ({ default: module.LabelsView })));
+const FiltersView = lazy(() => import('./views/FiltersView').then((module) => ({ default: module.FiltersView })));
+const InsightsView = lazy(() => import('./views/InsightsView').then((module) => ({ default: module.InsightsView })));
+const ReviewView = lazy(() => import('./views/ReviewView').then((module) => ({ default: module.ReviewView })));
+const SettingsView = lazy(() => import('./views/SettingsView').then((module) => ({ default: module.SettingsView })));
+const EisenhowerView = lazy(() => import('./views/EisenhowerView').then((module) => ({ default: module.EisenhowerView })));
 import { ConnectView } from './views/ConnectView';
 import { EstimateStorageDialog } from './components/overlays/EstimateStorageDialog';
 import { Walkthrough } from './components/overlays/Walkthrough';
@@ -668,7 +669,7 @@ function AppShell({
   const clearSelection = useStore((s) => s.clearSelection);
 
   const roots = useMemo(() => rootItems(items), [items]);
-  const snapshotForBell = useStore((s) => s.snapshot);
+  const snapshotForBell = useDataSnapshot();
   const conflictCount = useMemo(
     () => detectConflicts(roots, childrenOf, conflictSettings).length + unreadCount(snapshotForBell),
     [roots, childrenOf, conflictSettings, snapshotForBell],
@@ -775,33 +776,40 @@ function AppShell({
    * intersection observer answers without running anything while nothing is
    * happening.
    */
-  const [titleShown, setTitleShown] = useState(false);
+  const mobileTitleRef = useRef<HTMLElement>(null);
   useEffect(() => {
     const screen = document.querySelector('.screen.active');
-    const heading = screen?.querySelector('.ptitle');
-    if (!screen || !heading) { setTitleShown(false); return; }
+    mobileTitleRef.current?.classList.remove('shown');
+    if (!screen) return;
     const watch = new IntersectionObserver(
-      ([entry]) => setTitleShown(!entry.isIntersecting),
+      ([entry]) => mobileTitleRef.current?.classList.toggle('shown', !entry.isIntersecting),
       { root: screen, threshold: 0 },
     );
-    watch.observe(heading);
-    return () => watch.disconnect();
+    const attach = () => {
+      const heading = screen.querySelector('.ptitle');
+      if (!heading) return false;
+      watch.observe(heading);
+      return true;
+    };
+    const pending = new MutationObserver(() => { if (attach()) pending.disconnect(); });
+    if (!attach()) pending.observe(screen, { childList: true, subtree: true });
+    return () => { pending.disconnect(); watch.disconnect(); };
     // A new page brings a new heading to watch.
   }, [route.view, route.id]);
 
   /* Whether the page has been scrolled at all: the bar on a phone is clear
      at the top of a page and blurs once something goes under it (#291). */
-  const [barScrolled, setBarScrolled] = useState(false);
+  const mobileTopRef = useRef<HTMLElement>(null);
   useEffect(() => {
     const screen = document.querySelector('.screen.active');
-    if (!screen) { setBarScrolled(false); return; }
-    const sync = () => setBarScrolled(screen.scrollTop > 4);
+    if (!screen) { mobileTopRef.current?.classList.remove('scrolled'); return; }
+    const sync = () => mobileTopRef.current?.classList.toggle('scrolled', screen.scrollTop > 4);
     sync();
     screen.addEventListener('scroll', sync, { passive: true });
     return () => screen.removeEventListener('scroll', sync);
   }, [route.view, route.id]);
 
-  const openTask = (id: string) => setOpenTaskId(id);
+  const openTask = useCallback((id: string) => setOpenTaskId(id), [setOpenTaskId]);
   const addTask = () => {
     setPlacement(placementForPage(route, snapshot.user?.inbox_project_id));
     setComposerOpen(true);
@@ -817,73 +825,27 @@ function AppShell({
     openComposer: addTask,
     openShortcuts: () => setShortcutsOpen(true),
   });
-  const addTaskTo = (next: ComposerPlacement) => {
+  const addTaskTo = useCallback((next: ComposerPlacement) => {
     setPlacement(next);
     setComposerOpen(true);
-  };
-  const openInsights = () => setInsightsOpen(true);
-  const openUnestimated = (tasks?: Item[]) => {
+  }, [setPlacement, setComposerOpen]);
+  const openInsights = useCallback(() => setInsightsOpen(true), [setInsightsOpen]);
+  const openUnestimated = useCallback((tasks?: Item[]) => {
     // A click hands its event to whatever it calls: only a list is a list.
     setUnestimatedFor(Array.isArray(tasks) ? tasks : null);
     setUnestimatedOpen(true);
-  };
-  const viewProps = {
+  }, [setUnestimatedOpen]);
+  const viewProps = useMemo(() => ({
     onOpen: openTask,
     onInsights: openInsights,
     onUnestimated: openUnestimated,
     onAddTaskTo: addTaskTo,
     onProjectSheet: setProjectSheet,
     projectProgressCounts,
-  };
+  }), [openTask, openInsights, openUnestimated, addTaskTo, setProjectSheet, projectProgressCounts]);
 
-  const insightsProject = route.view === 'project' ? route.id : route.view === 'inbox' ? snapshot.user?.inbox_project_id : undefined;
-  return (
-    <div
-      className={`app${demo ? ' demo' : ''}${sidebarCollapsed ? ' collapsed' : ''}`}
-      data-density={density}
-    >
-      <Sidebar
-        route={route}
-        projectProgressCounts={projectProgressCounts}
-        onAddTask={addTask}
-        onSearch={() => setSearchOpen(true)}
-        onIssues={() => setIssuesOpen(true)}
-        onProjectSheet={setProjectSheet}
-        issuesCount={conflictCount}
-      />
-
-      <main className="workspace">
-        <header className={`mobile-top${barScrolled ? ' scrolled' : ''}`}>
-          {/* This opened My week, whatever it said. It opens the navigation. */}
-          <button
-            className="iconbtn hasdot"
-            aria-label={t('nav.openNavigation')}
-            onClick={() => setBrowseOpen(true)}
-          >
-            <Icon name="menu" />
-            {/* A new version waits at the foot of the navigation: the dot says where to look. */}
-            {updateReady && <span className="belldot" aria-hidden="true" />}
-          </button>
-          {/* The page names itself twice on a phone — once in this bar and once
-              as the heading under it — which costs a row of a short screen to
-              say nothing. The bar holds the name back until the heading has
-              scrolled away, which is the same title arriving where it is
-              needed rather than a second one standing beside it. */}
-          <strong className={titleShown ? ' shown' : ''}>{contextLabel}</strong>
-          <span className="mobile-top-end">
-            {/* The demo said so in a banner that cost a row of a short screen;
-                it is a chip now, and the way out is where it always was, in
-                the navigation (#291). */}
-            {demo && (
-              <button className="demochip" onClick={() => setBrowseOpen(true)}>{t('demo.chip')}</button>
-            )}
-            <button className="iconbtn" aria-label={t('nav.search')} onClick={() => setSearchOpen(true)}>
-              <Icon name="search" />
-            </button>
-          </span>
-        </header>
-
-        <section className="screen active">
+  // Overlay state belongs to the shell; keep the unchanged page subtree intact.
+  const pageContent = useMemo(() => (<Suspense fallback={<p role="status">{t('common.loading')}</p>}>
           {route.view === 'week' && (
             <WeekView {...viewProps} scope="all" />
           )}
@@ -914,6 +876,58 @@ function AppShell({
           {route.view === 'review' && <ReviewView onOpen={openTask} />}
           {route.view === 'insights' && <InsightsView onOpen={openTask} />}
           {route.view === 'settings' && <SettingsView />}
+  </Suspense>), [route.view, route.id, route.sectionId, route.query, snapshot.user?.id,
+    snapshot.user?.inbox_project_id, viewProps, openTask, openUnestimated, t]);
+
+  const insightsProject = route.view === 'project' ? route.id : route.view === 'inbox' ? snapshot.user?.inbox_project_id : undefined;
+  return (
+    <div
+      className={`app${demo ? ' demo' : ''}${sidebarCollapsed ? ' collapsed' : ''}`}
+      data-density={density}
+    >
+      <Sidebar
+        route={route}
+        projectProgressCounts={projectProgressCounts}
+        onAddTask={addTask}
+        onSearch={() => setSearchOpen(true)}
+        onIssues={() => setIssuesOpen(true)}
+        onProjectSheet={setProjectSheet}
+        issuesCount={conflictCount}
+      />
+
+      <main className="workspace">
+        <header ref={mobileTopRef} className="mobile-top">
+          {/* This opened My week, whatever it said. It opens the navigation. */}
+          <button
+            className="iconbtn hasdot"
+            aria-label={t('nav.openNavigation')}
+            onClick={() => setBrowseOpen(true)}
+          >
+            <Icon name="menu" />
+            {/* A new version waits at the foot of the navigation: the dot says where to look. */}
+            {updateReady && <span className="belldot" aria-hidden="true" />}
+          </button>
+          {/* The page names itself twice on a phone — once in this bar and once
+              as the heading under it — which costs a row of a short screen to
+              say nothing. The bar holds the name back until the heading has
+              scrolled away, which is the same title arriving where it is
+              needed rather than a second one standing beside it. */}
+          <strong ref={mobileTitleRef}>{contextLabel}</strong>
+          <span className="mobile-top-end">
+            {/* The demo said so in a banner that cost a row of a short screen;
+                it is a chip now, and the way out is where it always was, in
+                the navigation (#291). */}
+            {demo && (
+              <button className="demochip" onClick={() => setBrowseOpen(true)}>{t('demo.chip')}</button>
+            )}
+            <button className="iconbtn" aria-label={t('nav.search')} onClick={() => setSearchOpen(true)}>
+              <Icon name="search" />
+            </button>
+          </span>
+        </header>
+
+        <section className="screen active">
+          {pageContent}
         </section>
 
         <nav className="mobile-nav" aria-label={t('nav.projects')}>

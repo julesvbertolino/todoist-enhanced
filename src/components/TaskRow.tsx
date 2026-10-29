@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { TaskCommentBadge } from './TaskCommentBadge';
 import { tableRowColor } from '@/domain/table';
 import { TableContext } from './TableContext';
@@ -156,7 +157,7 @@ export function TaskRow({
     return () => node.removeEventListener(ROW_MOVE_EVENT, onMove);
   }, [item.id, item.parent_id, list, childrenOf]);
   const { t, locale } = useT();
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const hour12 = useStore((s) => s.prefs.hour12);
   const toggleTask = useStore((s) => s.toggleTask);
   const keepInSomeday = useStore((s) => s.keepInSomeday);

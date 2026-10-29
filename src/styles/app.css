@@ -18,7 +18,7 @@
   /* text — every value below passes AA on white at 12px */
   --text:#202020;
   --muted:#666666;
-  --faint:#808080;
+  --faint:#737373;
 
   /* brand + semantics
      Four warm reds carry the whole brand, each with one job:

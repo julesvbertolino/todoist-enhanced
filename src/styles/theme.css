@@ -91,7 +91,7 @@
   :root[data-background="colored"] .sidebar .side-foot .addbtn{background:#fff;color:var(--accent)}
   :root[data-background="colored"] .sidebar .side-foot .addbtn .ic{color:var(--accent)}
   :root[data-background="colored"] .sidebar .menu{
-    --text:#202020;--muted:#666;--faint:#808080;--hover:#f0efee;--subtle:#f9f8f7;--border:#f0f0f0;
+    --text:#202020;--muted:#666;--faint:#737373;--hover:#f0efee;--subtle:#f9f8f7;--border:#f0f0f0;
     --border-strong:#dcdcdc;color:#202020;
   }
   :root[data-background="colored"][data-theme="dark"] .sidebar .menu{
@@ -773,7 +773,10 @@ button.subprog[aria-expanded="false"]{background:var(--subtle)}
 .barslot{
   position:relative;flex:1 1 0;min-width:3px;
   display:flex;align-items:flex-end;align-self:stretch;
+  padding:0;border:0;background:transparent;cursor:pointer;border-radius:4px;
 }
+.barslot:hover,.barslot:focus-visible{background:var(--hover)}
+.barslot:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .bar{
   flex:1 1 0;min-width:3px;border-radius:4px 4px 0 0;   /* rounded data-end */
   background:var(--c-data);opacity:.85;
@@ -3101,3 +3104,9 @@ html.desktop-app.quickadd body::before{display:none}
   --chip-bg:color-mix(in srgb, var(--marker, var(--muted)) 20%, #0c0c0c);
 }
 :root[data-dark="amoled"] :is(.tag, .detail-side .pill.tagpill){background:color-mix(in srgb, var(--marker, var(--muted)) 20%, #0c0c0c)}
+
+/* Keep hints and empty fields lighter than informative secondary text. */
+:root:not([data-theme="dark"]) :is(input, textarea)::placeholder,
+:root:not([data-theme="dark"]) .descview.placeholder { color: #808080; }
+
+:root[data-background="colored"]:not([data-theme="dark"]) .sidebar :is(input, textarea)::placeholder { color: rgba(255,255,255,.62); }

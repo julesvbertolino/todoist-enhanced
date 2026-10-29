@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import {
   DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent,
@@ -22,7 +23,7 @@ export function TableSurface({ groups, viewKey, childrenOf, onOpen }: {
 }) {
   const { t, locale } = useT();
   const prefs = useStore((s) => s.prefs);
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const setViewPrefs = useStore((s) => s.setViewPrefs);
   const current = viewPrefs(prefs, viewKey);
   const columns = tableColumns(current);

@@ -1,3 +1,4 @@
+import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { TodoistMark } from './TodoistMark';
 import { addDays, nextMonday, nextSaturday, startOfDay } from 'date-fns';
 import { confirmUndatedMove } from '@/domain/confirmUndatedMove';
@@ -175,7 +176,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
   const removeTask = useStore((s) => s.removeTask);
   const skipOccurrence = useStore((s) => s.skipOccurrence);
   const confirm = useConfirm();
-  const snapshot = useStore((s) => s.snapshot);
+  const snapshot = useDataSnapshot();
   const apply = useStore((s) => s.apply);
   const setRecurrence = useStore((s) => s.setRecurrence);
   const toast = useStore((s) => s.toast);
