@@ -11,9 +11,18 @@ test('workspace counts use server totals, members and archive paginate, and cach
   await page.route('https://api.todoist.com/**', async (route) => {
     const url = new URL(route.request().url()); reads.push(url.pathname + url.search);
     let response: unknown;
-    if (url.pathname.endsWith('/sync')) response = { full_sync: true, sync_token: 'counts-only', completed_info: [
-      { project_id: 'site', completed_items: completed }, { project_id: 'site', section_id: 's-todo', completed_items: 4 },
-    ] };
+    if (url.pathname.endsWith('/sync')) {
+      const params = new URLSearchParams(route.request().postData() ?? '');
+      const resources: string[] = JSON.parse(params.get('resource_types') ?? '[]');
+      if (resources.length === 1 && resources[0] === 'completed_info') {
+        response = { full_sync: true, sync_token: 'counts-only', completed_info: [
+          { project_id: 'site', completed_items: completed }, { project_id: 'site', section_id: 's-todo', completed_items: 4 },
+        ] };
+      } else {
+        const commands: Array<{ uuid: string }> = JSON.parse(params.get('commands') ?? '[]');
+        response = { full_sync: false, sync_token: 'fixture', sync_status: Object.fromEntries(commands.map(({ uuid }) => [uuid, 'ok'])) };
+      }
+    }
     else if (url.pathname.endsWith('/users')) response = url.searchParams.has('cursor')
       ? { workspace_users: [{ user_id: 'two', full_name: 'Second member', role: 'MEMBER' }], has_more: false }
       : { workspace_users: [{ user_id: 'one', full_name: 'First member', role: 'ADMIN' }], has_more: true, next_cursor: 'page2' };
