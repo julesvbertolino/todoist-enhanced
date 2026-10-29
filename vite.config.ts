@@ -8,7 +8,8 @@ import { fileURLToPath, URL } from 'node:url';
  *
  * Apache applies them in production. `npm run preview` applies the same ones
  * here so a build can be checked against the policy before it is uploaded.
- * Keep the two in step.
+ * Cloudflare Workers serves the same policy from public/_headers. Keep all
+ * three in step.
  */
 const SECURITY_HEADERS = {
   'Content-Security-Policy': [
