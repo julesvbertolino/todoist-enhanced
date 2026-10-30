@@ -165,6 +165,8 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
     if (prefs.estimateStorage === 'duration' && !canStoreDurations(get().snapshot.user)) prefs.estimateStorage = 'tag';
     if (patch.weekLabel !== undefined) setWeekLabel(prefs.weekLabel);
     set({ prefs });
+    // Demo choices must not become the next real account's setup state.
+    if (get().demo) return;
     void idb.savePrefs(PREFS_KEY, prefs);
     schedulePreferencesWrite(get);
   },
@@ -224,6 +226,9 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
       if (!inbox) return;
 
       let comments = settingsComments(snapshot);
+      // Offline edits may update a known, readable comment; never create or
+      // overwrite one while its account state is unknown or unreadable.
+      if (!get().settingsChecked && (!localChange || comments.length === 0 || comments.some((note) => !readSettingsComment(note.content)))) return;
       if (comments.length === 0) {
         const fetched = await fetchSettingsComments(inbox);
         if (fetched === null) return; // unreachable: try again on the next sync

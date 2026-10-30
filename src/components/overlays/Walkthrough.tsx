@@ -103,6 +103,13 @@ export function Walkthrough({
     if (tour) onTour();
   };
 
+  const skipSetup = () => {
+    markOnboarded(user?.id);
+    setPrefs({ onboarded: true, setupDone: true });
+    go(0, true);
+    onDone();
+  };
+
   const title = current.id === 'end'
     ? t('setup.end.title', { name: first })
     : t(`setup.${current.id}.title` as TranslationKey);
@@ -162,6 +169,7 @@ export function Walkthrough({
             <button className="btn primary lg setup-go" onClick={() => go(1)}>
               {t('setup.continue')}
             </button>
+            <button className="setup-skiplink" onClick={skipSetup}>{t('setup.skipSetup')}</button>
           </div>
         ) : current.id === 'end' ? (
           <div className="setup-welcome setup-end">

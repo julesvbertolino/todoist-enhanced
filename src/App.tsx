@@ -97,6 +97,8 @@ export function App() {
   const toasts = useStore((s) => s.toasts);
   const dismissToast = useStore((s) => s.dismissToast);
   const syncState = useStore((s) => s.syncState);
+  const settingsChecked = useStore((s) => s.settingsChecked);
+  const settingsUnavailable = useStore((s) => s.settingsUnavailable);
   const whatsNewOn = useStore((s) => s.prefs.whatsNew);
   const seenVersion = useStore((s) => s.prefs.seenVersion);
   const setPrefs = useStore((s) => s.setPrefs);
@@ -245,7 +247,7 @@ export function App() {
     /* The render that closes the tour still carries the demo's user, put back
        by the time this runs: the store is asked, not the render (#212). */
     const liveUserId = useStore.getState().snapshot.user?.id;
-    if (!QUICK_ADD && !tourOpen && ready && (connected || demo) && !hasOnboarded(liveUserId) && !onboardingStarted) {
+    if (!QUICK_ADD && !tourOpen && ready && (connected || demo) && (demo || settingsChecked) && !hasOnboarded(liveUserId) && !onboardingStarted) {
       setOnboardingStarted(true);
       /* Somebody meeting the app for the first time is getting the tour; a
          list of what changed since a version they never used is not news. */
@@ -253,7 +255,7 @@ export function App() {
       navigate('week');
       setWalkthrough(true);
     }
-  }, [ready, connected, demo, userId, tourOpen, onboardingStarted, setPrefs, setWalkthrough]);
+  }, [ready, connected, demo, settingsChecked, userId, tourOpen, onboardingStarted, setPrefs, setWalkthrough]);
 
   /* An account set up before 2.0 is asked once for the choices that came with
      it (the look, the sidebar, what a task shows). Not the demo, which only
@@ -264,11 +266,11 @@ export function App() {
        has the demo's user and the tour's settings, which looked like an account
        that had never seen the Setup (#212). */
     const live = useStore.getState();
-    if (QUICK_ADD || tourOpen || !ready || !connected || demo || !settled || !hasOnboarded(live.snapshot.user?.id)) return;
+    if (QUICK_ADD || tourOpen || !ready || !connected || demo || !settingsChecked || !hasOnboarded(live.snapshot.user?.id)) return;
     if (live.prefs.setupDone || setupAsked.current) return;
     setupAsked.current = true;
     setWalkthrough(true);
-  }, [ready, connected, demo, settled, userId, tourOpen, setupDone, setWalkthrough]);
+  }, [ready, connected, demo, settingsChecked, userId, tourOpen, setupDone, setWalkthrough]);
 
   /* The first sync after loading is what brings the account's settings — and
      with them the version already seen on another device. Asked before it,
@@ -360,7 +362,7 @@ export function App() {
      neutral screen rather than the views, which the Setup would then cover a
      few seconds later (#7). An account this browser already knows as set up
      goes straight in; a failed sync shows the app and its error. */
-  const setupUnknown = !demo && !tourOpen && !settled && !walkthroughOpen && syncState !== 'error'
+  const setupUnknown = !demo && !tourOpen && !settingsChecked && !settingsUnavailable && !walkthroughOpen && syncState !== 'error' && syncState !== 'offline'
     && (!userId || !hasOnboarded(userId) || !setupDone);
   if (setupUnknown) {
     return (

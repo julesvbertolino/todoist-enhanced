@@ -28,8 +28,9 @@ vi.mock('@/api/commands', async (importOriginal) => ({
 import * as idb from '@/db/idb';
 import { sync } from '@/api/sync';
 import { sendCommands } from '@/api/commands';
-import { emptySnapshot, type TodoistUser } from '@/domain/types';
+import { emptySnapshot, type TodoistUser, type Note } from '@/domain/types';
 import { useStore } from './store';
+import { defaultPreferences, SETTINGS_COMMENT_MARKER } from './prefs';
 
 const asUser = (id: string) => ({ id } as TodoistUser);
 const queued = (uuid: string, userId?: string) => ({
@@ -64,6 +65,23 @@ afterEach(() => {
 });
 
 describe('changes waiting for one account, and another one signs in (#129)', () => {
+  it('publishes the signed-in user together with their saved setup state', async () => {
+    const user = { id: 'u2', inbox_project_id: 'inbox' } as TodoistUser;
+    const note = { id: 'setting', project_id: 'inbox', item_id: null, is_deleted: false,
+      posted_at: '2026-01-01T00:00:00Z', posted_uid: 'u2', file_attachment: null,
+      content: `${SETTINGS_COMMENT_MARKER}\n\n{"onboarded":true,"setupDone":true}` } as Note;
+    vi.mocked(sync).mockResolvedValueOnce({ sync_token: 'full', full_sync: true, user, project_notes: [note] })
+      .mockResolvedValueOnce({ sync_token: 'next', full_sync: false });
+    useStore.setState({ prefs: defaultPreferences('en'), settingsChecked: false });
+    const published: Array<{ done: boolean; checked: boolean }> = [];
+    const stop = useStore.subscribe((state) => {
+      if (state.snapshot.user?.id === 'u2') published.push({ done: state.prefs.setupDone, checked: state.settingsChecked });
+    });
+    await useStore.getState().refresh(true, { legacyOwner: 'u1' });
+    stop();
+    expect(published.length).toBeGreaterThan(0);
+    expect(published.every((state) => state.done && state.checked)).toBe(true);
+  });
   it('are not sent, are taken off the queue, and are reported once', async () => {
     db.queue = [queued('a', 'u1'), queued('b', 'u1')];
     todoistAnswersAs('u2');
