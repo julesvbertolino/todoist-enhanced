@@ -13,7 +13,7 @@ interface DurationFieldProps {
   /** What the face says when there is no value of its own: the sum of the subtasks, or an invitation. */
   placeholder: string;
   pendingWrites?: number;
-  /** In a table cell: no words or chevron while empty, only the clock. */
+  /** In a table cell: no chevron. */
   compact?: boolean;
   onCommit: (minutes: number | null) => void | Promise<'accepted' | 'pending' | 'failed' | void>;
 }
@@ -99,7 +99,7 @@ export function DurationField({ minutes, placeholder, pendingWrites, compact = f
         onClick={() => setOpen((now) => !now)}
       >
         <Icon name="clock" size="sm" />
-        {!(compact && minutes === null) && <span className="fselect-value">{minutes === null ? placeholder : formatDuration(minutes, locale)}</span>}
+        <span className="fselect-value">{minutes === null ? placeholder : formatDuration(minutes, locale)}</span>
         {!compact && <Icon name="caret" size="sm" />}
       </button>
       {status && <span className={`est-feedback ${status}`} aria-hidden="true">
@@ -109,35 +109,58 @@ export function DurationField({ minutes, placeholder, pendingWrites, compact = f
       {open && createPortal(
         <div
           ref={panelRef}
-          className="popover rowmenu estimatesheet durationpanel"
+          className="popover rowmenu estimatesheet durationpanel durationbody"
           role="dialog"
           aria-label={t('detail.estimate')}
           style={{ top: position?.top ?? -9999, left: position?.left ?? -9999, visibility: position ? undefined : 'hidden' }}
         >
-          <div className="estquick">
-            {QUICK_ESTIMATES.map((quick) => (
-              <button key={quick} type="button" className={`estchip${minutes === quick ? ' on' : ''}`} onClick={() => choose(quick)}>
-                {formatDuration(quick, locale)}
-              </button>
-            ))}
-            {minutes !== null && (
-              <button type="button" className="estchip clear" onClick={() => choose(null)}>
-                <Icon name="close" size="sm" />
-                {t('bulk.clear')}
-              </button>
-            )}
-          </div>
-          <EstimateField
-            autoFocus
-            cancelOnBlurTarget=".estchip"
-            minutes={minutes}
-            placeholder={t('task.estimatePlaceholder')}
-            onCancel={close}
-            onCommit={(value) => { void save(value); setOpen(false); }}
-          />
+          <DurationChooser minutes={minutes} onChoose={choose} onCancel={close} cancelOnBlurTarget=".estchip"
+            onType={(value) => { void save(value); setOpen(false); }} />
         </div>,
         document.body,
       )}
     </span>
+  );
+}
+
+/**
+ * The usual durations and a field for the others: what every way of setting a duration opens, whether
+ * from the task window, a table cell or a row's menu, so they all look and behave the same (#392).
+ */
+export function DurationChooser({ minutes, onChoose, onType, onCancel, cancelOnBlurTarget, autoFocus = true }: {
+  minutes: number | null;
+  /** A usual duration was pressed, or the clear button. */
+  onChoose: (minutes: number | null) => void;
+  /** A value was typed and confirmed. */
+  onType: (minutes: number | null) => void;
+  onCancel: () => void;
+  cancelOnBlurTarget: string;
+  autoFocus?: boolean;
+}) {
+  const { t, locale } = useT();
+  return (
+    <>
+      <div className="estquick">
+        {QUICK_ESTIMATES.map((quick) => (
+          <button key={quick} type="button" className={`estchip${minutes === quick ? ' on' : ''}`} onClick={() => onChoose(quick)}>
+            {formatDuration(quick, locale)}
+          </button>
+        ))}
+        {minutes !== null && (
+          <button type="button" className="estchip clear" onClick={() => onChoose(null)}>
+            <Icon name="close" size="sm" />
+            {t('bulk.clear')}
+          </button>
+        )}
+      </div>
+      <EstimateField
+        autoFocus={autoFocus}
+        cancelOnBlurTarget={cancelOnBlurTarget}
+        minutes={minutes}
+        placeholder={t('task.estimatePlaceholder')}
+        onCancel={onCancel}
+        onCommit={onType}
+      />
+    </>
   );
 }

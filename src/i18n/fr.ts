@@ -1760,6 +1760,7 @@ export const fr: Record<TranslationKey, string> = {
   'table.resize': 'Redimensionner {name}',
   'table.resizeHint': 'Glisser pour redimensionner, double-clic pour rétablir',
   'table.wrap': 'Retour à la ligne des textes longs',
+  'table.noDuration': 'Aucune',
   'table.moveHint': 'Glissez la poignée, ou Alt avec les flèches haut et bas, pour réordonner.',
   'table.moveColumn': 'Déplacer {name}',
 };

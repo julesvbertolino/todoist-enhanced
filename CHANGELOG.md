@@ -68,7 +68,7 @@ translation lives in CHANGELOG.fr.md.
 
 🐛 **Counts that match the page.** The numbers beside My week, Today and Upcoming follow what the page lists, with its grouping and its Show subtasks switch.
 
-🐛 **A cursor where you type.** In a task's checklist, a new empty item no longer shows the cursor at the far right.
+🐛 **A cursor where you type.** The description of a new task always shows its cursor, and in a task's checklist a new empty item no longer shows it at the far right.
 
 🐛 **A clean search field in pure black.** The search box in Display menus no longer shows a grey patch in the AMOLED dark theme.
 

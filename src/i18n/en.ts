@@ -1760,6 +1760,7 @@ export const en = {
   'table.resize': 'Resize {name}',
   'table.resizeHint': 'Drag to resize, double-click to reset',
   'table.wrap': 'Wrap long text',
+  'table.noDuration': 'None',
   'table.moveHint': 'Drag the handle, or Alt with the up and down arrows, to reorder.',
   'table.moveColumn': 'Move {name}',
 };

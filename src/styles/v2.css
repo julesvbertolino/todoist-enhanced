@@ -2283,8 +2283,8 @@ html[data-navigation="pointer"] .task:focus-visible::after{content:none}
 @media(hover:none){.table-head .head-resize::after{background:var(--border-strong)}}
 .table-head .head-more{right:6px}
 .colrow .switch:disabled{opacity:.5;cursor:default}
-.task-table .parentchip{display:inline-flex;align-items:center;gap:4px;flex:0 8 auto;min-width:1.8em;max-width:12em;margin-left:2px;padding:0 8px 0 6px;
-  border-radius:999px;background:var(--subtle);color:var(--muted);font-size:var(--fs-12);line-height:20px}
+.task-table .parentchip{display:inline-flex;align-items:center;gap:5px;flex:0 8 auto;min-width:2.4em;max-width:12em;margin:2px 0 2px 6px;padding:3px 10px 3px 8px;
+  border-radius:999px;background:var(--subtle);color:var(--muted);font-size:var(--fs-12);line-height:18px}
 .task-table .trow-title{min-width:4em}
 .task-table .parentchip .ic{flex:none;width:12px;height:12px}
 .task-table .parentchip-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -2308,9 +2308,10 @@ html[data-navigation="pointer"] .task:focus-visible::after{content:none}
 :root[data-dark="amoled"] :is(.pickersearch, .searchfield) input:not([type="checkbox"]):not([type="radio"]){background-color:transparent}
 
 /* #392 The duration chooser opened from the task panel is a floating panel, not a row's menu. */
-.durationpanel{position:fixed;z-index:110;width:288px;max-width:calc(100vw - 16px);padding:var(--s3)}
-.durationpanel .estfield{display:flex;width:100%;margin-top:0}
-.durationpanel .estfield .estinput{flex:1 1 auto;width:auto;height:32px}
+.durationpanel{position:fixed;z-index:110}
+.durationbody{width:288px;max-width:calc(100vw - 16px);padding:var(--s3)}
+.durationbody .estfield{display:flex;width:100%;margin-top:0}
+.durationbody .estfield .estinput{flex:1 1 auto;width:auto;height:32px}
 .durationfield{position:relative}
 .durationfield .est-feedback{right:30px}
 
@@ -2320,3 +2321,15 @@ html[data-navigation="pointer"] .task:focus-visible::after{content:none}
 .task-table button.parentchip:hover,.task-table button.parentchip:focus-visible{background:var(--btn-soft-hover);color:var(--text)}
 /* Table's Display: Columns, colour and wrap share one rhythm. */
 .dfield-stack>.display-fullwidth{margin:0;padding-block:var(--s2)}
+
+/* #411 CodeMirror draws its own cursor and hides the native one, but only once it has registered the focus.
+   When the field has the focus and CodeMirror has not noticed (a window that is activated after the field
+   was focused, as with Quick Add on macOS), the native caret is shown until it does. */
+.mdedit .cm-editor:not(.cm-focused) .cm-content:focus{caret-color:var(--text)!important}
+
+.asSheet.durationbody{width:auto;max-width:none}
+/* A heading's sort arrow is quiet, and its text gives way before the menu chevron that appears over its end. */
+.table-head .head-arrow{color:var(--muted)}
+.table-head>div:not(.head-title) .head-sort{max-width:calc(100% - 22px)}
+/* An empty duration in a table says so, quietly. */
+.task-table .table-estimate .durationfield .fselect-face.empty{color:var(--faint)}

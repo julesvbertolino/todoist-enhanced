@@ -20,7 +20,8 @@ import { copyText, isTemporaryId, todoistTaskUrl } from '@/api/links';
 import { ROW_PRESS_EVENT, type RowMenu } from '@/domain/gestures';
 import { useStore } from '@/store/store';
 import { useConfirm } from './overlays/Confirm';
-import { QUICK_ESTIMATES, effectiveEstimate, formatDuration } from '@/domain/estimates';
+import { effectiveEstimate, formatDuration } from '@/domain/estimates';
+import { DurationChooser } from './DurationField';
 import { EstimateField } from './EstimateField';
 import { DatePicker, shortDay, taskShortcuts, type RecurrenceReading } from './DatePicker';
 import { nextOccurrence } from '@/domain/nextOccurrence';
@@ -492,35 +493,17 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
 
   const back = contextPoint !== null || phone ? <button type="button" className="opt task-menu-back" onClick={() => setMenu('more')}><span><Icon name="arrow-left" size="sm" />{t('task.menuBack')}</span></button> : null;
   const estimateSheet = (
-    <div className={`popover rowmenu estimatesheet${phone ? ' asSheet' : placement.className}`} role="menu" ref={placement.ref}>
+    <div className={`popover rowmenu estimatesheet durationbody${phone ? ' asSheet' : placement.className}`} role="menu" ref={placement.ref}>
       {back}
       {/* Most estimates are one of these, and on a phone typing "45" means
           opening a keyboard over half the screen to press two keys. The field
           stays underneath for the ones that are not. */}
-      <div className="estquick">
-        {QUICK_ESTIMATES.map((quick) => (
-          <button
-            key={quick}
-            className={`estchip${minutes === quick && !computed ? ' on' : ''}`}
-            onClick={() => setEstimate(quick)}
-          >
-            {formatDuration(quick, locale)}
-          </button>
-        ))}
-        {minutes !== null && !computed && (
-          <button className="estchip clear" onClick={() => setEstimate(null)}>
-            <Icon name="close" size="sm" />
-            {t('bulk.clear')}
-          </button>
-        )}
-      </div>
-      <EstimateField
-        autoFocus
-        cancelOnBlurTarget=".task-menu-back, .estchip"
+      <DurationChooser
         minutes={computed ? null : minutes}
-        placeholder={t('task.estimatePlaceholder')}
+        cancelOnBlurTarget=".task-menu-back, .estchip"
+        onChoose={setEstimate}
+        onType={setEstimate}
         onCancel={() => setMenu('none')}
-        onCommit={setEstimate}
       />
     </div>
   );

@@ -36,7 +36,7 @@ Chaque ligne est marquée :
 
 🐛 **Des compteurs fidèles à la page.** Les nombres à côté de Cette semaine, Aujourd’hui et À venir suivent ce que la page liste, avec son regroupement et son réglage Afficher les sous-tâches.
 
-🐛 **Un curseur là où vous tapez.** Dans la liste de contrôle d’une tâche, un nouvel élément vide n’affiche plus le curseur tout à droite.
+🐛 **Un curseur là où vous tapez.** La description d’une nouvelle tâche affiche toujours son curseur, et dans la liste de contrôle d’une tâche, un nouvel élément vide ne l’affiche plus tout à droite.
 
 🐛 **Un champ de recherche net en noir pur.** La zone de recherche des menus d’Affichage n’a plus de tache grise dans le thème sombre AMOLED.
 
