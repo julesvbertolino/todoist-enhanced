@@ -2322,14 +2322,25 @@ html[data-navigation="pointer"] .task:focus-visible::after{content:none}
 /* Table's Display: Columns, colour and wrap share one rhythm. */
 .dfield-stack>.display-fullwidth{margin:0;padding-block:var(--s2)}
 
-/* #411 CodeMirror draws its own cursor and hides the native one, but only once it has registered the focus.
+/* #411 The composer's description scrolls (overflow auto), and what scrolls clips: the cursor of an empty
+   field sits a pixel left of the text, so it was cut off entirely. The text gets 2px of room on its left,
+   taken back by the editor's margin so it does not move. */
+.descedit.composer .cm-editor{margin-left:-2px}
+.descedit.composer .cm-content{padding-left:2px}
+
+/* CodeMirror draws its own cursor and hides the native one, but only once it has registered the focus.
    When the field has the focus and CodeMirror has not noticed (a window that is activated after the field
    was focused, as with Quick Add on macOS), the native caret is shown until it does. */
 .mdedit .cm-editor:not(.cm-focused) .cm-content:focus{caret-color:var(--text)!important}
 
 .asSheet.durationbody{width:auto;max-width:none}
-/* A heading's sort arrow is quiet, and its text gives way before the menu chevron that appears over its end. */
-.table-head .head-arrow{color:var(--muted)}
+/* A heading's text gives way before the menu chevron that appears over its end. */
 .table-head>div:not(.head-title) .head-sort{max-width:calc(100% - 22px)}
 /* An empty duration in a table says so, quietly. */
 .task-table .table-estimate .durationfield .fselect-face.empty{color:var(--faint)}
+
+/* Table rows centre everything on one line: the checkbox without the list's nudge, and the meta that holds
+   the comment badge without the list's gap above it and its full width. */
+.task-table .task>.check{margin-top:0}
+.task-table .tmain .meta{margin-top:0;width:auto;flex:0 0 auto}
+.task-table.wrap .task>.check{margin-top:2px}

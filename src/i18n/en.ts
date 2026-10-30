@@ -525,6 +525,7 @@ export const en = {
   'task.deleteConfirm': 'Delete "{name}"? Todoist keeps deleted tasks for seven days in its activity history.',
   'task.rescheduleAllConfirm': 'Move {count} overdue tasks to today?',
   'task.estimateChoose': 'Choose a duration',
+  'task.removeEstimate': 'Remove duration',
   'task.estimatePlaceholder': '15min, 1h…',
   'task.computedEstimate': 'Summed from subtasks',
   'detail.subtaskOf': 'Subtask of',

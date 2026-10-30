@@ -88,14 +88,14 @@ test.describe('lists and the keyboard (third pass)', () => {
     await expect(page.locator('.screen.active .board .chead small').first()).not.toContainText('unestimated');
   });
 
-  test('a duration set from the row opens empty, and Enter on nothing leaves it', async ({ demo: page }) => {
+  test('a duration set from the row opens the shared dropdown on the current value, and Enter leaves it', async ({ demo: page }) => {
     await go(page, '#/week');
     const first = rows(page).first();
     const before = await first.locator('.meta').innerText();
     await first.hover();
     await first.getByRole('button', { name: 'Set an estimate' }).click();
-    const field = first.getByRole('textbox');
-    await expect(field).toHaveValue('');
+    const field = page.locator('.durationbody').getByRole('textbox');
+    await expect(field).not.toHaveValue('');
     await field.press('Enter');
     await expect.poll(() => first.locator('.meta').innerText()).toBe(before);
   });

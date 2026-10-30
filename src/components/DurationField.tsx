@@ -149,7 +149,7 @@ export function DurationChooser({ minutes, onChoose, onType, onCancel, cancelOnB
         {minutes !== null && (
           <button type="button" className="estchip clear" onClick={() => onChoose(null)}>
             <Icon name="close" size="sm" />
-            {t('bulk.clear')}
+            {t('task.removeEstimate')}
           </button>
         )}
       </div>

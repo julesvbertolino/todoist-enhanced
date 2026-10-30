@@ -527,6 +527,7 @@ export const fr: Record<TranslationKey, string> = {
   'task.deleteConfirm': 'Supprimer « {name} » ? Todoist conserve les tâches supprimées sept jours dans son historique d’activité.',
   'task.rescheduleAllConfirm': 'Déplacer {count} tâches en retard à aujourd’hui ?',
   'task.estimateChoose': 'Choisir une durée',
+  'task.removeEstimate': 'Retirer la durée',
   'task.estimatePlaceholder': '15min, 1h…',
   'task.computedEstimate': 'Somme des sous-tâches',
   'detail.subtaskOf': 'Sous-tâche de',

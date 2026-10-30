@@ -126,3 +126,45 @@ test('a checklist item that is still empty keeps the cursor at its start', async
   const [line, cursor] = [(await item.boundingBox())!, (await page.locator('.descedit .cm-cursor').boundingBox())!];
   expect(cursor.x - line.x).toBeLessThan(40);
 });
+
+test('#411 the cursor of an empty description in the composer is not clipped by its scroller', async ({ demo: page }) => {
+  await page.getByRole('button', { name: 'Add task', exact: true }).first().click();
+  await page.locator('.descedit.composer .cm-content').click();
+  const cursor = page.locator('.descedit.composer .cm-cursor');
+  await expect(cursor).toHaveCount(1);
+  const [at, scroller] = [(await cursor.boundingBox())!, (await page.locator('.descedit.composer .cm-scroller').boundingBox())!];
+  expect(at.x).toBeGreaterThanOrEqual(scroller.x);
+});
+
+test('table: checkbox, title and cells share one line, and the sort arrow is not the accent colour', async ({ demo: page }) => {
+  await openTable(page);
+  const tasks = page.locator('.task-table .task[data-task-id]');
+  for (let at = 0; at < Math.min(await tasks.count(), 8); at += 1) {
+    const centres = await tasks.nth(at).evaluate((task) => {
+      const mid = (el: Element | null) => { const r = el?.getBoundingClientRect(); return r ? r.top + r.height / 2 : NaN; };
+      return [mid(task.querySelector('.check')), mid(task.querySelector('.ttitle')), mid(task.querySelector('.subprog')), mid(task.querySelector('.parentchip')), mid(task.querySelector('.table-cell'))].filter((n) => !Number.isNaN(n));
+    });
+    for (const centre of centres) expect(Math.abs(centre - centres[0])).toBeLessThan(0.75);
+  }
+  await page.locator('.table-head .head-sort').nth(2).click();
+  const same = await page.locator('.table-head .head-arrow').evaluate((arrow) => {
+    const probe = document.createElement('i');
+    probe.style.color = 'var(--accent)';
+    document.body.appendChild(probe);
+    const accent = getComputedStyle(probe).color;
+    probe.remove();
+    return getComputedStyle(arrow).color === accent;
+  });
+  expect(same).toBe(false);
+});
+
+test('a task\'s hover duration opens the same dropdown as the task window', async ({ demo: page }) => {
+  const task = page.locator('.screen.active .task[data-task-id]').first();
+  await task.hover();
+  await task.locator('.trow-end').getByRole('button', { name: 'Set an estimate' }).click();
+  const panel = page.locator('.durationbody');
+  await expect(panel.getByRole('button', { name: '30 min', exact: true })).toBeVisible();
+  await expect(panel.locator('input')).toBeFocused();
+  await panel.getByRole('button', { name: '30 min', exact: true }).click();
+  await expect(page.locator('.durationbody')).toHaveCount(0);
+});
