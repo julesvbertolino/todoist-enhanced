@@ -31,7 +31,7 @@ import type { Item } from '@/domain/types';
 import { useStore } from '@/store/store';
 import { newUuid } from '@/api/commands';
 import { viewPrefs } from '@/store/prefs';
-import { applyFilters, pullQuick, rootItems, sortItems } from '@/store/selectors';
+import { applyFilters, groupRoots, pullQuick, sortItems } from '@/store/selectors';
 import { summariseLoad } from '@/domain/load';
 import { readProjectIcon, stripProjectIcon, withProjectIcon } from '@/domain/projectIcons';
 import { bySectionOrder } from '@/domain/orderKey';
@@ -179,7 +179,7 @@ function ProjectBody({
    */
   const history = useProjectCompleted(projectId, current.filters.showCompleted);
   const pool0 = useMemo(() => {
-    const openRoots = rootItems(items).filter((i) => i.project_id === projectId);
+    const openRoots = groupRoots(items.filter((i) => i.project_id === projectId), current.group === 'none' ? 'section' : current.group, current.filters.showSubtasks);
     if (!current.filters.showCompleted) return openRoots;
     const ticked = Object.values(snapshot.items).filter(
       (i) => i.project_id === projectId && i.checked && !i.is_deleted && !i.parent_id,
@@ -187,7 +187,7 @@ function ProjectBody({
     /* What the sync still holds wins over the history's copy of the same task. */
     const known = new Set([...openRoots, ...ticked].map((i) => i.id));
     return [...openRoots, ...ticked, ...history.filter((i) => !known.has(i.id) && !snapshot.items[i.id])];
-  }, [items, projectId, current.filters.showCompleted, snapshot, history]);
+  }, [items, projectId, current.filters.showCompleted, current.filters.showSubtasks, current.group, snapshot, history]);
   const scoped = useMemo(
     () => applyFilters(pool0, current.filters, snapshot, childrenOf),
     [pool0, current.filters, snapshot, childrenOf],

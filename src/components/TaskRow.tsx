@@ -352,8 +352,8 @@ export function TaskRow({
         key="subtasks"
         className="subprog foldable"
         aria-expanded={expanded}
-        aria-label={t('detail.subtasks')}
-        title={t('detail.subtasks')}
+        aria-label={t(expanded ? 'task.foldSubtasks' : 'task.unfoldSubtasks')}
+        title={t(expanded ? 'task.foldSubtasks' : 'task.unfoldSubtasks')}
         onClick={(e) => {
           e.stopPropagation();
           toggleFold();
@@ -362,6 +362,7 @@ export function TaskRow({
       >
         <ProgressRing done={doneChildren} total={children.length} />
         {t('task.subtaskProgress', { done: doneChildren, total: children.length })}
+        <Icon name="caret" size="sm" className="subprog-chev" />
       </button>
     ) : (
       <span className="subprog" key="subtasks">
@@ -492,20 +493,6 @@ export function TaskRow({
               className="ttitle"
               dangerouslySetInnerHTML={{ __html: renderTitle(displayTaskContent(item)) }}
             />
-            {showSubtasks && openChildren.length > 0 && !item.projection && !table && (
-              /* Outside the title, which stops at two lines: a long one must
-                 not push the button out of sight. */
-              <button
-                className="fold-chev"
-                aria-expanded={expanded}
-                aria-label={t(expanded ? 'task.foldSubtasks' : 'task.unfoldSubtasks')}
-                title={t(expanded ? 'task.foldSubtasks' : 'task.unfoldSubtasks')}
-                onClick={(e) => { e.stopPropagation(); toggleFold(); }}
-                onKeyDown={(e) => e.stopPropagation()}
-              >
-                <Icon name="caret" size="sm" />
-              </button>
-            )}
           </span>
 
           {!table && preview && fields.description && (

@@ -22,8 +22,8 @@ import { useTimePill } from '@/hooks/useTimePill';
 import { useData } from '@/hooks/useData';
 import { useStore } from '@/store/store';
 import { viewPrefs } from '@/store/prefs';
-import { applyFilters, pullQuick, rootItems, sortItems } from '@/store/selectors';
-import { somedayItems, hasLabel, splitDust } from '@/domain/views';
+import { applyFilters, groupRoots, labelRoots, pullQuick, sortItems } from '@/store/selectors';
+import { somedayItems, splitDust } from '@/domain/views';
 import { summariseLoad } from '@/domain/load';
 import type { TranslationKey } from '@/i18n';
 import type { Item } from '@/domain/types';
@@ -99,7 +99,9 @@ function SimpleListBody({
   const filterPool = (ids: string[]): Item[] => filterRoots(ids, snapshot.items);
 
   const pool0 = useMemo(() => {
-    const roots = rootItems(items);
+    const subtasks = current.filters.showSubtasks;
+    /* A subtask is drawn on its own as a task is, and under its parent as well (#405). */
+    const roots = groupRoots(items, current.group === 'none' && kind === 'inbox' ? 'section' : current.group, subtasks);
     let selection: Item[];
 
     if (kind === 'someday') {
@@ -112,12 +114,12 @@ function SimpleListBody({
       selection = filterPool(filterResult.parts?.flatMap((part) => part.ids) ?? [])
         .filter((item) => !seen.has(item.id) && Boolean(seen.add(item.id)));
     } else {
-      selection = labelName ? roots.filter((i) => hasLabel(i, labelName)) : [];
+      selection = labelName ? labelRoots(items, labelName, snapshot, current.group, subtasks) : [];
     }
 
     return selection;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, kind, labelName, snapshot, filterResult.parts, matched]);
+  }, [items, kind, labelName, snapshot, filterResult.parts, matched, current.group, current.filters.showSubtasks]);
   const scoped = useMemo(
     () => applyFilters(pool0, current.filters, snapshot, childrenOf),
     [pool0, current.filters, snapshot, childrenOf],

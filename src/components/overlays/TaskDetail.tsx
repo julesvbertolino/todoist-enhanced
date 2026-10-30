@@ -341,6 +341,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
   const moreButton = useRef<HTMLButtonElement>(null);
   const [tagQuery, setTagQuery] = useState('');
   const newTagChoice = useCreateTag(tagQuery);
+  const createLabelOn = useStore((s) => s.createLabelOn);
   const panelRef = useRef<HTMLDivElement>(null);
   const menuRef = useMenuKeys(menuOpen, () => setMenuOpen(false));
   useDismissiblePopover(tagPickerOpen, tagsButton, tagsPanel, () => setTagPickerOpen(false), true);
@@ -500,13 +501,11 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
   const { name: newTag, available: canCreateTag, busy: creatingTag } = newTagChoice;
   async function createAndAttachTag() {
     if (!item) return;
+    if (!newTagChoice.available || newTagChoice.busy) return;
     const taskId = item.id;
-    const name = await newTagChoice.create();
-    const current = useStore.getState().snapshot.items[taskId];
-    if (name && current) {
-      await updateTask(taskId, { labels: [...new Set([...current.labels, name])] });
-      setTagQuery('');
-    }
+    const query = newTagChoice.name;
+    setTagQuery('');
+    await createLabelOn(taskId, query);
   }
 
   const toggleTag = (name: string) => void updateTask(item.id, {

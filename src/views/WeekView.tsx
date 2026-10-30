@@ -87,7 +87,7 @@ function WeekBody({
   const current = viewPrefs(prefs, viewKey);
 
   const pool = useMemo(() => {
-    const roots = datedRoots(items, snapshot);
+    const roots = datedRoots(items, snapshot, current.group, { subtasks: current.filters.showSubtasks, layout: current.group === 'none', quick: prefs.showQuickGroup });
     const now = new Date();
     const inScope =
       scope === 'today'
@@ -99,7 +99,7 @@ function WeekBody({
           ? anytimeItems(roots, now)
           : weekItems(roots, now);
     return inScope;
-  }, [items, snapshot, scope]);
+  }, [items, snapshot, scope, current.group, current.filters.showSubtasks, prefs.showQuickGroup]);
   const scoped = useMemo(
     () => applyFilters(pool, { ...current.filters, includeScheduled: true }, snapshot, childrenOf)
       .filter((item) => scope !== 'all' || current.filters.includeScheduled || !isToday(item)),
@@ -153,7 +153,7 @@ function WeekBody({
 
   /* A week is drawn from every project at once, so the order it is put into
      is the one Todoist keeps for lists like this one. */
-  const sortedGroup = (list: typeof scoped) => sortItems(list, current.sort, childrenOf, 'day', snapshot, true);
+  const sortedGroup = (list: typeof scoped) => sortItems(list, current.sort, childrenOf, 'day', snapshot, true, prefs.workspaceOrder);
   /* Dropping a task into a place in a list is always offered, whatever the
      list is sorted by: it is how you ask this view for an order of your own,
      and the drop makes it manual rather than being refused for not being
@@ -188,7 +188,7 @@ function WeekBody({
     return columns
       .filter((column) => column.items.length > 0 || column.dropTarget)
       .map((column) => ({
-        ...column, items: sortItems(column.items, current.sort, childrenOf, 'day', snapshot, true),
+        ...column, items: sortItems(column.items, current.sort, childrenOf, 'day', snapshot, true, prefs.workspaceOrder),
         /* Each column a task can be added to has the line to do it, empty or full. */
         onAddTask: column.id === 'quick' ? () => onAddTaskTo(placementFor({ kind: 'quick' }))
           : column.id === 'untimed' || column.id === 'timed' ? () => onAddTaskTo(placementFor({ kind: 'today' }))

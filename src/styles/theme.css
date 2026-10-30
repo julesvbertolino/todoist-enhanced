@@ -481,8 +481,10 @@
 /* Subtask progress (#156): the ring sits in the icon's box beside "1/3".
    Muted while in progress, the success colour once every subtask is done. */
 .subprog{display:inline-flex;align-items:center;gap:4px}
-button.subprog{padding:1px 6px 1px 4px;margin:-1px -2px;border-radius:var(--r-full);color:inherit;font:inherit;cursor:pointer}
+button.subprog{padding:2px 8px 2px 6px;margin:-2px -3px;border-radius:var(--r-full);color:inherit;font:inherit;cursor:pointer}
 button.subprog:hover{background:var(--hover);color:var(--text)}
+.subprog-chev{width:12px;height:12px;color:var(--faint);transition:transform .15s}
+button.subprog[aria-expanded="false"] .subprog-chev{transform:rotate(-90deg)}
 button.subprog[aria-expanded="false"]{background:var(--subtle)}
 .progressring{color:var(--muted)}
 .progressring.complete{color:var(--ok)}
@@ -3031,11 +3033,6 @@ html.desktop-app.quickadd body::before{display:none}
    two-line clamp; the button sits beside the block, on the first line. */
 .trow-title{display:flex;align-items:flex-start;gap:2px;min-width:0}
 .trow-title .ttitle{min-width:0}
-.fold-chev{flex:none;display:inline-grid;place-items:center;width:22px;height:22px;margin-top:-1px;border:0;border-radius:var(--r-full);background:transparent;color:var(--faint);cursor:pointer;padding:0}
-.fold-chev:hover{background:var(--hover);color:var(--text)}
-.fold-chev .ic{transition:transform .15s}
-.fold-chev[aria-expanded="false"] .ic{transform:rotate(-90deg)}
-.fold-chev[aria-expanded="false"]{color:var(--muted)}
 
 /* Mentions and who to notify, in a shared task's comments (#254). */
 /* A little more room above than below: the box's round corner makes the

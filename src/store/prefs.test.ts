@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   defaultPreferences, hydratePreferences, mergeSynced, readSettingsComment, SETTINGS_COMMENT_MARKER,
-  settingsCommentContent, settingsCommentMatches, syncedPreferences, type Preferences,
+  settingsCommentContent, settingsCommentMatches, syncedPreferences, viewPrefs, type Preferences,
 } from './prefs';
 import { defaultViewPrefs } from '@/domain/types';
 
@@ -298,5 +298,21 @@ describe('matrix horizon migration', () => {
     expect(hydratePreferences({ eisenhowerEnabled: true, eisenhowerShowFuture: true }, 'en').eisenhowerHorizon).toBe('all');
     expect(mergeSynced(defaultPreferences('en'), { eisenhowerEnabled: true, eisenhowerShowFuture: true }, 'en').eisenhowerHorizon).toBe('all');
     expect(mergeSynced(defaultPreferences('en'), { eisenhowerEnabled: true, eisenhowerShowFuture: false }, 'en').eisenhowerHorizon).toBe('today');
+  });
+});
+
+describe('the Full width switch (#403)', () => {
+  it('is one setting for every page', () => {
+    const on = prefs({ listFullWidth: true });
+    expect(viewPrefs(on, 'today').fullWidth).toBe(true);
+    expect(viewPrefs(on, 'label:work').fullWidth).toBe(true);
+    expect(viewPrefs(prefs(), 'today').fullWidth).toBeFalsy();
+  });
+
+  it('keeps a page that had it on, from before it was global', () => {
+    const stored = { views: { today: { ...viewPrefs(prefs(), 'today'), fullWidth: true } } };
+    expect(hydratePreferences(stored, 'en').listFullWidth).toBe(true);
+    expect(hydratePreferences({}, 'en').listFullWidth).toBe(false);
+    expect(hydratePreferences({ listFullWidth: false, ...stored }, 'en').listFullWidth).toBe(false);
   });
 });

@@ -7,7 +7,7 @@ import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } 
 import { CSS } from '@dnd-kit/utilities';
 import { Icon } from './Icon';
 import { useT } from '@/hooks/useT';
-import { tableColumnLabel, tableColumnOrder, tableColumns, tableLayoutPatch } from '@/domain/table';
+import { tableColumnIcon, tableColumnLabel, tableColumnOrder, tableColumns, tableLayoutPatch } from '@/domain/table';
 import type { TableColumn, ViewPrefs } from '@/domain/types';
 
 type Movable = Exclude<TableColumn, 'title'>;
@@ -77,9 +77,8 @@ export function ColumnsMenu({ value, onChange }: {
   return (
     <div className="columnsrow">
       <button ref={button} type="button" className="fselect-face" aria-expanded={open} aria-haspopup="dialog"
-        aria-label={`${t('table.columns')}: ${t('table.columnCount', { count: shown.length })}`} onClick={() => setOpen((now) => !now)}>
-        <Icon name="table" size="sm" /><span>{t('table.columns')}</span>
-        <span className="fselect-value">{t('table.columnCount', { count: shown.length })}</span>
+        aria-label={t('table.columns')} onClick={() => setOpen((now) => !now)}>
+        <Icon name="table" size="sm" /><span className="fselect-value">{t('table.columns')}</span>
         <Icon name="caret" size="sm" className="columns-caret" />
       </button>
       {open && createPortal(
@@ -88,6 +87,7 @@ export function ColumnsMenu({ value, onChange }: {
           <h5>{t('table.columns')}</h5>
           <div className="colrow locked">
             <span className="colgrip" aria-hidden="true" />
+            <Icon name={tableColumnIcon.title} size="sm" className="colicon" />
             <span className="collabel">{t(tableColumnLabel.title)}</span>
             <button type="button" className="switch" role="switch" aria-checked disabled aria-label={t(tableColumnLabel.title)} />
           </div>
@@ -124,6 +124,7 @@ function ColumnRow({ column, checked, onToggle, onStep }: { column: Movable; che
       >
         <Icon name="drag" size="sm" />
       </button>
+      <Icon name={tableColumnIcon[column]} size="sm" className="colicon" />
       <span className="collabel">{t(tableColumnLabel[column])}</span>
       <button type="button" className="switch" role="switch" aria-checked={checked} aria-label={t(tableColumnLabel[column])} onClick={onToggle} />
     </div>

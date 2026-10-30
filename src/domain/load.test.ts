@@ -28,3 +28,13 @@ describe('the tone of the header duration (#173)', () => {
     expect(summariseLoad(tasks, none, null).percentage).toBeNull();
   });
 });
+
+describe('a subtask listed on its own as well as under its parent (#405)', () => {
+  it('is counted once in the time', () => {
+    const parent = item({ id: 'p', labels: ['est-30'] });
+    const child = item({ id: 'c', parent_id: 'p', labels: ['est-30'] });
+    const childrenOf = (id: string) => (id === 'p' ? [child] : []);
+    expect(summariseLoad([parent, child], childrenOf, null)).toMatchObject({ taskCount: 2, estimatedMinutes: 30 });
+    expect(summariseLoad([child], childrenOf, null)).toMatchObject({ taskCount: 1, estimatedMinutes: 30 });
+  });
+});

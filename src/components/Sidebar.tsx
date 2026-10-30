@@ -4,7 +4,7 @@ import { SidebarResize } from './SidebarResize';
 import { isToday } from '@/domain/dates';
 import { viewPrefs } from '@/store/prefs';
 import { assigneeItems } from '@/domain/assignees';
-import { datedRoots, childIndex, makeChildrenOf, openItems, applyFilters } from '@/store/selectors';
+import { datedRoots, labelRoots, childIndex, makeChildrenOf, openItems, applyFilters } from '@/store/selectors';
 import { useFilterCounts } from '@/hooks/useFilterResult';
 import { FilterMark } from './FilterMark';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
@@ -16,7 +16,7 @@ import { useData } from '@/hooks/useData';
 import { useStore } from '@/store/store';
 import { navigate, type Route } from '@/hooks/useRoute';
 import { projectCounts, projectTree, rootItems, type ProjectNode } from '@/store/selectors';
-import { bucketOf, hasLabel, somedayItems, weekItems } from '@/domain/views';
+import { bucketOf, somedayItems, weekItems } from '@/domain/views';
 import { markerStyle, avatarUrl } from '@/domain/colors';
 import { firstName, karmaStanding } from '@/domain/karma';
 import { readProjectIcon } from '@/domain/projectIcons';
@@ -146,7 +146,6 @@ export function Sidebar({
 
   useEffect(() => hideHint, []);
 
-  const roots = useMemo(() => rootItems(items), [items]);
   const inboxId = snapshot.user?.inbox_project_id;
   const counts = useMemo(() => {
     const now = new Date();
@@ -588,7 +587,7 @@ export function Sidebar({
             {favourites.projects.map((p) =>
               projectNode({ project: p, children: [] }, 'fav-'))}
             {favourites.labels.map((l) =>
-              tagItem(l.name, l.color, roots.filter((i) => hasLabel(i, l.name)).length))}
+              tagItem(l.name, l.color, labelRoots(items, l.name, snapshot).length))}
             {/* The count is Todoist's answer to the query, asked again when
                 the tasks change; it shows once Todoist has answered. */}
             {favourites.filters.map((f) => (

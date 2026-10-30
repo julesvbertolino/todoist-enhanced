@@ -5,7 +5,7 @@ test.skip(process.env.PLAYWRIGHT_DEV === '1', 'Offline reload requires the produ
 
 test('closing setup and choosing estimate storage completes setup, including offline reload', async ({ page, context }) => {
   const marker = 'Enhanced for Todoist · settings (edited by the app, please leave as is)';
-  let content = `${marker}\n\n${JSON.stringify({ onboarded: true, setupDone: false, estimateStorage: null, seenVersion: '2.23.0' })}`;
+  let content = `${marker}\n\n${JSON.stringify({ onboarded: true, setupDone: false, estimateStorage: null, seenVersion: '2.24.0' })}`;
   let syncRequests = 0;
   const user = { id: 'account-test', full_name: 'Test User', inbox_project_id: 'inbox', is_premium: true, karma: 0 };
   const note = () => ({ id: 'settings', project_id: 'inbox', item_id: null, content, posted_at: '2026-01-01T00:00:00Z', posted_uid: user.id, is_deleted: false, file_attachment: null });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { datedRoots, groupItems, projectTree, pullQuick, sortItems } from './selectors';
+import { datedRoots, groupItems, groupRoots, labelRoots, projectRanks, projectTree, pullQuick, sortItems } from './selectors';
 import { emptySnapshot, type Project, type Section, type Snapshot } from '@/domain/types';
 import { due, item } from '@/test/items';
 
@@ -224,6 +224,104 @@ describe('datedRoots (#1)', () => {
     const parent = item({ id: 'p', due: due('2999-01-02') });
     const a = item({ id: 'a', parent_id: 'p', due: due('2999-01-02') });
     expect(datedRoots([parent, a], snap([parent, a])).map((i) => i.id)).toEqual(['p']);
+  });
+});
+
+describe('datedRoots grouped by an attribute (#405)', () => {
+  const snap = (items: ReturnType<typeof item>[]): Snapshot => ({ ...emptySnapshot(), items: Object.fromEntries(items.map((i) => [i.id, i])) });
+  const ids = (list: ReturnType<typeof item>[], group: Parameters<typeof datedRoots>[2]) => datedRoots(list, snap(list), group).map((i) => i.id);
+
+  it('lifts a P2 subtask due the same day as a P4 parent when grouped by priority', () => {
+    const parent = item({ id: 'p', priority: 1, due: due('2999-01-01') });
+    const a = item({ id: 'a', parent_id: 'p', priority: 3, due: due('2999-01-01') });
+    expect(ids([parent, a], 'priority')).toEqual(['p', 'a']);
+  });
+
+  it('keeps it nested once when the priority is the same, or when nothing is grouped', () => {
+    const parent = item({ id: 'p', priority: 3, due: due('2999-01-01') });
+    const same = item({ id: 'a', parent_id: 'p', priority: 3, due: due('2999-01-01') });
+    const other = item({ id: 'b', parent_id: 'p', priority: 1, due: due('2999-01-01') });
+    expect(ids([parent, same], 'priority')).toEqual(['p']);
+    expect(ids([parent, other], 'none')).toEqual(['p']);
+  });
+
+  it('applies to project and tag groups too', () => {
+    const parent = item({ id: 'p', project_id: 'x', labels: ['a'], due: due('2999-01-01') });
+    const elsewhere = item({ id: 'a', parent_id: 'p', project_id: 'y', labels: ['a'], due: due('2999-01-01') });
+    const tagged = item({ id: 'b', parent_id: 'p', project_id: 'x', labels: ['b'], due: due('2999-01-01') });
+    const covered = item({ id: 'c', parent_id: 'p', project_id: 'x', labels: ['a'], due: due('2999-01-01') });
+    expect(ids([parent, elsewhere], 'project')).toEqual(['p', 'a']);
+    expect(ids([parent, tagged], 'label')).toEqual(['p', 'b']);
+    expect(ids([parent, covered], 'label')).toEqual(['p']);
+  });
+
+  it('lists a subtask tagged for the week on its own, under a parent dated today', () => {
+    const today = item({ id: 't', due: due(new Date().toISOString().slice(0, 10)) });
+    const week = item({ id: 'w', parent_id: 't', labels: ['week'] });
+    const plain = item({ id: 'x', parent_id: 't' });
+    expect(ids([today, week, plain], 'none')).toEqual(['t', 'w']);
+  });
+
+  it('puts every subtask away when Show subtasks is off', () => {
+    const top = item({ id: 'p', priority: 1, due: due('2999-01-01') });
+    const child = item({ id: 'c', parent_id: 'p', priority: 3, due: due('2999-01-01') });
+    expect(datedRoots([top, child], snap([top, child]), 'priority', { subtasks: false }).map((i) => i.id)).toEqual(['p']);
+  });
+
+  it('leaves an undated subtask under its parent', () => {
+    const parent = item({ id: 'p', priority: 1, due: due('2999-01-01') });
+    const a = item({ id: 'a', parent_id: 'p', priority: 4, due: null });
+    expect(ids([parent, a], 'priority')).toEqual(['p']);
+  });
+});
+
+describe('groupRoots (#405)', () => {
+  const ids = (list: ReturnType<typeof item>[], group: Parameters<typeof groupRoots>[1]) => groupRoots(list, group).map((i) => i.id);
+  const parent = item({ id: 'p', priority: 1, due: due('2999-01-01') });
+
+  it('lists a P2 subtask of a P1 task in its own group, and keeps it under its parent', () => {
+    const child = item({ id: 'c', parent_id: 'p', priority: 3, due: due('2999-01-01') });
+    expect(ids([parent, child], 'priority')).toEqual(['p', 'c']);
+    expect(ids([parent, child], 'none')).toEqual(['p']);
+  });
+
+  it('lists a subtask on its own day when its parent is on another', () => {
+    const child = item({ id: 'c', parent_id: 'p', due: due('2999-01-05') });
+    expect(ids([parent, child], 'day')).toEqual(['p', 'c']);
+    expect(ids([parent, item({ id: 'd', parent_id: 'p', due: due('2999-01-01') })], 'day')).toEqual(['p']);
+  });
+});
+
+describe('labelRoots (#402)', () => {
+  const snap = (items: ReturnType<typeof item>[]): Snapshot => ({ ...emptySnapshot(), items: Object.fromEntries(items.map((i) => [i.id, i])) });
+  const name = '📅 Réunion équipe';
+
+  it('lists a tagged subtask whose parent is not tagged', () => {
+    const parent = item({ id: 'p' });
+    const a = item({ id: 'a', parent_id: 'p', labels: [name] });
+    expect(labelRoots([parent, a], name, snap([parent, a])).map((i) => i.id)).toEqual(['a']);
+  });
+
+  it('lists a task nested under a tagged parent once, under the parent', () => {
+    const parent = item({ id: 'p', labels: [name] });
+    const a = item({ id: 'a', parent_id: 'p', labels: [name] });
+    expect(labelRoots([parent, a], name, snap([parent, a])).map((i) => i.id)).toEqual(['p']);
+  });
+});
+
+describe('the tie between projects follows the sidebar (#407)', () => {
+  const spaces: Snapshot = {
+    ...emptySnapshot(),
+    projects: { mine: project('mine', 1), team: project('team', 1, { workspace_id: 'w1' }) },
+    workspaces: { w1: { id: 'w1', name: 'Studio' } },
+  };
+
+  it('puts a space above My projects when the sidebar does', () => {
+    const tied = [item({ id: 'a', project_id: 'mine' }), item({ id: 'b', project_id: 'team' })];
+    const order = (workspaces: string[]) => sortItems(tied, 'smart', () => [], 'day', spaces, true, workspaces).map((i) => i.id);
+    expect(order([])).toEqual(['a', 'b']);
+    expect(order(['w1', 'personal'])).toEqual(['b', 'a']);
+    expect(projectRanks(spaces, ['w1', 'personal']).get('team')).toBeLessThan(projectRanks(spaces, ['w1', 'personal']).get('mine')!);
   });
 });
 

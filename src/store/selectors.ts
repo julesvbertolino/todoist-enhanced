@@ -6,9 +6,9 @@ import {
   type SortKey, type ViewFilters,
 } from '@/domain/types';
 import { estimateOf, effectiveEstimate } from '@/domain/estimates';
-import { dueDate, deadlineDate } from '@/domain/dates';
+import { dueDate, deadlineDate, hasTime } from '@/domain/dates';
 import { differenceInCalendarDays, startOfMonth, startOfWeek, startOfYear } from 'date-fns';
-import { bucketOf, hasLabel, isOpen, splitQuick } from '@/domain/views';
+import { bucketOf, hasLabel, isOpen, isQuick, splitQuick } from '@/domain/views';
 import type { RowOrder } from '@/domain/dnd';
 import { PREFERENCES_TASK_CONTENT } from './prefs';
 import { byChildOrder, byLabelOrder, bySectionOrder } from '@/domain/orderKey';
@@ -67,19 +67,91 @@ export const rootItems = (items: Item[]): Item[] => {
  * tomorrow, or under a parent with no date, has to be found on today. On the
  * same day it stays nested under its parent, so nothing is listed twice. It
  * stays under the parent on the parent's day as well: that is where it belongs.
+ *
+ * A page grouped by an attribute of the task (priority, tag, project…) asks
+ * for the same of a subtask whose value differs from its parent's (#405):
+ * Todoist counts every task in its own group, so a P2 subtask under a P4
+ * parent is listed in P2 and, nested, under its parent.
  */
-export function datedRoots(items: Item[], snapshot: Snapshot): Item[] {
+export function datedRoots(
+  items: Item[],
+  snapshot: Snapshot,
+  group: GroupKey = 'none',
+  options: { subtasks?: boolean; layout?: boolean; quick?: boolean } = {},
+): Item[] {
+  /* "Show subtasks" off puts away the ones nested under a parent and the ones listed alone. */
+  if (options.subtasks === false) return rootItems(items);
   const now = new Date();
   const visible = new Set(items.map((item) => item.id));
-  /* A day, or the overdue pile (overdue tasks share one block), or nothing. */
-  const dayOf = (item: Item) => !item.due ? '' : bucketOf(item, now) === 'overdue' ? 'overdue' : item.due.date.slice(0, 10);
+  /* A day, or the overdue pile (overdue tasks share one block), or the week's
+     flexible block, or nothing. */
+  const dayOf = (item: Item) => bucketOf(item, now) === 'overdue' ? 'overdue' : item.due ? item.due.date.slice(0, 10) : bucketOf(item, now);
+  /* The fixed layout of the week page also splits a day into Quick, untimed and timed. */
+  const columnOf = (item: Item) => options.layout ? `${options.quick === true && isQuick(item)}|${hasTime(item.due)}` : '';
   return items.filter((item) => {
     if (!item.parent_id || !visible.has(item.parent_id)) return true;
-    if (!item.due) return false;
+    /* No date and no `week` tag: it is on none of these pages, wherever it is drawn. */
+    if (!item.due && bucketOf(item, now) === 'someday') return false;
     for (let id: string | null | undefined = item.parent_id, hops = 0; id && hops < 50; hops++) {
       const parent: Item | undefined = snapshot.items[id];
       if (!parent || !isOpen(parent)) { id = parent?.parent_id; continue; }
-      return dayOf(parent) !== dayOf(item);
+      return dayOf(parent) !== dayOf(item) || columnOf(parent) !== columnOf(item) || !sharesGroup(item, parent, group);
+    }
+    return true;
+  });
+}
+
+/**
+ * The top-level tasks of a page grouped by an attribute, plus every subtask
+ * that attribute puts somewhere its parent is not (#405). It is found in its
+ * own group and stays under its parent as well, where "Show subtasks" lists it.
+ */
+export function groupRoots(items: Item[], group: GroupKey, subtasks = true): Item[] {
+  if (!subtasks) return rootItems(items);
+  const byId = new Map(items.map((item) => [item.id, item]));
+  return items.filter((item) => {
+    const parent = item.parent_id ? byId.get(item.parent_id) : undefined;
+    return !parent || !sharesGroup(item, parent, group);
+  });
+}
+
+/** Whether `item` is drawn in every group its parent is, so nesting it there loses nothing. */
+function sharesGroup(item: Item, parent: Item, group: GroupKey): boolean {
+  switch (group) {
+    case 'priority': return item.priority === parent.priority;
+    case 'project': return item.project_id === parent.project_id;
+    /* A subtask not yet placed by Todoist is in its parent's section. */
+    case 'section': return (item.section_id ?? parent.section_id) === parent.section_id;
+    case 'assignee': return item.responsible_uid === parent.responsible_uid;
+    case 'estimate': return estimateOf(item) === estimateOf(parent);
+    case 'step': return stepOf(item) === stepOf(parent);
+    case 'label': {
+      const own = item.labels.filter((l) => !l.startsWith('est-'));
+      const theirs = new Set(parent.labels);
+      return own.length === 0 ? parent.labels.every((l) => l.startsWith('est-')) : own.every((l) => theirs.has(l));
+    }
+    case 'scheduled': return Boolean(item.due) === Boolean(parent.due);
+    case 'day': case 'week': case 'month': case 'year': {
+      const own = dueDate(item), theirs = dueDate(parent);
+      return (own ? bucketDateKey(own, group) : 'none') === (theirs ? bucketDateKey(theirs, group) : 'none');
+    }
+    default: return true;
+  }
+}
+
+/**
+ * The tasks of a tag page. Todoist lists every open task carrying the tag, a
+ * subtask included, so one whose parent does not carry it is a root here
+ * (#402). One whose parent does carry it stays nested under it, listed once.
+ */
+export function labelRoots(items: Item[], label: string, snapshot: Snapshot, group: GroupKey = 'none', subtasks = true): Item[] {
+  const visible = new Set(items.map((item) => item.id));
+  return items.filter((item) => {
+    if (!hasLabel(item, label)) return false;
+    for (let id: string | null | undefined = item.parent_id, hops = 0; id && hops < 50; hops++) {
+      const parent: Item | undefined = snapshot.items[id];
+      if (!parent || !isOpen(parent) || !visible.has(parent.id)) { id = parent?.parent_id; continue; }
+      return subtasks && (!hasLabel(parent, label) || !sharesGroup(item, parent, group));
     }
     return true;
   });
@@ -163,7 +235,7 @@ const projectRankOf = (ranks: Map<string, number> | undefined, item: Item): numb
  * after their parent. The Inbox leads, as it does in Todoist. An archived
  * project is not in the sidebar, so it has no rank and sorts after the rest.
  */
-export function projectRanks(snapshot: Snapshot): Map<string, number> {
+export function projectRanks(snapshot: Snapshot, workspaceOrder: string[] = []): Map<string, number> {
   const ranks = new Map<string, number>();
   for (const project of Object.values(snapshot.projects)) {
     if (project.inbox_project) ranks.set(project.id, -1);
@@ -172,7 +244,7 @@ export function projectRanks(snapshot: Snapshot): Map<string, number> {
     ranks.set(node.project.id, ranks.size);
     node.children.forEach(visit);
   };
-  for (const group of projectTree(snapshot)) group.roots.forEach(visit);
+  for (const group of projectTree(snapshot, workspaceOrder)) group.roots.forEach(visit);
   return ranks;
 }
 
@@ -217,6 +289,9 @@ export function sortItems(
      that read like Todoist's Today ask for it: elsewhere (Gathering dust, a
      tag) the order of arrival is the meaningful tiebreak. */
   byProject = false,
+  /* The sidebar's order of spaces, so a tie is settled the way the sidebar
+     reads (#407); without it "My projects" always comes first. */
+  workspaceOrder: string[] = [],
 ): Item[] {
   const copy = [...items];
   const estimate = (i: Item) => effectiveEstimate(i, childrenOf).minutes;
@@ -226,7 +301,7 @@ export function sortItems(
   /* Same for the project ranks: only the two sorts that read like Todoist's
      Today use them, and only on a list drawn from several projects. */
   const ranks = byProject && snapshot && order === 'day' && (sort === 'priority' || sort === 'due' || sort === 'smart')
-    ? projectRanks(snapshot)
+    ? projectRanks(snapshot, workspaceOrder)
     : undefined;
   const labelPositions = snapshot ? labelOrderByName(snapshot) : new Map<string, number>();
   const labelRank = (item: Item): [bucket: number, position: number, unknown: string] => {

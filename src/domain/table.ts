@@ -2,6 +2,7 @@ import { colorValue } from './colors';
 import { isOverdue, isToday } from './dates';
 import type { Item, TableColumn, SortKey, ViewPrefs } from './types';
 import type { TranslationKey } from '@/i18n';
+import type { IconName } from '@/components/Icon';
 export const TABLE_COLUMNS: TableColumn[] = ['title', 'date', 'deadline', 'priority', 'estimate', 'labels', 'description', 'project', 'assignee'];
 /** The title always leads; the others follow in the order the user put them. */
 export const tableColumns = (prefs: ViewPrefs): TableColumn[] => {
@@ -24,6 +25,11 @@ export const tableColumnLabel: Record<TableColumn, TranslationKey> = {
   title: 'table.title', date: 'detail.startDate', deadline: 'detail.deadline', priority: 'detail.priority',
   estimate: 'detail.estimate', labels: 'detail.labels', description: 'detail.description', project: 'detail.project',
   assignee: 'detail.assignee',
+};
+/** What each column is, drawn beside its name where the columns are listed (#401). */
+export const tableColumnIcon: Record<TableColumn, IconName> = {
+  title: 'checkbox', date: 'calendar', deadline: 'deadline', priority: 'flag', estimate: 'clock',
+  labels: 'tag', description: 'file', project: 'project', assignee: 'user',
 };
 export const tableColumnSort: Record<TableColumn, SortKey> = {
   title: 'alphabetical', date: 'due', deadline: 'deadline', priority: 'priority', estimate: 'estimate-asc',

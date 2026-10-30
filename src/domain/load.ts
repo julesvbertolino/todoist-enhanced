@@ -28,6 +28,21 @@ export interface LoadSummary {
 }
 
 /**
+ * The tasks of a list that sit under another task of the same list. A subtask
+ * listed on its own as well as under its parent (#405) is already in the
+ * parent's figure: the time is counted once, by the task above it.
+ */
+export function insideOthers(items: Item[], childrenOf: (parentId: string) => Item[]): Set<string> {
+  const inside = new Set<string>();
+  const collect = (id: string, depth: number) => {
+    if (depth > 50) return;
+    for (const child of childrenOf(id)) { inside.add(child.id); collect(child.id, depth + 1); }
+  };
+  for (const item of items) collect(item.id, 0);
+  return inside;
+}
+
+/**
  * The header line: X tasks, X h X min, X % of capacity, X unestimated.
  *
  * Computed over the tasks actually displayed, after filters, so the number
@@ -41,7 +56,9 @@ export function summariseLoad(
   let estimatedMinutes = 0;
   let unestimatedCount = 0;
 
+  const inside = insideOthers(items, childrenOf);
   for (const item of items) {
+    if (inside.has(item.id)) continue;
     const { minutes } = effectiveEstimate(item, childrenOf);
     if (minutes === null) unestimatedCount += 1;
     else estimatedMinutes += minutes;

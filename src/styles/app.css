@@ -851,8 +851,10 @@ ul{margin:0;padding:0;list-style:none}
    holds a colour for every tag and the row is where it earns its keep. */
 /* 12px in a task list (#141). The chip's height now comes from its text, so the
    vertical padding it had at 11px goes: with it, a row with tags grew by 2px. */
-.tag{display:inline-flex;align-items:center;gap:4px;padding:0 6px 0 5px;border-radius:var(--r-xs);
+.tag{display:inline-flex;align-items:center;gap:4px;padding:0 8px 0 7px;border-radius:var(--r-xs);
   background:var(--marker-soft,var(--subtle));color:var(--muted);font-size:var(--fs-12)}
+/* In a task row it gets air above and below too, without making the row taller. */
+.task .meta > .tag{padding-block:2px;margin-block:-2px}
 .tag .ic{width:11px;height:11px;color:var(--marker,var(--faint))}
 /* project reference: ONE treatment everywhere (v1 had 3: coloured inline,
    plain grey inline, and a right-hand grey column) */

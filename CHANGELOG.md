@@ -40,6 +40,18 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.24.0
+
+🎨 **Choose full width once.** In Display, turn on Full width and every list follows, instead of setting it page by page.
+
+🎨 **A clearer list of columns.** In a table's Display, Columns, each column now has its icon, the count of shown columns is gone, and the handles to drag them are lighter.
+
+🐛 **See subtasks where they belong.** When a page is grouped by priority, tag, project or day, a subtask also appears in its own group, as in Todoist, and stays under its parent.
+
+🐛 **Tags find their subtasks.** A tag's page and the Tags page now count every task carrying it, subtasks included. A tag created from a task's window is selected on that task straight away.
+
+🐛 **Tasks that share a day and a priority follow your sidebar.** Their order now respects the order of your workspaces and projects.
+
 ## 2.23.0
 
 🎨 **Clearer details.** Secondary text is easier to read, the project search hint is shorter, and chart columns are easier to select.
