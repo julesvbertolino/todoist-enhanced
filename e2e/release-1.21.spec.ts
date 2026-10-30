@@ -284,9 +284,9 @@ const openKickoff = async (page: Page) => {
 test.describe('#157 a checklist in the description', () => {
   test('shows the lines as boxes, ticks in place, and a row never shows raw markers', async ({ demo: page }) => {
     await go(page, '#/week');
-    // The row's own preview skips the checklist lines: only the text before them.
+    // The row's own preview skips the checklist lines, and follows the text with the items still to tick (#393).
     const preview = row(page, 'Prepare the kick-off meeting').locator('.tdesc');
-    await expect(preview).toHaveText('Before the call:');
+    await expect(preview).toHaveText('Before the call: Walk through the plan, List the decisions needed');
     await expect(row(page, 'Prepare the kick-off meeting')).not.toContainText('[ ]');
 
     await openKickoff(page);

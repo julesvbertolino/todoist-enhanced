@@ -40,6 +40,28 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.25.0
+
+🎨 **Tags look like tags in a task.** Open a task and each tag is a chip in its own colour, with its icon and an x to take it off. Creating or choosing a tag adds its chip straight away.
+
+🎨 **Create a view with every option.** The window that adds a view to a project now has Include scheduled tasks too, like its Display panel.
+
+🎨 **Hints on icon buttons.** Rest the pointer on a button that has only an icon, or reach it with the keyboard, and its name appears. The arrows that fold the sidebar sections say Collapse or Expand.
+
+🎨 **Upcoming shows the date of each day.** Headings read Tomorrow · Thu 29 Oct, then Fri 30 Oct, instead of a bare weekday you had to count from.
+
+🎨 **A description keeps its checklist in view.** Under a task, the line after "Before the call:" now shows the items still to tick, instead of ending on a colon.
+
+🎨 **Easier to read.** A project name in its colour is darkened just enough to stay readable, in light and dark. Orange stays orange.
+
+🎨 **Neater rows and sidebar.** The checkbox sits level with the title, the hover actions line up with the title's first line, and the drag handle stays inside tinted groups. Sidebar section titles are easier to click and the three-dot button lines up with the carets.
+
+🎨 **Start date everywhere.** The date you plan to do a task is called Start date in the composer, in selections and in Display, like in the task window. The deadline keeps its name.
+
+🎨 **Review on a phone.** The four moves are a grid of large buttons, 44 px high, with none left alone on a second line. The subtask line of the composer is fully visible.
+
+🐛 **Counts that match the page.** The numbers beside My week, Today and Upcoming follow what the page lists with its grouping and its Show subtasks switch.
+
 ## 2.24.0
 
 🎨 **Choose full width once.** In Display, turn on Full width and every list follows, instead of setting it page by page.

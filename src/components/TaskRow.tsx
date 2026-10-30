@@ -9,7 +9,7 @@ import { Icon } from './Icon';
 import { ProgressRing } from './ProgressRing';
 import { ProjectIcon } from './ProjectIconPicker';
 import { readProjectIcon } from '@/domain/projectIcons';
-import { withoutChecklist } from '@/domain/checklist';
+import { checklistPreview } from '@/domain/checklist';
 import { useRowTarget } from './dnd/useRowTarget';
 import {
   GROUP_ATTR, RowListContext, SUBTASK_DRAG_PREFIX, TASK_DROP_EVENT, TASK_PLACE_EVENT, groupAnswers, useRowList,
@@ -239,7 +239,7 @@ export function TaskRow({
   const parent = item.parent_id ? snapshot.items[item.parent_id] : undefined;
   const projectVisible = showProject && !(depth > 0 && parent?.project_id === item.project_id);
   const projectIcon = project ? readProjectIcon(project.description) : null;
-  const preview = useMemo(() => withoutChecklist(item.description), [item.description]);
+  const preview = useMemo(() => checklistPreview(item.description), [item.description]);
   const section = (showSection || showProject) && item.section_id ? snapshot.sections[item.section_id] : undefined;
 
   /**
@@ -497,7 +497,8 @@ export function TaskRow({
 
           {!table && preview && fields.description && (
             /* The row shows the formatted line, not the Markdown syntax, and
-               never a checklist line: its boxes are in the task, not here (#157). */
+               never a checklist line: its boxes are in the task, only the items still
+               to do follow the text (#157, #393). */
             <span
               className="tdesc"
               dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(preview) }}

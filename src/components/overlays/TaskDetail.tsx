@@ -1168,20 +1168,22 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
               {visibleLabels.map((label) => {
                 const known = Object.values(snapshot.labels).find((l) => l.name === label);
                 return (
-                  <button
-                    key={label}
-                    /* Drawn like a list row's tag (#25). */
-                    className="pill tagpill"
-                    style={markerStyle(known?.color)}
-                    title={t('detail.labels')}
-                    onClick={() =>
-                      void updateTask(item.id, { labels: item.labels.filter((l) => l !== label) })
-                    }
-                  >
+                  /* A real chip (#408): the tag's colour and glyph, its name cut
+                     cleanly when long, and its own button to take it off this
+                     task. The tag itself is never deleted from here. */
+                  <span key={label} className="pill tagpill" style={markerStyle(known?.color)}>
                     <Icon name="tag" size="sm" />
-                    <span>{label}</span>
-                    <Icon name="close" size="sm" />
-                  </button>
+                    <span className="tagname" title={label}>{label}</span>
+                    <button
+                      type="button"
+                      className="tagremove"
+                      aria-label={t('composer.removeTag', { name: label })}
+                      title={t('composer.removeTag', { name: label })}
+                      onClick={() => void updateTask(item.id, { labels: item.labels.filter((l) => l !== label) })}
+                    >
+                      <Icon name="close" size="sm" />
+                    </button>
+                  </span>
                 );
               })}
             </div>

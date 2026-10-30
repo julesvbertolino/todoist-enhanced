@@ -22,6 +22,7 @@ import { ProjectSheet, type ProjectSheetTarget } from './components/overlays/Pro
 import { Unestimated } from './components/overlays/Unestimated';
 import { ConfirmProvider } from './components/overlays/Confirm';
 import { Overlay } from './components/overlays/Overlay';
+import { IconTooltips } from './components/IconTooltips';
 import { QUICK_ADD, QuickAdd } from './QuickAdd';
 import { WeekView } from './views/WeekView';
 import { SearchView } from './views/SearchView';
@@ -375,6 +376,7 @@ export function App() {
 
   return (
     <>
+      <IconTooltips />
       <ConfirmProvider>
         <DragProvider>
           <AppShell

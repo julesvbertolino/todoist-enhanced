@@ -147,6 +147,21 @@ export function formatRelativeDay(
 }
 
 /**
+ * A day's heading in a list of days: "Tomorrow · Thu 29 Oct", "Fri 30 Oct".
+ * The weekday alone makes people count to know which Friday it is (#376), so
+ * every heading carries the date, and the year once it is not this one.
+ */
+export function formatDayHeading(date: Date, locale: 'en' | 'fr', now = new Date()): string {
+  const intl = locale === 'fr' ? 'fr-FR' : 'en-GB';
+  const full = dateFormatter(intl, {
+    weekday: 'short', day: 'numeric', month: 'short', ...(date.getFullYear() === now.getFullYear() ? {} : { year: 'numeric' }),
+  }).format(date);
+  const diff = differenceInCalendarDays(startOfDay(date), startOfDay(now));
+  if (diff !== 0 && diff !== 1) return full;
+  return `${formatRelativeDay(date, locale, now)} · ${full}`;
+}
+
+/**
  * How a whole date is written.
  *
  * Every country orders these three numbers differently and is certain its own

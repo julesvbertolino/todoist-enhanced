@@ -90,7 +90,7 @@ test('keys on a selection act on all of it; a priority keeps the selection', asy
 
   // T and V open the bar's own panels for the whole selection.
   await page.keyboard.press('t');
-  await expect(page.getByRole('menu', { name: 'Date' })).toBeVisible();
+  await expect(page.getByRole('menu', { name: 'Start date' })).toBeVisible();
   await page.keyboard.press('Escape');
   await page.keyboard.press('v');
   await expect(page.getByRole('menu', { name: 'Move' })).toBeVisible();
@@ -107,7 +107,7 @@ test('after a priority change, T and V still reach the selection, and the panels
   await page.keyboard.press('4');
   await page.keyboard.press('1');
   await page.keyboard.press('t');
-  const date = page.getByRole('menu', { name: 'Date' });
+  const date = page.getByRole('menu', { name: 'Start date' });
   await expect(date).toBeVisible();
   // The one date picker (#110), inside the panel itself: its field has the
   // caret, ↓ walks the quick choices, and "Pick a date" opens the month.

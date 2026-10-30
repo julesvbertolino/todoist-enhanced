@@ -8,6 +8,28 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.25.0
+
+🎨 **Les tags ressemblent à des tags dans une tâche.** Ouvrez une tâche : chaque tag est une pastille de sa couleur, avec son icône et une croix pour le retirer. En créer ou en choisir un ajoute sa pastille tout de suite.
+
+🎨 **Créez une vue avec toutes les options.** La fenêtre qui ajoute une vue à un projet propose aussi Inclure les tâches planifiées, comme son panneau Affichage.
+
+🎨 **Des infobulles sur les boutons d’icône.** Posez le pointeur sur un bouton qui n’a qu’une icône, ou atteignez-le au clavier : son nom apparaît. Les flèches qui replient les sections de la barre latérale disent Replier ou Déplier.
+
+🎨 **À venir indique la date de chaque jour.** Les titres affichent Demain · jeu. 29 oct., puis ven. 30 oct., au lieu d’un jour de semaine seul qu’il fallait compter.
+
+🎨 **Une description garde sa liste en vue.** Sous une tâche, la ligne après « Avant l’appel : » montre maintenant les éléments restant à cocher, au lieu de finir sur deux-points.
+
+🎨 **Plus lisible.** Le nom d’un projet, dans sa couleur, est assombri juste assez pour rester lisible, en clair comme en sombre. L’orange reste orange.
+
+🎨 **Des lignes et une barre latérale plus nettes.** La case est à hauteur du titre, les actions au survol s’alignent sur sa première ligne et la poignée de glisser reste dans les groupes teintés. Les titres de section de la barre latérale se cliquent plus facilement et le bouton à trois points s’aligne sur les flèches.
+
+🎨 **Date de début partout.** La date à laquelle vous prévoyez une tâche s’appelle Date de début dans la saisie, les sélections et Affichage, comme dans la fenêtre de la tâche. L’échéance garde son nom.
+
+🎨 **La Revue sur téléphone.** Les quatre déplacements forment une grille de grands boutons de 44 px, sans aucun seul sur une deuxième ligne. La ligne de sous-tâche de la saisie est entièrement visible.
+
+🐛 **Des compteurs fidèles à la page.** Les nombres à côté de Cette semaine, Aujourd’hui et À venir suivent ce que la page liste avec son regroupement et son interrupteur Afficher les sous-tâches.
+
 ## 2.24.0
 
 🎨 **Choisissez la pleine largeur une fois.** Dans Affichage, activez Pleine largeur et toutes vos listes suivent, sans le régler page par page.

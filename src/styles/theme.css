@@ -361,12 +361,11 @@
 :root[data-theme="dark"] .hash,
 :root[data-theme="dark"] .taglabel,
 :root[data-theme="dark"] .tag .ic,
-:root[data-theme="dark"] .meta .proj,
-:root[data-theme="dark"] .logmeta,
-:root[data-theme="dark"] .logrow .logmeta,
 :root[data-theme="dark"] .tagcard{
   color:color-mix(in srgb,var(--marker,var(--faint)) 66%,#ffffff);
 }
+/* A project name is lightened by the least that reaches AA on the dark page (#384). */
+:root[data-theme="dark"] :is(.meta .proj, .logmeta, .search-place){--ink:var(--marker-ink-d,var(--marker,var(--muted)))}
 
 /* ---------- Overlays ---------- */
 .sheet{border-radius:var(--r-lg)}
@@ -919,8 +918,10 @@ button.subprog[aria-expanded="false"]{background:var(--subtle)}
 .app.collapsed .workspace .page.wide{padding-left:64px}
 
 /* A project reference takes the colour the project carries, like the sidebar. */
-.meta .proj{color:var(--marker,var(--muted))}
-.logmeta{color:var(--marker,var(--faint))}
+.meta .proj,.logmeta,.search-place{--ink:var(--marker-ink-l,var(--marker,var(--muted)))}
+/* The colour as text (#384): the project's own, darkened only as far as AA needs. */
+.meta .proj{color:var(--ink)}
+.logmeta{color:var(--ink,var(--faint))}
 
 /* ==========================================================================
    Centring, callouts and the kanban — corrections
@@ -1438,7 +1439,7 @@ button.subprog[aria-expanded="false"]{background:var(--subtle)}
   display:grid;grid-template-columns:16px minmax(0,1fr) auto;align-items:center;
   gap:10px;min-height:32px;font-size:var(--fs-13);
 }
-.composer-sub .check{width:14px;height:14px;border-radius:5px;border-width:1.25px}
+.composer-sub .check{width:14px;height:14px;margin:0;border-radius:5px;border-width:1.25px}
 .composer-sub .namefield{min-width:0;line-height:0}
 .composer-sub input{
   border:0;background:transparent;font:inherit;font-size:var(--fs-13);
