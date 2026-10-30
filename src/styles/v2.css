@@ -2347,3 +2347,13 @@ html[data-navigation="pointer"] .task:focus-visible::after{content:none}
 
 /* A heading's name shrinks before its sort arrow does. */
 .table-head .head-label{min-width:0;overflow:hidden;text-overflow:ellipsis}
+
+/* Tags: one chip and a count when the column is narrow, two chips and a count when it has room. */
+.task-table .table-cell.table-labels{container-type:inline-size}
+.cell-tags .tag-more-narrow{display:none}
+@container (max-width:150px){
+  .cell-tags .tag:nth-child(n+2){display:none}
+  .cell-tags .tag-more-wide{display:none}
+  .cell-tags .tag-more-narrow{display:inline}
+}
+.cell-tags .tag:first-child{max-width:100%}

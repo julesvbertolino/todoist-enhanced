@@ -1,6 +1,13 @@
 import { expect, go, row, rows, test } from './demo';
 import type { Page } from '@playwright/test';
 
+type TestItem = { id: string; content: string; labels: string[]; [key: string]: unknown };
+type TestState = {
+  snapshot: { items: Record<string, TestItem>; [key: string]: unknown };
+  setViewPrefs: (key: string, patch: Record<string, unknown>) => void;
+};
+type Store = { getState: () => TestState; setState: (patch: Partial<TestState>) => void };
+
 test('#380 an icon-only button says what it is when the pointer rests on it', async ({ demo: page }) => {
   const caret = page.locator('.side-disclose').first();
   await caret.hover();
@@ -185,4 +192,22 @@ test('table: a sorted heading always shows its arrow, and a column cannot be pul
   await expect(arrow).toBeVisible();
   const narrow = (await head.boundingBox())!.width;
   expect(narrow).toBeGreaterThan(100);
+});
+
+test('table: a narrow Tags column shows one whole tag and a count that includes the rest', async ({ demo: page }) => {
+  test.skip(process.env.PLAYWRIGHT_DEV !== '1', 'Controlled store scenarios');
+  await page.evaluate(() => {
+    const store = (window as unknown as { __store: Store }).__store;
+    const state = store.getState();
+    const item = Object.values(state.snapshot.items).find((it) => it.content === 'Rebuild the home page')!;
+    store.setState({ snapshot: { ...state.snapshot, items: { ...state.snapshot.items, [item.id]: { ...item, labels: ['alpha', 'beta', 'gamma', 'delta'] } } } });
+    state.setViewPrefs('project:site', { mode: 'table', tableColumns: ['title', 'labels'], tableWidths: { labels: 110 } });
+  });
+  await go(page, '#/project/site');
+  const cell = row(page, 'Rebuild the home page').locator('.table-labels');
+  await expect(cell.locator('.tag').first()).toBeVisible();
+  await expect(cell.locator('.tag:visible')).toHaveCount(1);
+  await expect(cell.locator('.tag-more-narrow')).toHaveText('+3');
+  const [chip, box] = [(await cell.locator('.tag').first().boundingBox())!, (await cell.boundingBox())!];
+  expect(chip.x + chip.width).toBeLessThanOrEqual(box.x + box.width + 1);
 });

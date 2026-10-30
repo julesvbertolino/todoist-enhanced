@@ -91,7 +91,10 @@ export const clampColumnWidth = (width: number): number => Math.min(COLUMN_MAX, 
  * loses its arrow to a narrow column. The assignee is an icon alone. Names are about 7px a letter.
  */
 export const columnMinWidth = (column: TableColumn, label: string): number =>
-  column === 'assignee' ? COLUMN_MIN : Math.max(COLUMN_MIN, 14 + 5 + Math.ceil(label.length * 7) + 19 + 22 + 6);
+  column === 'assignee' ? COLUMN_MIN
+    /* Tags show a chip and a count: room for a short name and "+3". */
+    : column === 'labels' ? Math.max(110, 14 + 5 + Math.ceil(label.length * 7) + 19 + 22 + 6)
+    : Math.max(COLUMN_MIN, 14 + 5 + Math.ceil(label.length * 7) + 19 + 22 + 6);
 
 /** One column's width with the user's choice applied. */
 export const columnWidth = (prefs: ViewPrefs, column: TableColumn): number =>
