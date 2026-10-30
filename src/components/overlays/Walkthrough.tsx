@@ -52,6 +52,7 @@ export function Walkthrough({
   const { t, locale } = useT();
   const phone = usePhoneBehaviour();
   const prefs = useStore((s) => s.prefs);
+  const demo = useStore((s) => s.demo);
   const setPrefs = useStore((s) => s.setPrefs);
   const user = useStore((s) => s.snapshot.user);
   const [step, setStep] = useState(0);
@@ -94,8 +95,7 @@ export function Walkthrough({
     markOnboarded(user?.id);
     // With the settings too, so the account's other browsers know.
     setPrefs({
-      onboarded: true,
-      setupDone: true,
+      ...(demo ? {} : { onboarded: true, setupDone: true }),
       estimateStorage: prefs.estimateStorage === 'duration' && canStoreDurations(user) ? 'duration' : 'tag',
     });
     go(0, true);
@@ -105,7 +105,7 @@ export function Walkthrough({
 
   const skipSetup = () => {
     markOnboarded(user?.id);
-    setPrefs({ onboarded: true, setupDone: true });
+    if (!demo) setPrefs({ onboarded: true, setupDone: true });
     go(0, true);
     onDone();
   };

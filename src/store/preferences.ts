@@ -165,8 +165,6 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
     if (prefs.estimateStorage === 'duration' && !canStoreDurations(get().snapshot.user)) prefs.estimateStorage = 'tag';
     if (patch.weekLabel !== undefined) setWeekLabel(prefs.weekLabel);
     set({ prefs });
-    // Demo choices must not become the next real account's setup state.
-    if (get().demo) return;
     void idb.savePrefs(PREFS_KEY, prefs);
     schedulePreferencesWrite(get);
   },
