@@ -2344,3 +2344,6 @@ html[data-navigation="pointer"] .task:focus-visible::after{content:none}
 .task-table .task>.check{margin-top:0}
 .task-table .tmain .meta{margin-top:0;width:auto;flex:0 0 auto}
 .task-table.wrap .task>.check{margin-top:2px}
+
+/* A heading's name shrinks before its sort arrow does. */
+.table-head .head-label{min-width:0;overflow:hidden;text-overflow:ellipsis}

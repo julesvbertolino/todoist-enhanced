@@ -13,7 +13,7 @@ import { useStore } from '@/store/store';
 import { useT } from '@/hooks/useT';
 import { sortItems } from '@/store/selectors';
 import { viewPrefs } from '@/store/prefs';
-import { clampColumnWidth, columnWidth, dropTableColumn, tableColumnIcon, tableColumns, tableColumnLabel, tableColumnSort } from '@/domain/table';
+import { clampColumnWidth, columnMinWidth, columnWidth, dropTableColumn, tableColumnIcon, tableColumns, tableColumnLabel, tableColumnSort } from '@/domain/table';
 import { effectiveEstimate, formatDuration } from '@/domain/estimates';
 import { insideOthers } from '@/domain/load';
 import type { Item, TableColumn, ViewPrefs } from '@/domain/types';
@@ -30,14 +30,15 @@ export function TableSurface({ groups, viewKey, childrenOf, onOpen }: {
   const columns = tableColumns(current);
   /* A heading's edge can be pulled; while it is, the table follows the pointer and the choice is saved on release. */
   const [live, setLive] = useState<{ column: TableColumn; width: number } | null>(null);
-  const widthOf = (column: TableColumn): number => live?.column === column ? live.width : columnWidth(current, column);
+  const minOf = (column: TableColumn): number => columnMinWidth(column, t(tableColumnLabel[column]));
+  const widthOf = (column: TableColumn): number => Math.max(minOf(column), live?.column === column ? live.width : columnWidth(current, column));
   const titleSet = live?.column === 'title' || current.tableWidths?.title !== undefined;
   const tracks = columns.map((column) => column === 'title'
     ? `18px ${titleSet ? `${widthOf('title')}px` : 'minmax(var(--table-title-min,240px),var(--table-title-max,1fr))'}`
     : `${widthOf(column)}px`);
   const saveWidth = (column: TableColumn, width: number | null) => {
     const next = { ...current.tableWidths };
-    if (width === null) delete next[column]; else next[column] = clampColumnWidth(width);
+    if (width === null) delete next[column]; else next[column] = Math.max(minOf(column), clampColumnWidth(width));
     setViewPrefs(viewKey, { tableWidths: next });
   };
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -78,7 +79,7 @@ export function TableSurface({ groups, viewKey, childrenOf, onOpen }: {
           <SortableContext items={columns} strategy={horizontalListSortingStrategy}>
             <div className="table-head">{columns.map((column) => (
               <HeadCell key={column} column={column} open={menu?.column === column}
-                width={widthOf(column)} titleOffset={30}
+                width={widthOf(column)} minWidth={minOf(column)} titleOffset={30}
                 onResizing={(width) => setLive(width === null ? null : { column, width })}
                 onResized={(width) => saveWidth(column, width)}
                 sort={tableColumnSort[column] === current.sort ? current.tableDescending ? 'descending' : 'ascending' : 'none'}
@@ -113,9 +114,9 @@ const isFiltered = (current: ViewPrefs, column: TableColumn): boolean =>
  * while a filter is on), opens the column's menu. The person icon stands alone
  * for the assignee column, with its name as a tooltip.
  */
-function HeadCell({ column, sort, open, filtered, width, titleOffset, onResizing, onResized, onSort, onOpen }: {
+function HeadCell({ column, sort, open, filtered, width, minWidth, titleOffset, onResizing, onResized, onSort, onOpen }: {
   column: TableColumn; sort: 'ascending' | 'descending' | 'none'; open: boolean; filtered: boolean;
-  width: number; titleOffset: number; onResizing: (width: number | null) => void; onResized: (width: number | null) => void;
+  width: number; minWidth: number; titleOffset: number; onResizing: (width: number | null) => void; onResized: (width: number | null) => void;
   onSort: () => void; onOpen: (anchor: HTMLElement) => void;
 }) {
   const { t } = useT();
@@ -130,7 +131,7 @@ function HeadCell({ column, sort, open, filtered, width, titleOffset, onResizing
         {...attributes} {...listeners} aria-roledescription={undefined}
         onClick={onSort}>
         <Icon name={tableColumnIcon[column]} size="sm" className="head-icon" />
-        {column !== 'assignee' && name}
+        {column !== 'assignee' && <span className="head-label">{name}</span>}
         {sort !== 'none' && <Icon name="arrow-up" size="sm" className={`head-arrow${sort === 'descending' ? ' desc' : ''}`} />}
         {filtered && <span className="head-dot" aria-hidden="true" />}
       </button>
@@ -142,7 +143,7 @@ function HeadCell({ column, sort, open, filtered, width, titleOffset, onResizing
       )}
       <span className="head-resize" role="separator" aria-orientation="vertical" tabIndex={0}
         aria-label={t('table.resize', { name })} title={t('table.resizeHint')}
-        aria-valuemin={56} aria-valuemax={640} aria-valuenow={Math.round(width)}
+        aria-valuemin={minWidth} aria-valuemax={640} aria-valuenow={Math.round(width)}
         onPointerDown={(event: ReactPointerEvent<HTMLElement>) => {
           event.preventDefault();
           event.stopPropagation();
@@ -153,7 +154,7 @@ function HeadCell({ column, sort, open, filtered, width, titleOffset, onResizing
           const start = column === 'title' ? cell.offsetWidth - titleOffset : cell.offsetWidth;
           const from = event.clientX;
           let latest = start;
-          const move = (e: PointerEvent) => { latest = clampColumnWidth(start + e.clientX - from); onResizing(latest); };
+          const move = (e: PointerEvent) => { latest = Math.max(minWidth, clampColumnWidth(start + e.clientX - from)); onResizing(latest); };
           const stop = () => {
             handle.removeEventListener('pointermove', move);
             handle.removeEventListener('pointerup', stop);

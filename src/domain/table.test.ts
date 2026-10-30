@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clampColumnWidth, columnWidth, dropTableColumn, neighbourColumn, stepTableColumn, tableColumnOrder, tableColumns, toggleTableColumn } from './table';
+import { clampColumnWidth, columnMinWidth, columnWidth, dropTableColumn, neighbourColumn, stepTableColumn, tableColumnOrder, tableColumns, toggleTableColumn } from './table';
 import { pageClass } from './pageLayout';
 import { defaultViewPrefs, type ViewPrefs } from './types';
 
@@ -117,5 +117,16 @@ describe('column widths', () => {
     expect(clampColumnWidth(10)).toBe(56);
     expect(clampColumnWidth(5000)).toBe(640);
     expect(columnWidth({ ...view, tableWidths: { labels: 4 } }, 'labels')).toBe(56);
+  });
+});
+
+describe('the least a column can be', () => {
+  it('holds its icon, name, sort arrow and menu chevron', () => {
+    expect(columnMinWidth('date', 'Start date')).toBeGreaterThan(columnMinWidth('date', 'Date'));
+    expect(columnMinWidth('priority', 'Priority')).toBeGreaterThanOrEqual(56);
+  });
+
+  it('is only the icon for the assignee', () => {
+    expect(columnMinWidth('assignee', 'Assignee')).toBe(56);
   });
 });

@@ -86,6 +86,13 @@ export const defaultColumnWidth = (column: TableColumn): number =>
     : column === 'assignee' ? 56 : column === 'date' ? 140 : column === 'deadline' ? 130 : 110;
 export const clampColumnWidth = (width: number): number => Math.min(COLUMN_MAX, Math.max(COLUMN_MIN, Math.round(width)));
 
+/**
+ * The least a column can be: its icon, its name, the sort arrow and the menu chevron, so a heading never
+ * loses its arrow to a narrow column. The assignee is an icon alone. Names are about 7px a letter.
+ */
+export const columnMinWidth = (column: TableColumn, label: string): number =>
+  column === 'assignee' ? COLUMN_MIN : Math.max(COLUMN_MIN, 14 + 5 + Math.ceil(label.length * 7) + 19 + 22 + 6);
+
 /** One column's width with the user's choice applied. */
 export const columnWidth = (prefs: ViewPrefs, column: TableColumn): number =>
   clampColumnWidth(prefs.tableWidths?.[column] ?? defaultColumnWidth(column));

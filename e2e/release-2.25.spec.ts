@@ -168,3 +168,21 @@ test('a task\'s hover duration opens the same dropdown as the task window', asyn
   await panel.getByRole('button', { name: '30 min', exact: true }).click();
   await expect(page.locator('.durationbody')).toHaveCount(0);
 });
+
+test('table: a sorted heading always shows its arrow, and a column cannot be pulled narrower than its heading', async ({ demo: page }) => {
+  await openTable(page);
+  const head = page.locator('.table-head > div').filter({ hasText: 'Start date' });
+  await head.locator('.head-sort').click();
+  const arrow = head.locator('.head-arrow');
+  await expect(arrow).toBeVisible();
+  const [a, h] = [(await arrow.boundingBox())!, (await head.boundingBox())!];
+  expect(a.x + a.width).toBeLessThanOrEqual(h.x + h.width + 0.5);
+  const handle = (await head.locator('.head-resize').boundingBox())!;
+  await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(handle.x - 200, handle.y + handle.height / 2, { steps: 8 });
+  await page.mouse.up();
+  await expect(arrow).toBeVisible();
+  const narrow = (await head.boundingBox())!.width;
+  expect(narrow).toBeGreaterThan(100);
+});
