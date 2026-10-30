@@ -74,6 +74,17 @@ export function markOnboarded(userId: string | null | undefined): void {
   } catch { /* storage may be blocked; the walkthrough simply asks again */ }
 }
 
+/** Choosing estimate storage completes setup without changing other choices. */
+export function completeSetupWithEstimate(
+  userId: string | null | undefined,
+  storage: 'tag' | 'duration',
+  allowed: boolean,
+  save: (patch: { onboarded: true; setupDone: true; estimateStorage: 'tag' | 'duration' }) => void,
+): void {
+  markOnboarded(userId);
+  save({ onboarded: true, setupDone: true, estimateStorage: storage === 'duration' && !allowed ? 'tag' : storage });
+}
+
 /** For the About section's "show me that again". */
 export function forgetOnboarding(userId: string | null | undefined): void {
   if (!userId) return;

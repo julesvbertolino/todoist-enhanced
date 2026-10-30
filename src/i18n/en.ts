@@ -1707,6 +1707,7 @@ export const en = {
   'setup.useThese': 'Use these settings',
   'setup.welcome.karma': '{remaining} karma to reach {next}',
   'setup.continue': 'Continue',
+  'setup.skipSetup': 'Skip setup',
   'setup.layout.unified': 'My week, together',
   'setup.layout.unifiedHint': 'Today stays inside My week.',
   'setup.layout.split': 'Today and My week',

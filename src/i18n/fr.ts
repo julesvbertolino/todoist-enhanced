@@ -1707,6 +1707,7 @@ export const fr: Record<TranslationKey, string> = {
   'setup.useThese': 'Utiliser ces réglages',
   'setup.welcome.karma': '{remaining} points de karma avant de devenir {next}',
   'setup.continue': 'Continuer',
+  'setup.skipSetup': 'Passer la configuration',
   'setup.layout.unified': 'Ma semaine, tout ensemble',
   'setup.layout.unifiedHint': 'Aujourd’hui reste dans Ma semaine.',
   'setup.layout.split': 'Aujourd’hui et Ma semaine',
