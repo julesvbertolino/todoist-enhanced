@@ -13,6 +13,8 @@ interface DurationFieldProps {
   /** What the face says when there is no value of its own: the sum of the subtasks, or an invitation. */
   placeholder: string;
   pendingWrites?: number;
+  /** In a table cell: no words or chevron while empty, only the clock. */
+  compact?: boolean;
   onCommit: (minutes: number | null) => void | Promise<'accepted' | 'pending' | 'failed' | void>;
 }
 
@@ -21,7 +23,7 @@ interface DurationFieldProps {
  * and a chevron, and a chooser with the usual durations and a field for the others. Typing in the
  * chooser takes what the field has always taken: 45, 1h30, 90 min.
  */
-export function DurationField({ minutes, placeholder, pendingWrites, onCommit }: DurationFieldProps) {
+export function DurationField({ minutes, placeholder, pendingWrites, compact = false, onCommit }: DurationFieldProps) {
   const { t, locale } = useT();
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
@@ -97,8 +99,8 @@ export function DurationField({ minutes, placeholder, pendingWrites, onCommit }:
         onClick={() => setOpen((now) => !now)}
       >
         <Icon name="clock" size="sm" />
-        <span className="fselect-value">{minutes === null ? placeholder : formatDuration(minutes, locale)}</span>
-        <Icon name="caret" size="sm" />
+        {!(compact && minutes === null) && <span className="fselect-value">{minutes === null ? placeholder : formatDuration(minutes, locale)}</span>}
+        {!compact && <Icon name="caret" size="sm" />}
       </button>
       {status && <span className={`est-feedback ${status}`} aria-hidden="true">
         {status === 'pending' ? <span className="est-pulse" /> : <Icon name={status === 'accepted' ? 'check' : 'close'} size="sm" />}

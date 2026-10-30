@@ -512,11 +512,13 @@ export function TaskRow({
           )}
 
           {table && parent && (
-            /* Todoist marks a subtask in its table; here the mark also says whose it is. */
-            <span className="parentchip" title={t('detail.subtaskOf') + ' ' + parent.content}>
+            /* Todoist marks a subtask in its table; here the mark also says whose it is, and opens it. */
+            <button type="button" className="parentchip" title={t('detail.subtaskOf') + ' ' + parent.content}
+              onClick={(e) => { e.stopPropagation(); onOpen(parent.id); }}
+              onKeyDown={(e) => e.stopPropagation()}>
               <Icon name="subtask" size="sm" />
               <span className="parentchip-name">{displayTaskContent(parent)}</span>
-            </span>
+            </button>
           )}
           {table && subtaskPill}
           {table && <span className="meta"><TaskCommentBadge id={item.id} onOpen={onOpen} /></span>}

@@ -1,0 +1,46 @@
+<!doctype html><meta charset="utf-8"><title>Table visuals 2.25.0</title>
+<style>
+body{font:14px -apple-system,system-ui,sans-serif;background:#f4f3f1;margin:0;padding:24px;color:#202020}
+h1{font-size:18px;margin:0 0 16px}.grid{display:grid;grid-template-columns:repeat(2,380px);gap:24px}
+figure{margin:0}figcaption{font-size:13px;margin-bottom:8px}figcaption b{display:block;font-size:14px}
+.f{width:380px;aspect-ratio:16/10;background:#fff;border:1px solid #e6e4e1;border-radius:12px;overflow:hidden;position:relative;font-size:10px}
+.h,.r{display:grid;gap:8px;align-items:center;padding:0 12px;height:30px}
+.h{color:#666;font-weight:600;border-bottom:1px solid #eee;height:28px;position:relative}.h i{font-style:normal;margin-right:4px;opacity:.7}
+.r{border-bottom:1px solid #f4f4f4}.ck{display:inline-block;width:11px;height:11px;border:1.5px solid #d1453b;border-radius:3px;margin-right:6px;vertical-align:-2px}
+.pill{background:#f0f0f1;border-radius:99px;padding:3px 8px;color:#555;width:fit-content}.chip{background:#eee;border-radius:99px;padding:2px 7px;color:#666;margin-left:6px;font-size:9px}
+.grip{position:absolute;right:-5px;top:4px;bottom:4px;width:2px;background:#d1453b;border-radius:1px}
+.cap{position:absolute;left:12px;right:12px;bottom:10px;font-size:11px;color:#666}
+.cur{position:absolute;font-size:16px}
+.sub{padding-left:18px}.hi{background:#fdf1ef}
+.mv{box-shadow:0 4px 14px rgba(0,0,0,.18);background:#fff;border-radius:6px;position:absolute;padding:5px 10px;font-weight:600;color:#202020}
+</style>
+<h1>Une image pour les tables (2.25.0) : 4 propositions</h1>
+<div class="grid">
+
+<figure><figcaption><b>A. Redimensionner</b>Le bord d'un en-tête se tire : la colonne s'élargit, le curseur change.</figcaption>
+<div class="f"><div class="h" style="grid-template-columns:150px 70px 1fr"><span><i>☑</i>Titre</span><span><i>▦</i>Début<span class="grip"></span></span><span><i>⚑</i>Priorité</span></div>
+<div class="r" style="grid-template-columns:150px 70px 1fr"><span><b class="ck"></b>Préparer la réunion</span><span class="pill">Hier</span><span class="pill">P2</span></div>
+<div class="r" style="grid-template-columns:150px 70px 1fr"><span><b class="ck"></b>Mettre à jour le portfolio</span><span class="pill">Demain</span><span class="pill">P1</span></div>
+<div class="r" style="grid-template-columns:150px 70px 1fr"><span><b class="ck"></b>Lire le rapport</span><span class="pill">Ven.</span><span class="pill">P3</span></div>
+<span class="cur" style="left:236px;top:22px">↔</span><div class="cap">Tirez le bord d'un en-tête.</div></div></figure>
+
+<figure><figcaption><b>B. Colonne avant le titre</b>La date passe devant le titre : on la glisse par son en-tête.</figcaption>
+<div class="f"><div class="h" style="grid-template-columns:70px 170px 1fr"><span class="mv" style="left:14px;top:3px"><i>▦</i>Début</span><span style="opacity:.0">x</span><span><i>☑</i>Titre</span><span><i>⚑</i>Priorité</span></div>
+<div class="r" style="grid-template-columns:70px 170px 1fr"><span class="pill">Hier</span><span><b class="ck"></b>Préparer la réunion</span><span class="pill">P2</span></div>
+<div class="r" style="grid-template-columns:70px 170px 1fr"><span class="pill">Demain</span><span><b class="ck"></b>Mettre à jour le portfolio</span><span class="pill">P1</span></div>
+<div class="r" style="grid-template-columns:70px 170px 1fr"><span class="pill">Ven.</span><span><b class="ck"></b>Lire le rapport</span><span class="pill">P3</span></div>
+<div class="cap">Déplacez n'importe quelle colonne, le titre compris.</div></div></figure>
+
+<figure><figcaption><b>C. Le parent à côté de la sous-tâche</b>Chaque sous-tâche dit de qui elle dépend.</figcaption>
+<div class="f"><div class="h" style="grid-template-columns:1fr 70px 50px"><span><i>☑</i>Titre</span><span><i>▦</i>Début</span><span><i>⚑</i></span></div>
+<div class="r" style="grid-template-columns:1fr 70px 50px"><span><b class="ck"></b>Refonte de la page d'accueil</span><span class="pill">Auj.</span><span class="pill">P1</span></div>
+<div class="r sub" style="grid-template-columns:1fr 70px 50px"><span><b class="ck"></b>Écrire les textes <span class="chip">↳ Refonte de la page…</span></span><span class="pill">Demain</span><span class="pill">P4</span></div>
+<div class="r sub" style="grid-template-columns:1fr 70px 50px"><span><b class="ck"></b>Choisir les images <span class="chip">↳ Refonte de la page…</span></span><span class="pill">Ven.</span><span class="pill">P4</span></div>
+<div class="cap">Un clic sur la pastille ouvre la tâche parente.</div></div></figure>
+
+<figure><figcaption><b>D. Tout ensemble</b>Icônes d'en-tête, colonne déplacée, largeur choisie, texte à la ligne.</figcaption>
+<div class="f"><div class="h" style="grid-template-columns:62px 130px 1fr"><span><i>▦</i>Début</span><span><i>☑</i>Titre<span class="grip"></span></span><span><i>⚑</i>Priorité</span></div>
+<div class="r" style="grid-template-columns:62px 130px 1fr;height:44px;align-items:start;padding-top:8px"><span class="pill">Hier</span><span><b class="ck"></b>Préparer la réunion de lancement du site</span><span class="pill">P2</span></div>
+<div class="r" style="grid-template-columns:62px 130px 1fr;height:44px;align-items:start;padding-top:8px"><span class="pill">Demain</span><span><b class="ck"></b>Mettre à jour le portfolio et les textes</span><span class="pill">P1</span></div>
+<div class="cap">Votre table, à votre façon.</div></div></figure>
+</div>

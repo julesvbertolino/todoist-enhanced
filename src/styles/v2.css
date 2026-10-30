@@ -2313,3 +2313,10 @@ html[data-navigation="pointer"] .task:focus-visible::after{content:none}
 .durationpanel .estfield .estinput{flex:1 1 auto;width:auto;height:32px}
 .durationfield{position:relative}
 .durationfield .est-feedback{right:30px}
+
+/* The sidebar's three-dot button has no padding of its own either: its icon sits in the middle of its hover. */
+.navmore{padding:0}
+.task-table button.parentchip{border:0;font:inherit;font-size:var(--fs-12);cursor:pointer}
+.task-table button.parentchip:hover,.task-table button.parentchip:focus-visible{background:var(--btn-soft-hover);color:var(--text)}
+/* Table's Display: Columns, colour and wrap share one rhythm. */
+.dfield-stack>.display-fullwidth{margin:0;padding-block:var(--s2)}

@@ -1,7 +1,7 @@
 import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { Icon } from './Icon';
 import { DateField } from './DateField';
-import { EstimateField } from './EstimateField';
+import { DurationField } from './DurationField';
 import { MultiSelect } from './MultiSelect';
 import { Select } from './Select';
 import { useStore } from '@/store/store';
@@ -45,7 +45,8 @@ export function TableCells({ item, columns, childrenOf, hideProject = false }: {
         visual: <span className={`table-priority-mark p${priority}`}><Icon name="flag" size="sm" /></span> }))}
       onChange={(value) => void updateTask(item.id, { priority: toTodoistPriority(Number(value) as DisplayPriority) })} />;
     else if (column === 'estimate') content = computed ? <span>{formatDuration(minutes ?? 0, locale)} *</span>
-      : <EstimateField minutes={minutes} onCommit={async (value) => { await setEstimates([{ id: item.id, minutes: value }]); }} />;
+      : <DurationField compact minutes={minutes} placeholder={t('task.estimateChoose')}
+        onCommit={async (value) => { await setEstimates([{ id: item.id, minutes: value }]); }} />;
     else if (column === 'labels') content = <MultiSelect label={t('detail.labels')} value={item.labels.filter((label) => !label.startsWith('est-'))}
       face={item.labels.some((label) => !label.startsWith('est-'))
         ? <span className="cell-tags">{(() => {

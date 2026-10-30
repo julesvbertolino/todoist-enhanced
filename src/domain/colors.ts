@@ -65,8 +65,11 @@ export function contrast(a: string, b: string): number {
 /** What text sits on: the page in each theme. */
 export const LIGHT_SURFACE = '#ffffff';
 export const DARK_SURFACE = '#1e1e1e';
-/** AA for the 12 px text a project name is. */
-export const MIN_CONTRAST = 4.5;
+/**
+ * Enough to read a 12 px semibold name next to a coloured marker (#384). AA's 4.5 turns orange into
+ * brown, and the marker already says which project it is, so a name only has to be legible: 3.6.
+ */
+export const MIN_CONTRAST = 3.6;
 
 /** #rrggbb as hue (0-360), saturation and lightness (0-1). */
 function toHsl(hex: string): [number, number, number] {

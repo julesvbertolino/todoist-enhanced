@@ -42,8 +42,10 @@ test('table keeps task actions, editable cells, column preferences and sorting',
   const row = table.locator('.task').first();
   await row.locator('.table-priority').getByRole('button').click();
   await page.getByRole('option', { name: 'P1', exact: true }).click();
-  await row.locator('.table-estimate input').fill('45');
-  await row.locator('.table-estimate input').press('Enter');
+  /* The duration is the same dropdown as in a task's window (#392). */
+  await row.locator('.table-estimate .fselect-face').click();
+  await page.locator('.durationpanel input').fill('45');
+  await page.locator('.durationpanel input').press('Enter');
   await page.reload();
   await expect(table).toBeVisible();
   await expect(table.locator('.table-description').first()).toBeAttached();
