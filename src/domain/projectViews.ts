@@ -89,6 +89,7 @@ export const cloneSettings = (view: ViewPrefs): ViewPrefs => ({
   filters: { ...view.filters, priorities: [...view.filters.priorities], labels: [...view.filters.labels], projects: [...view.filters.projects], workspaces: [...view.filters.workspaces], assignees: view.filters.assignees ? [...view.filters.assignees] : view.filters.assignees },
   ...(view.tableColumns ? { tableColumns: [...view.tableColumns] } : {}),
   ...(view.tableOrder ? { tableOrder: [...view.tableOrder] } : {}),
+  ...(view.tableWidths ? { tableWidths: { ...view.tableWidths } } : {}),
   ...(view.calendar ? { calendar: { ...view.calendar } } : {}),
 });
 

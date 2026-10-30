@@ -228,3 +228,13 @@ export function parentEstimateWrites(
   }
   return writes;
 }
+
+/**
+ * The durations an estimate usually is.
+ *
+ * Fifteen minutes to two hours, which is the whole of what a task on a week's
+ * plan realistically takes — anything longer is a project, and the app says so
+ * elsewhere. Offered as buttons because typing "45" on a phone means opening a
+ * keyboard over half the screen to press two keys.
+ */
+export const QUICK_ESTIMATES = [5, 15, 30, 45, 60, 90, 120];

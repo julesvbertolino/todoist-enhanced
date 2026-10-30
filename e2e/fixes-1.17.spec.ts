@@ -114,7 +114,7 @@ test('#146 Upcoming moves its range on at midnight, without leaving the page', a
   await page.keyboard.press('Escape');
 
   const heads = page.locator('.screen.active .board .col .chead strong');
-  await expect(heads.first()).toHaveText('Tomorrow');
+  await expect(heads.first()).toHaveText(/^Tomorrow · /);
   const before = await heads.allInnerTexts();
   expect(before.length).toBeGreaterThanOrEqual(15);
 
@@ -122,7 +122,7 @@ test('#146 Upcoming moves its range on at midnight, without leaving the page', a
   await page.clock.runFor(20_000);
 
   // The first column is tomorrow again, and the range has gained a day at its far end.
-  await expect(heads.first()).toHaveText('Tomorrow');
+  await expect(heads.first()).toHaveText(/^Tomorrow · /);
   await expect.poll(async () => (await heads.allInnerTexts()).at(-1)).not.toBe(before.at(-1));
   expect(await heads.count()).toBe(before.length);
 });

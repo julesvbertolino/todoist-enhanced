@@ -10,12 +10,10 @@ import { useT } from '@/hooks/useT';
 import { tableColumnIcon, tableColumnLabel, tableColumnOrder, tableColumns, tableLayoutPatch } from '@/domain/table';
 import type { TableColumn, ViewPrefs } from '@/domain/types';
 
-type Movable = Exclude<TableColumn, 'title'>;
-
 /**
  * The columns of a table: one row in Display that opens a list at its side,
  * with a switch and a handle for every column, shown or not. The title is
- * always there and always first. A column switched off keeps its place in the
+ * always there, and moves like the others (a column can sit before it). A column switched off keeps its place in the
  * list, so switching it on again puts it back where it was. The handle never
  * toggles a column, and Alt with an arrow key moves one for whoever does not drag.
  */
@@ -61,17 +59,17 @@ export function ColumnsMenu({ value, onChange }: {
   }, [open]);
 
   /** Saves a new order and which of its columns are on: the shown ones read in that same order. */
-  const save = (next: Movable[], on: Movable[]) =>
+  const save = (next: TableColumn[], on: TableColumn[]) =>
     onChange(tableLayoutPatch(next, on));
-  const on = shown.filter((column): column is Movable => column !== 'title');
+  const on = shown;
 
-  const move = (column: Movable, to: number) => {
+  const move = (column: TableColumn, to: number) => {
     const from = order.indexOf(column);
     if (from >= 0 && to >= 0 && to < order.length && to !== from) save(arrayMove(order, from, to), on);
   };
-  const toggle = (column: Movable) => save(order, on.includes(column) ? on.filter((one) => one !== column) : [...on, column]);
+  const toggle = (column: TableColumn) => column !== 'title' && save(order, on.includes(column) ? on.filter((one) => one !== column) : [...on, column]);
   const onDragEnd = ({ active, over }: DragEndEvent) => {
-    if (over && active.id !== over.id) move(active.id as Movable, order.indexOf(over.id as Movable));
+    if (over && active.id !== over.id) move(active.id as TableColumn, order.indexOf(over.id as TableColumn));
   };
 
   return (
@@ -85,12 +83,6 @@ export function ColumnsMenu({ value, onChange }: {
         <div ref={menu} className="sidemenu" role="dialog" aria-label={t('table.columns')} onMouseDown={(event) => event.stopPropagation()}
           style={{ left: place?.left ?? -9999, top: place?.top ?? -9999 }}>
           <h5>{t('table.columns')}</h5>
-          <div className="colrow locked">
-            <span className="colgrip" aria-hidden="true" />
-            <Icon name={tableColumnIcon.title} size="sm" className="colicon" />
-            <span className="collabel">{t(tableColumnLabel.title)}</span>
-            <button type="button" className="switch" role="switch" aria-checked disabled aria-label={t(tableColumnLabel.title)} />
-          </div>
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
             <SortableContext items={order} strategy={verticalListSortingStrategy}>
               {order.map((column) => (
@@ -107,7 +99,7 @@ export function ColumnsMenu({ value, onChange }: {
   );
 }
 
-function ColumnRow({ column, checked, onToggle, onStep }: { column: Movable; checked: boolean; onToggle: () => void; onStep: (by: -1 | 1) => void }) {
+function ColumnRow({ column, checked, onToggle, onStep }: { column: TableColumn; checked: boolean; onToggle: () => void; onStep: (by: -1 | 1) => void }) {
   const { t } = useT();
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: column });
   return (
@@ -126,7 +118,8 @@ function ColumnRow({ column, checked, onToggle, onStep }: { column: Movable; che
       </button>
       <Icon name={tableColumnIcon[column]} size="sm" className="colicon" />
       <span className="collabel">{t(tableColumnLabel[column])}</span>
-      <button type="button" className="switch" role="switch" aria-checked={checked} aria-label={t(tableColumnLabel[column])} onClick={onToggle} />
+      <button type="button" className="switch" role="switch" aria-checked={checked} aria-label={t(tableColumnLabel[column])}
+        disabled={column === 'title'} onClick={onToggle} />
     </div>
   );
 }

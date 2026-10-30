@@ -42,10 +42,86 @@ export function colorSoft(name: string | undefined | null): string {
   return `rgba(${r}, ${g}, ${b}, 0.12)`;
 }
 
+const channels = (hex: string): [number, number, number] =>
+  [1, 3, 5].map((at) => Number.parseInt(hex.slice(at, at + 2), 16)) as [number, number, number];
+
+const toHex = (rgb: number[]): string => `#${rgb.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')}`;
+
+/** WCAG relative luminance of a #rrggbb colour. */
+function luminance(hex: string): number {
+  const [r, g, b] = channels(hex).map((v) => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** WCAG contrast ratio between two #rrggbb colours, from 1 to 21. */
+export function contrast(a: string, b: string): number {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/** What text sits on: the page in each theme. */
+export const LIGHT_SURFACE = '#ffffff';
+export const DARK_SURFACE = '#1e1e1e';
+/**
+ * Enough to read a 12 px semibold name next to a coloured marker (#384). AA's 4.5 turns orange into
+ * brown, and the marker already says which project it is, so a name only has to be legible: 3.6.
+ */
+export const MIN_CONTRAST = 3.6;
+
+/** #rrggbb as hue (0-360), saturation and lightness (0-1). */
+function toHsl(hex: string): [number, number, number] {
+  const [r, g, b] = channels(hex).map((v) => v / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  const h = max === r ? (g - b) / d + (g < b ? 6 : 0) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [h * 60, s, l];
+}
+
+function fromHsl(h: number, s: number, l: number): string {
+  const k = (n: number) => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  return toHex([f(0) * 255, f(8) * 255, f(4) * 255]);
+}
+
+/**
+ * A project colour made readable as text (#384): the colour itself while it
+ * already reads, otherwise the same hue and saturation at the lightness that
+ * first reaches AA (darker on the light page, lighter on a dark one). Keeping
+ * the saturation is the point: mixing a pastel with black turns it grey, and
+ * a project name would look washed out. The marker and every fill keep the
+ * colour Todoist gave the project.
+ */
+export function colorInk(name: string | undefined | null, theme: 'light' | 'dark'): string {
+  const base = colorValue(name);
+  const surface = theme === 'light' ? LIGHT_SURFACE : DARK_SURFACE;
+  if (contrast(base, surface) >= MIN_CONTRAST) return base;
+  const [h, saturated, l] = toHsl(base);
+  /* A pastel pulled all the way down at full saturation turns loud (salmon becomes red), so it is eased a little. */
+  const s = Math.min(saturated, 0.78);
+  const dir = theme === 'light' ? -1 : 1;
+  for (let step = 1; step <= 100; step += 1) {
+    const next = Math.min(1, Math.max(0, l + dir * step / 100));
+    const ink = fromHsl(h, s, next);
+    if (contrast(ink, surface) >= MIN_CONTRAST) return ink;
+    if (next === 0 || next === 1) break;
+  }
+  return theme === 'light' ? '#000000' : '#ffffff';
+}
+
 /** The CSS custom properties a coloured marker reads. */
 export const markerStyle = (name: string | undefined | null, withBackground = true) =>
   ({
     '--marker': colorValue(name),
+    '--marker-ink-l': colorInk(name, 'light'),
+    '--marker-ink-d': colorInk(name, 'dark'),
     ...(withBackground ? { '--marker-soft': colorSoft(name) } : {}),
   }) as React.CSSProperties;
 

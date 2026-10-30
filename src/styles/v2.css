@@ -363,9 +363,9 @@
 .ttitle{font-weight:450}
 .check{border-radius:5px}
 /* The box sits on the title's first line, whatever the size: half of what is left of the line's height once
-   the 16px box is in it, then .6px lower, onto the middle of the lowercase letters, which is where the eye
-   reads a line's centre. A fixed 3px offset sat too low (#244). */
-.task > .check{margin-top:calc((1.4 * var(--fs-14) - 16px) / 2 + .6px)}
+   the 16px box is in it, less .3px. Measured, that puts the box's centre on the line's centre, and half a
+   pixel under it reads as level, because lowercase letters sit lower than the middle of their line (#388). */
+.task > .check{margin-top:calc((1.4 * var(--fs-14) - 16px) / 2 - .3px)}
 .gcount{min-width:22px;padding:1px 7px;text-align:center;background:var(--btn-soft)}
 
 /* ==========================================================================
@@ -1416,6 +1416,8 @@ img.notifav{display:block;width:34px;height:34px;object-fit:cover}
   .side-sheet:has(.icard),.side-sheet:has(> .detail-top){top:0;right:0;bottom:auto}
 }
 .side-headbtn{display:inline-flex;align-items:center;gap:7px}
+/* A 28px target to fold a section (#385), in the 22px the heading row already takes: the extra height is given back in negative margin, so nothing in the sidebar moves. */
+.side-headbtn{min-height:28px;margin-block:-3px}
 /* The workspace's picture, or its initial, sits in the same 20px marker slot as a project's hash, and the title starts where the project names do, so the icons share one vertical line (#262). */
 .workspace-avatar.small{width:18px;height:18px;font-size:10px;margin:0 2px 0 -7px}
 .chead-title .gnamefield{display:block;width:100%;max-width:100%;padding:0;border:0;background:transparent;font-size:14px;font-weight:700;color:inherit}
@@ -1654,22 +1656,25 @@ img.notifav{display:block;width:34px;height:34px;object-fit:cover}
 /* #34 The comment ⋯ menu floats over the window, measured like the reaction palette. */
 .popover.rowmenu.comment-menu{position:fixed;z-index:110;right:auto}
 
-/* #25 Task window. Tags in the right column are drawn like a list row's tags,
-   wrapping with the same gap. */
+/* #25, #408 Task window. A tag is a chip in the tag's own colour, whatever the
+   task-chips setting: its glyph, its name (cut with an ellipsis, never wider
+   than the column) and a button of its own to take it off. They wrap. */
 .detail-side .pills:has(> .tagpill){display:flex;flex-wrap:wrap;gap:6px}
 .detail-side .pill.tagpill{
-  --chip-fg:var(--muted);--chip-bg:var(--subtle);
-  display:inline-flex;align-items:center;gap:4px;height:auto;min-height:0;padding:1px 6px;border:0;border-radius:var(--r-xs);
-  background:var(--chip-bg);color:var(--chip-fg);font-size:var(--fs-12);line-height:18px;box-shadow:none;cursor:pointer;
+  --ink:var(--marker-ink-l,var(--marker,var(--muted)));
+  display:inline-flex;align-items:center;gap:4px;max-width:100%;height:auto;min-height:0;padding:2px 3px 2px 7px;border:0;
+  border-radius:var(--r-xs);background:var(--marker-soft,var(--subtle));color:var(--text);font-size:var(--fs-12);line-height:18px;box-shadow:none;
 }
-.detail-side .pill.tagpill .ic{width:12px;height:12px;color:inherit;flex:none}
-.detail-side .pill.tagpill .ic:last-child{opacity:0;width:0;margin-left:-4px;transition:opacity .12s,width .12s,margin .12s}
-.detail-side .pill.tagpill:is(:hover,:focus-visible) .ic:last-child{opacity:.8;width:12px;margin-left:0}
-:root[data-chips="inherited"] .detail-side .pill.tagpill{
-  --chip-fg:color-mix(in srgb,var(--marker,var(--muted)) 72%,var(--text));
-  --chip-bg:color-mix(in srgb,var(--marker,var(--muted)) 8%,var(--surface));
+:root[data-theme="dark"] .detail-side .pill.tagpill{--ink:var(--marker-ink-d,var(--marker,var(--muted)))}
+.detail-side .pill.tagpill > .ic{width:12px;height:12px;color:var(--ink);flex:none}
+.detail-side .pill.tagpill .tagname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.detail-side .pill.tagpill .tagremove{
+  display:inline-grid;place-items:center;flex:none;width:18px;height:18px;padding:0;border:0;border-radius:var(--r-xs);
+  background:transparent;color:var(--muted);cursor:pointer;
 }
-:root[data-chips="classic"] .detail-side .pill.tagpill{background:transparent;color:var(--marker,var(--muted));padding:1px 0}
+.detail-side .pill.tagpill .tagremove .ic{width:12px;height:12px}
+.detail-side .pill.tagpill .tagremove:is(:hover,:focus-visible){background:color-mix(in srgb,var(--marker,var(--muted)) 22%,transparent);color:var(--text)}
+@media(pointer:coarse){.detail-side .pill.tagpill .tagremove{width:28px;height:28px}}
 /* The picture beside the new comment is centred on the one-line field, and
    stays level with its first line when the field grows. */
 .comment.comment-new{align-items:start}
@@ -1821,7 +1826,7 @@ img.notifav{display:block;width:34px;height:34px;object-fit:cover}
 .pactions .btn.insights-control:active{background:color-mix(in srgb,var(--accent) 22%,var(--surface));transform:none;box-shadow:none}
 .pactions .btn.insights-control:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .search-destinations{display:flex;flex-wrap:wrap;gap:8px;margin:var(--s4) 0}
-.search-place{display:inline-flex;align-items:center;gap:6px;max-width:100%;border:1px solid transparent;border-radius:999px;padding:6px 11px;background:color-mix(in srgb,var(--marker,var(--muted)) 10%,var(--surface));color:var(--marker,var(--text));font:inherit;font-size:var(--fs-13);cursor:pointer;text-align:left}
+.search-place{display:inline-flex;align-items:center;gap:6px;max-width:100%;border:1px solid transparent;border-radius:999px;padding:6px 11px;background:color-mix(in srgb,var(--marker,var(--muted)) 10%,var(--surface));color:var(--ink,var(--marker,var(--text)));font:inherit;font-size:var(--fs-13);cursor:pointer;text-align:left}
 .search-place span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .search-place .ic{color:inherit;flex:none}
 .search-place .hash{color:inherit;background:none}
@@ -2044,6 +2049,13 @@ html{-webkit-tap-highlight-color:transparent}
 }
 @media (max-width:720px){
   .reviewrow .reviewactions .btn{padding:0 9px;font-size:var(--fs-12);white-space:nowrap}
+  /* #377 The four moves are a 2 x 2 grid of equal targets, 44px high, rather than a pill that wraps and leaves
+     one word alone on a second line. An odd one out (the next occurrence) takes the whole last row. The thumb
+     of the chosen one still follows its button: it is placed from the button's own offsets. */
+  .reviewrow .reviewactions{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:16px;grid-column:1/-1;justify-self:stretch}
+  .reviewrow .reviewactions .btn{min-height:44px;display:inline-flex;align-items:center;justify-content:center;font-size:var(--fs-13);border-radius:12px}
+  .reviewrow .reviewactions.seg-slide::before{border-radius:12px}
+  .reviewrow .reviewactions > .btn:last-child:nth-child(odd){grid-column:1/-1}
 }
 
 /* The logbook on a phone: the controls stand closer together, and a row is
@@ -2072,7 +2084,7 @@ html{-webkit-tap-highlight-color:transparent}
 @media (max-width:720px){
   .task-table{--table-title-min:150px;--table-title-max:170px}
   .table-scroll{-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
-  .task-table .tmain,.task-table .table-head > div:first-of-type{box-shadow:6px 0 6px -6px rgba(0,0,0,.18)}
+  .task-table .tmain,.task-table .table-head > div.head-title{box-shadow:6px 0 6px -6px rgba(0,0,0,.18)}
 }
 
 /* Sign-in on a phone: the form first, then the same pitch and picture the
@@ -2235,3 +2247,113 @@ html[data-navigation="pointer"] .task:focus-visible::after{content:none}
 /* The sidebar project ring uses the project's own colour, including at 100% open. */
 .project-progress .project-progress-track{stroke:currentColor}
 .project-progress .project-progress-fill{fill:currentColor;stroke:none}
+
+/* #386 A row's actions line up with the first line of its title, not the middle of the whole row,
+   which on a row with a description and chips floated between the two. The title's first line
+   sits 8px below the row's top padding; the buttons are 30px tall. The phone keeps its swipe tray. */
+@media (min-width:721px){
+  .task:not(.hirenote) > .trow-end{align-self:start;margin-top:-6px}
+}
+
+/* #387 In a group drawn as a card, the drag handle stays inside the card: the card takes 10px
+   more on its left, so the text keeps its place and the handle has room between its edge and the checkbox. */
+@media (min-width:721px){
+  .group:is(.accent-late,.accent-quick,.accent-dust,.tinted-late,.tinted-quick){margin-left:-30px;padding-left:30px}
+  .group:is(.accent-late,.accent-quick,.accent-dust,.tinted-late,.tinted-quick) .task .drag{left:-26px}
+}
+
+/* #380 The tooltip of an icon-only button (IconTooltips), on tokens so it follows every theme:
+   the page's text colour as its ground and the page itself as its ink. */
+.icontip{
+  position:fixed;z-index:400;max-width:260px;padding:5px 8px;border-radius:var(--r-xs);pointer-events:none;
+  background:var(--text);color:var(--surface);font-size:var(--fs-12);line-height:1.3;box-shadow:var(--sh-sm);
+}
+@media (hover:none){.icontip{display:none}}
+
+/* Table: columns on either side of the title, columns the user can resize, icons in the headings,
+   the parent of a subtask, and text that wraps when asked. */
+.table-head>div.head-title{grid-column:span 2}
+.table-head>div.head-title button.head-sort{padding-left:0}
+.table-head[class] > div:not(.head-title) .head-sort{padding-inline:6px;margin-left:-6px}
+.table-head .head-icon{flex:none;opacity:.8}
+.table-head .head-resize{position:absolute;right:-8px;top:2px;bottom:2px;width:12px;z-index:3;cursor:col-resize;touch-action:none;border-radius:var(--r-xs);outline:0}
+.table-head .head-resize::after{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:2px;border-radius:1px;background:transparent;transition:background .12s}
+.table-head>div:hover .head-resize::after{background:var(--border-strong)}
+.table-head .head-resize:hover::after,.table-head .head-resize:focus-visible::after,.table-head .head-resize:active::after{background:var(--accent)}
+@media(hover:none){.table-head .head-resize::after{background:var(--border-strong)}}
+.table-head .head-more{right:6px}
+.colrow .switch:disabled{opacity:.5;cursor:default}
+.task-table .parentchip{display:inline-flex;align-items:center;gap:5px;flex:0 8 auto;min-width:2.4em;max-width:12em;margin:2px 0 2px 6px;padding:3px 10px 3px 8px;
+  border-radius:999px;background:var(--subtle);color:var(--muted);font-size:var(--fs-12);line-height:18px}
+.task-table .trow-title{min-width:4em}
+.task-table .parentchip .ic{flex:none;width:12px;height:12px}
+.task-table .parentchip-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.task-table.wrap .task{align-items:start;padding-block:8px}
+.task-table.wrap .task>.check{margin-top:2px}
+.task-table.wrap .ttitle{-webkit-line-clamp:unset;display:block;overflow:visible;white-space:normal;overflow-wrap:anywhere}
+.task-table.wrap .trow-title{white-space:normal}
+.task-table.wrap .tmain{align-items:flex-start;flex-wrap:wrap}
+.task-table.wrap .table-cell{max-height:none}
+.task-table.wrap .table-description{white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+.task-table.wrap .table-cell{margin-top:-4px}
+
+/* The sidebar's disclosure caret sits in the middle of its hover square, not 2px to the right of it. */
+.side-disclose{padding:0}
+
+/* The remove button of a checklist item hangs from a holder that takes no room (see RemoveWidget). */
+.mdedit .checkdel-holder{display:inline-block;width:0;height:0;overflow:visible}
+
+/* AMOLED: a search field in a menu draws its frame on the wrapper; the raised tone the theme gives every
+   input must not fill the input inside it, or a grey square shows in the pill. */
+:root[data-dark="amoled"] :is(.pickersearch, .searchfield) input:not([type="checkbox"]):not([type="radio"]){background-color:transparent}
+
+/* #392 The duration chooser opened from the task panel is a floating panel, not a row's menu. */
+.durationpanel{position:fixed;z-index:110}
+.durationbody{width:288px;max-width:calc(100vw - 16px);padding:var(--s3)}
+.durationbody .estfield{display:flex;width:100%;margin-top:0}
+.durationbody .estfield .estinput{flex:1 1 auto;width:auto;height:32px}
+.durationfield{position:relative}
+.durationfield .est-feedback{right:30px}
+
+/* The sidebar's three-dot button has no padding of its own either: its icon sits in the middle of its hover. */
+.navmore{padding:0}
+.task-table button.parentchip{border:0;font:inherit;font-size:var(--fs-12);cursor:pointer}
+.task-table button.parentchip:hover,.task-table button.parentchip:focus-visible{background:var(--btn-soft-hover);color:var(--text)}
+/* Table's Display: Columns, colour and wrap share one rhythm. */
+.dfield-stack>.display-fullwidth{margin:0;padding-block:var(--s2)}
+
+/* #411 The composer's description scrolls (overflow auto), and what scrolls clips: the cursor of an empty
+   field sits a pixel left of the text, so it was cut off entirely. The text gets 2px of room on its left,
+   taken back by the editor's margin so it does not move. */
+.descedit.composer .cm-editor{margin-left:-2px}
+.descedit.composer .cm-content{padding-left:2px}
+
+/* CodeMirror draws its own cursor and hides the native one, but only once it has registered the focus.
+   When the field has the focus and CodeMirror has not noticed (a window that is activated after the field
+   was focused, as with Quick Add on macOS), the native caret is shown until it does. */
+.mdedit .cm-editor:not(.cm-focused) .cm-content:focus{caret-color:var(--text)!important}
+
+.asSheet.durationbody{width:auto;max-width:none}
+/* A heading's text gives way before the menu chevron that appears over its end. */
+.table-head>div:not(.head-title) .head-sort{max-width:calc(100% - 22px)}
+/* An empty duration in a table says so, quietly. */
+.task-table .table-estimate .durationfield .fselect-face.empty{color:var(--faint)}
+
+/* Table rows centre everything on one line: the checkbox without the list's nudge, and the meta that holds
+   the comment badge without the list's gap above it and its full width. */
+.task-table .task>.check{margin-top:0}
+.task-table .tmain .meta{margin-top:0;width:auto;flex:0 0 auto}
+.task-table.wrap .task>.check{margin-top:2px}
+
+/* A heading's name shrinks before its sort arrow does. */
+.table-head .head-label{min-width:0;overflow:hidden;text-overflow:ellipsis}
+
+/* Tags: one chip and a count when the column is narrow, two chips and a count when it has room. */
+.task-table .table-cell.table-labels{container-type:inline-size}
+.cell-tags .tag-more-narrow{display:none}
+@container (max-width:150px){
+  .cell-tags .tag:nth-child(n+2){display:none}
+  .cell-tags .tag-more-wide{display:none}
+  .cell-tags .tag-more-narrow{display:inline}
+}
+.cell-tags .tag:first-child{max-width:100%}

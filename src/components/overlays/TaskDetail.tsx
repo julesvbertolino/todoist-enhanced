@@ -33,7 +33,7 @@ import {
 import { plainTitle, renderTitle, titleLinks } from '@/domain/markdown';
 import { parseShorthand, savedRefusals, type TextRange } from '@/domain/shorthand';
 import { dueForDate } from '@/domain/recurrence';
-import { EstimateField } from '../EstimateField';
+import { DurationField } from '../DurationField';
 import { TaskNameField } from '../TaskNameField';
 import { PlacementField } from '../PlacementField';
 import { CommentThread } from '../CommentThread';
@@ -1082,15 +1082,15 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
 
           <div className="prop" data-prop="estimate">
             <PropLabel name={t('detail.estimate')} prop="estimate" />
-            {/* The same field as everywhere else, so the unit is always beside
-                the number instead of being left to the reader to infer. */}
-            <EstimateField
+            {/* The same face as the date, the deadline and the project beside it; the chooser is the
+                one the row's menu opens, with the usual durations and a field for the others. */}
+            <DurationField
               minutes={computed ? null : minutes}
               pendingWrites={pendingWrites}
               placeholder={
                 computed && minutes !== null
                   ? `${formatDuration(minutes, locale)} · ${t('task.computedEstimate')}`
-                  : t('task.estimatePlaceholder')
+                  : t('task.estimateChoose')
               }
               onCommit={async (value) => {
                 await updateTask(item.id, { estimateMinutes: value });
@@ -1168,20 +1168,22 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
               {visibleLabels.map((label) => {
                 const known = Object.values(snapshot.labels).find((l) => l.name === label);
                 return (
-                  <button
-                    key={label}
-                    /* Drawn like a list row's tag (#25). */
-                    className="pill tagpill"
-                    style={markerStyle(known?.color)}
-                    title={t('detail.labels')}
-                    onClick={() =>
-                      void updateTask(item.id, { labels: item.labels.filter((l) => l !== label) })
-                    }
-                  >
+                  /* A real chip (#408): the tag's colour and glyph, its name cut
+                     cleanly when long, and its own button to take it off this
+                     task. The tag itself is never deleted from here. */
+                  <span key={label} className="pill tagpill" style={markerStyle(known?.color)}>
                     <Icon name="tag" size="sm" />
-                    <span>{label}</span>
-                    <Icon name="close" size="sm" />
-                  </button>
+                    <span className="tagname" title={label}>{label}</span>
+                    <button
+                      type="button"
+                      className="tagremove"
+                      aria-label={t('composer.removeTag', { name: label })}
+                      title={t('composer.removeTag', { name: label })}
+                      onClick={() => void updateTask(item.id, { labels: item.labels.filter((l) => l !== label) })}
+                    >
+                      <Icon name="close" size="sm" />
+                    </button>
+                  </span>
                 );
               })}
             </div>

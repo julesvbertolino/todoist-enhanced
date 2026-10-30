@@ -135,3 +135,13 @@
 .cv-progress-task.done{color:var(--muted);text-decoration:line-through}
 .cv-progress-task.done i{background:var(--muted);border-color:var(--muted);position:relative}
 .cv-progress-task.done i:after{content:'✓';position:absolute;inset:-3px 0 0;color:var(--surface);font-size:9px;text-align:center;text-decoration:none}
+.cv-tbl{display:grid;font-size:9px;color:var(--text)}
+.cv-tbl-row{display:grid;grid-template-columns:56px minmax(0,1fr) 56px;gap:24px;align-items:start;padding:7px 4px;border-bottom:1px solid var(--border);line-height:1.4}
+.cv-tbl-row>span{display:flex;align-items:center;gap:4px;min-width:0}
+.cv-tbl-row .cv-chip{font-size:8px;padding:2px 6px;border-radius:99px;margin:0}
+.cv-tbl-head{align-items:center;color:var(--muted);font-weight:600;border-bottom-color:var(--border-strong);padding-top:2px}
+.cv-tbl-head .ic{width:11px;height:11px;opacity:.75}
+.cv-tbl-title{position:relative}
+.cv-tbl-head{white-space:nowrap}
+.cv-tbl-grip{position:absolute;right:-12px;top:-3px;bottom:-3px;width:2px;border-radius:1px;background:var(--accent)}
+.cv-tbl-badge{position:absolute;right:-18px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:14px;height:14px;border-radius:50%;background:var(--accent);color:#fff;font-size:9px;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.2)}

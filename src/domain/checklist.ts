@@ -119,6 +119,21 @@ export function withoutChecklist(description: string): string {
     .trim();
 }
 
+/**
+ * The one line a task row shows for a description with a checklist (#393): the
+ * text, then the items still to do. A text that announces the list ("Before
+ * the call:") would otherwise end on a colon followed by nothing. With every
+ * item ticked there is nothing left to announce, so the colon goes too.
+ */
+export function checklistPreview(description: string): string {
+  const text = withoutChecklist(description);
+  const items = checklistItems(description);
+  if (items.length === 0) return text;
+  const todo = items.filter((item) => !item.checked && item.text.trim()).map((item) => item.text.trim());
+  if (todo.length === 0) return text.replace(/\s*[:：]\s*$/, '');
+  return text ? `${text} ${todo.join(', ')}` : todo.join(', ');
+}
+
 /** The line ending a description is written with: its first one, or a newline. */
 export function eolOf(lines: readonly Line[]): string {
   return lines.find((line) => line.eol !== '')?.eol ?? '\n';

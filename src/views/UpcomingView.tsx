@@ -21,7 +21,7 @@ import { upcomingItems } from '@/domain/views';
 import { projectOccurrences } from '@/domain/projectOccurrences';
 import type { GroupKey } from '@/domain/types';
 import { summariseLoad } from '@/domain/load';
-import { dueDate, daysBetween, formatRelativeDay, toApiDate } from '@/domain/dates';
+import { dueDate, daysBetween, formatDayHeading, toApiDate } from '@/domain/dates';
 import { addDays, startOfDay } from 'date-fns';
 
 interface UpcomingViewProps {
@@ -99,7 +99,7 @@ function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: Upcomi
   const columns = days
     .map((day) => ({
       id: toApiDate(day),
-      title: formatRelativeDay(day, locale),
+      title: formatDayHeading(day, locale),
       items: sortItems(byDay.get(toApiDate(day)) ?? [], current.sort, childrenOf, 'day', snapshot, true, prefs.workspaceOrder),
       dropTarget: { kind: 'day' as const, date: day },
       capacityMinutes: prefs.dailyCapacity[day.getDay()],

@@ -9,7 +9,7 @@ import { Icon } from './Icon';
 import { ProgressRing } from './ProgressRing';
 import { ProjectIcon } from './ProjectIconPicker';
 import { readProjectIcon } from '@/domain/projectIcons';
-import { withoutChecklist } from '@/domain/checklist';
+import { checklistPreview } from '@/domain/checklist';
 import { useRowTarget } from './dnd/useRowTarget';
 import {
   GROUP_ATTR, RowListContext, SUBTASK_DRAG_PREFIX, TASK_DROP_EVENT, TASK_PLACE_EVENT, groupAnswers, useRowList,
@@ -238,8 +238,12 @@ export function TaskRow({
   const project = snapshot.projects[item.project_id];
   const parent = item.parent_id ? snapshot.items[item.parent_id] : undefined;
   const projectVisible = showProject && !(depth > 0 && parent?.project_id === item.project_id);
+  /* A table's columns may sit on either side of the title: those before it come ahead of the checkbox. */
+  const titleAt = table ? Math.max(0, table.columns.indexOf('title')) : 0;
+  const columnsBefore = table ? table.columns.slice(0, titleAt) : [];
+  const columnsAfter = table ? table.columns.slice(titleAt + 1) : [];
   const projectIcon = project ? readProjectIcon(project.description) : null;
-  const preview = useMemo(() => withoutChecklist(item.description), [item.description]);
+  const preview = useMemo(() => checklistPreview(item.description), [item.description]);
   const section = (showSection || showProject) && item.section_id ? snapshot.sections[item.section_id] : undefined;
 
   /**
@@ -456,6 +460,8 @@ export function TaskRow({
           </span>
         )}
 
+        {table && columnsBefore.length > 0 && <TableCells item={item} hideProject={!projectVisible} columns={columnsBefore} childrenOf={childrenOf} />}
+
         {item.projection ? (
           <span className={`check forecast-check p${fields.priority ? priority : 4}`} role="checkbox" aria-checked="false" aria-disabled="true" aria-label={t('upcoming.projected')} onClick={(e) => e.stopPropagation()} />
         ) : uncompletable ? (
@@ -497,13 +503,23 @@ export function TaskRow({
 
           {!table && preview && fields.description && (
             /* The row shows the formatted line, not the Markdown syntax, and
-               never a checklist line: its boxes are in the task, not here (#157). */
+               never a checklist line: its boxes are in the task, only the items still
+               to do follow the text (#157, #393). */
             <span
               className="tdesc"
               dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(preview) }}
             />
           )}
 
+          {table && parent && (
+            /* Todoist marks a subtask in its table; here the mark also says whose it is, and opens it. */
+            <button type="button" className="parentchip" title={t('detail.subtaskOf') + ' ' + parent.content}
+              onClick={(e) => { e.stopPropagation(); onOpen(parent.id); }}
+              onKeyDown={(e) => e.stopPropagation()}>
+              <Icon name="subtask" size="sm" />
+              <span className="parentchip-name">{displayTaskContent(parent)}</span>
+            </button>
+          )}
           {table && subtaskPill}
           {table && <span className="meta"><TaskCommentBadge id={item.id} onOpen={onOpen} /></span>}
           {!table && <span className="meta">
@@ -527,7 +543,7 @@ export function TaskRow({
           </span>}
         </span>
 
-        {table && <TableCells item={item} hideProject={!projectVisible} columns={table.columns} childrenOf={childrenOf} />}
+        {table && <TableCells item={item} hideProject={!projectVisible} columns={columnsAfter} childrenOf={childrenOf} />}
         {!item.projection && <span className="trow-end">
           <TaskActions
             item={item}

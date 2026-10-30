@@ -82,6 +82,11 @@ export function DisplayFields({
           <Select label={t('table.coloration')} value={value.tableColoration ?? 'none'}
             options={(['none', 'priority', 'date', 'project'] as const).map((option) => ({ value: option, label: t(`table.color.${option}`) }))}
             onChange={(option) => onChange({ tableColoration: option as NonNullable<ViewPrefs['tableColoration']> })} />
+          <div className="panelrow display-fullwidth">
+            <span>{t('table.wrap')}</span>
+            <button type="button" className="switch" role="switch" aria-checked={value.tableWrap === true} aria-label={t('table.wrap')}
+              onClick={() => onChange({ tableWrap: value.tableWrap !== true })} />
+          </div>
         </div>
       )}
       {isCalendar && (

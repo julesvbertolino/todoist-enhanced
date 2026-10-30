@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   MAX_DESCRIPTION, checklistItems, checklistProgress, parseLines, pasteIntoItem,
-  serializeLines, toggleItem, toggleItemAt, withoutChecklist,
+  checklistPreview, serializeLines, toggleItem, toggleItemAt, withoutChecklist,
 } from './checklist';
 
 describe('what counts as a checklist item (#157)', () => {
@@ -32,6 +32,28 @@ describe('what counts as a checklist item (#157)', () => {
   it('keeps the text before, between and after', () => {
     expect(withoutChecklist('Intro\n- [ ] a\nmiddle\n- [x] b\nend')).toBe('Intro\nmiddle\nend');
     expect(withoutChecklist('- [ ] only\n- [x] items')).toBe('');
+  });
+});
+
+describe('the preview a row shows (#393)', () => {
+  it('follows the text with the items still to do', () => {
+    expect(checklistPreview('Avant l’appel :\n- [x] Ouvrir\n- [ ] Présenter le planning\n- [ ] Lister les décisions'))
+      .toBe('Avant l’appel : Présenter le planning, Lister les décisions');
+  });
+
+  it('drops the dangling colon once every item is ticked', () => {
+    expect(checklistPreview('Avant l’appel :\n- [x] a\n- [x] b')).toBe('Avant l’appel');
+    expect(checklistPreview('Before the call:\n- [x] a')).toBe('Before the call');
+  });
+
+  it('shows the items alone when there is no text', () => {
+    expect(checklistPreview('- [ ] one\n- [x] two\n- [ ] three')).toBe('one, three');
+    expect(checklistPreview('- [x] done')).toBe('');
+  });
+
+  it('leaves a description without a checklist as it was', () => {
+    expect(checklistPreview('Just text:\nand more')).toBe('Just text:\nand more');
+    expect(checklistPreview('')).toBe('');
   });
 });
 

@@ -20,8 +20,8 @@ import { copyText, isTemporaryId, todoistTaskUrl } from '@/api/links';
 import { ROW_PRESS_EVENT, type RowMenu } from '@/domain/gestures';
 import { useStore } from '@/store/store';
 import { useConfirm } from './overlays/Confirm';
-import { effectiveEstimate, formatDuration } from '@/domain/estimates';
-import { EstimateField } from './EstimateField';
+import { effectiveEstimate } from '@/domain/estimates';
+import { DurationChooser } from './DurationField';
 import { DatePicker, shortDay, taskShortcuts, type RecurrenceReading } from './DatePicker';
 import { nextOccurrence } from '@/domain/nextOccurrence';
 import { dueDate, isOverdue, formatDayOrName, formatTime, toApiDate } from '@/domain/dates';
@@ -143,16 +143,6 @@ function useMenuPlacement(menu: string, anchorRef: React.RefObject<HTMLElement |
   return { ref, className: ' floating' };
 }
 
-/**
- * The durations an estimate usually is.
- *
- * Fifteen minutes to two hours, which is the whole of what a task on a week's
- * plan realistically takes — anything longer is a project, and the app says so
- * elsewhere. Offered as buttons because typing "45" on a phone means opening a
- * keyboard over half the screen to press two keys.
- */
-const QUICK_ESTIMATES = [5, 15, 30, 45, 60, 90, 120];
-
 interface TaskActionsProps {
   item: Item;
   contextOnly?: boolean;
@@ -201,7 +191,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
   const phone = usePhoneBehaviour();
   /* Only where a menu hangs off its row. On a phone it is a sheet along the
      bottom edge, placed by the stylesheet, with nothing to flip. */
-  const placement = useMenuPlacement(phone || (menu === 'estimate' && !contextPoint) ? 'none' : menu, ref, contextPoint);
+  const placement = useMenuPlacement(phone ? 'none' : menu, ref, contextPoint);
 
   useEffect(() => { if (menu !== 'move') { setDest(''); setDestPick(-1); } }, [menu]);
 
@@ -502,35 +492,17 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
 
   const back = contextPoint !== null || phone ? <button type="button" className="opt task-menu-back" onClick={() => setMenu('more')}><span><Icon name="arrow-left" size="sm" />{t('task.menuBack')}</span></button> : null;
   const estimateSheet = (
-    <div className={`popover rowmenu estimatesheet${phone ? ' asSheet' : placement.className}`} role="menu" ref={placement.ref}>
+    <div className={`popover rowmenu estimatesheet durationbody${phone ? ' asSheet' : placement.className}`} role="menu" ref={placement.ref}>
       {back}
       {/* Most estimates are one of these, and on a phone typing "45" means
           opening a keyboard over half the screen to press two keys. The field
           stays underneath for the ones that are not. */}
-      <div className="estquick">
-        {QUICK_ESTIMATES.map((quick) => (
-          <button
-            key={quick}
-            className={`estchip${minutes === quick && !computed ? ' on' : ''}`}
-            onClick={() => setEstimate(quick)}
-          >
-            {formatDuration(quick, locale)}
-          </button>
-        ))}
-        {minutes !== null && !computed && (
-          <button className="estchip clear" onClick={() => setEstimate(null)}>
-            <Icon name="close" size="sm" />
-            {t('bulk.clear')}
-          </button>
-        )}
-      </div>
-      <EstimateField
-        autoFocus
-        cancelOnBlurTarget=".task-menu-back, .estchip"
+      <DurationChooser
         minutes={computed ? null : minutes}
-        placeholder={t('task.estimatePlaceholder')}
+        cancelOnBlurTarget=".task-menu-back, .estchip"
+        onChoose={setEstimate}
+        onType={setEstimate}
         onCancel={() => setMenu('none')}
-        onCommit={setEstimate}
       />
     </div>
   );
@@ -550,7 +522,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
         }} />
       </div>}
 
-      {(phone || contextPoint !== null) && menu === 'estimate' && estimateSheet}
+      {menu === 'estimate' && estimateSheet}
         {menu === 'schedule' && (
           <div
             className={`popover rowmenu schedulemenu${phone ? ' asSheet' : placement.className}`}
@@ -792,23 +764,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
 
   return (
     <span className={`trow-actions${contextOnly ? ' calendar-context-actions' : ''}`} ref={ref} onPointerEnter={() => void warmPeople()} onClick={(e) => { e.stopPropagation(); if (e.currentTarget.contains(e.target as Node)) setContextPoint(null); }}>
-      {menu === 'estimate' && !phone && contextPoint === null ? (
-        /* Opens empty, with the current duration shown as the placeholder: the
-           point of the field is to type a new one, and Enter on nothing leaves
-           it as it was rather than clearing it. */
-        <EstimateField
-          autoFocus
-          minutes={null}
-          placeholder={!computed && minutes !== null ? formatDuration(minutes, locale) : undefined}
-          onCancel={() => setMenu('none')}
-          onCommit={(value) => {
-            setMenu('none');
-            if (value === null && !computed && minutes !== null) return;
-            void updateTask(item.id, { estimateMinutes: value });
-          }}
-        />
-      ) : (
-        <>
+      <>
           {/* Opening the task is what tapping the row already does, so on a
               phone that button is the one the tray leaves out. An estimate is
               not: it is the number this whole app is built on, and asking for
@@ -828,8 +784,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
           >
             <Icon name="clock" size="sm" />
           </button>
-        </>
-      )}
+      </>
 
       <button
         aria-label={t('task.schedule')}

@@ -40,6 +40,38 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.25.0
+
+🆕 **Arrange your table your way.** Drag the edge of a heading to resize a column, and move any column, the title included, where you want it. Every heading now has an icon, and a Display switch wraps long titles and descriptions instead of cutting them.
+
+🆕 **See whose subtask it is.** In a table, a subtask now shows the name of its parent beside its title.
+
+🆕 **Every icon has a name.** Rest the pointer on a button that shows only an icon, such as the actions that appear on a task, and its name shows up right away. The keyboard gets it too.
+
+🎨 **Duration looks like the rest.** In a task, Duration now looks like the date and the project beside it. Pick 30 minutes, or type 1h30, then press E to open it from the keyboard.
+
+🎨 **Tags look like tags.** Open a task and each tag is a chip in its own colour, with its icon and an x to take it off. Creating or choosing a tag adds its chip straight away.
+
+🎨 **Create a view with every option.** The window that adds a view to a project now has Include scheduled tasks too, like Display.
+
+🎨 **Upcoming shows the date of each day.** Headings read Tomorrow · Thu 29 Oct, then Fri 30 Oct, instead of a bare weekday you had to count from.
+
+🎨 **A checklist stays in view.** Under a task, the line after "Before the call:" now shows the items still to tick, instead of ending on a colon.
+
+🎨 **Easier to read.** Project names keep their colour and stay clear: a little deeper on a light page, a little lighter on a dark one. The grey of secondary text is a touch stronger as well.
+
+🎨 **Neater rows and sidebar.** The checkbox sits level with the title, the actions line up with its first line, and the drag handle stays inside tinted groups. Sidebar section titles are easier to click.
+
+🎨 **Start date everywhere.** The date you plan to do a task is called Start date in the composer, in selections and in Display, like in the task window. The deadline keeps its name.
+
+🎨 **Review on a phone.** The four moves are a grid of large buttons, with none left alone on a second line. The subtask line of the composer is fully visible.
+
+🐛 **Counts that match the page.** The numbers beside My week, Today and Upcoming follow what the page lists, with its grouping and its Show subtasks switch.
+
+🐛 **A cursor where you type.** The description of a new task always shows its cursor, and in a task's checklist a new empty item no longer shows it at the far right.
+
+🐛 **A clean search field in pure black.** The search box in Display menus no longer shows a grey patch in the AMOLED dark theme.
+
 ## 2.24.0
 
 🎨 **Choose full width once.** In Display, turn on Full width and every list follows, instead of setting it page by page.

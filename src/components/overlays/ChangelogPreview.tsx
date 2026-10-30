@@ -112,6 +112,17 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
     case 'viewChoices':
       content = <div className="cv-modes">{([['list', say('List', 'Liste'), false], ['board', say('Board', 'Tableau'), false], ['table', 'Table', true], ['calendar', say('Calendar', 'Calendrier'), false]] as Array<[IconName, string, boolean]>)
         .map(([icon, label, on]) => <span key={label} className={on ? 'on' : ''}><Icon name={icon} size="sm" /><small>{label}</small></span>)}</div>; break;
+    case 'tableLayout':
+      content = <div className="cv-tbl">
+        <div className="cv-tbl-row cv-tbl-head">
+          <span><Icon name="calendar" size="sm" />{say('Date', 'Date')}</span>
+          <span className="cv-tbl-title"><Icon name="checkbox" size="sm" />{say('Title', 'Titre')}<i className="cv-tbl-grip" /><b className="cv-tbl-badge">↔</b></span>
+          <span><Icon name="flag" size="sm" />{say('Priority', 'Priorité')}</span>
+        </div>
+        <div className="cv-tbl-row"><span>{chip(say('Today', 'Aujourd’hui'), 'green')}</span><span className="cv-tbl-title">{review}</span><span>{chip('P1', 'red')}</span></div>
+        <div className="cv-tbl-row"><span>{chip(say('Tomorrow', 'Demain'), 'orange')}</span><span className="cv-tbl-title">{say('Choose the photos for the new home page and send them over', 'Choisir les photos de la nouvelle page d’accueil et les envoyer')}</span><span>{chip('P2', 'orange')}</span></div>
+        <div className="cv-tbl-row"><span>{chip(say('Friday', 'Vendredi'), 'purple')}</span><span className="cv-tbl-title">{say('Publish the page', 'Publier la page')}</span><span>{chip('P3', 'blue')}</span></div>
+      </div>; break;
     case 'table':
       content = <>{title(say('Table view', 'Vue Table'))}<div className="cv-task-table">
         <div className="cv-table-heading"><b>{say('Task', 'Tâche')}</b><b>{say('Date', 'Date')} ↑</b><b>{say('Priority', 'Priorité')}</b></div>

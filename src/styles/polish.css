@@ -48,6 +48,8 @@
   --chip-bg:color-mix(in srgb, var(--marker, var(--muted)) 8%, var(--surface));
 }
 
+:root[data-chips="inherited"] :is(.task, .tcard, .preview-task) .meta > .proj{--chip-fg:var(--ink,var(--muted))}
+
 /* On a tinted callout a grey chip needs a surface of its own to be seen: the
    duration always, and every chip when the colours are off. Inherited chips
    are already mixed into the surface, so they read there as they are. */

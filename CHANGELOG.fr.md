@@ -8,6 +8,38 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.25.0
+
+🆕 **Organisez votre table à votre façon.** Tirez le bord d’un en-tête pour redimensionner une colonne, et déplacez n’importe laquelle, le titre compris, où vous voulez. Chaque en-tête a son icône, et un réglage d’Affichage passe à la ligne les titres et descriptions longs au lieu de les couper.
+
+🆕 **Sachez de qui dépend une sous-tâche.** Dans une table, une sous-tâche affiche maintenant le nom de sa tâche parente à côté de son titre.
+
+🆕 **Chaque icône a un nom.** Posez le pointeur sur un bouton qui n’a qu’une icône, comme les actions qui apparaissent sur une tâche : son nom s’affiche tout de suite. Le clavier y a droit aussi.
+
+🎨 **La durée comme le reste.** Dans une tâche, la durée ressemble à la date et au projet à côté d’elle. Choisissez 30 minutes ou tapez 1h30, puis appuyez sur E pour l’ouvrir au clavier.
+
+🎨 **Les tags ressemblent à des tags.** Ouvrez une tâche : chaque tag est une pastille de sa couleur, avec son icône et une croix pour le retirer. En créer ou en choisir un ajoute sa pastille tout de suite.
+
+🎨 **Créez une vue avec toutes les options.** La fenêtre qui ajoute une vue à un projet propose aussi Inclure les tâches planifiées, comme Affichage.
+
+🎨 **À venir indique la date de chaque jour.** Les titres affichent Demain · jeu. 29 oct., puis ven. 30 oct., au lieu d’un jour de semaine seul qu’il fallait compter.
+
+🎨 **Une liste de contrôle reste en vue.** Sous une tâche, la ligne après « Avant l’appel : » montre maintenant les éléments restant à cocher, au lieu de finir sur deux-points.
+
+🎨 **Plus lisible.** Les noms de projet gardent leur couleur et restent nets : un peu plus profonds sur une page claire, un peu plus clairs sur une page sombre. Le gris des textes secondaires est aussi un peu plus marqué.
+
+🎨 **Des lignes et une barre latérale plus nettes.** La case est à hauteur du titre, les actions s’alignent sur sa première ligne et la poignée de glisser reste dans les groupes teintés. Les titres de section de la barre latérale se cliquent plus facilement.
+
+🎨 **Date de début partout.** La date à laquelle vous prévoyez une tâche s’appelle Date de début dans la saisie, les sélections et Affichage, comme dans la fenêtre de la tâche. L’échéance garde son nom.
+
+🎨 **La Revue sur téléphone.** Les quatre déplacements forment une grille de grands boutons, sans aucun seul sur une deuxième ligne. La ligne de sous-tâche de la saisie est entièrement visible.
+
+🐛 **Des compteurs fidèles à la page.** Les nombres à côté de Cette semaine, Aujourd’hui et À venir suivent ce que la page liste, avec son regroupement et son réglage Afficher les sous-tâches.
+
+🐛 **Un curseur là où vous tapez.** La description d’une nouvelle tâche affiche toujours son curseur, et dans la liste de contrôle d’une tâche, un nouvel élément vide ne l’affiche plus tout à droite.
+
+🐛 **Un champ de recherche net en noir pur.** La zone de recherche des menus d’Affichage n’a plus de tache grise dans le thème sombre AMOLED.
+
 ## 2.24.0
 
 🎨 **Choisissez la pleine largeur une fois.** Dans Affichage, activez Pleine largeur et toutes vos listes suivent, sans le régler page par page.

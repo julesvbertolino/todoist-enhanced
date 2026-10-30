@@ -21,7 +21,7 @@ import { markerStyle, avatarUrl } from '@/domain/colors';
 import { firstName, karmaStanding } from '@/domain/karma';
 import { readProjectIcon } from '@/domain/projectIcons';
 import { ProjectIcon } from './ProjectIconPicker';
-import type { ViewId } from '@/domain/types';
+import type { GroupKey, ViewId } from '@/domain/types';
 import type { DropTarget } from '@/domain/dnd';
 import type { TranslationKey } from '@/i18n';
 import { SyncStatus } from './SyncStatus';
@@ -154,7 +154,11 @@ export function Sidebar({
       const scoped = { ...snapshot, items: assigneeItems(snapshot, filters.assignees) };
       /* A project's count is Todoist's: every open task, subtasks included,
          so the Inbox and the projects read the same number in both apps. */
-      const list = ['today', 'week', 'upcoming'].includes(key) ? datedRoots(openItems(scoped), scoped) : key === 'inbox' ? openItems(scoped) : rootItems(openItems(scoped));
+      /* The page lists its tasks under its own grouping and "Show subtasks"
+         (#409): the count reads them from the same place. Upcoming never groups. */
+      const dated = (group: GroupKey, layout: boolean) =>
+        datedRoots(openItems(scoped), scoped, group, { subtasks: filters.showSubtasks, layout, quick: prefs.showQuickGroup });
+      const list = key === 'upcoming' ? dated('none', false) : ['today', 'week'].includes(key) ? dated(viewPrefs(prefs, key).group, viewPrefs(prefs, key).group === 'none') : key === 'inbox' ? openItems(scoped) : rootItems(openItems(scoped));
       return applyFilters(list, ['today', 'week', 'upcoming'].includes(key) ? { ...filters, includeScheduled: true } : filters, snapshot, makeChildrenOf(childIndex(scoped)));
     };
     return {
@@ -700,6 +704,7 @@ function SideGroup({
   dropTarget?: DropTarget;
   children: React.ReactNode;
 }) {
+  const { t } = useT();
   const head = () => (
     <div className="side-head">
         <button className="side-headbtn" aria-expanded={onOpen ? undefined : open} onClick={onOpen ?? onToggle}>
@@ -721,7 +726,7 @@ function SideGroup({
         <button
           className="side-disclose"
           aria-expanded={open}
-          aria-label={title}
+          aria-label={t(open ? 'nav.collapseGroup' : 'nav.expandGroup', { name: title })}
           onClick={onToggle}
         >
           <Icon name={open ? 'caret-up' : 'caret'} size="sm" />

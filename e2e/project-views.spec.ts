@@ -148,8 +148,8 @@ test.describe('saved views of a project', () => {
     await expect(side).toBeVisible();
     const [panelBox, sideBox] = [await display.boundingBox(), await side.boundingBox()];
     expect(sideBox!.x + sideBox!.width).toBeLessThanOrEqual(panelBox!.x);
-    // Every column but the title has a handle, the hidden ones too.
-    await expect(side.locator('button.colgrip')).toHaveCount(8);
+    // Every column has a handle, the title and the hidden ones too.
+    await expect(side.locator('button.colgrip')).toHaveCount(9);
     await side.getByRole('switch', { name: 'Description' }).click();
     await expect(side.getByRole('switch', { name: 'Description' })).toHaveAttribute('aria-checked', 'true');
     const before = await side.locator('.colrow .collabel').allInnerTexts();

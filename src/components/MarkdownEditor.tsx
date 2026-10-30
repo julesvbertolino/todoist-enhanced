@@ -112,7 +112,12 @@ class RemoveWidget extends WidgetType {
       view.dispatch({ changes: { from, to }, selection: { anchor: Math.min(from, view.state.doc.length - (to - from)) } });
       view.focus();
     });
-    return button;
+    /* The button is placed by the line, at its right edge. This holder takes no room and stays where the text
+       ends, so a caret at the end of an empty item is measured there and not beside the button. */
+    const holder = document.createElement('span');
+    holder.className = 'checkdel-holder';
+    holder.appendChild(button);
+    return holder;
   }
   ignoreEvent() { return true; }
 }

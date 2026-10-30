@@ -46,7 +46,7 @@ function ViewBody({ api, name, onName, onNameBlur, onNameEnter, value, onChange 
       />
       <DisplayFields
         value={value} onChange={onChange} viewKey={api.keyOf('draft')} modes={VIEW_MODES} groups={PROJECT_GROUPS} sorts={PROJECT_SORTS}
-        tags={tags} completedToggle
+        tags={tags} completedToggle scheduledLabel={value.mode === 'calendar' ? undefined : 'filter.includeScheduled'}
       />
     </>
   );

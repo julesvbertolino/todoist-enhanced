@@ -200,8 +200,9 @@ test('profile photo stays centred before the more menu and its dropdown fits the
   const avatar = task.getByRole('img', { name: 'Assigned to: Alex Martin' });
   await expect(avatar.locator('img')).toBeVisible();
   await expect.poll(() => avatar.locator('img').evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
-  const before = (await avatar.boundingBox())!; const box = (await task.boundingBox())!;
-  expect(Math.abs(before.y + before.height / 2 - box.y - box.height / 2)).toBeLessThan(2);
+  // #386: the row's actions sit on the title's first line, not the middle of the whole row.
+  const before = (await avatar.boundingBox())!; const title = (await task.locator('.ttitle').first().boundingBox())!;
+  expect(Math.abs(before.y + before.height / 2 - title.y - Math.min(title.height, 22) / 2)).toBeLessThan(4);
   await task.hover();
   const after = (await avatar.boundingBox())!;
   expect(Math.abs(before.x - after.x)).toBeLessThan(1);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Item } from './types';
-import { dateTone, formatTimeAgo, msUntilNextDay, weekStartsOnOf } from './dates';
+import { dateTone, formatDayHeading, formatTimeAgo, msUntilNextDay, weekStartsOnOf } from './dates';
 
 describe('msUntilNextDay (#146)', () => {
   it('counts to the next local midnight', () => {
@@ -62,5 +62,21 @@ describe('dateTone (#218)', () => {
 
   it('has nothing to say about a task with no date', () => {
     expect(dateTone({ due: null } as unknown as Item, now)).toBeNull();
+  });
+});
+
+describe('a day heading carries its date (#376)', () => {
+  const now = new Date(2026, 9, 28, 10, 0);
+  it('names today and tomorrow, then gives the date', () => {
+    expect(formatDayHeading(new Date(2026, 9, 28), 'en', now)).toBe('Today · Wed 28 Oct');
+    expect(formatDayHeading(new Date(2026, 9, 29), 'en', now)).toBe('Tomorrow · Thu 29 Oct');
+    expect(formatDayHeading(new Date(2026, 9, 29), 'fr', now)).toBe('Demain · jeu. 29 oct.');
+  });
+  it('gives the weekday, the day and the month to every later day', () => {
+    expect(formatDayHeading(new Date(2026, 9, 30), 'fr', now)).toBe('ven. 30 oct.');
+    expect(formatDayHeading(new Date(2026, 10, 2), 'en', now)).toBe('Mon 2 Nov');
+  });
+  it('adds the year once it is not this one', () => {
+    expect(formatDayHeading(new Date(2027, 0, 2), 'fr', now)).toBe('sam. 2 janv. 2027');
   });
 });

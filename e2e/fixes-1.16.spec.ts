@@ -88,8 +88,8 @@ test('#110 the row menu and the bulk bar show the same date picker', async ({ de
 
   await row(page, first).click({ modifiers: ['ControlOrMeta'] });
   await row(page, second).click({ modifiers: ['ControlOrMeta'] });
-  await page.getByRole('toolbar').getByRole('button', { name: 'Date' }).click();
-  const bulk = page.getByRole('menu', { name: 'Date' });
+  await page.getByRole('toolbar').getByRole('button', { name: 'Start date' }).click();
+  const bulk = page.getByRole('menu', { name: 'Start date' });
   await expect(bulk.locator('.datepicker')).toBeVisible();
   const fromBulk = (await labels(bulk)).map((l) => l.trim());
   const choices = ['Today', 'Tomorrow', 'Next week', 'This week', 'Someday'];

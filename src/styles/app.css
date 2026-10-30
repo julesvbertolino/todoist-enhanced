@@ -15,10 +15,10 @@
   --border:#f0f0f0;
   --border-strong:#dcdcdc;
 
-  /* text — every value below passes AA on white at 12px */
+  /* text — every value below passes AA at 12px on white and on the hover grey (#383) */
   --text:#202020;
   --muted:#666666;
-  --faint:#737373;
+  --faint:#6b6b6b;
 
   /* brand + semantics
      Four warm reds carry the whole brand, each with one job:
@@ -164,7 +164,7 @@
 
   --text:#e6e6e6;
   --muted:#ababab;
-  --faint:#8c8c8c;
+  --faint:#999999;
 
   /* The accent keeps its hue: it is the brand. What changes is the family
      around it — "dark" is the readable ink on a dark page, and the washes go
