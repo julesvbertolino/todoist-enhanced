@@ -7,6 +7,7 @@ import { useT } from '@/hooks/useT';
 import { canStoreDurations } from '@/domain/estimates';
 import { planEstimateConversion } from '@/domain/estimate-conversion';
 import type { EstimateStorage } from '@/domain/types';
+import { completeSetupWithEstimate } from '@/domain/onboarding';
 
 export function EstimateStorageDialog({ open, onClose, onConvert }: { open: boolean; onClose: () => void; onConvert: (target: EstimateStorage) => void }) {
   const { t } = useT();
@@ -16,6 +17,9 @@ export function EstimateStorageDialog({ open, onClose, onConvert }: { open: bool
   const snapshot = useDataSnapshot();
   const count = planEstimateConversion(Object.values(snapshot.items), choice).changes.length;
   const allowed = canStoreDurations(user);
+  const confirmChoice = (value: EstimateStorage) => {
+    completeSetupWithEstimate(user?.id, value, allowed, setPrefs);
+  };
   useEffect(() => { if (open) setChoice('tag'); }, [open, user?.id]);
   return (
     <Overlay open={open} onClose={onClose} label={t('estimates.storage')} size="sm">
@@ -23,11 +27,11 @@ export function EstimateStorageDialog({ open, onClose, onConvert }: { open: bool
       <div className="sheet-body">
         <p className="estimate-dialog-intro">{t('estimates.dialogIntro')}</p>
         <EstimateStorageChoice value={choice} allowed={allowed} onChange={setChoice} />
-        {count > 0 && (choice === 'tag' || allowed) && <div className="estimate-conversion-offer"><p>{t('estimates.offer', { count })}</p><button className="btn" onClick={() => { setPrefs({ estimateStorage: choice }); onConvert(choice); onClose(); }}>{t('estimates.savePreview')}</button></div>}
+        {count > 0 && (choice === 'tag' || allowed) && <div className="estimate-conversion-offer"><p>{t('estimates.offer', { count })}</p><button className="btn" onClick={() => { confirmChoice(choice); onConvert(choice); onClose(); }}>{t('estimates.savePreview')}</button></div>}
       </div>
       <div className="sheet-foot">
         <button className="btn" onClick={onClose}>{t('common.close')}</button>
-        <button className="btn primary" onClick={() => { setPrefs({ estimateStorage: choice === 'duration' && !allowed ? 'tag' : choice }); onClose(); }}>
+        <button className="btn primary" onClick={() => { confirmChoice(choice); onClose(); }}>
           {t('estimates.confirm')}
         </button>
       </div>
