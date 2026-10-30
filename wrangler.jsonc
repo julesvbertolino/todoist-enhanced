@@ -1,0 +1,9 @@
+{
+  "name": "todoist-enhanced",
+  "compatibility_date": "2026-10-29",
+  "previews": {},
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}

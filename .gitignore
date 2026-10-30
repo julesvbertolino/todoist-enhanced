@@ -4,6 +4,7 @@ dist-ssr
 .DS_Store
 *.local
 .vite
+.wrangler/
 *.tsbuildinfo
 
 # A build, zipped for upload. Rebuilt on demand; never committed.

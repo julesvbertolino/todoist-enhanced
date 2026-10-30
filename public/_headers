@@ -1,0 +1,18 @@
+# Keep security headers in sync with .htaccess and vite.config.ts.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.todoist.com; img-src 'self' data: blob: https:; font-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'self'; frame-src 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
+/sw.js
+  Cache-Control: no-cache, must-revalidate
+/registerSW.js
+  Cache-Control: no-cache, must-revalidate
+/theme-boot.js
+  Cache-Control: no-cache, must-revalidate
+/manifest.webmanifest
+  Cache-Control: no-cache, must-revalidate
+  Content-Type: application/manifest+json
+/oauth/client.json
+  Cache-Control: no-cache, must-revalidate
