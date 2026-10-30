@@ -333,6 +333,8 @@ export interface Preferences {
   dailyCapacity: DailyCapacity;
   weeklyCapacityOverride: number | null;
   showQuickGroup: boolean;
+  /** Lists take the whole page, on every page at once (#403). Display's Full width switch writes it. */
+  listFullWidth: boolean;
   /** The sound that plays when a task is ticked off, or none (#282). */
   completionSoundChoice: CompletionChoice;
   /** The Gathering dust group at the top of Someday (#161). */
@@ -460,6 +462,7 @@ export const defaultPreferences = (locale: Locale): Preferences => ({
   dailyCapacity: defaultCapacity(),
   weeklyCapacityOverride: null,
   showQuickGroup: true,
+  listFullWidth: false,
   completionSoundChoice: DEFAULT_COMPLETION_CHOICE,
   showDustGroup: true,
   dustAfterMonths: DEFAULT_DUST_MONTHS,
@@ -518,7 +521,9 @@ export const viewPrefs = (prefs: Preferences, viewKey: string): ViewPrefs => {
   if (cached) return cached;
   const base = defaultViewPrefs(viewKey);
   const saved = prefs.views[viewKey];
-  const value = saved ? { ...base, ...saved, filters: { ...base.filters, ...saved.filters } } : base;
+  const merged = saved ? { ...base, ...saved, filters: { ...base.filters, ...saved.filters } } : base;
+  /* One setting for every page: a switch set on one list is the others' too (#403). */
+  const value = merged.fullWidth === prefs.listFullWidth ? merged : { ...merged, fullWidth: prefs.listFullWidth };
   views.set(viewKey, value);
   return value;
 };
@@ -591,6 +596,8 @@ export function hydratePreferences(stored: unknown, locale: Locale): Preferences
     eisenhowerIncludeSomeday: s.eisenhowerIncludeSomeday === true,
     eisenhowerWorkspace: typeof s.eisenhowerWorkspace === 'string' ? s.eisenhowerWorkspace : null,
     showDustGroup: s.showDustGroup !== false,
+    /* Before it was global, each page kept its own: one already on stays on. */
+    listFullWidth: typeof s.listFullWidth === 'boolean' ? s.listFullWidth : Object.values(s.views ?? {}).some((view) => view?.fullWidth === true),
     completionSoundChoice: isCompletionChoice(s.completionSoundChoice) ? s.completionSoundChoice : base.completionSoundChoice,
     // Only the delays the Settings offers: anything else reads as the default.
     dustAfterMonths: isDustMonths(s.dustAfterMonths) ? s.dustAfterMonths : base.dustAfterMonths,

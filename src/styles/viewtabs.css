@@ -94,8 +94,9 @@
 .colrow{display:flex;align-items:center;gap:6px;min-height:38px;padding:0 4px;border-radius:var(--r-sm);background:var(--surface)}
 .colrow:hover{background:var(--hover)}
 .colrow.dragging{position:relative;z-index:2;box-shadow:var(--sh-md);background:var(--surface)}
-.colgrip{flex:none;width:24px;height:28px;display:grid;place-items:center;color:var(--faint);border-radius:6px;cursor:grab;touch-action:none}
-.colgrip:hover{color:var(--text)}
+.colicon{flex:none;color:var(--muted)}
+.colgrip{flex:none;width:24px;height:28px;display:grid;place-items:center;color:var(--faint);opacity:.45;border-radius:6px;cursor:grab;touch-action:none}
+.colgrip:hover,.colgrip:focus-visible{color:var(--text);opacity:1}
 .colgrip:focus-visible{outline:2px solid var(--accent)}
 span.colgrip{cursor:default}
 .collabel{flex:1;min-width:0;font-size:var(--fs-13);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

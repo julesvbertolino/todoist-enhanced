@@ -1754,7 +1754,6 @@ export const fr: Record<TranslationKey, string> = {
   'filter.anyTag': 'Tous les tags',
   'views.duplicateCurrent': 'Partir de la vue actuelle',
   'views.cancel': 'Annuler',
-  'table.columnCount': '{count} affichées',
   'table.moveHint': 'Glissez la poignée, ou Alt avec les flèches haut et bas, pour réordonner.',
   'table.moveColumn': 'Déplacer {name}',
 };

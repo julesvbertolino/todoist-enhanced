@@ -52,11 +52,11 @@ import { useSelectionBlocks } from './hooks/useSelectionBlocks';
 import { useKeyboard } from './hooks/useKeyboard';
 import { useData } from './hooks/useData';
 import { navigate, useRoute, type Route } from './hooks/useRoute';
-import { rootItems } from './store/selectors';
+import { labelRoots, rootItems } from './store/selectors';
 import { detectConflicts } from './domain/conflicts';
 import { placementForPage } from './domain/dnd';
 import { useParentEstimates } from './hooks/useParentEstimates';
-import { bucketOf, hasLabel, somedayItems, upcomingItems, weekItems } from './domain/views';
+import { bucketOf, somedayItems, upcomingItems, weekItems } from './domain/views';
 import { effectiveEstimate } from './domain/estimates';
 import type { Item } from './domain/types';
 import type { TranslationKey } from './i18n';
@@ -689,7 +689,7 @@ function AppShell({
       }
       case 'label':
         return {
-          contextItems: route.id ? roots.filter((i) => hasLabel(i, route.id!)) : [],
+          contextItems: route.id ? labelRoots(items, route.id, snapshot) : [],
           contextLabel: route.id ?? '',
         };
       case 'week':
@@ -727,7 +727,7 @@ function AppShell({
       default:
         return { contextItems: roots, contextLabel: t(`nav.${route.view}` as TranslationKey) };
     }
-  }, [route, roots, snapshot.projects, snapshot.user?.inbox_project_id, t]);
+  }, [route, roots, items, snapshot, t]);
 
   const unestimatedItems = useMemo(
     () => contextItems.filter((i) => effectiveEstimate(i, childrenOf).minutes === null),

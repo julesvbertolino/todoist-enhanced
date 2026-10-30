@@ -620,3 +620,6 @@
 :root[data-chips="neutral"] :is(.task,.tcard,.preview-task) .meta > .repeatdot{
   color:var(--muted);background:var(--subtle);
 }
+
+/* A tag keeps room around its icon, as the other chips do around theirs. */
+:root:not([data-chips="classic"]) :is(.task, .tcard, .preview-task) .meta > .tag{padding:2px 8px 2px 7px;margin-block:-1px}

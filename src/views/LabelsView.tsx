@@ -14,8 +14,7 @@ import { copyText, todoistLabelUrl } from '@/api/links';
 import {
   TAG_DRAG_PREFIX, TAG_DROP_PREFIX, TAG_TOP_DROP_ID, useTagDrag, useTagTopDrop,
 } from '@/components/dnd/DraggableTag';
-import { rootItems } from '@/store/selectors';
-import { hasLabel } from '@/domain/views';
+import { labelRoots } from '@/store/selectors';
 import { markerStyle } from '@/domain/colors';
 import type { Label } from '@/domain/types';
 import { byLabelOrder } from '@/domain/orderKey';
@@ -32,8 +31,6 @@ export function LabelsView() {
   const { snapshot, items } = useData();
   const [sheet, setSheet] = useState<TagSheetTarget>(null);
   const { topDropRef, isTopOver } = useTagTopDrop();
-
-  const roots = useMemo(() => rootItems(items), [items]);
 
   const labels = useMemo(
     () =>
@@ -118,7 +115,7 @@ export function LabelsView() {
               label={label}
               shift={shiftOf(index)}
               order={labels.map((l) => l.name)}
-              count={roots.filter((i) => hasLabel(i, label.name)).length}
+              count={labelRoots(items, label.name, snapshot).length}
               onEdit={() => setSheet({ mode: 'edit', labelId: label.id })}
             />
           ))}

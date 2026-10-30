@@ -8,6 +8,18 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.24.0
+
+🎨 **Choisissez la pleine largeur une fois.** Dans Affichage, activez Pleine largeur et toutes vos listes suivent, sans le régler page par page.
+
+🎨 **Une liste de colonnes plus claire.** Dans Affichage, Colonnes d’un tableau, chaque colonne a désormais son icône, le nombre de colonnes affichées disparaît et les poignées pour les déplacer sont plus discrètes.
+
+🐛 **Retrouvez les sous-tâches là où elles vont.** Quand une page est groupée par priorité, tag, projet ou jour, une sous-tâche apparaît aussi dans son propre groupe, comme dans Todoist, et reste sous sa tâche parente.
+
+🐛 **Les tags retrouvent leurs sous-tâches.** La page d’un tag et la page Tags comptent désormais toutes les tâches qui le portent, sous-tâches comprises. Un tag créé depuis la fenêtre d’une tâche est aussitôt sélectionné sur elle.
+
+🐛 **Les tâches du même jour et de même priorité suivent votre barre latérale.** Leur ordre respecte désormais celui de vos espaces de travail et de vos projets.
+
 ## 2.23.0
 
 🎨 **Des détails plus clairs.** Les textes secondaires sont plus lisibles, l’aide à la recherche de projet est plus courte et les colonnes des graphiques sont plus faciles à sélectionner.

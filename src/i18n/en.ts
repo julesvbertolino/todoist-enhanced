@@ -1754,7 +1754,6 @@ export const en = {
   'filter.anyTag': 'Any tag',
   'views.duplicateCurrent': 'Start from the current view',
   'views.cancel': 'Cancel',
-  'table.columnCount': '{count} shown',
   'table.moveHint': 'Drag the handle, or Alt with the up and down arrows, to reorder.',
   'table.moveColumn': 'Move {name}',
 };

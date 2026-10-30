@@ -15,6 +15,7 @@ import { sortItems } from '@/store/selectors';
 import { viewPrefs } from '@/store/prefs';
 import { dropTableColumn, tableColumns, tableColumnLabel, tableColumnSort } from '@/domain/table';
 import { effectiveEstimate, formatDuration } from '@/domain/estimates';
+import { insideOthers } from '@/domain/load';
 import type { Item, TableColumn, ViewPrefs } from '@/domain/types';
 import type { TaskGroupProps } from './TaskGroup';
 
@@ -55,7 +56,8 @@ export function TableSurface({ groups, viewKey, childrenOf, onOpen }: {
     return () => { window.removeEventListener('resize', measure); observer.disconnect(); };
   }, []);
   const all = [...new Map(groups.flatMap((group) => group.items).map((item) => [item.id, item])).values()];
-  const total = all.reduce((sum, item) => sum + (effectiveEstimate(item, childrenOf).minutes ?? 0), 0);
+  const inside = insideOthers(all, childrenOf);
+  const total = all.reduce((sum, item) => sum + (inside.has(item.id) ? 0 : effectiveEstimate(item, childrenOf).minutes ?? 0), 0);
   return <TableContext.Provider value={{ columns, coloration: current.tableColoration ?? 'none' }}>
     <div ref={scrollRef} className="table-scroll fullwidth"
       style={room ? { maxHeight: room } : undefined}>

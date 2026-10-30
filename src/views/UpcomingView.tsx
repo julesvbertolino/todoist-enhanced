@@ -56,7 +56,7 @@ function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: Upcomi
      by itself, so the range never lags behind the tasks it lets in (#146). */
   const today = useToday();
 
-  const forecasts = useMemo(() => projectOccurrences(datedRoots(items, snapshot), addDays(today, 1), startOfDay(addDays(today, horizon))), [items, today, horizon, snapshot]);
+  const forecasts = useMemo(() => projectOccurrences(datedRoots(items, snapshot, 'none', { subtasks: current.filters.showSubtasks }), addDays(today, 1), startOfDay(addDays(today, horizon))), [items, today, horizon, snapshot, current.filters.showSubtasks]);
   const pool = forecasts.items;
   const sources = useMemo(() => new Map(pool.filter((item) => item.projection).map((item) => [item.id, item.projection!.sourceId])), [pool]);
   const childrenOf = useMemo(() => (id: string) => sourceChildrenOf(sources.get(id) ?? id), [sources, sourceChildrenOf]);
@@ -66,7 +66,7 @@ function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: Upcomi
   );
 
   const hasMoreFuture = useMemo(() => {
-    const beyond = applyFilters(upcomingItems(datedRoots(items, snapshot)), { ...current.filters, includeScheduled: true }, snapshot, childrenOf);
+    const beyond = applyFilters(upcomingItems(datedRoots(items, snapshot, 'none', { subtasks: current.filters.showSubtasks })), { ...current.filters, includeScheduled: true }, snapshot, childrenOf);
     const limit = startOfDay(addDays(today, horizon));
     return beyond.some((item) => { const day = dueDate(item); return day !== null && startOfDay(day) > limit; });
   }, [items, snapshot, current.filters, childrenOf, today, horizon]);
@@ -100,7 +100,7 @@ function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: Upcomi
     .map((day) => ({
       id: toApiDate(day),
       title: formatRelativeDay(day, locale),
-      items: sortItems(byDay.get(toApiDate(day)) ?? [], current.sort, childrenOf, 'day', snapshot, true),
+      items: sortItems(byDay.get(toApiDate(day)) ?? [], current.sort, childrenOf, 'day', snapshot, true, prefs.workspaceOrder),
       dropTarget: { kind: 'day' as const, date: day },
       capacityMinutes: prefs.dailyCapacity[day.getDay()],
     }))

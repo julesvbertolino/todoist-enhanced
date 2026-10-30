@@ -172,13 +172,17 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
     if (tourPrefsBackup) {
       /* A view arranged during the tour is the demo's: nothing is kept. */
       const current = readViewPrefs(get().prefs, viewKey);
-      set({ prefs: { ...get().prefs, views: { ...get().prefs.views, [viewKey]: { ...current, ...patch } } } });
+      const { fullWidth, ...own } = patch;
+      set({ prefs: { ...get().prefs, ...(fullWidth === undefined ? {} : { listFullWidth: fullWidth }), views: { ...get().prefs.views, [viewKey]: { ...current, ...own } } } });
       return;
     }
     const current = readViewPrefs(get().prefs, viewKey);
+    /* Full width belongs to no page: it is the lists' as a whole (#403). */
+    const { fullWidth, ...own } = patch;
     const prefs = {
       ...get().prefs,
-      views: { ...get().prefs.views, [viewKey]: { ...current, ...patch } },
+      ...(fullWidth === undefined ? {} : { listFullWidth: fullWidth }),
+      views: { ...get().prefs.views, [viewKey]: { ...current, ...own } },
     };
     set({ prefs });
     void idb.savePrefs(PREFS_KEY, prefs);
