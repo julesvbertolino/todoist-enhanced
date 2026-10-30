@@ -10,25 +10,35 @@ Chaque ligne est marquée :
 
 ## 2.25.0
 
-🎨 **Les tags ressemblent à des tags dans une tâche.** Ouvrez une tâche : chaque tag est une pastille de sa couleur, avec son icône et une croix pour le retirer. En créer ou en choisir un ajoute sa pastille tout de suite.
+🆕 **Organisez votre table à votre façon.** Tirez le bord d’un en-tête pour redimensionner une colonne, et déplacez n’importe laquelle, le titre compris, où vous voulez. Chaque en-tête a son icône, et un réglage d’Affichage passe à la ligne les titres et descriptions longs au lieu de les couper.
 
-🎨 **Créez une vue avec toutes les options.** La fenêtre qui ajoute une vue à un projet propose aussi Inclure les tâches planifiées, comme son panneau Affichage.
+🆕 **Sachez de qui dépend une sous-tâche.** Dans une table, une sous-tâche affiche maintenant le nom de sa tâche parente à côté de son titre.
 
-🎨 **Des infobulles sur les boutons d’icône.** Posez le pointeur sur un bouton qui n’a qu’une icône, ou atteignez-le au clavier : son nom apparaît. Les flèches qui replient les sections de la barre latérale disent Replier ou Déplier.
+🆕 **Chaque icône a un nom.** Posez le pointeur sur un bouton qui n’a qu’une icône, comme les actions qui apparaissent sur une tâche : son nom s’affiche tout de suite. Le clavier y a droit aussi.
+
+🎨 **La durée comme le reste.** Dans une tâche, la durée ressemble à la date et au projet à côté d’elle. Choisissez 30 minutes ou tapez 1h30, puis appuyez sur E pour l’ouvrir au clavier.
+
+🎨 **Les tags ressemblent à des tags.** Ouvrez une tâche : chaque tag est une pastille de sa couleur, avec son icône et une croix pour le retirer. En créer ou en choisir un ajoute sa pastille tout de suite.
+
+🎨 **Créez une vue avec toutes les options.** La fenêtre qui ajoute une vue à un projet propose aussi Inclure les tâches planifiées, comme Affichage.
 
 🎨 **À venir indique la date de chaque jour.** Les titres affichent Demain · jeu. 29 oct., puis ven. 30 oct., au lieu d’un jour de semaine seul qu’il fallait compter.
 
-🎨 **Une description garde sa liste en vue.** Sous une tâche, la ligne après « Avant l’appel : » montre maintenant les éléments restant à cocher, au lieu de finir sur deux-points.
+🎨 **Une liste de contrôle reste en vue.** Sous une tâche, la ligne après « Avant l’appel : » montre maintenant les éléments restant à cocher, au lieu de finir sur deux-points.
 
-🎨 **Plus lisible.** Le nom d’un projet, dans sa couleur, est assombri juste assez pour rester lisible, en clair comme en sombre. L’orange reste orange.
+🎨 **Plus lisible.** Les noms de projet gardent leur couleur et restent nets : un peu plus profonds sur une page claire, un peu plus clairs sur une page sombre. Le gris des textes secondaires est aussi un peu plus marqué.
 
-🎨 **Des lignes et une barre latérale plus nettes.** La case est à hauteur du titre, les actions au survol s’alignent sur sa première ligne et la poignée de glisser reste dans les groupes teintés. Les titres de section de la barre latérale se cliquent plus facilement et le bouton à trois points s’aligne sur les flèches.
+🎨 **Des lignes et une barre latérale plus nettes.** La case est à hauteur du titre, les actions s’alignent sur sa première ligne et la poignée de glisser reste dans les groupes teintés. Les titres de section de la barre latérale se cliquent plus facilement.
 
 🎨 **Date de début partout.** La date à laquelle vous prévoyez une tâche s’appelle Date de début dans la saisie, les sélections et Affichage, comme dans la fenêtre de la tâche. L’échéance garde son nom.
 
-🎨 **La Revue sur téléphone.** Les quatre déplacements forment une grille de grands boutons de 44 px, sans aucun seul sur une deuxième ligne. La ligne de sous-tâche de la saisie est entièrement visible.
+🎨 **La Revue sur téléphone.** Les quatre déplacements forment une grille de grands boutons, sans aucun seul sur une deuxième ligne. La ligne de sous-tâche de la saisie est entièrement visible.
 
-🐛 **Des compteurs fidèles à la page.** Les nombres à côté de Cette semaine, Aujourd’hui et À venir suivent ce que la page liste avec son regroupement et son interrupteur Afficher les sous-tâches.
+🐛 **Des compteurs fidèles à la page.** Les nombres à côté de Cette semaine, Aujourd’hui et À venir suivent ce que la page liste, avec son regroupement et son réglage Afficher les sous-tâches.
+
+🐛 **Un curseur là où vous tapez.** Dans la liste de contrôle d’une tâche, un nouvel élément vide n’affiche plus le curseur tout à droite.
+
+🐛 **Un champ de recherche net en noir pur.** La zone de recherche des menus d’Affichage n’a plus de tache grise dans le thème sombre AMOLED.
 
 ## 2.24.0
 

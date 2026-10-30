@@ -464,8 +464,12 @@ export type TableColumn = 'title' | 'date' | 'deadline' | 'priority' | 'estimate
 
 export interface ViewPrefs {
   tableColumns?: TableColumn[];
-  /** Every column but the title, shown or not, in the order Display lists them: a column switched on again returns to its place. */
+  /** Every column, the title included, shown or not, in the order Display lists them: a column switched on again returns to its place. */
   tableOrder?: TableColumn[];
+  /** Widths the user pulled, in pixels. A column absent from here has its default width. */
+  tableWidths?: Partial<Record<TableColumn, number>>;
+  /** Long titles and descriptions run over several lines instead of being cut (#299). */
+  tableWrap?: boolean;
   tableColoration?: 'none' | 'priority' | 'date' | 'project';
   tableDescending?: boolean;
   /** A list keeps a centred reading width unless this is true: then it takes the whole page. */

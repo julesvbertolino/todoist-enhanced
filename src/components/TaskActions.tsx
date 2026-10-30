@@ -20,7 +20,7 @@ import { copyText, isTemporaryId, todoistTaskUrl } from '@/api/links';
 import { ROW_PRESS_EVENT, type RowMenu } from '@/domain/gestures';
 import { useStore } from '@/store/store';
 import { useConfirm } from './overlays/Confirm';
-import { effectiveEstimate, formatDuration } from '@/domain/estimates';
+import { QUICK_ESTIMATES, effectiveEstimate, formatDuration } from '@/domain/estimates';
 import { EstimateField } from './EstimateField';
 import { DatePicker, shortDay, taskShortcuts, type RecurrenceReading } from './DatePicker';
 import { nextOccurrence } from '@/domain/nextOccurrence';
@@ -142,16 +142,6 @@ function useMenuPlacement(menu: string, anchorRef: React.RefObject<HTMLElement |
 
   return { ref, className: ' floating' };
 }
-
-/**
- * The durations an estimate usually is.
- *
- * Fifteen minutes to two hours, which is the whole of what a task on a week's
- * plan realistically takes — anything longer is a project, and the app says so
- * elsewhere. Offered as buttons because typing "45" on a phone means opening a
- * keyboard over half the screen to press two keys.
- */
-const QUICK_ESTIMATES = [5, 15, 30, 45, 60, 90, 120];
 
 interface TaskActionsProps {
   item: Item;

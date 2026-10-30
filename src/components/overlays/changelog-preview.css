@@ -136,4 +136,3 @@
 .cv-progress-task.done i{background:var(--muted);border-color:var(--muted);position:relative}
 .cv-progress-task.done i:after{content:'✓';position:absolute;inset:-3px 0 0;color:var(--surface);font-size:9px;text-align:center;text-decoration:none}
 
-.cv-tagchip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:4px 6px}.cv-tagchip .ic{width:11px;height:11px}.cv-tagchip .ic:last-child{opacity:.7}

@@ -171,11 +171,15 @@ test('#335 a heading sorts and reverses; its chevron filters, moves and hides th
   expect(await headings(page)).not.toContain('Priority');
 });
 
-test('#335 the Title has no menu, and the edges cannot be passed', async ({ demo: page }) => {
+test('#335 the Title has no menu, and the edges of the row cannot be passed', async ({ demo: page }) => {
   await openTable(page, '#/project/site');
   await expect(menuOf(page, 'Title')).toHaveCount(0);
+  /* The Title is a column like the others now: Start date may step in front of it. */
   await menuOf(page, 'Start date').click({ force: true });
-  await expect(page.getByRole('menu', { name: 'Start date' }).getByRole('menuitem', { name: 'Move left' })).toBeDisabled();
+  await expect(page.getByRole('menu', { name: 'Start date' }).getByRole('menuitem', { name: 'Move left' })).toBeEnabled();
+  await page.keyboard.press('Escape');
+  await menuOf(page, 'Tags').click({ force: true });
+  await expect(page.getByRole('menu', { name: 'Tags' }).getByRole('menuitem', { name: 'Move right' })).toBeDisabled();
 });
 
 test('#335 dragging a heading moves the column and opens no menu; Display follows', async ({ demo: page }) => {

@@ -91,11 +91,11 @@
   :root[data-background="colored"] .sidebar .side-foot .addbtn{background:#fff;color:var(--accent)}
   :root[data-background="colored"] .sidebar .side-foot .addbtn .ic{color:var(--accent)}
   :root[data-background="colored"] .sidebar .menu{
-    --text:#202020;--muted:#666;--faint:#737373;--hover:#f0efee;--subtle:#f9f8f7;--border:#f0f0f0;
+    --text:#202020;--muted:#666;--faint:#6b6b6b;--hover:#f0efee;--subtle:#f9f8f7;--border:#f0f0f0;
     --border-strong:#dcdcdc;color:#202020;
   }
   :root[data-background="colored"][data-theme="dark"] .sidebar .menu{
-    --text:#e6e6e6;--muted:#ababab;--faint:#8c8c8c;--hover:#2d2d2d;--subtle:#262626;--border:#393939;
+    --text:#e6e6e6;--muted:#ababab;--faint:#999999;--hover:#2d2d2d;--subtle:#262626;--border:#393939;
     --border-strong:#4b4b4b;color:#e6e6e6;
   }
 }

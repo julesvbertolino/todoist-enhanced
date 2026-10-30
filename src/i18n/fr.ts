@@ -526,6 +526,7 @@ export const fr: Record<TranslationKey, string> = {
   'task.movedTo': 'Déplacée vers {destination}',
   'task.deleteConfirm': 'Supprimer « {name} » ? Todoist conserve les tâches supprimées sept jours dans son historique d’activité.',
   'task.rescheduleAllConfirm': 'Déplacer {count} tâches en retard à aujourd’hui ?',
+  'task.estimateChoose': 'Choisir une durée',
   'task.estimatePlaceholder': '15min, 1h…',
   'task.computedEstimate': 'Somme des sous-tâches',
   'detail.subtaskOf': 'Sous-tâche de',
@@ -1756,6 +1757,9 @@ export const fr: Record<TranslationKey, string> = {
   'filter.anyTag': 'Tous les tags',
   'views.duplicateCurrent': 'Partir de la vue actuelle',
   'views.cancel': 'Annuler',
+  'table.resize': 'Redimensionner {name}',
+  'table.resizeHint': 'Glisser pour redimensionner, double-clic pour rétablir',
+  'table.wrap': 'Retour à la ligne des textes longs',
   'table.moveHint': 'Glissez la poignée, ou Alt avec les flèches haut et bas, pour réordonner.',
   'table.moveColumn': 'Déplacer {name}',
 };

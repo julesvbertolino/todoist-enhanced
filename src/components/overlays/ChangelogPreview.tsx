@@ -65,8 +65,6 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
         <div className="cv-progress-sidebar">{([['Website', 1, 3, 'purple'], ['Travel', 2, 2, 'blue'], ['Reading', 4, 0, 'green']] as const).map(([name, open, completed, color], i) => <div className={`cv-progress-project${i === 0 ? ' selected' : ''}`} key={name}><span className={`cv-progress-${color}`}><ProjectProgress open={open} completed={completed} label={name} /></span><span>{name}</span></div>)}</div>
         <div className="cv-progress-page"><div className="cv-progress-page-title"><span className="cv-progress-purple"><ProjectProgress open={1} completed={3} label="Website" /></span><b>Website</b></div><div className="cv-progress-task done"><i />Plan the pages</div><div className="cv-progress-task done"><i />Write the copy</div><div className="cv-progress-task done"><i />Choose the images</div><div className="cv-progress-task"><i />Publish the site</div></div>
       </div>; break;
-    case 'taskTags':
-      content = <>{title(say('Tags', 'Tags'))}<div className="cv-chips">{[['Design', 'purple'], [say('Waiting', 'En attente'), 'orange'], ['Client', 'green']].map(([name, tone]) => <span key={name} className={`cv-chip cv-tagchip ${tone}`}><Icon name="tag" size="sm" />{name}<Icon name="close" size="sm" /></span>)}</div></>; break;
     case 'darkAmoled':
       content = <div className="cv-amoled">{[['Classic', ''], ['AMOLED', ' black']].map(([label, tone]) => <div key={label} className={`cv-amoled-screen${tone}`}>
         <aside><i /><i /><i /></aside><main><b>{label}</b>{row(review, 'checkbox')}{row(task, 'checkbox')}<span className="cv-amoled-menu">Menu</span></main></div>)}</div>; break;

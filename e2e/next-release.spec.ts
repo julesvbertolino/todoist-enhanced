@@ -71,16 +71,21 @@ test('label rename preserves page settings and tasks, duplicate and reserved nam
 test('duration Enter normalizes input and confirms acceptance without closing the task', async ({ demo: page }) => {
   await seed(page); await go(page, 'search?q=release%20cafe');
   await rows(page).first().click();
-  const field = page.locator('[data-prop="estimate"] input');
-  await field.fill('1h30'); await field.press('Enter');
-  await expect(field).toHaveValue('1 h 30');
-  await expect(page.locator('[data-prop="estimate"] [role="status"]')).toHaveText('Input accepted');
+  const face = page.locator('[data-prop="estimate"] .fselect-face');
+  const field = page.locator('.durationpanel input');
+  await face.click();
   await expect(field).toBeFocused();
+  await field.fill('1h30'); await field.press('Enter');
+  await expect(face).toContainText('1 h 30');
+  await expect(page.locator('[data-prop="estimate"] [role="status"]')).toHaveText('Input accepted');
+  await expect(page.locator('.durationpanel')).toHaveCount(0);
+  await expect(page.locator('[data-prop="estimate"]')).toBeVisible();
+  await face.click();
   await field.fill('oops'); await field.press('Enter');
   await expect(field).toHaveAttribute('aria-invalid','true');
   await expect(page.locator('[data-prop="estimate"] [role="status"]')).toBeEmpty();
   await field.fill(''); await field.press('Enter');
-  await expect(field).toHaveValue('');
+  await expect(face).toContainText('Choose a duration');
 });
 test('recurring forecasts show load and open their source, without mutation controls', async ({ demo: page }) => {
   await seed(page); await go(page, 'upcoming');
@@ -129,7 +134,8 @@ test('queued duration stays pending and a refused write restores the previous va
       await original(id, args); useStore.setState({ pendingCount: 1 });
     } });
   });
-  const field = page.locator('[data-prop="estimate"] input');
+  await page.locator('[data-prop="estimate"] .fselect-face').click();
+  const field = page.locator('.durationpanel input');
   await field.fill('45'); await field.press('Enter');
   await expect(page.locator('[data-prop="estimate"] [role="status"]')).toHaveText('Saving…');
   await page.evaluate(async () => {
@@ -141,7 +147,7 @@ test('queued duration stays pending and a refused write restores the previous va
     useStore.setState({ pendingCount: 0, snapshot: { ...state.snapshot, items: { ...state.snapshot.items, [task?.id ?? id]: { ...task, labels: ['release-test'], duration: null } } } });
   });
   await expect(page.locator('[data-prop="estimate"] [role="status"]')).toHaveText('Could not save');
-  await expect(field).toHaveValue('');
+  await expect(page.locator('[data-prop="estimate"] .fselect-face')).toContainText('Choose a duration');
 });
 
 test('Insights exposes the contextual panel and its active state', async ({ demo: page }) => {

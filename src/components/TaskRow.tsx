@@ -238,6 +238,10 @@ export function TaskRow({
   const project = snapshot.projects[item.project_id];
   const parent = item.parent_id ? snapshot.items[item.parent_id] : undefined;
   const projectVisible = showProject && !(depth > 0 && parent?.project_id === item.project_id);
+  /* A table's columns may sit on either side of the title: those before it come ahead of the checkbox. */
+  const titleAt = table ? Math.max(0, table.columns.indexOf('title')) : 0;
+  const columnsBefore = table ? table.columns.slice(0, titleAt) : [];
+  const columnsAfter = table ? table.columns.slice(titleAt + 1) : [];
   const projectIcon = project ? readProjectIcon(project.description) : null;
   const preview = useMemo(() => checklistPreview(item.description), [item.description]);
   const section = (showSection || showProject) && item.section_id ? snapshot.sections[item.section_id] : undefined;
@@ -456,6 +460,8 @@ export function TaskRow({
           </span>
         )}
 
+        {table && columnsBefore.length > 0 && <TableCells item={item} hideProject={!projectVisible} columns={columnsBefore} childrenOf={childrenOf} />}
+
         {item.projection ? (
           <span className={`check forecast-check p${fields.priority ? priority : 4}`} role="checkbox" aria-checked="false" aria-disabled="true" aria-label={t('upcoming.projected')} onClick={(e) => e.stopPropagation()} />
         ) : uncompletable ? (
@@ -505,6 +511,13 @@ export function TaskRow({
             />
           )}
 
+          {table && parent && (
+            /* Todoist marks a subtask in its table; here the mark also says whose it is. */
+            <span className="parentchip" title={t('detail.subtaskOf') + ' ' + parent.content}>
+              <Icon name="subtask" size="sm" />
+              <span className="parentchip-name">{displayTaskContent(parent)}</span>
+            </span>
+          )}
           {table && subtaskPill}
           {table && <span className="meta"><TaskCommentBadge id={item.id} onOpen={onOpen} /></span>}
           {!table && <span className="meta">
@@ -528,7 +541,7 @@ export function TaskRow({
           </span>}
         </span>
 
-        {table && <TableCells item={item} hideProject={!projectVisible} columns={table.columns} childrenOf={childrenOf} />}
+        {table && <TableCells item={item} hideProject={!projectVisible} columns={columnsAfter} childrenOf={childrenOf} />}
         {!item.projection && <span className="trow-end">
           <TaskActions
             item={item}

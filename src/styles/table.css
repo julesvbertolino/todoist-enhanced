@@ -22,7 +22,7 @@
 .table-footer{padding:var(--s4) 12px;color:var(--muted);border-top:1px solid var(--border)}
 .task-table .trow-end{width:28px}.task-table .taskacts{right:0}
 @media(max-width:720px){
- .task-table .tmain,.table-head>div:first-of-type{position:sticky;left:0;background:var(--surface);z-index:2}
+ .task-table .tmain,.table-head>div.head-title{position:sticky;left:0;background:var(--surface);z-index:2}
  .task-table .task{grid-template-columns:var(--table-columns)}
 }
 
@@ -84,8 +84,6 @@
 .table-scroll .table-head{position:sticky;top:0;z-index:4;background:var(--surface);border-radius:var(--r-md) var(--r-md) 0 0}
 
 /* "Title" starts where the checkboxes do; "Add task" sits under them. */
-.table-head>div:first-of-type{grid-column:1 / 3}
-.table-head>div:first-of-type button{padding-left:0}
 .task-table .addline{padding-left:30px}
 
 /* Rows carry no buttons at their right edge; a task opens from its title. */
@@ -126,7 +124,6 @@
 .table-head .head-sort{display:inline-flex;align-items:center;gap:5px;width:auto;max-width:100%;min-width:0;flex:0 1 auto;cursor:pointer;touch-action:none;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:var(--r-sm)}
 .table-head .head-sort:hover{color:var(--text)}
-.table-head[class] > div:not(:first-of-type) .head-sort{padding-inline:6px;margin-left:-6px}
 .table-head .head-arrow{flex:none;color:var(--accent)}
 .table-head .head-arrow.desc{transform:rotate(180deg)}
 .table-head .head-dot{flex:none;width:6px;height:6px;border-radius:50%;background:var(--accent)}

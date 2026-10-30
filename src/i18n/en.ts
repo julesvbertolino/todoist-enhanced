@@ -524,6 +524,7 @@ export const en = {
   'task.movedTo': 'Moved to {destination}',
   'task.deleteConfirm': 'Delete "{name}"? Todoist keeps deleted tasks for seven days in its activity history.',
   'task.rescheduleAllConfirm': 'Move {count} overdue tasks to today?',
+  'task.estimateChoose': 'Choose a duration',
   'task.estimatePlaceholder': '15min, 1h…',
   'task.computedEstimate': 'Summed from subtasks',
   'detail.subtaskOf': 'Subtask of',
@@ -1756,6 +1757,9 @@ export const en = {
   'filter.anyTag': 'Any tag',
   'views.duplicateCurrent': 'Start from the current view',
   'views.cancel': 'Cancel',
+  'table.resize': 'Resize {name}',
+  'table.resizeHint': 'Drag to resize, double-click to reset',
+  'table.wrap': 'Wrap long text',
   'table.moveHint': 'Drag the handle, or Alt with the up and down arrows, to reorder.',
   'table.moveColumn': 'Move {name}',
 };

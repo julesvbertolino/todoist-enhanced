@@ -1,7 +1,7 @@
 import { expect, go, test } from './demo';
 
 test('secondary text has more contrast while hints and dark theme keep their colours', async ({ demo: page }) => {
-  await expect(page.locator('html')).toHaveCSS('--faint', '#737373');
+  await expect(page.locator('html')).toHaveCSS('--faint', '#6b6b6b');
   await page.getByRole('button', { name: 'Add task', exact: true }).first().click();
   await expect(page.locator('.composer-name')).toHaveCSS('color', /.+/);
   const placeholder = await page.locator('.composer-name').evaluate((input) => getComputedStyle(input, '::placeholder').color);
@@ -9,7 +9,7 @@ test('secondary text has more contrast while hints and dark theme keep their col
   await page.keyboard.press('Escape');
   await go(page, '#/settings');
   await page.getByRole('radio', { name: 'Dark', exact: true }).click();
-  expect((await page.locator('html').evaluate((root) => getComputedStyle(root).getPropertyValue('--faint'))).trim()).toBe('#8c8c8c');
+  expect((await page.locator('html').evaluate((root) => getComputedStyle(root).getPropertyValue('--faint'))).trim()).toBe('#999999');
 });
 
 test('project picker uses a short hint in English and French', async ({ demo: page }) => {

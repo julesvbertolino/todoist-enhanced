@@ -33,7 +33,7 @@ import {
 import { plainTitle, renderTitle, titleLinks } from '@/domain/markdown';
 import { parseShorthand, savedRefusals, type TextRange } from '@/domain/shorthand';
 import { dueForDate } from '@/domain/recurrence';
-import { EstimateField } from '../EstimateField';
+import { DurationField } from '../DurationField';
 import { TaskNameField } from '../TaskNameField';
 import { PlacementField } from '../PlacementField';
 import { CommentThread } from '../CommentThread';
@@ -1082,15 +1082,15 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
 
           <div className="prop" data-prop="estimate">
             <PropLabel name={t('detail.estimate')} prop="estimate" />
-            {/* The same field as everywhere else, so the unit is always beside
-                the number instead of being left to the reader to infer. */}
-            <EstimateField
+            {/* The same face as the date, the deadline and the project beside it; the chooser is the
+                one the row's menu opens, with the usual durations and a field for the others. */}
+            <DurationField
               minutes={computed ? null : minutes}
               pendingWrites={pendingWrites}
               placeholder={
                 computed && minutes !== null
                   ? `${formatDuration(minutes, locale)} · ${t('task.computedEstimate')}`
-                  : t('task.estimatePlaceholder')
+                  : t('task.estimateChoose')
               }
               onCommit={async (value) => {
                 await updateTask(item.id, { estimateMinutes: value });

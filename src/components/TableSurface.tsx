@@ -1,5 +1,5 @@
 import { useDataSnapshot } from '@/hooks/useDataSnapshot';
-import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import {
   DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent,
 } from '@dnd-kit/core';
@@ -13,7 +13,7 @@ import { useStore } from '@/store/store';
 import { useT } from '@/hooks/useT';
 import { sortItems } from '@/store/selectors';
 import { viewPrefs } from '@/store/prefs';
-import { dropTableColumn, tableColumns, tableColumnLabel, tableColumnSort } from '@/domain/table';
+import { clampColumnWidth, columnWidth, dropTableColumn, tableColumnIcon, tableColumns, tableColumnLabel, tableColumnSort } from '@/domain/table';
 import { effectiveEstimate, formatDuration } from '@/domain/estimates';
 import { insideOthers } from '@/domain/load';
 import type { Item, TableColumn, ViewPrefs } from '@/domain/types';
@@ -28,7 +28,18 @@ export function TableSurface({ groups, viewKey, childrenOf, onOpen }: {
   const setViewPrefs = useStore((s) => s.setViewPrefs);
   const current = viewPrefs(prefs, viewKey);
   const columns = tableColumns(current);
-  const widths = columns.slice(1).map((column) => column === 'description' ? '240px' : column === 'labels' || column === 'project' ? '160px' : column === 'assignee' ? '56px' : column === 'date' ? '140px' : column === 'deadline' ? '130px' : '110px');
+  /* A heading's edge can be pulled; while it is, the table follows the pointer and the choice is saved on release. */
+  const [live, setLive] = useState<{ column: TableColumn; width: number } | null>(null);
+  const widthOf = (column: TableColumn): number => live?.column === column ? live.width : columnWidth(current, column);
+  const titleSet = live?.column === 'title' || current.tableWidths?.title !== undefined;
+  const tracks = columns.map((column) => column === 'title'
+    ? `18px ${titleSet ? `${widthOf('title')}px` : 'minmax(var(--table-title-min,240px),var(--table-title-max,1fr))'}`
+    : `${widthOf(column)}px`);
+  const saveWidth = (column: TableColumn, width: number | null) => {
+    const next = { ...current.tableWidths };
+    if (width === null) delete next[column]; else next[column] = clampColumnWidth(width);
+    setViewPrefs(viewKey, { tableWidths: next });
+  };
   const scrollRef = useRef<HTMLDivElement>(null);
   /* Pressing a heading sorts by it, ascending then descending; its chevron opens
      the menu. A drag moves the column and does neither. */
@@ -61,11 +72,15 @@ export function TableSurface({ groups, viewKey, childrenOf, onOpen }: {
   return <TableContext.Provider value={{ columns, coloration: current.tableColoration ?? 'none' }}>
     <div ref={scrollRef} className="table-scroll fullwidth"
       style={room ? { maxHeight: room } : undefined}>
-      <div className="task-table" style={{ '--table-columns': `18px minmax(var(--table-title-min,240px),var(--table-title-max,1fr)) ${widths.join(' ')}`, minWidth: 306 + 12 * widths.length + widths.reduce((sum, width) => sum + parseInt(width), 0) } as CSSProperties}>
+      <div className={`task-table${current.tableWrap ? ' wrap' : ''}`}
+        style={{ '--table-columns': tracks.join(' '), minWidth: 60 + 12 * columns.length + columns.reduce((sum, column) => sum + (column === 'title' && !titleSet ? 240 : widthOf(column)), 0) } as CSSProperties}>
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={() => setMenu(null)} onDragEnd={onDragEnd}>
-          <SortableContext items={columns.slice(1)} strategy={horizontalListSortingStrategy}>
+          <SortableContext items={columns} strategy={horizontalListSortingStrategy}>
             <div className="table-head">{columns.map((column) => (
               <HeadCell key={column} column={column} open={menu?.column === column}
+                width={widthOf(column)} titleOffset={30}
+                onResizing={(width) => setLive(width === null ? null : { column, width })}
+                onResized={(width) => saveWidth(column, width)}
                 sort={tableColumnSort[column] === current.sort ? current.tableDescending ? 'descending' : 'ascending' : 'none'}
                 filtered={isFiltered(current, column)}
                 onSort={() => { if (!dragged.current) setViewPrefs(viewKey, { sort: tableColumnSort[column], tableDescending: tableColumnSort[column] === current.sort && !current.tableDescending }); }}
@@ -98,31 +113,69 @@ const isFiltered = (current: ViewPrefs, column: TableColumn): boolean =>
  * while a filter is on), opens the column's menu. The person icon stands alone
  * for the assignee column, with its name as a tooltip.
  */
-function HeadCell({ column, sort, open, filtered, onSort, onOpen }: {
+function HeadCell({ column, sort, open, filtered, width, titleOffset, onResizing, onResized, onSort, onOpen }: {
   column: TableColumn; sort: 'ascending' | 'descending' | 'none'; open: boolean; filtered: boolean;
+  width: number; titleOffset: number; onResizing: (width: number | null) => void; onResized: (width: number | null) => void;
   onSort: () => void; onOpen: (anchor: HTMLElement) => void;
 }) {
   const { t } = useT();
-  const movable = column !== 'title';
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: column, disabled: !movable });
+  const menuable = column !== 'title';
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: column });
   const name = t(tableColumnLabel[column]);
   const hint = t(sort === 'ascending' ? 'table.menu.sortDesc' : 'table.menu.sortAsc');
   return (
-    <div ref={setNodeRef} aria-sort={sort} className={`${isDragging ? 'head-dragging' : ''}${filtered ? ' head-filtered' : ''}${open ? ' head-open' : ''}`.trim() || undefined}
-      style={movable ? { transform: CSS.Translate.toString(transform), transition } : undefined}>
+    <div ref={setNodeRef} aria-sort={sort} className={`${column === 'title' ? 'head-title ' : ''}${isDragging ? 'head-dragging' : ''}${filtered ? ' head-filtered' : ''}${open ? ' head-open' : ''}`.trim() || undefined}
+      style={{ transform: CSS.Translate.toString(transform), transition }}>
       <button type="button" className="head-sort" aria-label={column === 'assignee' ? `${name}: ${hint}` : undefined} title={column === 'assignee' ? `${name} · ${hint}` : hint}
-        {...(movable ? { ...attributes, ...listeners } : {})} aria-roledescription={undefined}
+        {...attributes} {...listeners} aria-roledescription={undefined}
         onClick={onSort}>
-        {column === 'assignee' ? <Icon name="user" size="sm" /> : name}
+        <Icon name={tableColumnIcon[column]} size="sm" className="head-icon" />
+        {column !== 'assignee' && name}
         {sort !== 'none' && <Icon name="arrow-up" size="sm" className={`head-arrow${sort === 'descending' ? ' desc' : ''}`} />}
         {filtered && <span className="head-dot" aria-hidden="true" />}
       </button>
-      {movable && (
+      {menuable && (
         <button type="button" className="head-more" aria-haspopup="menu" aria-expanded={open} aria-label={`${t('table.menu.open')} (${name})`} title={t('table.menu.open')}
           onClick={(event) => onOpen(event.currentTarget)}>
           <Icon name="caret" size="sm" />
         </button>
       )}
+      <span className="head-resize" role="separator" aria-orientation="vertical" tabIndex={0}
+        aria-label={t('table.resize', { name })} title={t('table.resizeHint')}
+        aria-valuemin={56} aria-valuemax={640} aria-valuenow={Math.round(width)}
+        onPointerDown={(event: ReactPointerEvent<HTMLElement>) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const handle = event.currentTarget;
+          handle.setPointerCapture(event.pointerId);
+          const cell = handle.parentElement!;
+          /* The title's heading also covers the checkbox column. */
+          const start = column === 'title' ? cell.offsetWidth - titleOffset : cell.offsetWidth;
+          const from = event.clientX;
+          let latest = start;
+          const move = (e: PointerEvent) => { latest = clampColumnWidth(start + e.clientX - from); onResizing(latest); };
+          const stop = () => {
+            handle.removeEventListener('pointermove', move);
+            handle.removeEventListener('pointerup', stop);
+            handle.removeEventListener('pointercancel', stop);
+            onResizing(null);
+            if (latest !== start) onResized(latest);
+          };
+          handle.addEventListener('pointermove', move);
+          handle.addEventListener('pointerup', stop);
+          handle.addEventListener('pointercancel', stop);
+        }}
+        onClick={(event) => event.stopPropagation()}
+        onDoubleClick={() => onResized(null)}
+        onKeyDown={(event: KeyboardEvent<HTMLElement>) => {
+          if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+            event.preventDefault();
+            onResized(width + (event.key === 'ArrowRight' ? 16 : -16));
+          } else if (event.key === 'Delete' || event.key === 'Backspace') {
+            event.preventDefault();
+            onResized(null);
+          }
+        }} />
     </div>
   );
 }
