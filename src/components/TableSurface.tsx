@@ -120,6 +120,8 @@ function HeadCell({ column, sort, open, filtered, width, minWidth, titleOffset, 
   onSort: () => void; onOpen: (anchor: HTMLElement) => void;
 }) {
   const { t } = useT();
+  /* A double-click gives a column its width back, but not the end of a drag, nor a drag begun a moment after another. */
+  const pulled = useRef(false);
   const menuable = column !== 'title';
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: column });
   const name = t(tableColumnLabel[column]);
@@ -148,13 +150,14 @@ function HeadCell({ column, sort, open, filtered, width, minWidth, titleOffset, 
           event.preventDefault();
           event.stopPropagation();
           const handle = event.currentTarget;
+          pulled.current = false;
           handle.setPointerCapture(event.pointerId);
           const cell = handle.parentElement!;
           /* The title's heading also covers the checkbox column. */
           const start = column === 'title' ? cell.offsetWidth - titleOffset : cell.offsetWidth;
           const from = event.clientX;
           let latest = start;
-          const move = (e: PointerEvent) => { latest = Math.max(minWidth, clampColumnWidth(start + e.clientX - from)); onResizing(latest); };
+          const move = (e: PointerEvent) => { pulled.current = true; latest = Math.max(minWidth, clampColumnWidth(start + e.clientX - from)); onResizing(latest); };
           const stop = () => {
             handle.removeEventListener('pointermove', move);
             handle.removeEventListener('pointerup', stop);
@@ -167,7 +170,7 @@ function HeadCell({ column, sort, open, filtered, width, minWidth, titleOffset, 
           handle.addEventListener('pointercancel', stop);
         }}
         onClick={(event) => event.stopPropagation()}
-        onDoubleClick={() => onResized(null)}
+        onDoubleClick={() => { if (!pulled.current) onResized(null); }}
         onKeyDown={(event: KeyboardEvent<HTMLElement>) => {
           if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
             event.preventDefault();
