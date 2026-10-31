@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { Icon } from './Icon';
-import { ProjectIcon } from './ProjectIconPicker';
+import { ProjectIcon } from './ProjectIcon';
 import { readProjectIcon } from '@/domain/projectIcons';
 import type { Filter } from '@/domain/types';
 

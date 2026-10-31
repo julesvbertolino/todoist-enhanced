@@ -8,6 +8,10 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.26.0
+
+🎨 **Les gros comptes s’allègent.** Cocher ou modifier une tâche dans une longue liste, ou recevoir une mise à jour de Todoist, ne redessine plus toutes les autres lignes. L’app charge aussi moins de code au démarrage : les gros projets et Ma semaine restent réactifs.
+
 ## 2.25.0
 
 🆕 **Organisez votre table à votre façon.** Tirez le bord d’un en-tête pour redimensionner une colonne, et déplacez n’importe laquelle, le titre compris, où vous voulez. Chaque en-tête a son icône, et un réglage d’Affichage passe à la ligne les titres et descriptions longs au lieu de les couper.

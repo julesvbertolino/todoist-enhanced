@@ -13,6 +13,7 @@ import {
   StatTile, seriesColor, type BarDatum, type ContributionDatum,
   type SliceDatum,
 } from '@/components/charts';
+import { intlDate } from '@/lib/intl';
 import { DashboardGrid, type DashboardCardSpec } from '@/components/DashboardCards';
 import { cutLogbook, LOG_GROUPS, LOG_SORTS, type LogGroup, type LogSort } from '@/domain/logbook';
 import { useT } from '@/hooks/useT';
@@ -245,7 +246,7 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
       const key = format(at, 'yyyy-MM-dd');
       return {
         key,
-        label: new Intl.DateTimeFormat(intl, { day: 'numeric', month: 'short' }).format(at),
+        label: intlDate(intl, { day: 'numeric', month: 'short' }).format(at),
         value: counts.get(key) ?? 0,
       } satisfies ContributionDatum;
     });
@@ -322,7 +323,7 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
                 : t('insights.noHistory'))
               : (bestDay
                 ? t('insights.bestDay', {
-                  day: new Intl.DateTimeFormat(intl, { weekday: 'long', day: 'numeric', month: 'short' }).format(new Date(`${bestDay.date}T12:00:00`)),
+                  day: intlDate(intl, { weekday: 'long', day: 'numeric', month: 'short' }).format(new Date(`${bestDay.date}T12:00:00`)),
                   tasks: tasksLabel(bestDay.count),
                 })
                 : t('insights.noHistory'))}
@@ -577,9 +578,9 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
 
 function bucketLabel(at: Date, grain: Grain, intl: string, weekday = false): string {
   if (grain === 'month') {
-    return new Intl.DateTimeFormat(intl, { month: 'short' }).format(at);
+    return intlDate(intl, { month: 'short' }).format(at);
   }
-  return new Intl.DateTimeFormat(
+  return intlDate(
     intl,
     weekday ? { weekday: 'short' } : { day: 'numeric', month: 'short' },
   ).format(at);
@@ -653,7 +654,7 @@ function Logbook({ completed, onOpen }: { completed: CompletedItem[]; onOpen?: (
       : cut.priority !== null
         ? `P${cut.priority}`
         : cut.at !== null && group === 'month'
-          ? new Intl.DateTimeFormat(locale === 'fr' ? 'fr-FR' : 'en-GB', { month: 'long', year: 'numeric' }).format(cut.at)
+          ? intlDate(locale === 'fr' ? 'fr-FR' : 'en-GB', { month: 'long', year: 'numeric' }).format(cut.at)
           : cut.at !== null ? formatRelativeDay(cut.at, locale) : '—';
     return { ...cut, title };
   }), [filtered, group, sort, snapshot.projects, locale]);

@@ -1,7 +1,7 @@
 {
   "name": "todoist-enhancements",
   "private": true,
-  "version": "2.25.0",
+  "version": "2.26.0",
   "engines": {
     "node": ">=20"
   },
@@ -11,6 +11,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "icons": "node scripts/make-icons.mjs",
+    "check:bundle": "node scripts/check-bundle.mjs",
     "package": "npm run build && node scripts/package.mjs",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",

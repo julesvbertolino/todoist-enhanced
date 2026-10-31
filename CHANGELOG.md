@@ -40,6 +40,10 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.26.0
+
+🎨 **Large accounts feel lighter.** Ticking or editing a task in a long list, or an update arriving from Todoist, no longer redraws every other row. The app also loads less code when it starts, so big projects and My week stay responsive.
+
 ## 2.25.0
 
 🆕 **Arrange your table your way.** Drag the edge of a heading to resize a column, and move any column, the title included, where you want it. Every heading now has an icon, and a Display switch wraps long titles and descriptions instead of cutting them.
