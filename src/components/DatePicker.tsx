@@ -3,6 +3,7 @@ import {
   addDays, addMonths, addYears, endOfWeek, format, isSameDay, isSameMonth, nextMonday,
   startOfDay, startOfMonth, startOfWeek,
 } from 'date-fns';
+import { intlDate } from '@/lib/intl';
 import { Icon, type IconName } from './Icon';
 import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
@@ -229,7 +230,7 @@ export function DatePicker({
   }, [month, weekStartsOn]);
   const weekdays = useMemo(() => {
     const first = startOfWeek(new Date(), { weekStartsOn });
-    const fmt = new Intl.DateTimeFormat(locale, { weekday: 'narrow' });
+    const fmt = intlDate(locale, { weekday: 'narrow' });
     return Array.from({ length: 7 }, (_, offset) => fmt.format(addDays(first, offset)));
   }, [locale, weekStartsOn]);
 
@@ -496,7 +497,7 @@ export function DatePicker({
             <Icon name="arrow-left" size="sm" />
           </button>
           <strong>
-            {new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(month)}
+            {intlDate(locale, { month: 'long', year: 'numeric' }).format(month)}
           </strong>
           <button
             type="button"
@@ -671,7 +672,7 @@ function FootRow({ buttonRef, icon, label, value, clearLabel, onOpen, onClear }:
 
 /** "Tue 29 Sep": the day a quick choice lands on, short enough for the end of its line. */
 export const shortDay = (day: Date, locale: 'en' | 'fr'): string =>
-  new Intl.DateTimeFormat(locale === 'fr' ? 'fr-FR' : 'en-GB', {
+  intlDate(locale === 'fr' ? 'fr-FR' : 'en-GB', {
     weekday: 'short', day: 'numeric', month: 'short',
   }).format(day).replace(/,/g, '');
 

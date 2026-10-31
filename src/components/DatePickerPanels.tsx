@@ -11,6 +11,7 @@ import {
   anchorAllowed, buildRule, readClock, weekdayOrder, weekOfMonth,
   type MonthlyAnchor, type RepeatRule, type RepeatUnit,
 } from '@/domain/repeatRule';
+import { intlDate } from '@/lib/intl';
 
 /* The keys the row or the list behind a picker also listen to: inside a
    panel they belong to the field or the button they are pressed on. */
@@ -269,9 +270,9 @@ const preset = (patch: Partial<RepeatRule>, time: string | null): RepeatRule => 
  */
 export function RepeatPresets({ start, time, current, onApply, onCustom, onStop }: RepeatPresetsProps) {
   const { t, locale } = useT();
-  const weekday = new Intl.DateTimeFormat(intl(locale), { weekday: 'long' }).format(start);
+  const weekday = intlDate(intl(locale), { weekday: 'long' }).format(start);
   const monthDay = locale === 'fr' ? (start.getDate() === 1 ? '1er' : String(start.getDate())) : ordinalEn(start.getDate());
-  const dayMonth = new Intl.DateTimeFormat(intl(locale), { day: 'numeric', month: 'long' }).format(start);
+  const dayMonth = intlDate(intl(locale), { day: 'numeric', month: 'long' }).format(start);
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { listRef.current?.querySelector<HTMLButtonElement>('button')?.focus(); }, []);
@@ -386,7 +387,7 @@ export function RepeatDialog({ start, initial, replaces, onApply, onCancel }: Re
   const canApply = !endProblem && !(ends && !end);
 
   const weekdayName = (day: number, style: 'long' | 'narrow') =>
-    new Intl.DateTimeFormat(intl(locale), { weekday: style }).format(new Date(2026, 9, 11 + day)); // 11 Oct 2026 is a Sunday
+    intlDate(intl(locale), { weekday: style }).format(new Date(2026, 9, 11 + day)); // 11 Oct 2026 is a Sunday
   const nth = weekOfMonth(start);
   const ordinal = locale === 'fr' ? (nth === 1 ? '1er' : `${nth}e`) : ordinalEn(nth);
   const monthLabel: Record<MonthlyAnchor, string> = {
@@ -398,7 +399,7 @@ export function RepeatDialog({ start, initial, replaces, onApply, onCancel }: Re
       : t('repeat.monthWeekday', { nth: ordinal, weekday: weekdayName(start.getDay(), 'long') }),
     lastDay: t('repeat.monthLastDay'),
   };
-  const yearDay = new Intl.DateTimeFormat(intl(locale), { day: 'numeric', month: 'long' }).format(start);
+  const yearDay = intlDate(intl(locale), { day: 'numeric', month: 'long' }).format(start);
   const unitWord = (unit: RepeatUnit) =>
     t(`repeat.${unit}.${rule.interval > 1 ? 'other' : 'one'}` as 'repeat.day.one');
 

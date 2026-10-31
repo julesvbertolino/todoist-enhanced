@@ -2,11 +2,12 @@ import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from './Icon';
 import { useT } from '@/hooks/useT';
+import { intlDate } from '@/lib/intl';
 
 export function CalendarDayPopover({ anchor, day, onClose, children }: { anchor: HTMLElement; day: Date; onClose: () => void; children: ReactNode }) {
   const { locale, t } = useT();
   const ref = useRef<HTMLDivElement>(null);
-  const title = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long' }).format(day);
+  const title = intlDate(locale, { weekday: 'long', day: 'numeric', month: 'long' }).format(day);
   useLayoutEffect(() => {
     const panel = ref.current;
     if (!panel) return;

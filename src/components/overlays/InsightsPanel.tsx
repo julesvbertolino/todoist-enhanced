@@ -17,6 +17,7 @@ import { isOverdue, overdueBy } from '@/domain/dates';
 import type { Item } from '@/domain/types';
 import type { TranslationKey } from '@/i18n';
 import { plainTitle } from '@/domain/markdown';
+import { intlDate } from '@/lib/intl';
 
 interface InsightsPanelProps {
   open: boolean;
@@ -96,7 +97,7 @@ export function InsightsPanel({
       const key = format(at, 'yyyy-MM-dd');
       return {
         key,
-        label: new Intl.DateTimeFormat(intl, { weekday: 'short' }).format(at),
+        label: intlDate(intl, { weekday: 'short' }).format(at),
         value: counts.get(key) ?? 0,
         current: key === today,
       };

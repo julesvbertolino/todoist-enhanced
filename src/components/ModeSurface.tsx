@@ -19,6 +19,7 @@ import { Droppable } from './dnd/Droppable';
 import { RowListContext } from './dnd/RowList';
 import type { DropTarget, RowOrder } from '@/domain/dnd';
 import type { TranslationKey } from '@/i18n';
+import { intlDate } from '@/lib/intl';
 
 interface ModeSurfaceProps {
   items: Item[];
@@ -109,11 +110,11 @@ function useGrouped(props: ModeSurfaceProps) {
         if (weeks === 0) return t('group.thisWeek');
         if (weeks === 1) return t('date.nextWeek');
         return t('group.weekOf', {
-          date: new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(monday),
+          date: intlDate(locale, { day: 'numeric', month: 'short' }).format(monday),
         });
       },
       month: (first) => {
-        const name = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(first);
+        const name = intlDate(locale, { month: 'long', year: 'numeric' }).format(first);
         return name.charAt(0).toUpperCase() + name.slice(1);
       },
       year: (first) => String(first.getFullYear()),

@@ -16,6 +16,7 @@ import type { Project } from '@/domain/types';
 import { markerStyle } from '@/domain/colors';
 import { Icon } from '@/components/Icon';
 import { projectTree, type ProjectNode } from '@/store/selectors';
+import { intlDate } from '@/lib/intl';
 
 interface WorkspaceExtra { archive?: Project[]; members?: WorkspaceMember[]; projects?: Project[]; counts?: Record<string, number>; weeks?: Record<string, number[]> }
 export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
@@ -96,7 +97,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
   const members = (demo ? [{ user_id: 'demo-user', full_name: snapshot.user?.full_name ?? 'Sam', user_email: snapshot.user?.email ?? '', role: 'ADMIN' }, { user_id: 'demo-alex', full_name: 'Alex Martin', user_email: 'alex@example.com', role: 'MEMBER' }] : extra.members)?.filter((member) => !member.is_deleted);
   const weeks = demo ? weeklyCompletions(buildDemoCompleted(locale), new Date()) : extra.weeks;
   const now = new Date();
-  const dateFormat = new Intl.DateTimeFormat(locale === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  const dateFormat = intlDate(locale === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   const rows = entries.map(({ project, depth, projectCount }) => {
     const items = Object.values(snapshot.items).filter((item) => item.project_id === project.id && !item.is_deleted);
     const active = snapshot.projects[project.id] ? items.filter((item) => !item.checked).length : undefined;
