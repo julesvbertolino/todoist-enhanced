@@ -618,10 +618,12 @@ function SubtaskRow(props: TaskRowProps) {
   const { setNodeRef, attributes, listeners, isDragging } = useDraggable({
     id: `${SUBTASK_DRAG_PREFIX}${props.item.id}`,
   });
+  /* Stable, as in DraggableTask: new handlers on every render would redraw the subtask each time (#364). */
+  const handleProps = useMemo(() => ({ ...attributes, ...listeners }), [attributes, listeners]);
   return (
     <TaskRow
       {...props}
-      dragHandleProps={{ ...attributes, ...listeners }}
+      dragHandleProps={handleProps}
       dragRef={setNodeRef}
       lifted={isDragging}
     />
