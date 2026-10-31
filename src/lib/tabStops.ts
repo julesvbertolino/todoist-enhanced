@@ -28,16 +28,36 @@ function untab(root: ParentNode) {
   });
 }
 
+/** A node that has just arrived: itself if it is one of those controls, and what it holds. */
+function untabAdded(node: Element) {
+  if (node.matches(IN_LISTS) && (node as HTMLElement).tabIndex !== -1) (node as HTMLElement).tabIndex = -1;
+  untab(node);
+}
+
+/*
+ * Only what arrived is looked at. Scanning the whole document after every
+ * change costs tens of milliseconds on a long list, and a list changes all the
+ * time (#364).
+ */
 export function startTabStops(): () => void {
   if (typeof document === 'undefined') return () => {};
+  const added = new Set<Element>();
   let queued = false;
-  const run = () => { queued = false; untab(document); };
-  const observer = new MutationObserver(() => {
-    if (queued) return;
+  const run = () => {
+    queued = false;
+    const nodes = [...added];
+    added.clear();
+    for (const node of nodes) if (node.isConnected) untabAdded(node);
+  };
+  const observer = new MutationObserver((records) => {
+    for (const record of records) {
+      record.addedNodes.forEach((node) => { if (node.nodeType === Node.ELEMENT_NODE) added.add(node as Element); });
+    }
+    if (queued || added.size === 0) return;
     queued = true;
     requestAnimationFrame(run);
   });
   observer.observe(document.body, { childList: true, subtree: true });
-  run();
+  untab(document);
   return () => observer.disconnect();
 }

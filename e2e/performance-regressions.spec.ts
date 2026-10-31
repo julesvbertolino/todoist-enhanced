@@ -1,4 +1,4 @@
-import { expect, go, test } from './demo';
+import { expect, go, oneOffTitles, row, test } from './demo';
 
 test('Review stops mutating classes while idle', async ({ demo: page }) => {
   await go(page, '#/review');
@@ -122,4 +122,21 @@ test('emoji picker loads the needed language and keeps bilingual French search',
   await search.fill('coeur');
   await expect(page.locator('.emojipalette [role="option"]').first()).toBeVisible();
   await expect.poll(() => requests.some((url) => url.includes('/fr/compact.json'))).toBe(true);
+});
+
+test('buttons inside lists stay out of the tab order, in rows that arrive later too', async ({ demo: page }) => {
+  const stray = () => page.evaluate(() => Array.from(document.querySelectorAll<HTMLElement>('.screen .task button, .screen .taskwrap button'))
+    .filter((button) => button.tabIndex !== -1).length);
+  await go(page, '#/upcoming');
+  await expect.poll(stray).toBe(0);
+  await go(page, '#/project/home');
+  await expect.poll(stray).toBe(0);
+  // A row that comes back after the page was drawn: ticked, then undone.
+  const [title] = await oneOffTitles(page);
+  await row(page, title).getByRole('checkbox', { name: 'Complete task' }).click();
+  await expect(row(page, title)).toHaveCount(0);
+  await page.locator('body').click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(row(page, title)).toBeVisible();
+  await expect.poll(stray).toBe(0);
 });
