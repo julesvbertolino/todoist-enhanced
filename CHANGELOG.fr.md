@@ -8,6 +8,10 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.26.0
+
+🎨 **Les longues listes s’ouvrent plus vite.** Les projets, Ma semaine et À venir qui comptent des centaines de tâches ne dessinent plus que les lignes proches de l’écran : ils s’ouvrent et défilent plus souplement. L’app charge aussi moins de code au démarrage et écrit les dates plus vite.
+
 ## 2.25.0
 
 🆕 **Organisez votre table à votre façon.** Tirez le bord d’un en-tête pour redimensionner une colonne, et déplacez n’importe laquelle, le titre compris, où vous voulez. Chaque en-tête a son icône, et un réglage d’Affichage passe à la ligne les titres et descriptions longs au lieu de les couper.

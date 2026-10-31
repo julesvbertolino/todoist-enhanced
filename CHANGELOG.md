@@ -40,6 +40,10 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.26.0
+
+🎨 **Long lists open faster.** Projects, My week and Upcoming with hundreds of tasks now draw only the rows near the screen, so they open and scroll more smoothly. The app also loads less code when it starts, and writes dates faster.
+
 ## 2.25.0
 
 🆕 **Arrange your table your way.** Drag the edge of a heading to resize a column, and move any column, the title included, where you want it. Every heading now has an icon, and a Display switch wraps long titles and descriptions instead of cutting them.

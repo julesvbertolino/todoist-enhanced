@@ -8,7 +8,7 @@ import { fetchProjectCounts, fetchWorkspaceArchive, fetchWorkspaceCollection, up
 import { fetchCompleted } from '@/api/completed';
 import { elapsed, weeklyCompletions, weeksStart } from '@/domain/workspaceStats';
 import { WorkspaceAvatar } from '@/components/WorkspaceFilter';
-import { ProjectIcon } from '@/components/ProjectIconPicker';
+import { ProjectIcon } from '@/components/ProjectIcon';
 import { readProjectIcon } from '@/domain/projectIcons';
 import { loadPrefs, savePrefs } from '@/db/idb';
 import type { TranslationKey } from '@/i18n';

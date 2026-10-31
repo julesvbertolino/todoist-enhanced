@@ -11,7 +11,7 @@ import { dateTone, isOverdue } from '@/domain/dates';
 import { toDisplayPriority, toTodoistPriority, type Item, type TableColumn, type DisplayPriority } from '@/domain/types';
 import { tableColumnLabel } from '@/domain/table';
 import { markerStyle } from '@/domain/colors';
-import { ProjectIcon } from './ProjectIconPicker';
+import { ProjectIcon } from './ProjectIcon';
 import { AssigneeField } from './AssigneeField';
 import { PersonAvatar } from './PersonAvatar';
 import { assignees } from '@/domain/sharing';

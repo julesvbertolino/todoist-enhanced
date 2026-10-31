@@ -7,7 +7,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { Fragment, createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from './Icon';
 import { ProgressRing } from './ProgressRing';
-import { ProjectIcon } from './ProjectIconPicker';
+import { ProjectIcon } from './ProjectIcon';
 import { readProjectIcon } from '@/domain/projectIcons';
 import { checklistPreview } from '@/domain/checklist';
 import { useRowTarget } from './dnd/useRowTarget';

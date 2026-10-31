@@ -3,7 +3,7 @@ import { Overlay } from './Overlay';
 import { useConfirm } from './Confirm';
 import { COLOUR_CHOICES } from './ProjectSheet';
 import { Icon } from '../Icon';
-import { ProjectIcon, ProjectIconGrid } from '../ProjectIconPicker';
+import { ProjectIcon, ProjectIconGrid } from '../ProjectIcon';
 import { readProjectIcon, stripProjectIcon, withProjectIcon } from '@/domain/projectIcons';
 import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
