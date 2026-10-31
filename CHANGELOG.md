@@ -42,7 +42,7 @@ translation lives in CHANGELOG.fr.md.
 
 ## 2.26.0
 
-🎨 **Long lists open faster.** Projects, My week and Upcoming with hundreds of tasks now draw only the rows near the screen, so they open and scroll more smoothly. The app also loads less code when it starts, and writes dates faster.
+🎨 **Large accounts feel lighter.** Ticking or editing a task in a long list, or an update arriving from Todoist, no longer redraws every other row. The app also loads less code when it starts, so big projects and My week stay responsive.
 
 ## 2.25.0
 

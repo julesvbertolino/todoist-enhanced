@@ -10,7 +10,7 @@ Chaque ligne est marquée :
 
 ## 2.26.0
 
-🎨 **Les longues listes s’ouvrent plus vite.** Les projets, Ma semaine et À venir qui comptent des centaines de tâches ne dessinent plus que les lignes proches de l’écran : ils s’ouvrent et défilent plus souplement. L’app charge aussi moins de code au démarrage et écrit les dates plus vite.
+🎨 **Les gros comptes s’allègent.** Cocher ou modifier une tâche dans une longue liste, ou recevoir une mise à jour de Todoist, ne redessine plus toutes les autres lignes. L’app charge aussi moins de code au démarrage : les gros projets et Ma semaine restent réactifs.
 
 ## 2.25.0
 
