@@ -1,10 +1,9 @@
-import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { TaskCommentBadge } from './TaskCommentBadge';
 import { tableRowColor } from '@/domain/table';
 import { TableContext } from './TableContext';
 import { TableCells } from './TableCells';
 import { useDraggable } from '@dnd-kit/core';
-import { Fragment, createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, createContext, useContext, memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from './Icon';
 import { ProgressRing } from './ProgressRing';
 import { ProjectIcon } from './ProjectIcon';
@@ -81,7 +80,7 @@ interface TaskRowProps {
   lifted?: boolean;
 }
 
-export function TaskRow({
+function TaskRowView({
   item, childrenOf, onOpen, depth = 0, showProject = true, showSection = false, dust = false, dragHandleProps,
   nestable = false, dragRef, lifted = false,
 }: TaskRowProps) {
@@ -157,7 +156,12 @@ export function TaskRow({
     return () => node.removeEventListener(ROW_MOVE_EVENT, onMove);
   }, [item.id, item.parent_id, list, childrenOf]);
   const { t, locale } = useT();
-  const snapshot = useDataSnapshot();
+  /* Narrow reads: a row follows its own project, parent, section and the tag
+     colours, so a change elsewhere in the account leaves it alone (#364). */
+  const project = useStore((s) => s.snapshot.projects[item.project_id]);
+  const parent = useStore((s) => (item.parent_id ? s.snapshot.items[item.parent_id] : undefined));
+  const section = useStore((s) => ((showSection || showProject) && item.section_id ? s.snapshot.sections[item.section_id] : undefined));
+  const labels = useStore((s) => s.snapshot.labels);
   const hour12 = useStore((s) => s.prefs.hour12);
   const toggleTask = useStore((s) => s.toggleTask);
   const keepInSomeday = useStore((s) => s.keepInSomeday);
@@ -235,8 +239,6 @@ export function TaskRow({
   const due = dueDate(item);
   const deadline = deadlineDate(item);
   const late = isOverdue(item);
-  const project = snapshot.projects[item.project_id];
-  const parent = item.parent_id ? snapshot.items[item.parent_id] : undefined;
   const projectVisible = showProject && !(depth > 0 && parent?.project_id === item.project_id);
   /* A table's columns may sit on either side of the title: those before it come ahead of the checkbox. */
   const titleAt = table ? Math.max(0, table.columns.indexOf('title')) : 0;
@@ -244,7 +246,6 @@ export function TaskRow({
   const columnsAfter = table ? table.columns.slice(titleAt + 1) : [];
   const projectIcon = project ? readProjectIcon(project.description) : null;
   const preview = useMemo(() => checklistPreview(item.description), [item.description]);
-  const section = (showSection || showProject) && item.section_id ? snapshot.sections[item.section_id] : undefined;
 
   /**
    * The DOM is the final truth about range order.
@@ -280,9 +281,9 @@ export function TaskRow({
      stores names, and the colour lives on the label, which is the lookup. */
   const labelColours = useMemo(() => {
     const byName = new Map<string, string>();
-    for (const label of Object.values(snapshot.labels)) byName.set(label.name, label.color);
+    for (const label of Object.values(labels)) byName.set(label.name, label.color);
     return byName;
-  }, [snapshot.labels]);
+  }, [labels]);
 
   const lateDays = late ? overdueBy(item) : 0;
   const lateness = lateDays >= 2 ? lateLabel(lateDays, t) : null;
@@ -569,6 +570,37 @@ export function TaskRow({
     </>
   );
 }
+
+/** True when the task and everything under it, as `before` and `after` list it, is the same set of tasks. */
+function sameTree(id: string, before: (id: string) => Item[], after: (id: string) => Item[]): boolean {
+  const a = before(id);
+  const b = after(id);
+  if (a === b) return true;
+  if (a.length !== b.length) return false;
+  return a.every((child, at) => child === b[at] && sameTree(child.id, before, after));
+}
+
+/**
+ * A row redraws when its own task, the tasks under it, its siblings or what it
+ * was handed change, not when the page around it does (#364). The function that
+ * lists children is new with every change to the account, so it is compared by
+ * what it answers for this row rather than by identity.
+ */
+export function sameRow(before: TaskRowProps, after: TaskRowProps): boolean {
+  for (const key of Object.keys(after) as (keyof TaskRowProps)[]) {
+    if (key !== 'childrenOf' && before[key] !== after[key]) return false;
+  }
+  if (Object.keys(before).length !== Object.keys(after).length) return false;
+  if (before.childrenOf === after.childrenOf) return true;
+  const parent = after.item.parent_id;
+  const siblings = (parent ? before.childrenOf(parent) : []);
+  const siblingsNow = (parent ? after.childrenOf(parent) : []);
+  return sameTree(after.item.id, before.childrenOf, after.childrenOf)
+    && siblings.length === siblingsNow.length
+    && siblings.every((sibling, at) => sibling === siblingsNow[at]);
+}
+
+export const TaskRow = memo(TaskRowView, sameRow);
 
 export { SUBTASK_DRAG_PREFIX };
 

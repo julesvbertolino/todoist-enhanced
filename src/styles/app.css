@@ -1376,9 +1376,3 @@ kbd{padding:2px 5px;border:1px solid var(--border-strong);border-radius:var(--r-
 .dash-layout-edit:is(:hover, :focus-visible, .is-editing) .edit-layout-label { max-width: 180px; opacity: 1; margin-left: 8px; }
 .dashboard-layout-tools { display: flex; justify-content: flex-end; margin-bottom: 12px; }
 @media (prefers-reduced-motion: reduce) { .dash-layout-edit .edit-layout-label { transition: none; } }
-
-/* A long list paints only the rows near the screen: the browser skips the
-   layout and paint of the others and keeps a placeholder of about one row.
-   Text stays searchable with Cmd+F. Each row, its subtasks included, is one
-   unit, and the margin keeps the drag handle that sits left of it (#365). */
-.group > .taskwrap{content-visibility:auto;contain-intrinsic-size:auto 80px;overflow-clip-margin:40px}

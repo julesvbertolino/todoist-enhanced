@@ -1,4 +1,3 @@
-import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { Icon } from './Icon';
 import { DateField } from './DateField';
 import { DurationField } from './DurationField';
@@ -20,7 +19,10 @@ import { readProjectIcon } from '@/domain/projectIcons';
 /** Inline values use the same controls and store commands as task details. */
 export function TableCells({ item, columns, childrenOf, hideProject = false }: { hideProject?: boolean; item: Item; columns: TableColumn[]; childrenOf: (id: string) => Item[] }) {
   const { t, locale } = useT();
-  const snapshot = useDataSnapshot();
+  const allLabels = useStore((s) => s.snapshot.labels);
+  const allProjects = useStore((s) => s.snapshot.projects);
+  const allSections = useStore((s) => s.snapshot.sections);
+  const alone = useStore((s) => Boolean(s.snapshot.projects[item.project_id]?.inbox_project) || (!item.responsible_uid && assignees(s.snapshot, item.project_id).length === 0));
   const updateTask = useStore((s) => s.updateTask);
   const assignTask = useStore((s) => s.assignTask);
   const setEstimates = useStore((s) => s.setEstimates);
@@ -52,18 +54,18 @@ export function TableCells({ item, columns, childrenOf, hideProject = false }: {
         ? <span className="cell-tags">{(() => {
           const names = item.labels.filter((label) => !label.startsWith('est-'));
           return <>{names.slice(0, 2).map((label) => <span className="tag" key={label}
-            style={markerStyle(Object.values(snapshot.labels).find((entry) => entry.name === label)?.color)}><Icon name="tag" size="sm" />{label}</span>)}
+            style={markerStyle(Object.values(allLabels).find((entry) => entry.name === label)?.color)}><Icon name="tag" size="sm" />{label}</span>)}
           {/* In a narrow column the second tag gives way to a count that includes it (see .table-labels). */}
           {names.length > 2 && <span className="tag-more tag-more-wide">+{names.length - 2}</span>}
           {names.length > 1 && <span className="tag-more tag-more-narrow">+{names.length - 1}</span>}</>;
         })()}</span>
         : <span className="cell-tags is-none"><Icon name="plus" size="sm" /></span>}
-      options={Object.values(snapshot.labels).filter((label) => !label.is_deleted && !label.name.startsWith('est-')).map((label) => ({ value: label.name, label: label.name }))}
+      options={Object.values(allLabels).filter((label) => !label.is_deleted && !label.name.startsWith('est-')).map((label) => ({ value: label.name, label: label.name }))}
       onChange={(labels) => void setTaskLabels(item.id, [...item.labels.filter((label) => label.startsWith('est-')),
-        ...(labels ?? Object.values(snapshot.labels).filter((label) => !label.is_deleted && !label.name.startsWith('est-')).map((label) => label.name))])} />;
+        ...(labels ?? Object.values(allLabels).filter((label) => !label.is_deleted && !label.name.startsWith('est-')).map((label) => label.name))])} />;
     else if (column === 'project') {
-      const project = snapshot.projects[item.project_id];
-      const section = item.section_id ? snapshot.sections[item.section_id] : undefined;
+      const project = allProjects[item.project_id];
+      const section = item.section_id ? allSections[item.section_id] : undefined;
       const projectIcon = project ? readProjectIcon(project.description) : null;
       content = project && !hideProject ? (
         <span className="meta"><span className="proj" style={markerStyle(project.color)} title={section ? `${project.name} / ${section.name}` : project.name}>
@@ -74,8 +76,6 @@ export function TableCells({ item, columns, childrenOf, hideProject = false }: {
     }
     else if (column === 'assignee') {
       /* The picker is the task window's own. A project nobody else is in has nobody to pick, and shows the plain unassigned mark. */
-      const inbox = snapshot.projects[item.project_id]?.inbox_project;
-      const alone = inbox || (!item.responsible_uid && assignees(snapshot, item.project_id).length === 0);
       content = alone ? <span className="assign-alone" title={t('table.assignNeedsShare')}><PersonAvatar id={null} /></span> : <AssigneeField projectId={item.project_id} value={item.responsible_uid}
         onChange={(next) => void assignTask(item.id, next)} iconOnly />;
     }
