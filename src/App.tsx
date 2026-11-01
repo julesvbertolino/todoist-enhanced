@@ -310,6 +310,13 @@ export function App() {
   /* The task the full screen carries is edited there: the window behind it would be a second editor of the same task. */
   const pomodoroFullscreen = usePomodoro((s) => s.fullscreen);
   useEffect(() => { if (pomodoroFullscreen) setOpenTaskId(null); }, [pomodoroFullscreen]);
+  useEffect(() => {
+    const open = (event: Event) => { const id = (event as CustomEvent<string>).detail; if (id) setOpenTaskId(id); };
+    window.addEventListener('pomodoro:open-task', open);
+    return () => window.removeEventListener('pomodoro:open-task', open);
+  }, []);
+  /* A timer left by another account is not this one's. */
+  useEffect(() => { if (ready && userId) usePomodoro.getState().claim(String(userId)); }, [ready, userId]);
 
   /* The Pomodoro arrived after the setup: whoever already went through it is
      asked how it should open, once, after What's new. */

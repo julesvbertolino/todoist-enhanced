@@ -36,7 +36,6 @@
 .pomo-fs-controls .btn{min-width:110px;min-height:39px;justify-content:center;gap:8px;border-radius:999px;font-size:12px}
 .pomo-fs-task{background:var(--surface);border:1px solid var(--border-strong,var(--border));border-radius:14px;box-shadow:0 10px 40px #1410191a;padding:24px 28px;max-height:calc(100dvh - 150px);overflow:auto;display:grid;gap:10px;align-content:start}
 .pomo-fs-project{display:flex;gap:6px;font-size:12px;font-weight:600}
-.pomo-fs-title{font-size:24px;font-weight:650;letter-spacing:-.5px;line-height:1.35;width:100%;border:0;background:transparent;color:var(--text);padding:2px 0;outline-offset:3px}
 .pomo-fs-task .descview{font-size:13px;line-height:1.7;color:var(--muted);cursor:text;padding:6px 0}
 .pomo-fs-label{font-size:11px;color:var(--muted);font-weight:600;margin-top:10px}
 .pomo-fs-sub{display:flex;align-items:center;gap:10px;font-size:13px;padding:9px 0;border-top:1px solid var(--border);cursor:pointer}
@@ -82,6 +81,18 @@
 @media(max-width:560px){.pomo-choice::before{width:calc(100% - 8px);height:calc((100% - 12px) / 2);bottom:auto}.pomo-choice[data-selected="1"]::before{transform:translateY(calc(100% + 4px))}}
 @media(prefers-reduced-motion:reduce){.pomo-choice::before{transition:none}}
 
-.pomo-fs-props{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 8px}
-.pomo-fs-props .priopills{display:flex;gap:4px}
-.pomo-fs-props .priopill{border-radius:9999px}
+
+/* Full screen, task side: a header that holds whatever the task says. */
+.pomo-fs{overflow:hidden}
+.pomo-fs-body{min-height:0;overflow:hidden}
+.pomo-fs.linked .pomo-fs-body{align-items:stretch;padding-bottom:30px}
+.pomo-fs-task{max-height:100%;min-width:0;align-self:center}
+.pomo-fs-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.pomo-fs-open{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);padding:4px 8px;border-radius:7px}
+.pomo-fs-open:hover{background:var(--hover);color:var(--text)}
+.pomo-fs-titlerow{display:flex;align-items:flex-start;gap:12px}
+.pomo-fs-titlerow .check{margin-top:6px;flex:none}
+.pomo-fs-title{font-size:24px;font-weight:650;letter-spacing:-.5px;line-height:1.35;width:100%;min-width:0;border:0;background:transparent;color:var(--text);padding:2px 0;outline-offset:3px;text-overflow:ellipsis}
+.pomo-fs-meta{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted);margin:0 0 4px 30px}
+.pomo-fs-meta span{display:inline-flex;align-items:center;gap:6px}
+.pomo-fs-task .descview{overflow-wrap:anywhere}

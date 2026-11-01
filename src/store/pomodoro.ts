@@ -15,12 +15,20 @@ const load = (): PomodoroState => {
   }
 };
 
+const OWNER_KEY = 'enhanced.pomodoro.owner';
+const loadOwner = (): string | null => {
+  try { return window.localStorage.getItem(OWNER_KEY); } catch { return null; }
+};
+
 const save = (state: PomodoroState): void => {
   try { window.localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* private window */ }
 };
 
 interface PomodoroStore {
   timer: PomodoroState;
+  /** The account the timer belongs to: a timer does not follow a sign-out. */
+  owner: string | null;
+  claim: (userId: string) => void;
   /** The full screen is showing. The timer keeps running when it is not. */
   fullscreen: boolean;
   /** Which toolbar button has its session popover open: a page's, or a task's by id. */
@@ -43,6 +51,14 @@ export const usePomodoro = create<PomodoroStore>((set, get) => {
   };
   return {
     timer: load(),
+    owner: loadOwner(),
+    claim: (userId) => {
+      const { owner, timer } = get();
+      if (owner === userId) return;
+      if (owner !== null && timer.status !== 'idle') commit(endSession(), { fullscreen: false, popover: null });
+      try { window.localStorage.setItem(OWNER_KEY, userId); } catch { /* private window */ }
+      set({ owner: userId });
+    },
     fullscreen: false,
     popover: null,
     start: (taskId, fullscreen) => commit(startFocus(get().timer, taskId, Date.now()), { fullscreen, popover: null }),

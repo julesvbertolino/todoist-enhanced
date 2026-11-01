@@ -12,9 +12,9 @@ Chaque ligne est marquée :
 
 🆕 **Restez sur une seule chose avec un minuteur Pomodoro.** Appuyez sur la pastille 25 min en haut d’une page, ou sur une tâche pour la garder avec vous. Le minuteur défile dans votre barre ou prend tout l’écran, où vous pouvez encore modifier la tâche. Choisissez son ouverture dans les Réglages.
 
-🆕 **Gardez les tâches du mois ensemble.** Ce mois-ci est une nouvelle page pour ce que vous voulez faire ce mois-ci, sans jour précis. Glissez une tâche dessus, donnez-lui le tag @thismonth, ou choisissez Ce mois-ci dans le sélecteur de date. Activez-la dans Réglages, puis Barre latérale.
+🆕 **Planifiez le mois avec À tout moment ce mois-ci.** Ce mois-ci est une nouvelle page pour ce que vous voulez faire ce mois-ci, sans jour précis. Glissez une tâche dessus, ou choisissez À tout moment ce mois-ci dans un sélecteur de date. Dans une liste, une telle tâche affiche À tout moment cette semaine ou ce mois-ci à la place de sa date.
 
-🐛 **Retrouvez un projet en déplaçant une tâche.** Taper dans le sélecteur de projet liste désormais projets et sections dans une seule liste, avec leurs icônes alignées.
+🐛 **Retrouvez plus vite un projet ou une section.** Pendant que vous tapez dans le sélecteur de projet, les projets viennent d’abord, puis les sections, et chaque section indique son projet.
 
 ## 2.26.1
 

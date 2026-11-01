@@ -35,9 +35,8 @@ export function PomodoroButton({ taskId = null }: { taskId?: string | null }) {
   const { start, togglePause, setPopover, setFullscreen } = usePomodoro.getState();
   const now = usePomodoroNow();
   const wrap = useRef<HTMLSpanElement>(null);
-  /* A task's pill shows its own session. Another session, free or on another
-     task, is not this task's: the pill offers a new one here instead. */
-  const active = timer.status !== 'idle' && (taskId === null || timer.taskId === taskId);
+  /* One timer: a task's pill and the page's show the same session. */
+  const active = timer.status !== 'idle';
   const paused = timer.status === 'paused';
 
   useEffect(() => {
@@ -92,12 +91,12 @@ export function PomodoroButton({ taskId = null }: { taskId?: string | null }) {
       >
         {paused || timer.status === 'done' ? <Play size={14} strokeWidth={1.7} /> : <Pause size={14} strokeWidth={1.7} />}
       </button>
-      {popover && createPortal(<SessionPopover anchor={wrap.current} onFullscreen={() => setFullscreen(true)} />, document.body)}
+      {popover && createPortal(<SessionPopover openedFrom={taskId} anchor={wrap.current} onFullscreen={() => setFullscreen(true)} />, document.body)}
     </span>
   );
 }
 
-function SessionPopover({ anchor, onFullscreen }: { anchor: HTMLElement | null; onFullscreen: () => void }) {
+function SessionPopover({ openedFrom, anchor, onFullscreen }: { openedFrom: string | null; anchor: HTMLElement | null; onFullscreen: () => void }) {
   const { t } = useT();
   const timer = usePomodoro((s) => s.timer);
   const now = usePomodoroNow();
@@ -116,7 +115,10 @@ function SessionPopover({ anchor, onFullscreen }: { anchor: HTMLElement | null; 
       </button>
       <div className="pomo-popover-time">{formatClock(remainingAt(timer, now))}</div>
       <span className="pomo-popover-phase">{phase}</span>
-      {linked
+      {/* Opened from the task itself, its name would only repeat the window around it. */}
+      {linked && linked.id === openedFrom
+        ? null
+        : linked
         ? <strong className="pomo-popover-task">{displayTaskContent(linked)}</strong>
         : <p className="pomo-popover-free">{t('pomodoro.noTask')}</p>}
       <div className="pomo-popover-actions">

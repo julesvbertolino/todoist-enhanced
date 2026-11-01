@@ -1,4 +1,5 @@
 import { clearProjectPeopleCache } from './collab';
+import { usePomodoro } from './pomodoro';
 /** Talking to Todoist: signing in and out, reading, writing, the offline queue, the demo. */
 import { verifyEstimateWrites } from './estimate-safety';
 import { auth } from '@/api/auth';
@@ -267,6 +268,7 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
   async disconnect() {
     clearProjectPeopleCache();
     sessionRemove('demo');
+    usePomodoro.getState().end();
     await auth.disconnect();
     await idb.clearAll();
     set({

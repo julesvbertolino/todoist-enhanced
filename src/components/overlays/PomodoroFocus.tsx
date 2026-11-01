@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pause, Play, Timer, X } from 'lucide-react';
+import { ExternalLink, Pause, Play, Timer, X } from 'lucide-react';
 import { useT } from '@/hooks/useT';
 import { useData } from '@/hooks/useData';
 import { useStore } from '@/store/store';
@@ -7,12 +7,9 @@ import { usePomodoro } from '@/store/pomodoro';
 import { usePomodoroNow } from '@/hooks/usePomodoroClock';
 import { formatClock, remainingAt } from '@/domain/pomodoro';
 import { colorValue } from '@/domain/colors';
-import { displayTaskContent, toDisplayPriority, toTodoistPriority, type Item } from '@/domain/types';
-import { dueDate, hasTime, toApiDate, toApiDateTime } from '@/domain/dates';
-import { dueForDate } from '@/domain/recurrence';
-import { effectiveEstimate } from '@/domain/estimates';
-import { DateField } from '../DateField';
-import { DurationField } from '../DurationField';
+import { SYSTEM_LABELS, displayTaskContent, toDisplayPriority, weekLabel, type Item } from '@/domain/types';
+import { dueDate, formatRelativeDay } from '@/domain/dates';
+import { effectiveEstimate, formatDuration } from '@/domain/estimates';
 import { Icon } from '../Icon';
 import { toggleItemAt } from '@/domain/checklist';
 import { DescriptionEditor, DescriptionView } from '../Checklist';
@@ -77,7 +74,7 @@ export function PomodoroFocus() {
 }
 
 function TaskPanel({ item }: { item: Item }) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const { childrenOf } = useData();
   const updateTask = useStore((s) => s.updateTask);
   const toggleTask = useStore((s) => s.toggleTask);
@@ -86,9 +83,13 @@ function TaskPanel({ item }: { item: Item }) {
   const [editing, setEditing] = useState(false);
   const [description, setDescription] = useState(item.description);
   const subtasks = childrenOf(item.id);
-  const pendingWrites = useStore((s) => s.pendingCount);
   const due = dueDate(item);
-  const { minutes, computed } = effectiveEstimate(item, childrenOf);
+  const { minutes } = effectiveEstimate(item, childrenOf);
+  /* The day it is planned for, said as a person would; or the horizon it is committed to. */
+  const has = (name: string) => item.labels.some((l) => l.toLowerCase() === name.toLowerCase());
+  const when = due ? formatRelativeDay(due, locale)
+    : has(weekLabel()) ? t('review.to.anytime')
+    : has(SYSTEM_LABELS.month) ? t('review.to.month') : null;
   const priority = toDisplayPriority(item.priority);
   /* The title is saved when the screen goes, too: ending the session closes it
      before the field has lost focus, and a rename must not be lost with it. */
@@ -121,45 +122,31 @@ function TaskPanel({ item }: { item: Item }) {
 
   return (
     <article className="pomo-fs-task">
-      {project && (
-        <div className="pomo-fs-project" style={{ color: colorValue(project.color) }}><span>#</span>{project.name}</div>
-      )}
-      <input
-        className="pomo-fs-title"
-        value={title}
-        aria-label={t('detail.title')}
-        onChange={(event) => setTitle(event.target.value)}
-        onBlur={commitTitle}
-        onKeyDown={(event) => { if (event.key === 'Enter') (event.target as HTMLInputElement).blur(); }}
-      />
-      <div className="pomo-fs-props">
-        <DateField
-          value={due ? (hasTime(item.due) ? toApiDateTime(due) : toApiDate(due)) : ''}
-          withTime
-          label={t('detail.startDate')}
-          placeholder={t('date.pick')}
-          onChange={(value, how) => void updateTask(item.id, { due: value ? dueForDate(item.due, value, 'en', { dropTime: how?.clearTime }) : null })}
-        />
-        <DurationField
-          minutes={computed ? null : minutes}
-          pendingWrites={pendingWrites}
-          placeholder={t('task.estimateChoose')}
-          onCommit={async (value) => {
-            await updateTask(item.id, { estimateMinutes: value });
-            const state = useStore.getState();
-            const saved = state.snapshot.items[item.id];
-            if (!saved || effectiveEstimate(saved, () => []).minutes !== value) return 'failed';
-            return state.pendingCount > 0 ? 'pending' : 'accepted';
-          }}
-        />
-        <div className="priopills" role="radiogroup" aria-label={t('detail.priority')}>
-          {([1, 2, 3, 4] as const).map((p) => (
-            <button key={p} type="button" role="radio" aria-checked={priority === p} className={`priopill p${p}`} onClick={() => void updateTask(item.id, { priority: toTodoistPriority(p) })}>
-              <Icon name="flag" size="sm" />{`P${p}`}
-            </button>
-          ))}
-        </div>
+      <div className="pomo-fs-top">
+        {project && (
+          <div className="pomo-fs-project" style={{ color: colorValue(project.color) }}><span>#</span>{project.name}</div>
+        )}
+        <button type="button" className="pomo-fs-open" onClick={() => { usePomodoro.getState().setFullscreen(false); window.dispatchEvent(new CustomEvent('pomodoro:open-task', { detail: item.id })); }}>
+          <ExternalLink size={13} />{t('pomodoro.openTask')}
+        </button>
       </div>
+      <div className="pomo-fs-titlerow">
+        <button type="button" className={`check p${priority}`} role="checkbox" aria-checked={item.checked} aria-label={t('task.complete')} onClick={() => void toggleTask(item.id)} />
+        <input
+          className="pomo-fs-title"
+          value={title}
+          aria-label={t('detail.title')}
+          onChange={(event) => setTitle(event.target.value)}
+          onBlur={commitTitle}
+          onKeyDown={(event) => { if (event.key === 'Enter') (event.target as HTMLInputElement).blur(); }}
+        />
+      </div>
+      {(when || minutes !== null) && (
+        <p className="pomo-fs-meta">
+          {when && <span><Icon name="calendar" size="sm" />{when}</span>}
+          {minutes !== null && <span><Icon name="clock" size="sm" />{formatDuration(minutes, locale)}</span>}
+        </p>
+      )}
       {editing ? (
         <DescriptionEditor
           value={description}

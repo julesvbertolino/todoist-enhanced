@@ -44,9 +44,9 @@ translation lives in CHANGELOG.fr.md.
 
 🆕 **Stay on one thing with a Pomodoro timer.** Press the 25 min pill at the top of a page, or on a task to keep it with you. It counts down in your toolbar or fills the screen, where you can still edit the task. Choose how it opens in Settings.
 
-🆕 **Keep this month's tasks together.** This month is a new page for what you want to do this month, with no set day. Drag a task there, tag it @thismonth, or pick This month in the date picker. Turn it on in Settings, then Sidebar.
+🆕 **Plan the month with Anytime this month.** This month is a new page for what you want to do this month, with no set day. Drag a task there, or pick Anytime this month in a date picker. In a list, such a task shows Anytime this week or Anytime this month where its date would be.
 
-🐛 **Find a project when you move a task.** Typing in the project picker now lists projects and sections in one list, with their icons lined up.
+🐛 **Find a project or section faster.** While you type in the project picker, projects come first, then sections, and each section shows the project it belongs to.
 
 ## 2.26.1
 

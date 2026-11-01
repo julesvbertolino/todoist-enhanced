@@ -22,7 +22,7 @@ import { usePhoneBehaviour } from '@/hooks/useTouchLayout';
 import { useRowGesture } from '@/hooks/useRowGesture';
 import { useStore } from '@/store/store';
 import { completionTick } from '@/store/tick';
-import { displayTaskContent, isUncompletable, toDisplayPriority, type Item } from '@/domain/types';
+import { SYSTEM_LABELS, displayTaskContent, isUncompletable, toDisplayPriority, weekLabel, type Item } from '@/domain/types';
 import { effectiveEstimate, formatDuration } from '@/domain/estimates';
 import { dateTone, deadlineDate, dueDate, formatRelativeDay, formatTime, hasTime, isOverdue, isToday, overdueBy } from '@/domain/dates';
 import { markerStyle } from '@/domain/colors';
@@ -275,7 +275,13 @@ function TaskRowView({
   };
 
   // Estimate labels are shown as a duration, never as an ordinary tag.
-  const visibleLabels = item.labels.filter((l) => !l.toLowerCase().startsWith('est-'));
+  /* A task committed to the week or the month with no day is shown by that, as a
+     date would be, not by the tag that carries it. */
+  const horizon = item.due ? null : item.labels.some((l) => l.toLowerCase() === weekLabel().toLowerCase())
+    ? 'review.to.anytime' as const
+    : item.labels.some((l) => l.toLowerCase() === SYSTEM_LABELS.month) ? 'review.to.month' as const : null;
+  const visibleLabels = item.labels.filter((l) => !l.toLowerCase().startsWith('est-')
+    && !(horizon && [weekLabel().toLowerCase(), SYSTEM_LABELS.month].includes(l.toLowerCase())));
 
   /* A tag carries a colour in Todoist, so it carries it here too. The task
      stores names, and the colour lives on the label, which is the lookup. */
@@ -304,6 +310,12 @@ function TaskRowView({
               {formatRelativeDay(due, locale)}
               {hasTime(item.due) && ` ${formatTime(due, locale, hour12)}`}
             </>}
+          </span>
+        )}
+        {horizon && (
+          <span className="at tone-later">
+            <Icon name="calendar" />
+            {t(horizon)}
           </span>
         )}
         {item.due?.is_recurring && (

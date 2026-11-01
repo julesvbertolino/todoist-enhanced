@@ -132,9 +132,10 @@ function EntryRow({
   entry, shown, showToday, onToggle,
 }: { entry: SidebarEntry; shown: boolean; showToday: boolean; onToggle: () => void }) {
   const { t } = useT();
+  const weekTag = useStore((s) => s.prefs.weekLabel);
   /* The hint follows My Week's display filter independently of sidebar visibility. */
   const hint = entry.id === 'week'
-    ? t(showToday ? 'nav.weekHintUnified' : 'nav.weekHintSplit')
+    ? t(showToday ? 'nav.weekHintUnified' : 'nav.weekHintSplit', { tag: weekTag })
     : entry.id === 'month' ? t('nav.monthHint')
     : entry.id === 'upcoming' ? t('nav.upcomingHint')
     : entry.id === 'someday' ? t('nav.somedayHint')

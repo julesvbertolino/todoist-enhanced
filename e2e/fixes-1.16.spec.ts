@@ -92,10 +92,10 @@ test('#110 the row menu and the bulk bar show the same date picker', async ({ de
   const bulk = page.getByRole('menu', { name: 'Start date' });
   await expect(bulk.locator('.datepicker')).toBeVisible();
   const fromBulk = (await labels(bulk)).map((l) => l.trim());
-  const choices = ['Today', 'Tomorrow', 'Next week', 'This week', 'Someday'];
+  const choices = ['Today', 'Tomorrow', 'Next week', 'Anytime this week', 'Anytime this month', 'Someday'];
   // The same choices in the same order, ending in "Pick a date"; the row
   // menu adds what only a task can do (remove its date) between the two (#153).
-  expect(fromRow.map((l) => l.trim()).slice(0, 5)).toEqual(choices);
+  expect(fromRow.map((l) => l.trim()).slice(0, 6)).toEqual(choices);
   expect(fromBulk).toEqual([...choices, 'Pick a date']);
   expect(fromRow.map((l) => l.trim()).at(-1)).toBe('Pick a date');
 });
