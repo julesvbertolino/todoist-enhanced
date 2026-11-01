@@ -221,9 +221,14 @@ export function upcomingItems(items: Item[], now = new Date()): Item[] {
   return items.filter((i) => bucketOf(i, now) === 'upcoming');
 }
 
-/** Someday / backlog: no date and no `week` commitment. */
+/** Later: no date, no `week` commitment, carrying the `later` tag. */
+export function laterItems(items: Item[], now = new Date()): Item[] {
+  return items.filter((i) => bucketOf(i, now) === 'someday' && hasLabel(i, SYSTEM_LABELS.later));
+}
+
+/** Someday / backlog: no date, no `week` commitment and no `later` tag. */
 export function somedayItems(items: Item[], now = new Date()): Item[] {
-  return items.filter((i) => bucketOf(i, now) === 'someday');
+  return items.filter((i) => bucketOf(i, now) === 'someday' && !hasLabel(i, SYSTEM_LABELS.later));
 }
 
 /** Anytime this week: no date, carrying `week`. */

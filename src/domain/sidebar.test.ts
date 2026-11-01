@@ -18,9 +18,15 @@ describe('readSidebarNav', () => {
       other: [{ id: 'labels', on: true }, { id: 'review', on: true }, { id: 'dashboard', on: true },
         { id: 'logbook', on: true }, { id: 'matrix', on: true }],
     });
-    expect(ids(nav.main)).toEqual(['week', 'inbox', 'today', 'upcoming', 'someday']);
+    expect(ids(nav.main)).toEqual(['week', 'later', 'inbox', 'today', 'upcoming', 'someday']);
     expect(nav.main.find((e) => e.id === 'inbox')?.on).toBe(false);
+    // Someone who arranged the sidebar before Later existed does not get it unasked.
+    expect(nav.main.find((e) => e.id === 'later')?.on).toBe(false);
     expect(ids(nav.other)[0]).toBe('labels');
+  });
+
+  it('shows Later from the start for an account that never arranged the sidebar', () => {
+    expect(defaultSidebarNav().main.find((e) => e.id === 'later')?.on).toBe(true);
   });
 
   it('drops ids it does not know and entries listed twice', () => {
@@ -44,7 +50,7 @@ describe('readSidebarNav', () => {
     const nav = readSidebarNav({ main: [{ id: 'review' }], other: [{ id: 'inbox' }] });
     const all = ids([...nav.main, ...nav.other]);
     expect(new Set(all).size).toBe(all.length);
-    expect(all).toHaveLength(11);
+    expect(all).toHaveLength(12);
     // Moved across blocks: it stays where the user put it.
     expect(ids(nav.main)).toContain('review');
     expect(ids(nav.other)).toContain('inbox');

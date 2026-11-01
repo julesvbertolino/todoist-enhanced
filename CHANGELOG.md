@@ -40,6 +40,16 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.27.0
+
+🆕 **Focus with a Pomodoro timer.** Press the 25 min pill at the top of any page to start a free session, or open a task and start it there to keep that task with you. Choose in Settings whether it stays in your toolbar or fills the screen, where you can still edit the task.
+
+🆕 **Plan beyond this week with Later.** Later is a new page for what you want to do in a month, a quarter or a sprint, as you decide. Drag a task there, tag it @later, or pick Later in the date picker. Turn it on in Settings, then Sidebar.
+
+🎨 **My week is now This week.** The page keeps its name in French and drops "My" in English, next to Later and Someday. A task is in one of them at a time: choosing another takes the first one off.
+
+🎨 **Find a project or a section in one search.** Typing in the project picker now lists projects and sections in a single flat list, with their icons lined up.
+
 ## 2.26.1
 
 🎨 **Large accounts feel lighter.** Ticking or editing a task in a long list, or an update arriving from Todoist, no longer redraws every other row. The app also loads less code when it starts, so big projects and My week stay responsive.

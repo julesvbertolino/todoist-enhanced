@@ -25,7 +25,7 @@ import { DatePicker, shortDay, taskShortcuts, type RecurrenceReading } from './D
 import { nextOccurrence } from '@/domain/nextOccurrence';
 import { dueDate, isOverdue, formatDayOrName, formatTime, toApiDate } from '@/domain/dates';
 import { dueForDate } from '@/domain/recurrence';
-import { weekLabel } from '@/domain/types';
+import { withoutHorizons } from '@/domain/types';
 import { markerStyle } from '@/domain/colors';
 import { dropMutation, moveArgs, type DropTarget } from '@/domain/dnd';
 import { updateItem, moveItem } from '@/api/commands';
@@ -406,7 +406,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
     const before = { due: item.due, labels: item.labels };
     const update = {
       due: dueForDate(item.due, iso, 'en', { dropTime: how?.clearTime }),
-      labels: item.labels.filter((l) => l.toLowerCase() !== weekLabel().toLowerCase()),
+      labels: withoutHorizons(item.labels),
     };
     const patch = (fields: Record<string, unknown>) => (snap: Snapshot): Snapshot => ({
       ...snap,
@@ -444,7 +444,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
 
     /* A real date and the week tag on the same task is the contradiction the
        app reports rather than resolves, and a rule is a date in that sense. */
-    const labels = item.labels.filter((l) => l.toLowerCase() !== weekLabel().toLowerCase());
+    const labels = withoutHorizons(item.labels);
     if (labels.length !== item.labels.length) void updateTask(item.id, { labels });
 
     void setRecurrence(item.id, repeat).then(() => {
@@ -551,6 +551,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
                 today: () => void moveTo({ kind: 'today' }, t('common.today')),
                 day: (date) => commitDate(toApiDate(date)),
                 anytime: () => void moveTo({ kind: 'anytime' }, t('nav.week')),
+                later: () => void moveTo({ kind: 'later' }, t('nav.later')),
                 someday: () => void moveTo({ kind: 'someday' }, t('nav.someday')),
               })}
               footer={(item.due?.is_recurring || item.due) ? (

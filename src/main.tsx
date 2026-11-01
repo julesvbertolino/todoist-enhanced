@@ -11,6 +11,7 @@ import './styles/v2.css';
 import './styles/viewtabs.css';
 import './styles/table.css';
 import './styles/mobile.css';
+import './styles/pomodoro.css';
 import { startInputModality } from './lib/inputModality';
 import { startSegSlider } from './lib/segSlider';
 import { startTabStops } from './lib/tabStops';

@@ -8,6 +8,16 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.27.0
+
+🆕 **Concentrez-vous avec un minuteur Pomodoro.** Appuyez sur la pastille 25 min en haut d’une page pour lancer une session libre, ou ouvrez une tâche et lancez-la depuis là pour la garder avec vous. Choisissez dans les Réglages si le minuteur reste dans la barre ou prend tout l’écran, où vous pouvez toujours modifier la tâche.
+
+🆕 **Planifiez au-delà de la semaine avec Plus tard.** Plus tard est une nouvelle page pour ce que vous voulez faire dans un mois, un trimestre ou un sprint, à vous de décider. Glissez une tâche dessus, donnez-lui le tag @later, ou choisissez Plus tard dans le sélecteur de date. Activez-la dans Réglages, puis Barre latérale.
+
+🎨 **Ma semaine devient Cette semaine.** La page garde son nom en français et perd « My » en anglais, à côté de Plus tard et Un jour. Une tâche n’est que dans l’une d’elles à la fois : en choisir une autre retire la première.
+
+🎨 **Trouvez un projet ou une section en une recherche.** Taper dans le sélecteur de projet liste désormais projets et sections dans une seule liste, avec leurs icônes alignées.
+
 ## 2.26.1
 
 🎨 **Les gros comptes s’allègent.** Cocher ou modifier une tâche dans une longue liste, ou recevoir une mise à jour de Todoist, ne redessine plus toutes les autres lignes. L’app charge aussi moins de code au démarrage : les gros projets et Ma semaine restent réactifs.

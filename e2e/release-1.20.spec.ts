@@ -112,7 +112,7 @@ accountTest('initial choice offers conversion, with verified and pending rows sc
     localStorage.setItem('onboarded', JSON.stringify(['account-test']));
     const db = await new Promise<IDBDatabase>((resolve, reject) => { const request = indexedDB.open('todoist-enhancements', 1); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
     const tx = db.transaction('prefs', 'readwrite');
-    tx.objectStore('prefs').put({ locale: 'en', onboarded: true, setupDone: true, seenVersion: version, estimateStorage: null }, 'preferences');
+    tx.objectStore('prefs').put({ locale: 'en', onboarded: true, setupDone: true, pomodoroAsked: true, seenVersion: version, estimateStorage: null }, 'preferences');
     await new Promise<void>((resolve, reject) => { tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error); });
     db.close();
   }, VERSION);

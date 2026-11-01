@@ -23,7 +23,7 @@ async function openAccount(page: Page, projects: Array<Record<string, unknown>>,
     localStorage.setItem('onboarded', JSON.stringify(['account-test']));
     const db = await new Promise<IDBDatabase>((resolve, reject) => { const request = indexedDB.open('todoist-enhancements', 1); request.onupgradeneeded = () => { const d = request.result; for (const [name, options] of [['snapshot', undefined], ['prefs', undefined], ['queue', { keyPath: 'uuid' }]] as const) if (!d.objectStoreNames.contains(name)) d.createObjectStore(name, options); }; request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
     const tx = db.transaction('prefs', 'readwrite');
-    tx.objectStore('prefs').put({ locale: 'en', onboarded: true, setupDone: true, seenVersion: version, estimateStorage: 'tag', hireNoteSeen: true }, 'preferences');
+    tx.objectStore('prefs').put({ locale: 'en', onboarded: true, setupDone: true, pomodoroAsked: true, seenVersion: version, estimateStorage: 'tag', hireNoteSeen: true }, 'preferences');
     await new Promise<void>((resolve, reject) => { tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error); });
     db.close();
   }, seenVersion);
@@ -204,7 +204,7 @@ async function openWorkspaceAccount(page: Page, options: { refuse?: string } = {
     localStorage.setItem('onboarded', JSON.stringify(['account-test']));
     const db = await new Promise<IDBDatabase>((resolve, reject) => { const request = indexedDB.open('todoist-enhancements', 1); request.onupgradeneeded = () => { const d = request.result; for (const [name, options] of [['snapshot', undefined], ['prefs', undefined], ['queue', { keyPath: 'uuid' }]] as const) if (!d.objectStoreNames.contains(name)) d.createObjectStore(name, options); }; request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
     const tx = db.transaction('prefs', 'readwrite');
-    tx.objectStore('prefs').put({ locale: 'en', onboarded: true, setupDone: true, seenVersion: version, estimateStorage: 'tag', hireNoteSeen: true }, 'preferences');
+    tx.objectStore('prefs').put({ locale: 'en', onboarded: true, setupDone: true, pomodoroAsked: true, seenVersion: version, estimateStorage: 'tag', hireNoteSeen: true }, 'preferences');
     await new Promise<void>((resolve, reject) => { tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error); });
     db.close();
   }, VERSION);
@@ -351,7 +351,7 @@ test('acknowledged changelog stays closed after stale settings sync and reload',
   await page.route('https://api.todoist.com/api/v1/sync', async (route) => {
     await route.fulfill({ json: { full_sync: false, sync_token: 'stale', sync_status: {}, project_notes: [{
       id: 'old-settings', project_id: 'inbox', item_id: null, is_deleted: false, posted_at: '2026-10-14T00:00:00Z',
-      content: 'Enhanced for Todoist · settings (edited by the app, please leave as is)\n\n' + JSON.stringify({ savedAt: Date.now() + 60000, seenVersion: '2.6.0', onboarded: true, setupDone: true, estimateStorage: 'tag', hireNoteSeen: true }),
+      content: 'Enhanced for Todoist · settings (edited by the app, please leave as is)\n\n' + JSON.stringify({ savedAt: Date.now() + 60000, seenVersion: '2.6.0', onboarded: true, setupDone: true, pomodoroAsked: true, estimateStorage: 'tag', hireNoteSeen: true }),
     }] } });
   });
   await expect.poll(() => page.evaluate(async () => {

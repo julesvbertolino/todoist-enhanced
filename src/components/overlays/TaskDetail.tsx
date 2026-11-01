@@ -15,6 +15,7 @@ import { Overlay } from './Overlay';
 import { isTopOverlay } from './overlayStack';
 import { Icon } from '../Icon';
 import { ProgressRing } from '../ProgressRing';
+import { PomodoroButton } from '../PomodoroButton';
 import { ChecklistProgress, DescriptionEditor, DescriptionView } from '../Checklist';
 import { toggleItemAt } from '@/domain/checklist';
 import { useT } from '@/hooks/useT';
@@ -727,6 +728,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
         </nav>
 
         <div className="detail-tools">
+          <PomodoroButton taskId={item.id} />
           {walk.current && (
             <span className="detail-walk">
               <button

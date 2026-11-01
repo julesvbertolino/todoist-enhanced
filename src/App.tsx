@@ -39,6 +39,8 @@ const EisenhowerView = lazy(() => import('./views/EisenhowerView').then((module)
 import { ConnectView } from './views/ConnectView';
 import { EstimateStorageDialog } from './components/overlays/EstimateStorageDialog';
 import { Walkthrough } from './components/overlays/Walkthrough';
+import { PomodoroFocus } from './components/overlays/PomodoroFocus';
+import { PomodoroAsk } from './components/overlays/PomodoroAsk';
 import { Tour } from './components/overlays/Tour';
 import { InstallPrompt } from './components/overlays/InstallPrompt';
 import { WhatsNew, type WhatsNewScope } from './components/overlays/WhatsNew';
@@ -57,7 +59,7 @@ import { labelRoots, rootItems } from './store/selectors';
 import { detectConflicts } from './domain/conflicts';
 import { placementForPage } from './domain/dnd';
 import { useParentEstimates } from './hooks/useParentEstimates';
-import { bucketOf, somedayItems, upcomingItems, weekItems } from './domain/views';
+import { bucketOf, laterItems, somedayItems, upcomingItems, weekItems } from './domain/views';
 import { effectiveEstimate } from './domain/estimates';
 import type { Item } from './domain/types';
 import type { TranslationKey } from './i18n';
@@ -304,6 +306,16 @@ export function App() {
   }, [ready, connected, demo, settled, userId, tourOpen, walkthroughOpen, whatsNew,
     seenVersion, whatsNewOn, setPrefs, setupDone]);
 
+  /* The Pomodoro arrived after the setup: whoever already went through it is
+     asked how it should open, once, after What's new. */
+  const pomodoroAsked = useStore((s) => s.prefs.pomodoroAsked);
+  const [askPomodoro, setAskPomodoro] = useState(false);
+  useEffect(() => {
+    if (QUICK_ADD || demo || !ready || !connected || !settled || !hasOnboarded(userId)) return;
+    if (tourOpen || walkthroughOpen || whatsNew || !setupDone || seenVersion !== VERSION) return;
+    if (!pomodoroAsked) setAskPomodoro(true);
+  }, [ready, connected, demo, settled, userId, tourOpen, walkthroughOpen, whatsNew, setupDone, seenVersion, pomodoroAsked]);
+
   /* A note for Todoist's own people, once. Put up only when nothing else has
      the page — no tour, no first run, no What's new — so it is not lost behind
      them, and recorded on the account the moment it is shown. */
@@ -412,6 +424,8 @@ export function App() {
       <EstimateStorageDialog onConvert={(target) => setConversionRequest((previous) => ({ target, request: previous.request + 1 }))} open={storageOpen && !demo && !tourOpen && !walkthroughOpen && !whatsNew} onClose={() => { setStorageDismissed(userId ?? null); }} />
       <EstimateConversion target={conversionRequest.target} openRequest={conversionRequest.request} hideTrigger />
       <ShareSheet projectId={shareProject} onClose={() => setShareProject(null)} />
+      <PomodoroFocus />
+      <PomodoroAsk open={askPomodoro && !pomodoroAsked} onClose={() => setAskPomodoro(false)} />
       <Walkthrough
         open={walkthroughOpen}
         onDone={() => setWalkthrough(false)}
@@ -644,7 +658,7 @@ function paintBrowserChrome(): void {
 }
 
 /** The pages that list tasks to work through, which is where "I have time" is offered (#159). */
-const TIME_PAGES = new Set<Route['view']>(['week', 'today', 'project', 'label', 'inbox', 'someday']);
+const TIME_PAGES = new Set<Route['view']>(['week', 'today', 'project', 'label', 'inbox', 'later', 'someday']);
 
 function AppShell({
   route, openTaskId, setOpenTaskId, composerOpen, setComposerOpen,
@@ -715,6 +729,8 @@ function AppShell({
         return { contextItems: upcomingItems(roots), contextLabel: t('nav.upcoming') };
       case 'review':
         return { contextItems: weekItems(roots), contextLabel: t('nav.review') };
+      case 'later':
+        return { contextItems: laterItems(roots), contextLabel: t('nav.later') };
       case 'someday':
         return { contextItems: somedayItems(roots), contextLabel: t('nav.someday') };
       case 'inbox': {
@@ -857,6 +873,7 @@ function AppShell({
           {route.view === 'today' && <WeekView {...viewProps} scope="today" />}
           {route.view === 'search' && <SearchView query={route.query ?? ''} onOpen={openTask} />}
           {route.view === 'upcoming' && <UpcomingView {...viewProps} />}
+          {route.view === 'later' && <SimpleListView kind="later" {...viewProps} />}
           {route.view === 'someday' && <SimpleListView kind="someday" {...viewProps} />}
           {/* The Inbox is a project like the others, with sections of its own
              : it is drawn by the project page, which is what shows them. */}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  ageInMonths, groupWeek, keptDay, pruneKept, readKept, splitDust, splitQuick,
+  ageInMonths, bucketOf, groupWeek, keptDay, laterItems, pruneKept, readKept, somedayItems, splitDust, splitQuick,
 } from './views';
 import { due, item } from '@/test/items';
 
@@ -206,5 +206,24 @@ describe('ageInMonths', () => {
     expect(ageInMonths(item({ added_at: '2026-02-01T10:00:00' }), NOW)).toBe(8);
     expect(ageInMonths(item({ added_at: '2026-10-05T10:00:00' }), NOW)).toBe(1);
     expect(ageInMonths(item(), NOW)).toBe(0);
+  });
+});
+
+describe('the Later horizon', () => {
+  const later = item({ id: 'later', labels: ['later'] });
+  const plain = item({ id: 'plain' });
+  const week = item({ id: 'week', labels: ['week'] });
+  const both = item({ id: 'both', labels: ['week', 'later'] });
+  const dated = item({ id: 'dated', labels: ['later'], due: due('2026-10-20') });
+
+  it('lists undated tasks tagged later, and keeps them out of Someday', () => {
+    const all = [later, plain, week, both, dated];
+    expect(ids(laterItems(all, NOW))).toEqual(['later']);
+    expect(ids(somedayItems(all, NOW))).toEqual(['plain']);
+  });
+
+  it('lets the week win over later, and a date win over both', () => {
+    expect(bucketOf(both, NOW)).toBe('anytime');
+    expect(bucketOf(dated, NOW)).toBe('upcoming');
   });
 });

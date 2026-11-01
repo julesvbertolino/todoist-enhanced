@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { SubtasksProvider } from '@/components/TaskRow';
 import { DisplayMenu } from '@/components/DisplayMenu';
+import { PomodoroButton } from '@/components/PomodoroButton';
 import { TaskGroup } from '@/components/TaskGroup';
 import { ModeSurface } from '@/components/ModeSurface';
 import { Icon } from '@/components/Icon';
@@ -210,6 +211,7 @@ function WeekBody({
         title={t(scope === 'today' ? 'nav.today' : 'nav.week')}
         actions={
           <>
+            <PomodoroButton />
             <DisplayMenu
               viewKey={viewKey}
               pageItems={current.mode === 'calendar' ? items : pool}

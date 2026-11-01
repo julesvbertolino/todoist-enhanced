@@ -68,6 +68,7 @@ export function PlacementField({ label, ariaLabel, value, onChange, variant, onN
                 label: title,
                 icon: 'section' as const,
                 sub: true,
+                searchHint: name,
                 /* Read on its own, out of the list, a section name says nothing
                    about where it is. */
                 face: `${name} / ${title}`,
@@ -88,6 +89,7 @@ export function PlacementField({ label, ariaLabel, value, onChange, variant, onN
       options={options}
       variant={variant}
       matchWidth={matchWidth}
+      flattenSearch
       maxPopupWidth={variant === 'chip' ? 280 : undefined}
       popupClassName={variant === 'chip' ? 'composer-place-menu' : undefined}
       onChange={(next) => {

@@ -301,6 +301,8 @@ export function DragProvider({ children }: { children: ReactNode }) {
         return t('drop.quick');
       case 'anytime':
         return t('drop.anytime');
+      case 'later':
+        return t('drop.later');
       case 'someday':
         return t('drop.someday');
       case 'project':
@@ -327,6 +329,7 @@ export function DragProvider({ children }: { children: ReactNode }) {
       case 'day': return formatDayOrName(target.date, locale, dateFormat);
       case 'quick': return t('group.quick');
       case 'anytime': return t('group.anytime');
+      case 'later': return t('nav.later');
       case 'someday': return t('nav.someday');
       case 'step': return t(`step.${target.step}`);
       case 'label': return `@${target.label}`;

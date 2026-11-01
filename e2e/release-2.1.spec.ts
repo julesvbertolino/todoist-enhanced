@@ -32,10 +32,10 @@ test('a label with an emoji or an accent in its name opens its own page (#196)',
   expect(new URL(page.url()).hash).toBe(`#/label/${encodeURIComponent('🏠Café')}`);
 });
 
-test('the sidebar editor says whether My week holds today\u2019s tasks (#195)', async ({ demo: page }) => {
+test('the sidebar editor says whether This week holds today\u2019s tasks (#195)', async ({ demo: page }) => {
   await go(page, '#/settings');
   await page.getByRole('button', { name: 'Sidebar' }).click();
-  const week = page.locator('.navedit-row').filter({ has: page.getByText('My week', { exact: true }) });
+  const week = page.locator('.navedit-row').filter({ has: page.getByText('This week', { exact: true }) });
   const today = page.locator('.navedit-row').filter({ has: page.getByText('Today', { exact: true }) });
   await expect(week).toContainText('Includes today\u2019s tasks');
   const height = (await week.boundingBox())!.height;

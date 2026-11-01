@@ -1,5 +1,6 @@
 import { canStoreDurations } from '@/domain/estimates';
 import { useEffect, useRef, useState } from 'react';
+import { PomodoroDisplayChoice } from '../PomodoroDisplayChoice';
 import { Overlay } from './Overlay';
 import { Icon, type IconName } from '../Icon';
 import {
@@ -59,6 +60,11 @@ export function Walkthrough({
   const [motion, setMotion] = useState<'enter' | 'forward' | 'back'>('enter');
   const previous = useRef(0);
   const current = STEPS[step];
+  /* Someone who went through the content step has been offered the Pomodoro choice. */
+  useEffect(() => {
+    if (open && current.id === 'content' && !prefs.pomodoroAsked) setPrefs({ pomodoroAsked: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, current.id]);
   /* Each step opens at its top: on a phone the picture and the choices are one scroll. */
   const track = useRef<HTMLDivElement>(null);
   useEffect(() => { track.current?.scrollTo({ top: 0 }); }, [current.id]);
@@ -281,6 +287,11 @@ export function Walkthrough({
                           </button>
                         ))}
                       </div>
+                    </div>
+                    <div>
+                      <h3>{t('pomodoro.setupTitle')}</h3>
+                      <p className="setup-hint">{t('pomodoro.intro')}</p>
+                      <PomodoroDisplayChoice value={prefs.pomodoroDisplay} onChange={(pomodoroDisplay) => setPrefs({ pomodoroDisplay, pomodoroAsked: true })} />
                     </div>
                     <div>
                       <h3>{t('setup.estimates.title')}</h3>

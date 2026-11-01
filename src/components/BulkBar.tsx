@@ -432,6 +432,7 @@ export function BulkBar() {
               today: () => { close(); void send({ kind: 'today' }, t('common.today')); },
               day: (date, label) => { close(); void send({ kind: 'day', date }, label); },
               anytime: () => { close(); void send({ kind: 'anytime' }, t('nav.week')); },
+              later: () => { close(); void send({ kind: 'later' }, t('nav.later')); },
               someday: () => { close(); void send({ kind: 'someday' }, t('nav.someday')); },
             })}
             footer={recurringCount > 0 ? (

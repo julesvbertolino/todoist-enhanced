@@ -16,6 +16,7 @@ export const ENTRY: Record<SidebarItemId, { icon: IconName; label: TranslationKe
   inbox: { icon: 'inbox', label: 'nav.inbox' },
   today: { icon: 'calendar', label: 'nav.today' },
   week: { icon: 'week', label: 'nav.week' },
+  later: { icon: 'calendar', label: 'nav.later' },
   upcoming: { icon: 'upcoming', label: 'nav.upcoming' },
   someday: { icon: 'someday', label: 'nav.someday' },
   review: { icon: 'check', label: 'nav.review' },
@@ -134,6 +135,9 @@ function EntryRow({
   /* The hint follows My Week's display filter independently of sidebar visibility. */
   const hint = entry.id === 'week'
     ? t(showToday ? 'nav.weekHintUnified' : 'nav.weekHintSplit')
+    : entry.id === 'later' ? t('nav.laterHint')
+    : entry.id === 'upcoming' ? t('nav.upcomingHint')
+    : entry.id === 'someday' ? t('nav.somedayHint')
     : null;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: entry.id });
   const { icon, label } = ENTRY[entry.id];

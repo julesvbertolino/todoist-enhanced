@@ -20,6 +20,8 @@ export interface SelectOption {
   face?: string;
   /** A sentence under the label, in the list and, in a `row`, on the closed control too. */
   hint?: string;
+  /** Context displayed beside this option only while searching. */
+  searchHint?: string;
   /** A destructive entry, drawn in red ("Remove from project"). */
   danger?: boolean;
   /** A small button at the right of the row that does something without choosing it (a preview). */
@@ -55,6 +57,8 @@ interface SelectProps {
   matchWidth?: boolean;
   maxPopupWidth?: number;
   popupClassName?: string;
+  /** Group projects before sections in search results. */
+  flattenSearch?: boolean;
   /** Drawn as it is but greyed, and it does not open: the value can be read, not changed. */
   disabled?: boolean;
   /** What a greyed control says when pointed at. */
@@ -76,7 +80,7 @@ interface SelectProps {
  */
 export function Select({
   label, value, options, onChange, ariaLabel, placeholder, searchable: searchableProp,
-  variant = 'field', unset = false, unsetLabel, chipIcon, tint, matchWidth = false, maxPopupWidth, popupClassName, disabled = false, title,
+  variant = 'field', unset = false, unsetLabel, chipIcon, tint, matchWidth = false, maxPopupWidth, popupClassName, disabled = false, title, flattenSearch = false,
 }: SelectProps) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
@@ -96,9 +100,12 @@ export function Select({
   );
   const filtered = useMemo(() => {
     if (!query.trim()) return options;
-    return options.filter((option) =>
+    const matches = options.filter((option) =>
       matchesSearch(`${option.label} ${option.face ?? ''}`, query));
-  }, [options, query]);
+    return flattenSearch
+      ? [...matches.filter((option) => !option.sub), ...matches.filter((option) => option.sub)]
+      : matches;
+  }, [options, query, flattenSearch]);
 
   // Opening starts on what is already chosen, not at the top of the list.
   useEffect(() => {
@@ -233,7 +240,7 @@ export function Select({
           role="option"
           aria-selected={option.value === value}
           data-active={at === active || undefined}
-          className={`opt${at === active ? ' active' : ''}${option.sub ? ' sectionopt' : ''}${option.danger ? ' danger' : ''}`}
+          className={`opt${at === active ? ' active' : ''}${option.sub && !(flattenSearch && query.trim()) ? ' sectionopt' : ''}${option.danger ? ' danger' : ''}`}
           onMouseEnter={() => setActive(at)}
           onMouseDown={(event) => { event.preventDefault(); choose(at); }}
         >
@@ -245,6 +252,7 @@ export function Select({
           {option.hint
             ? <span className="listbox-text"><span className="listbox-label">{option.label}</span><small>{option.hint}</small></span>
             : <span className="listbox-label">{option.label}</span>}
+          {flattenSearch && query.trim() && option.searchHint && <small className="listbox-search-hint" title={option.searchHint}>{option.searchHint}</small>}
           {option.value === value && <Icon name="check" size="sm" />}
           {option.action && (
             <span

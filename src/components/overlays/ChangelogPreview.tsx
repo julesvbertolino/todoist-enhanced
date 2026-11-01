@@ -93,6 +93,10 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
           <div><span className="cv-event orange">Time for yourself<small>10:00 · 45 min</small></span></div>
         </div>
       </div>; break;
+    case 'pomodoro':
+      content = <><div className="cv-heading"><Icon name="clock" size="sm" />{say('This week', 'Cette semaine')}</div>
+        <div className="cv-pills"><span className="cv-pill on"><Icon name="clock" size="sm" />25 min</span><span className="cv-pill">{say('Display', 'Affichage')}</span><span className="cv-pill">Insights</span></div>
+        {row(review, 'checkbox', 'P1')}{row(task, 'checkbox', 'P2')}</>; break;
     case 'assign':
       content = <><div className="cv-sentence">Prepare the presentation {chip('+Anne', 'accent')}</div>{row('Anne', 'user', '↵', true)}</>; break;
     case 'views':

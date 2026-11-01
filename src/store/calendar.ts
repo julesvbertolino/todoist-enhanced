@@ -1,5 +1,5 @@
 import { calendarDue, calendarMinutes } from '@/domain/calendar';
-import { weekLabel, type Item } from '@/domain/types';
+import { withoutHorizons, type Item } from '@/domain/types';
 import { useStore } from './store';
 import { translate } from '@/i18n';
 
@@ -11,7 +11,7 @@ export async function scheduleCalendarTask(id: string, day: Date, minutes: numbe
   if (!item || item.checked || item.is_deleted || item.projection) return;
   const patch: Record<string, unknown> = {
     due: calendarDue(item, day, minutes),
-    labels: item.labels.filter((label) => label.toLowerCase() !== weekLabel().toLowerCase()),
+    labels: withoutHorizons(item.labels),
   };
   if (minutes !== null) patch.estimateMinutes = duration ?? calendarMinutes(item);
   const done = state.updateTask(id, patch);

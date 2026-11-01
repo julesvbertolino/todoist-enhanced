@@ -1,0 +1,26 @@
+.fs-list{display:grid;gap:34px;padding:28px;max-width:1180px;margin:auto}
+.fs-list figcaption{font-size:12px;color:var(--muted);margin-bottom:10px}.fs-list figcaption b{color:var(--text);font-size:14px}
+.fs-frame{height:640px;position:relative;border-radius:20px;overflow:hidden;border:1px solid var(--border);background:var(--frame-app)}
+.fs-frame.narrow{width:390px;height:760px;margin:0}
+.fs-frame .proto-focus{position:relative;inset:auto;height:100%;border-radius:0;border:0}
+.fs-frame.narrow .proto-focus>header button{font-size:0}.fs-frame.narrow .focus-center>h1{font-size:25px}.fs-frame.narrow .focus-digits{font-size:93px;letter-spacing:-5px}.fs-frame.narrow .proto-focus.split .focus-center{display:flex}.fs-frame.narrow .focus-reading{width:100%;text-align:left}.fs-frame.narrow .proto-focus>footer{flex-wrap:wrap;gap:12px}
+
+.proto-focus.free .focus-center{padding-top:0}
+.focus-free{font-size:12px;color:var(--muted);margin-top:22px}
+.proto-focus.linked .focus-center{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:56px;width:min(1040px,100%);align-items:center;text-align:left}
+.proto-focus.linked .timer-side{display:grid;justify-items:start}.proto-focus.linked .timer-side .timer-controls{justify-content:flex-start}
+.proto-focus.linked .focus-digits{font-size:clamp(78px,9vw,112px);margin-top:0}
+.task-side{background:var(--hover);border:1px solid var(--border);border-radius:14px;padding:26px 28px;max-height:100%;overflow:auto}
+.task-side .focus-project{margin-top:0}.task-side h1{font-size:24px;margin:8px 0 0;font-weight:650;letter-spacing:-.5px;line-height:1.35}
+.task-side .focus-description{white-space:pre-line;max-width:none;margin:12px 0 18px}
+.task-side h2{font-size:11px;color:var(--muted);font-weight:600;margin:16px 0 4px}
+.task-line{display:flex;align-items:center;gap:10px;font-size:13px;padding:9px 0;border-top:1px solid var(--border)}
+.focus-circle.round{border-radius:50%}
+.task-side .focus-context{margin-top:18px}
+.fs-frame.narrow .proto-focus.linked .focus-center{display:flex;flex-direction:column;gap:22px;padding:20px}.fs-frame.narrow .proto-focus.linked .timer-side{justify-items:center;width:100%}.fs-frame.narrow .task-side{width:100%}
+.fs-frame .proto-focus>footer{display:none}
+.fs-frame{height:760px}.fs-frame.narrow{height:900px}.task-side{padding:22px 26px}
+
+.task-side{background:var(--surface)!important;border:1px solid var(--border-strong,var(--border))!important;box-shadow:0 10px 40px #1410191a}
+.focus-circle.sub{width:16px;height:16px;border:1.5px solid #cf9f40;border-radius:5px}
+.task-line .focus-circle{border-radius:5px;flex:none}
