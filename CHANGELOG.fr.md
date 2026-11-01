@@ -8,7 +8,7 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
-## 2.26.0
+## 2.26.1
 
 🎨 **Les gros comptes s’allègent.** Cocher ou modifier une tâche dans une longue liste, ou recevoir une mise à jour de Todoist, ne redessine plus toutes les autres lignes. L’app charge aussi moins de code au démarrage : les gros projets et Ma semaine restent réactifs.
 

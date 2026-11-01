@@ -40,7 +40,7 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
-## 2.26.0
+## 2.26.1
 
 🎨 **Large accounts feel lighter.** Ticking or editing a task in a long list, or an update arriving from Todoist, no longer redraws every other row. The app also loads less code when it starts, so big projects and My week stay responsive.
 
