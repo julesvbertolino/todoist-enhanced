@@ -15,11 +15,8 @@
 .pomo-popover-time{font-size:46px;letter-spacing:-2px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.2}
 .pomo-popover-phase,.pomo-popover-free{color:var(--muted);font-size:11px;margin:4px 0 0}
 .pomo-popover-task{display:block;margin-top:14px;font-size:13px;line-height:1.5}
-.pomo-popover-link{margin-top:12px;color:var(--accent-dark);text-align:left;font-size:11px;line-height:1.5}
 .pomo-popover-actions{display:flex;gap:8px;margin:18px 0 8px}
 .pomo-popover-actions .btn{flex:1;justify-content:center;gap:6px;min-height:34px;font-size:12px}
-.pomo-popover-end{padding:10px 0 6px;border-top:1px solid var(--border);color:var(--muted);font-size:11px}
-.pomo-popover-end:hover{color:var(--late-dark,#b3261e)}
 
 .pomo-fs{position:fixed;inset:12px;z-index:200;display:flex;flex-direction:column;overflow:auto;border:1px solid var(--border);border-radius:20px;color:var(--text);
   background:radial-gradient(900px 520px at 50% -10%,color-mix(in srgb,var(--accent) 22%,transparent),transparent 70%),radial-gradient(700px 400px at 50% 110%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 70%),var(--surface);
@@ -73,3 +70,18 @@
 .pomo-ask p{font-size:13px;color:var(--muted);line-height:1.6}
 .pomo-ask footer{display:flex;justify-content:space-between;gap:10px;margin-top:6px}
 @media(max-width:560px){.pomo-choice{grid-template-columns:1fr}}
+
+.pomo-popover{padding:18px 20px 16px;position:fixed}
+.pomo-popover-expand{position:absolute;top:10px;right:10px;color:var(--muted)}
+.pomo-popover-actions{display:flex;gap:8px;margin:18px 0 0}
+/* The two ways to open it slide like the other toggles do. */
+.pomo-choice{position:relative;isolation:isolate}
+.pomo-choice::before{content:"";position:absolute;z-index:-1;top:4px;bottom:4px;left:4px;width:calc((100% - 12px) / 2);background:var(--surface);border:1px solid var(--accent);border-radius:12px;box-shadow:0 1px 4px #0002;transition:transform .24s cubic-bezier(.3,.7,.3,1)}
+.pomo-choice[data-selected="1"]::before{transform:translateX(calc(100% + 4px))}
+.pomo-choice>button[aria-checked=true]{background:transparent;border-color:transparent;box-shadow:none}
+@media(max-width:560px){.pomo-choice::before{width:calc(100% - 8px);height:calc((100% - 12px) / 2);bottom:auto}.pomo-choice[data-selected="1"]::before{transform:translateY(calc(100% + 4px))}}
+@media(prefers-reduced-motion:reduce){.pomo-choice::before{transition:none}}
+
+.pomo-fs-props{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 8px}
+.pomo-fs-props .priopills{display:flex;gap:4px}
+.pomo-fs-props .priopill{border-radius:9999px}

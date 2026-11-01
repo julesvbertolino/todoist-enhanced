@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  ageInMonths, bucketOf, groupWeek, keptDay, laterItems, pruneKept, readKept, somedayItems, splitDust, splitQuick,
+  ageInMonths, bucketOf, groupWeek, keptDay, monthItems, pruneKept, readKept, somedayItems, splitDust, splitQuick,
 } from './views';
 import { due, item } from '@/test/items';
 
@@ -210,15 +210,15 @@ describe('ageInMonths', () => {
 });
 
 describe('the Later horizon', () => {
-  const later = item({ id: 'later', labels: ['later'] });
+  const later = item({ id: 'month', labels: ['thismonth'] });
   const plain = item({ id: 'plain' });
   const week = item({ id: 'week', labels: ['week'] });
-  const both = item({ id: 'both', labels: ['week', 'later'] });
-  const dated = item({ id: 'dated', labels: ['later'], due: due('2026-10-20') });
+  const both = item({ id: 'both', labels: ['week', 'thismonth'] });
+  const dated = item({ id: 'dated', labels: ['thismonth'], due: due('2026-10-20') });
 
   it('lists undated tasks tagged later, and keeps them out of Someday', () => {
     const all = [later, plain, week, both, dated];
-    expect(ids(laterItems(all, NOW))).toEqual(['later']);
+    expect(ids(monthItems(all, NOW))).toEqual(['month']);
     expect(ids(somedayItems(all, NOW))).toEqual(['plain']);
   });
 

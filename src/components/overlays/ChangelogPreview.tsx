@@ -94,9 +94,9 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
         </div>
       </div>; break;
     case 'pomodoro':
-      content = <><div className="cv-heading"><Icon name="clock" size="sm" />{say('This week', 'Cette semaine')}</div>
-        <div className="cv-pills"><span className="cv-pill on"><Icon name="clock" size="sm" />25 min</span><span className="cv-pill">{say('Display', 'Affichage')}</span><span className="cv-pill">Insights</span></div>
-        {row(review, 'checkbox', 'P1')}{row(task, 'checkbox', 'P2')}</>; break;
+      content = <><div className="cv-heading"><Icon name="week" size="sm" />{say('This week', 'Cette semaine')}</div>
+        <div className="cv-pills"><span className="cv-pill"><Icon name="clock" size="sm" />25 min</span><span className="cv-pill on"><Icon name="clock" size="sm" />18:42 ❚❚</span><span className="cv-pill">12:08 ▶</span></div>
+        <div className="cv-focus"><small>{review}</small><b>18:42</b><span className="cv-chip accent">{say('Pause', 'Pause')}</span></div></>; break;
     case 'assign':
       content = <><div className="cv-sentence">Prepare the presentation {chip('+Anne', 'accent')}</div>{row('Anne', 'user', '↵', true)}</>; break;
     case 'views':

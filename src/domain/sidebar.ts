@@ -13,7 +13,7 @@
  */
 
 export const SIDEBAR_ITEMS = [
-  'inbox', 'today', 'week', 'later', 'upcoming', 'someday',
+  'inbox', 'today', 'week', 'month', 'upcoming', 'someday',
   'review', 'dashboard', 'logbook', 'matrix', 'labels', 'filters',
 ] as const;
 export type SidebarItemId = (typeof SIDEBAR_ITEMS)[number];
@@ -28,7 +28,7 @@ export interface SidebarNav {
   other: SidebarEntry[];
 }
 
-const MAIN: SidebarItemId[] = ['inbox', 'today', 'week', 'later', 'upcoming', 'someday'];
+const MAIN: SidebarItemId[] = ['inbox', 'today', 'week', 'month', 'upcoming', 'someday'];
 const OTHER: SidebarItemId[] = ['review', 'dashboard', 'logbook', 'matrix', 'labels', 'filters'];
 
 export const defaultSidebarNav = (): SidebarNav => ({
@@ -70,7 +70,7 @@ export function readSidebarNav(stored: unknown): SidebarNav {
       const at = before ? block.findIndex((e) => e.id === before) + 1 : 0;
       /* The Later page is new to anyone who already arranged the sidebar: it
          starts off for them, and Settings or the setup turns it on. */
-      block.splice(at, 0, { id, on: !(id === 'later' && arranged) });
+      block.splice(at, 0, { id, on: !(id === 'month' && arranged) });
     });
   };
   restore(main, MAIN);

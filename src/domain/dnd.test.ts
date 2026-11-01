@@ -258,21 +258,21 @@ describe('placementForPage: what Q opens the composer with', () => {
 describe('the Later drop', () => {
   it('tags a task later, clears its date, and swaps out the week tag', () => {
     const task = item({ labels: [weekLabel(), 'home'], due: due('2026-09-30') });
-    expect(dropMutation(task, { kind: 'later' })?.update).toEqual({ due: null, labels: ['home', 'later'] });
+    expect(dropMutation(task, { kind: 'month' })?.update).toEqual({ due: null, labels: ['home', 'thismonth'] });
   });
 
   it('takes the later tag off when a task gets a day or goes to Someday', () => {
-    const task = item({ labels: ['later', 'home'] });
+    const task = item({ labels: ['thismonth', 'home'] });
     expect(dropMutation(task, { kind: 'today' })?.update).toMatchObject({ labels: ['home'] });
     expect(dropMutation(task, { kind: 'someday' })?.update).toEqual({ due: null, labels: ['home'] });
   });
 
   it('swaps the later tag for the week tag', () => {
-    const task = item({ labels: ['later'] });
+    const task = item({ labels: ['thismonth'] });
     expect(dropMutation(task, { kind: 'anytime' })?.update).toEqual({ due: null, labels: [weekLabel()] });
   });
 
   it('opens the composer with the tag', () => {
-    expect(placementFor({ kind: 'later' })).toEqual({ labels: ['later'] });
+    expect(placementFor({ kind: 'month' })).toEqual({ labels: ['thismonth'] });
   });
 });

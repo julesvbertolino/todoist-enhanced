@@ -16,7 +16,7 @@ import { useData } from '@/hooks/useData';
 import { useStore } from '@/store/store';
 import { navigate, type Route } from '@/hooks/useRoute';
 import { projectCounts, projectTree, rootItems, type ProjectNode } from '@/store/selectors';
-import { bucketOf, laterItems, somedayItems, weekItems } from '@/domain/views';
+import { bucketOf, monthItems, somedayItems, weekItems } from '@/domain/views';
 import { markerStyle, avatarUrl } from '@/domain/colors';
 import { firstName, karmaStanding } from '@/domain/karma';
 import { readProjectIcon } from '@/domain/projectIcons';
@@ -177,7 +177,7 @@ export function Sidebar({
         const roots = rootItems(openItems({ ...snapshot, items: workspaceItems }));
         return matrixVisibleItems(roots, snapshot.projects, prefs.eisenhowerHorizon, prefs.eisenhowerIncludeSomeday, filters.workspaces.length ? null : prefs.eisenhowerWorkspace, snapshot.user?.start_day ?? 1).length;
       })(),
-      later: laterItems(scope('later')).length,
+      month: monthItems(scope('month')).length,
       someday: somedayItems(scope('someday')).length,
       byProject: projectCounts(items),
     };
@@ -297,7 +297,7 @@ export function Sidebar({
           inboxId ? { kind: 'project', projectId: inboxId } : undefined);
       case 'today': return navItem('today', 'calendar', 'nav.today', counts.today, { kind: 'today' });
       case 'week': return navItem('week', 'week', 'nav.week', counts.week, { kind: 'anytime' });
-      case 'later': return navItem('later', 'calendar', 'nav.later', counts.later, { kind: 'later' });
+      case 'month': return navItem('month', 'calendar', 'nav.month', counts.month, { kind: 'month' });
       case 'upcoming': return navItem('upcoming', 'upcoming', 'nav.upcoming', 0);
       case 'someday': return navItem('someday', 'someday', 'nav.someday', counts.someday, { kind: 'someday' });
       case 'review': return navItem('review', 'check', 'nav.review', 0);

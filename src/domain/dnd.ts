@@ -19,7 +19,7 @@ export type DropTarget =
   | { kind: 'quick' }
   | { kind: 'anytime' }
   /** A horizon past this week, carried by the `later` tag. */
-  | { kind: 'later' }
+  | { kind: 'month' }
   | { kind: 'someday' }
   /**
    * A calendar day, and optionally a time of day (`HH:mm:ss`) typed with it in
@@ -61,8 +61,8 @@ const withoutHorizon = withoutHorizons;
 const withWeek = (labels: string[]): string[] =>
   withoutHorizon(labels).concat(weekLabel());
 
-const withLater = (labels: string[]): string[] =>
-  withoutHorizon(labels).concat(SYSTEM_LABELS.later);
+const withMonth = (labels: string[]): string[] =>
+  withoutHorizon(labels).concat(SYSTEM_LABELS.month);
 
 /**
  * A due value for a calendar date.
@@ -107,8 +107,8 @@ export function placementFor(target: DropTarget, now = new Date()): TaskPlacemen
       return { date: toApiDate(target.date) };
     case 'anytime':
       return { labels: [weekLabel()] };
-    case 'later':
-      return { labels: [SYSTEM_LABELS.later] };
+    case 'month':
+      return { labels: [SYSTEM_LABELS.month] };
     // Nothing to carry: Someday is what a task with no date and no week label
     // already is.
     case 'someday':
@@ -147,8 +147,8 @@ export function placementForPage(
     /* My week's own "Add task" line puts a task in the week with its label. */
     case 'week':
       return placementFor({ kind: 'anytime' }, now);
-    case 'later':
-      return placementFor({ kind: 'later' }, now);
+    case 'month':
+      return placementFor({ kind: 'month' }, now);
     case 'label':
       return page.id ? { labels: [page.id] } : {};
     default:
@@ -184,8 +184,8 @@ export function dropMutation(item: Item, target: DropTarget): DropMutation | nul
       // Committed to this week, but to no particular day.
       return { update: { due: null, labels: withWeek(item.labels) } };
 
-    case 'later':
-      return { update: { due: null, labels: withLater(item.labels) } };
+    case 'month':
+      return { update: { due: null, labels: withMonth(item.labels) } };
 
     case 'someday':
       return { update: { due: null, labels: withoutHorizon(item.labels) } };
@@ -471,7 +471,7 @@ function encodeKind(target: DropTarget): string {
 
 export function decodeTarget(encoded: string): DropTarget | null {
   const id = encoded.includes('|') ? encoded.slice(encoded.indexOf('|') + 1) : encoded;
-  if (id === 'today' || id === 'quick' || id === 'anytime' || id === 'later' || id === 'someday'
+  if (id === 'today' || id === 'quick' || id === 'anytime' || id === 'month' || id === 'someday'
     || id === 'favourites') return { kind: id };
 
   const [kind, ...rest] = id.split(':');

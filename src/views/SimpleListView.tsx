@@ -24,14 +24,14 @@ import { useData } from '@/hooks/useData';
 import { useStore } from '@/store/store';
 import { viewPrefs } from '@/store/prefs';
 import { applyFilters, groupRoots, labelRoots, pullQuick, sortItems } from '@/store/selectors';
-import { laterItems, somedayItems, splitDust } from '@/domain/views';
+import { monthItems, somedayItems, splitDust } from '@/domain/views';
 import { summariseLoad } from '@/domain/load';
 import type { TranslationKey } from '@/i18n';
 import { SYSTEM_LABELS, type Item } from '@/domain/types';
 import type { DropTarget, RowOrder, TaskPlacement } from '@/domain/dnd';
 
 interface SimpleListViewProps {
-  kind: 'later' | 'someday' | 'inbox' | 'label' | 'filter';
+  kind: 'month' | 'someday' | 'inbox' | 'label' | 'filter';
   labelName?: string;
   /** The saved filter a `filter` page shows. */
   filterId?: string;
@@ -105,8 +105,8 @@ function SimpleListBody({
     const roots = groupRoots(items, current.group === 'none' && kind === 'inbox' ? 'section' : current.group, subtasks);
     let selection: Item[];
 
-    if (kind === 'later') {
-      selection = laterItems(roots);
+    if (kind === 'month') {
+      selection = monthItems(roots);
     } else if (kind === 'someday') {
       selection = somedayItems(roots);
     } else if (kind === 'inbox') {
@@ -185,15 +185,15 @@ function SimpleListBody({
   const inboxId = snapshot.user?.inbox_project_id;
   const dropTarget: DropTarget | undefined = kind === 'filter'
     ? undefined
-    : kind === 'later'
-    ? { kind: 'later' }
+    : kind === 'month'
+    ? { kind: 'month' }
     : kind === 'someday'
     ? { kind: 'someday' }
     : kind === 'inbox'
       ? (inboxId ? { kind: 'project', projectId: inboxId } : undefined)
       : (labelName ? { kind: 'label', label: labelName } : undefined);
-  const addition = kind === 'later'
-    ? { labels: [SYSTEM_LABELS.later] }
+  const addition = kind === 'month'
+    ? { labels: [SYSTEM_LABELS.month] }
     : kind === 'someday' || kind === 'filter'
     ? {}
     : kind === 'inbox'

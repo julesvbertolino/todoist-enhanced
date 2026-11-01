@@ -37,20 +37,20 @@ test('the sidebar editor says whether This week holds today\u2019s tasks (#195)'
   await page.getByRole('button', { name: 'Sidebar' }).click();
   const week = page.locator('.navedit-row').filter({ has: page.getByText('This week', { exact: true }) });
   const today = page.locator('.navedit-row').filter({ has: page.getByText('Today', { exact: true }) });
-  await expect(week).toContainText('Includes today\u2019s tasks');
+  await expect(week).toContainText('Today and anytime this week');
   const height = (await week.boundingBox())!.height;
 
   // Wait for the opening dialog to settle before clicking the real control.
   const todayCheckbox = today.getByRole('checkbox');
   await todayCheckbox.check();
   await expect(todayCheckbox).toBeChecked();
-  await expect(week).toContainText('Includes today\u2019s tasks');
+  await expect(week).toContainText('Today and anytime this week');
   // The list does not move when the tick is turned.
   expect((await week.boundingBox())!.height).toBe(height);
 
   await todayCheckbox.uncheck();
   await expect(todayCheckbox).not.toBeChecked();
-  await expect(week).toContainText('Includes today\u2019s tasks');
+  await expect(week).toContainText('Today and anytime this week');
 });
 
 test('the Inbox is drawn as a project, so its sections can be added and shown', async ({ demo: page }) => {

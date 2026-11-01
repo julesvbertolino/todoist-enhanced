@@ -18,15 +18,15 @@ describe('readSidebarNav', () => {
       other: [{ id: 'labels', on: true }, { id: 'review', on: true }, { id: 'dashboard', on: true },
         { id: 'logbook', on: true }, { id: 'matrix', on: true }],
     });
-    expect(ids(nav.main)).toEqual(['week', 'later', 'inbox', 'today', 'upcoming', 'someday']);
+    expect(ids(nav.main)).toEqual(['week', 'month', 'inbox', 'today', 'upcoming', 'someday']);
     expect(nav.main.find((e) => e.id === 'inbox')?.on).toBe(false);
     // Someone who arranged the sidebar before Later existed does not get it unasked.
-    expect(nav.main.find((e) => e.id === 'later')?.on).toBe(false);
+    expect(nav.main.find((e) => e.id === 'month')?.on).toBe(false);
     expect(ids(nav.other)[0]).toBe('labels');
   });
 
   it('shows Later from the start for an account that never arranged the sidebar', () => {
-    expect(defaultSidebarNav().main.find((e) => e.id === 'later')?.on).toBe(true);
+    expect(defaultSidebarNav().main.find((e) => e.id === 'month')?.on).toBe(true);
   });
 
   it('drops ids it does not know and entries listed twice', () => {

@@ -42,13 +42,11 @@ translation lives in CHANGELOG.fr.md.
 
 ## 2.27.0
 
-🆕 **Focus with a Pomodoro timer.** Press the 25 min pill at the top of any page to start a free session, or open a task and start it there to keep that task with you. Choose in Settings whether it stays in your toolbar or fills the screen, where you can still edit the task.
+🆕 **Stay on one thing with a Pomodoro timer.** Press the 25 min pill at the top of a page, or on a task to keep it with you. It counts down in your toolbar or fills the screen, where you can still edit the task. Choose how it opens in Settings.
 
-🆕 **Plan beyond this week with Later.** Later is a new page for what you want to do in a month, a quarter or a sprint, as you decide. Drag a task there, tag it @later, or pick Later in the date picker. Turn it on in Settings, then Sidebar.
+🆕 **Keep this month's tasks together.** This month is a new page for what you want to do this month, with no set day. Drag a task there, tag it @thismonth, or pick This month in the date picker. Turn it on in Settings, then Sidebar.
 
-🎨 **My week is now This week.** The page keeps its name in French and drops "My" in English, next to Later and Someday. A task is in one of them at a time: choosing another takes the first one off.
-
-🎨 **Find a project or a section in one search.** Typing in the project picker now lists projects and sections in a single flat list, with their icons lined up.
+🐛 **Find a project when you move a task.** Typing in the project picker now lists projects and sections in one list, with their icons lined up.
 
 ## 2.26.1
 

@@ -334,8 +334,8 @@ export const SYSTEM_LABELS = {
   quick: 'quick',
   automation: 'automation',
   waiting: 'waiting',
-  /** A horizon past this week: a month, a quarter, a sprint. The user decides the span. */
-  later: 'later',
+  /** The month's horizon: tasks for this month with no set day. */
+  month: 'thismonth',
 } as const;
 
 export const DEFAULT_WEEK_LABEL = 'week';
@@ -368,7 +368,7 @@ export const setWeekLabel = (name: string): void => {
 export const withoutHorizons = (labels: string[]): string[] =>
   labels.filter((l) => {
     const name = l.toLowerCase();
-    return name !== weekLabelName.toLowerCase() && name !== SYSTEM_LABELS.later;
+    return name !== weekLabelName.toLowerCase() && name !== SYSTEM_LABELS.month;
   });
 
 export const ESTIMATE_PREFIX = 'est-';
@@ -382,7 +382,7 @@ export type ViewId =
   /** Today on its own, when the sidebar is set to separate it from the week. */
   | 'today'
   | 'upcoming'
-  | 'later'
+  | 'month'
   | 'someday'
   | 'review'
   | 'dashboard'

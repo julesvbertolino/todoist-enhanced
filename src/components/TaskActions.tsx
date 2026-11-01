@@ -551,7 +551,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
                 today: () => void moveTo({ kind: 'today' }, t('common.today')),
                 day: (date) => commitDate(toApiDate(date)),
                 anytime: () => void moveTo({ kind: 'anytime' }, t('nav.week')),
-                later: () => void moveTo({ kind: 'later' }, t('nav.later')),
+                month: () => void moveTo({ kind: 'month' }, t('nav.month')),
                 someday: () => void moveTo({ kind: 'someday' }, t('nav.someday')),
               })}
               footer={(item.due?.is_recurring || item.due) ? (

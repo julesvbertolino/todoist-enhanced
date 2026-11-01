@@ -41,6 +41,7 @@ import { EstimateStorageDialog } from './components/overlays/EstimateStorageDial
 import { Walkthrough } from './components/overlays/Walkthrough';
 import { PomodoroFocus } from './components/overlays/PomodoroFocus';
 import { PomodoroAsk } from './components/overlays/PomodoroAsk';
+import { usePomodoro } from './store/pomodoro';
 import { Tour } from './components/overlays/Tour';
 import { InstallPrompt } from './components/overlays/InstallPrompt';
 import { WhatsNew, type WhatsNewScope } from './components/overlays/WhatsNew';
@@ -59,7 +60,7 @@ import { labelRoots, rootItems } from './store/selectors';
 import { detectConflicts } from './domain/conflicts';
 import { placementForPage } from './domain/dnd';
 import { useParentEstimates } from './hooks/useParentEstimates';
-import { bucketOf, laterItems, somedayItems, upcomingItems, weekItems } from './domain/views';
+import { bucketOf, monthItems, somedayItems, upcomingItems, weekItems } from './domain/views';
 import { effectiveEstimate } from './domain/estimates';
 import type { Item } from './domain/types';
 import type { TranslationKey } from './i18n';
@@ -305,6 +306,10 @@ export function App() {
     return () => { cancelled = true; };
   }, [ready, connected, demo, settled, userId, tourOpen, walkthroughOpen, whatsNew,
     seenVersion, whatsNewOn, setPrefs, setupDone]);
+
+  /* The task the full screen carries is edited there: the window behind it would be a second editor of the same task. */
+  const pomodoroFullscreen = usePomodoro((s) => s.fullscreen);
+  useEffect(() => { if (pomodoroFullscreen) setOpenTaskId(null); }, [pomodoroFullscreen]);
 
   /* The Pomodoro arrived after the setup: whoever already went through it is
      asked how it should open, once, after What's new. */
@@ -658,7 +663,7 @@ function paintBrowserChrome(): void {
 }
 
 /** The pages that list tasks to work through, which is where "I have time" is offered (#159). */
-const TIME_PAGES = new Set<Route['view']>(['week', 'today', 'project', 'label', 'inbox', 'later', 'someday']);
+const TIME_PAGES = new Set<Route['view']>(['week', 'today', 'project', 'label', 'inbox', 'month', 'someday']);
 
 function AppShell({
   route, openTaskId, setOpenTaskId, composerOpen, setComposerOpen,
@@ -729,8 +734,8 @@ function AppShell({
         return { contextItems: upcomingItems(roots), contextLabel: t('nav.upcoming') };
       case 'review':
         return { contextItems: weekItems(roots), contextLabel: t('nav.review') };
-      case 'later':
-        return { contextItems: laterItems(roots), contextLabel: t('nav.later') };
+      case 'month':
+        return { contextItems: monthItems(roots), contextLabel: t('nav.month') };
       case 'someday':
         return { contextItems: somedayItems(roots), contextLabel: t('nav.someday') };
       case 'inbox': {
@@ -873,7 +878,7 @@ function AppShell({
           {route.view === 'today' && <WeekView {...viewProps} scope="today" />}
           {route.view === 'search' && <SearchView query={route.query ?? ''} onOpen={openTask} />}
           {route.view === 'upcoming' && <UpcomingView {...viewProps} />}
-          {route.view === 'later' && <SimpleListView kind="later" {...viewProps} />}
+          {route.view === 'month' && <SimpleListView kind="month" {...viewProps} />}
           {route.view === 'someday' && <SimpleListView kind="someday" {...viewProps} />}
           {/* The Inbox is a project like the others, with sections of its own
              : it is drawn by the project page, which is what shows them. */}

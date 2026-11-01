@@ -74,7 +74,7 @@ export function Search({ open, onClose, onOpen, seed = '' }: SearchProps) {
       { key: 'go-inbox', icon: 'inbox', title: t('nav.inbox'), run: go(() => navigate('inbox')) },
       { key: 'go-today', icon: 'calendar', title: t('nav.today'), run: go(() => navigate('today')) },
       { key: 'go-week', icon: 'week', title: t('nav.week'), run: go(() => navigate('week')) },
-      { key: 'go-later', icon: 'calendar', title: t('nav.later'), run: go(() => navigate('later')) },
+      { key: 'go-later', icon: 'calendar', title: t('nav.month'), run: go(() => navigate('month')) },
       { key: 'go-upcoming', icon: 'upcoming', title: t('nav.upcoming'),
         run: go(() => navigate('upcoming')) },
       { key: 'go-someday', icon: 'someday', title: t('nav.someday'),

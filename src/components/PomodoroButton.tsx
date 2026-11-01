@@ -35,7 +35,9 @@ export function PomodoroButton({ taskId = null }: { taskId?: string | null }) {
   const { start, togglePause, setPopover, setFullscreen } = usePomodoro.getState();
   const now = usePomodoroNow();
   const wrap = useRef<HTMLSpanElement>(null);
-  const active = timer.status !== 'idle';
+  /* A task's pill shows its own session. Another session, free or on another
+     task, is not this task's: the pill offers a new one here instead. */
+  const active = timer.status !== 'idle' && (taskId === null || timer.taskId === taskId);
   const paused = timer.status === 'paused';
 
   useEffect(() => {
@@ -90,12 +92,12 @@ export function PomodoroButton({ taskId = null }: { taskId?: string | null }) {
       >
         {paused || timer.status === 'done' ? <Play size={14} strokeWidth={1.7} /> : <Pause size={14} strokeWidth={1.7} />}
       </button>
-      {popover && createPortal(<SessionPopover taskId={taskId} anchor={wrap.current} onFullscreen={() => setFullscreen(true)} />, document.body)}
+      {popover && createPortal(<SessionPopover anchor={wrap.current} onFullscreen={() => setFullscreen(true)} />, document.body)}
     </span>
   );
 }
 
-function SessionPopover({ taskId, anchor, onFullscreen }: { taskId: string | null; anchor: HTMLElement | null; onFullscreen: () => void }) {
+function SessionPopover({ anchor, onFullscreen }: { anchor: HTMLElement | null; onFullscreen: () => void }) {
   const { t } = useT();
   const timer = usePomodoro((s) => s.timer);
   const now = usePomodoroNow();
@@ -109,24 +111,21 @@ function SessionPopover({ taskId, anchor, onFullscreen }: { taskId: string | nul
   const place = rect ? { top: rect.bottom + 8, right: Math.max(12, window.innerWidth - rect.right) } : undefined;
   return (
     <div className="pomo-popover" role="dialog" aria-label={t('pomodoro.session')} style={place}>
+      <button type="button" className="pomo-popover-expand iconbtn" aria-label={t('pomodoro.fullscreen')} title={t('pomodoro.fullscreen')} onClick={onFullscreen}>
+        <Maximize2 size={15} />
+      </button>
       <div className="pomo-popover-time">{formatClock(remainingAt(timer, now))}</div>
       <span className="pomo-popover-phase">{phase}</span>
       {linked
         ? <strong className="pomo-popover-task">{displayTaskContent(linked)}</strong>
         : <p className="pomo-popover-free">{t('pomodoro.noTask')}</p>}
-      {taskId && taskId !== timer.taskId && (
-        <button type="button" className="pomo-popover-link" onClick={() => usePomodoro.getState().link(taskId)}>
-          {t('pomodoro.useThisTask')}
-        </button>
-      )}
       <div className="pomo-popover-actions">
         <button type="button" className="btn primary" onClick={() => (timer.status === 'done' ? usePomodoro.getState().startBreak() : usePomodoro.getState().togglePause())}>
           {timer.status === 'paused' || timer.status === 'done' ? <Play size={14} /> : <Pause size={14} />}
           {timer.status === 'done' ? t('pomodoro.startBreak') : timer.status === 'paused' ? t('pomodoro.resume') : t('pomodoro.pause')}
         </button>
-        <button type="button" className="btn" onClick={onFullscreen}><Maximize2 size={14} />{t('pomodoro.fullscreen')}</button>
+        <button type="button" className="btn" onClick={() => usePomodoro.getState().end()}>{t('pomodoro.end')}</button>
       </div>
-      <button type="button" className="pomo-popover-end" onClick={() => usePomodoro.getState().end()}>{t('pomodoro.end')}</button>
     </div>
   );
 }

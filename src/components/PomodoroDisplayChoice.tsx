@@ -31,7 +31,7 @@ export function PomodoroDisplayChoice({ value, onChange }: { value: Display; onC
     ['fullscreen', t('pomodoro.full'), t('pomodoro.fullHint')],
   ];
   return (
-    <div className="pomo-choice" role="radiogroup" aria-label={t('pomodoro.title')}>
+    <div className="pomo-choice" role="radiogroup" aria-label={t('pomodoro.title')} data-selected={value === 'fullscreen' ? 1 : 0}>
       {options.map(([id, title, hint]) => (
         <button key={id} type="button" role="radio" aria-checked={value === id} onClick={() => onChange(id)}>
           <Preview kind={id} />
