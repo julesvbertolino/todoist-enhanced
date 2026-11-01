@@ -346,6 +346,8 @@ test('sidebar contains title and duration; sort stays on one line and forecasts 
   expect(field!.height).toBeLessThan(50);
   await menu.getByRole('switch', { name: 'Future occurrences', exact: true }).click();
   await active(page).getByRole('button', { name: /^Display/ }).click();
+  /* Next week always has occurrences ahead of it; on a Sunday this week has none left. */
+  await calendar(page).getByRole('button', { name: 'Next period', exact: true }).click();
   const forecast = calendar(page).locator('.is-forecast').first();
   await expect(forecast.locator('.calendar-forecast-mark')).toBeVisible();
   await expect(forecast.getByRole('checkbox')).toHaveCount(0);
