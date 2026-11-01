@@ -85,7 +85,7 @@
 /* Full screen, task side: a header that holds whatever the task says. */
 .pomo-fs{overflow:hidden}
 .pomo-fs-body{min-height:0;overflow:hidden}
-.pomo-fs.linked .pomo-fs-body{align-items:stretch;padding-bottom:30px}
+.pomo-fs.linked .pomo-fs-body{align-items:center;padding-bottom:30px}
 .pomo-fs-task{max-height:100%;min-width:0;align-self:center}
 .pomo-fs-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .pomo-fs-open{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);padding:4px 8px;border-radius:7px}
@@ -96,3 +96,16 @@
 .pomo-fs-meta{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--muted);margin:0 0 4px 30px}
 .pomo-fs-meta span{display:inline-flex;align-items:center;gap:6px}
 .pomo-fs-task .descview{overflow-wrap:anywhere}
+
+.pomo-linked{color:var(--accent);flex:none}
+.pomo-popover-link{display:flex;align-items:center;gap:6px;margin:10px 0 0;font-size:11px;color:var(--muted)}
+.pomo-popover-link button{margin-left:auto;font-size:11px;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.pomo-popover-linkbtn{display:inline-flex;align-items:center;gap:7px;justify-self:start;margin-top:12px;padding:6px 10px;border-radius:8px;background:var(--hover);font-size:12px}
+.pomo-popover-linkbtn:hover{background:var(--border)}
+
+/* The task side reads from the title's left edge down, and the timer sits at the middle of its column. */
+.pomo-fs.linked .pomo-fs-timer{align-self:center}
+.pomo-fs-titlerow .check{margin-top:7px}
+.pomo-fs-task .descview,.pomo-fs-task .descedit,.pomo-fs-label,.pomo-fs-sub{margin-left:30px}
+.pomo-fs-sub{padding-right:2px}
+.pomo-fs-controls .btn{flex:none}

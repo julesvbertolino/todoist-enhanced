@@ -41,7 +41,9 @@ import { CommentThread } from '../CommentThread';
 import { DateField } from '../DateField';
 import { markerStyle } from '@/domain/colors';
 import { assignees } from '@/domain/sharing';
-import { displayTaskContent, isUncompletable, toDisplayPriority, toTodoistPriority, type Item } from '@/domain/types';
+import { SYSTEM_LABELS, displayTaskContent, isUncompletable, toDisplayPriority, toTodoistPriority, weekLabel, type Item } from '@/domain/types';
+import { dropMutation, type DropTarget } from '@/domain/dnd';
+import { taskShortcuts } from '../DatePicker';
 import { matchesSearch } from '@/domain/search';
 import { byLabelOrder } from '@/domain/orderKey';
 import { intlDate } from '@/lib/intl';
@@ -473,6 +475,13 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
   const links = titleLinks(item.content);
   const priority = toDisplayPriority(item.priority);
   const due = dueDate(item);
+  /* No day, but committed to the week or the month: the start date says so, in words. */
+  const hasTag = (name: string) => item.labels.some((l) => l.toLowerCase() === name.toLowerCase());
+  const horizonText = item.due ? null : hasTag(weekLabel()) ? t('review.to.anytime') : hasTag(SYSTEM_LABELS.month) ? t('review.to.month') : null;
+  const moveTo = (target: DropTarget) => {
+    const mutation = dropMutation(item, target);
+    if (mutation?.update) return updateTask(item.id, mutation.update);
+  };
   const deadline = deadlineDate(item);
   const subtasks = childrenOf(item.id);
   const doneSubtasks = subtasks.filter((c) => c.checked).length;
@@ -1028,7 +1037,14 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
               withTime
               value={due ? (hasTime(item.due) ? toApiDateTime(due) : toApiDate(due)) : ''}
               label={t('detail.startDate')}
-              placeholder={t('date.pick')}
+              placeholder={horizonText ?? t('date.pick')}
+              shortcuts={taskShortcuts(t, locale, {
+                day: (date) => void moveTo({ kind: 'day', date }),
+                today: () => void moveTo({ kind: 'today' }),
+                anytime: () => void moveTo({ kind: 'anytime' }),
+                month: () => void moveTo({ kind: 'month' }),
+                someday: () => void moveTo({ kind: 'someday' }),
+              })}
               onChange={(value, how) => {
                 /* Keeps the rule. Writing the date into `due.string` is what
                    ends a series, and picking a day in a calendar is never a

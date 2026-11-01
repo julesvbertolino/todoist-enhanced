@@ -42,7 +42,9 @@ translation lives in CHANGELOG.fr.md.
 
 ## 2.27.0
 
-🆕 **Stay on one thing with a Pomodoro timer.** Press the 25 min pill at the top of a page, or on a task to keep it with you. It counts down in your toolbar or fills the screen, where you can still edit the task. Choose how it opens in Settings.
+🆕 **Start a Pomodoro from any page.** Press the 25 min pill at the top of a page to start 25 minutes of focus. It counts down in the pill, with pause beside it. Open a task and press the pill to link the timer to that task.
+
+🆕 **Focus in full screen.** Open the timer and press the full screen button: only the time, or the time beside the task you linked, which you can edit there. Choose how a session opens in Settings.
 
 🆕 **Plan the month with Anytime this month.** This month is a new page for what you want to do this month, with no set day. Drag a task there, or pick Anytime this month in a date picker. In a list, such a task shows Anytime this week or Anytime this month where its date would be.
 

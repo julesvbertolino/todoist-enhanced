@@ -152,3 +152,4 @@
 .cv-focus>b{font-size:42px;letter-spacing:-2px;font-weight:450;line-height:1;font-variant-numeric:tabular-nums}
 .cv-focus-side{display:grid;gap:3px;justify-items:start}.cv-focus-side>i{font-style:normal;font-size:8px;color:var(--accent-dark)}.cv-focus-side>strong{font-size:10px}
 .cv-focus-actions{display:flex;gap:5px;margin-top:3px}
+.cv-pill.cv-paused{color:var(--muted);font-weight:500}

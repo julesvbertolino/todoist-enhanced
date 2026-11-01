@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Maximize2, Pause, Play, Timer } from 'lucide-react';
+import { Link2, Maximize2, Pause, Play, Timer } from 'lucide-react';
 import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
 import { usePomodoro } from '@/store/pomodoro';
@@ -81,6 +81,7 @@ export function PomodoroButton({ taskId = null }: { taskId?: string | null }) {
       >
         <Ring progress={timer.status === 'done' ? 1 : progressAt(timer, now)} />
         <span className="pomo-time">{time}</span>
+        {timer.taskId && <Link2 className="pomo-linked" size={12} aria-label={t('pomodoro.linkedHere')} />}
       </button>
       <button
         type="button"
@@ -115,12 +116,17 @@ function SessionPopover({ openedFrom, anchor, onFullscreen }: { openedFrom: stri
       </button>
       <div className="pomo-popover-time">{formatClock(remainingAt(timer, now))}</div>
       <span className="pomo-popover-phase">{phase}</span>
-      {/* Opened from the task itself, its name would only repeat the window around it. */}
-      {linked && linked.id === openedFrom
-        ? null
-        : linked
-        ? <strong className="pomo-popover-task">{displayTaskContent(linked)}</strong>
-        : <p className="pomo-popover-free">{t('pomodoro.noTask')}</p>}
+      {linked && linked.id !== openedFrom && <strong className="pomo-popover-task">{displayTaskContent(linked)}</strong>}
+      {!openedFrom && !linked && <p className="pomo-popover-free">{t('pomodoro.noTask')}</p>}
+      {openedFrom && (linked?.id === openedFrom ? (
+        <p className="pomo-popover-link"><Link2 size={12} />{t('pomodoro.linkedHere')}
+          <button type="button" onClick={() => usePomodoro.getState().link(null)}>{t('pomodoro.unlink')}</button>
+        </p>
+      ) : (
+        <button type="button" className="pomo-popover-linkbtn" onClick={() => usePomodoro.getState().link(openedFrom)}>
+          <Link2 size={13} />{t('pomodoro.linkTask')}
+        </button>
+      ))}
       <div className="pomo-popover-actions">
         <button type="button" className="btn primary" onClick={() => (timer.status === 'done' ? usePomodoro.getState().startBreak() : usePomodoro.getState().togglePause())}>
           {timer.status === 'paused' || timer.status === 'done' ? <Play size={14} /> : <Pause size={14} />}

@@ -95,9 +95,13 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
       </div>; break;
     case 'pomodoro':
       content = <><div className="cv-toolbar"><b>{say('This week', 'Cette semaine')}</b>
-        <span className="cv-pill on"><svg viewBox="0 0 20 20" width="11" height="11" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeOpacity=".25" strokeWidth="2.4" /><circle cx="10" cy="10" r="8" fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" strokeDasharray="50.3" strokeDashoffset="17" transform="rotate(-90 10 10)" /></svg>18:42 ❚❚</span>
-        <span className="cv-pill">{say('Display', 'Affichage')}</span></div>
-        <div className="cv-focus"><b>18:42</b><span className="cv-focus-side"><i>{say('Website', 'Site vitrine')}</i><strong>{review}</strong><span className="cv-focus-actions"><span className="cv-chip accent">{say('Pause', 'Pause')}</span><span className="cv-chip">{say('End session', 'Terminer')}</span></span></span></div></>; break;
+        <span className="cv-pill"><Icon name="clock" size="sm" />25 min</span><span className="cv-pill">{say('Display', 'Affichage')}</span></div>
+        <div className="cv-toolbar"><b>{say('This week', 'Cette semaine')}</b>
+        <span className="cv-pill on"><svg viewBox="0 0 20 20" width="11" height="11" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeOpacity=".25" strokeWidth="2.4" /><circle cx="10" cy="10" r="8" fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" strokeDasharray="50.3" strokeDashoffset="17" transform="rotate(-90 10 10)" /></svg>18:42 <svg viewBox="0 0 10 10" width="8" height="8" aria-hidden="true"><rect x="1.5" y="1" width="2.4" height="8" rx=".8" fill="currentColor" /><rect x="6.1" y="1" width="2.4" height="8" rx=".8" fill="currentColor" /></svg></span><span className="cv-pill">{say('Display', 'Affichage')}</span></div>
+        <div className="cv-toolbar"><b>{say('This week', 'Cette semaine')}</b>
+        <span className="cv-pill on cv-paused"><svg viewBox="0 0 20 20" width="11" height="11" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeOpacity=".25" strokeWidth="2.4" /><circle cx="10" cy="10" r="8" fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" strokeDasharray="50.3" strokeDashoffset="30" transform="rotate(-90 10 10)" /></svg>18:42 <svg viewBox="0 0 10 10" width="8" height="8" aria-hidden="true"><path d="M2 1 9 5 2 9z" fill="currentColor" /></svg></span><span className="cv-pill">{say('Display', 'Affichage')}</span></div></>; break;
+    case 'pomodoroFocus':
+      content = <div className="cv-focus"><b>18:42</b><span className="cv-focus-side"><i>{design}</i><strong>{review}</strong><span className="cv-focus-actions"><span className="cv-chip accent">{say('Pause', 'Pause')}</span><span className="cv-chip">{say('End session', 'Terminer')}</span></span></span></div>; break;
     case 'assign':
       content = <><div className="cv-sentence">Prepare the presentation {chip('+Anne', 'accent')}</div>{row('Anne', 'user', '↵', true)}</>; break;
     case 'views':
