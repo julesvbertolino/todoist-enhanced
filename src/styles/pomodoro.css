@@ -130,5 +130,10 @@
 .detail-tools .pomo-pause{width:32px}
 
 /* Left-aligned, the digits' own side bearing would push them in from the label and the buttons. */
-.pomo-fs.linked .pomo-fs-digits{margin-left:-.08em}
 .pomo-fs-timer>*{max-width:100%}
+
+/* The timer column is centred on the digits: buttons and caption sit under them, and the digits'
+   own side space (more before than after) is evened out so the ink is what is centred. */
+.pomo-fs-digits{letter-spacing:-.04em;text-indent:-.021em}
+.pomo-fs.linked .pomo-fs-timer{justify-items:center;text-align:center}
+.pomo-fs.linked .pomo-fs-controls{justify-content:center}

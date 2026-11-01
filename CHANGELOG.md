@@ -42,7 +42,7 @@ translation lives in CHANGELOG.fr.md.
 
 ## 2.27.0
 
-🆕 **Start a Pomodoro from any page.** Press the 25 min pill at the top of a page to start 25 minutes of focus. It counts down in the pill, with pause beside it. Open a task and press the pill to link the timer to that task.
+🆕 **Meet the Pomodoro timer.** Press the 25 min pill at the top of a page to start 25 minutes of focus. It counts down in the pill, with pause beside it. Open a task and press the pill to link the timer to that task, and open it full screen to work on it.
 
 🆕 **Plan the month with Anytime this month.** This month is a new page for what you want to do this month, with no set day. Drag a task there, or pick Anytime this month in a date picker. In a list, such a task shows Anytime this week or Anytime this month where its date would be.
 

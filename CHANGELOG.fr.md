@@ -10,7 +10,7 @@ Chaque ligne est marquée :
 
 ## 2.27.0
 
-🆕 **Lancez un Pomodoro depuis n’importe quelle page.** Appuyez sur la pastille 25 min en haut d’une page pour 25 minutes de concentration. Le temps défile dans la pastille, avec la pause à côté. Ouvrez une tâche et appuyez sur la pastille pour lier le minuteur à cette tâche.
+🆕 **Découvrez le minuteur Pomodoro.** Appuyez sur la pastille 25 min en haut d’une page pour 25 minutes de concentration. Le temps défile dans la pastille, avec la pause à côté. Ouvrez une tâche et appuyez sur la pastille pour lier le minuteur à cette tâche, puis passez en plein écran pour travailler dessus.
 
 🆕 **Planifiez le mois avec À tout moment ce mois-ci.** Ce mois-ci est une nouvelle page pour ce que vous voulez faire ce mois-ci, sans jour précis. Glissez une tâche dessus, ou choisissez À tout moment ce mois-ci dans un sélecteur de date. Dans une liste, une telle tâche affiche À tout moment cette semaine ou ce mois-ci à la place de sa date.
 
