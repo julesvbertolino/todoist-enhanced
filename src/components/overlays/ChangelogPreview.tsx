@@ -93,6 +93,10 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
           <div><span className="cv-event orange">Time for yourself<small>10:00 · 45 min</small></span></div>
         </div>
       </div>; break;
+    case 'pomodoro':
+      content = <><div className="cv-toolbar"><b>{say('This week', 'Cette semaine')}</b>
+        <span className="cv-pill on"><svg viewBox="0 0 20 20" width="11" height="11" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeOpacity=".25" strokeWidth="2.4" /><circle cx="10" cy="10" r="8" fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" strokeDasharray="50.3" strokeDashoffset="17" transform="rotate(-90 10 10)" /></svg>18:42 <svg viewBox="0 0 10 10" width="8" height="8" aria-hidden="true"><rect x="1.5" y="1" width="2.4" height="8" rx=".8" fill="currentColor" /><rect x="6.1" y="1" width="2.4" height="8" rx=".8" fill="currentColor" /></svg></span><span className="cv-pill">{say('Display', 'Affichage')}</span></div>
+        {row(review, 'checkbox', 'P1')}{row(task, 'checkbox', 'P2')}</>; break;
     case 'assign':
       content = <><div className="cv-sentence">Prepare the presentation {chip('+Anne', 'accent')}</div>{row('Anne', 'user', '↵', true)}</>; break;
     case 'views':

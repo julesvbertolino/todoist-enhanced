@@ -40,6 +40,14 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.27.0
+
+🆕 **Meet the Pomodoro timer.** Press the 25 min pill at the top of a page to start 25 minutes of focus. It counts down in the pill, with pause beside it. Open a task and press the pill to link the timer to that task, and open it full screen to work on it.
+
+🆕 **Plan the month with Anytime this month.** This month is a new page for what you want to do this month, with no set day. Drag a task there, or pick Anytime this month in a date picker. In a list, such a task shows Anytime this week or Anytime this month where its date would be.
+
+🐛 **Find a project or section faster.** While you type in the project picker, projects come first, then sections, and each section shows the project it belongs to.
+
 ## 2.26.1
 
 🎨 **Large accounts feel lighter.** Ticking or editing a task in a long list, or an update arriving from Todoist, no longer redraws every other row. The app also loads less code when it starts, so big projects and My week stay responsive.

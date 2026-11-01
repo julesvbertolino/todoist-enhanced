@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { SubtasksProvider } from '@/components/TaskRow';
 import { DisplayMenu } from '@/components/DisplayMenu';
+import { PomodoroButton } from '@/components/PomodoroButton';
 import { PageMenu } from '@/components/PageMenu';
 import { TaskGroup } from '@/components/TaskGroup';
 import { ModeSurface } from '@/components/ModeSurface';
@@ -117,6 +118,7 @@ function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: Upcomi
         title={t('nav.upcoming')}
         actions={
           <>
+            <PomodoroButton />
             <DisplayMenu
               pageItems={current.mode === 'calendar' ? items : pool}
               viewKey="upcoming"

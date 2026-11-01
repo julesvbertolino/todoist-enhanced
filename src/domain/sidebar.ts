@@ -13,7 +13,7 @@
  */
 
 export const SIDEBAR_ITEMS = [
-  'inbox', 'today', 'week', 'upcoming', 'someday',
+  'inbox', 'today', 'week', 'month', 'upcoming', 'someday',
   'review', 'dashboard', 'logbook', 'matrix', 'labels', 'filters',
 ] as const;
 export type SidebarItemId = (typeof SIDEBAR_ITEMS)[number];
@@ -28,7 +28,7 @@ export interface SidebarNav {
   other: SidebarEntry[];
 }
 
-const MAIN: SidebarItemId[] = ['inbox', 'today', 'week', 'upcoming', 'someday'];
+const MAIN: SidebarItemId[] = ['inbox', 'today', 'week', 'month', 'upcoming', 'someday'];
 const OTHER: SidebarItemId[] = ['review', 'dashboard', 'logbook', 'matrix', 'labels', 'filters'];
 
 export const defaultSidebarNav = (): SidebarNav => ({
@@ -58,6 +58,7 @@ export function readSidebarNav(stored: unknown): SidebarNav {
     }
     return out;
   };
+  const arranged = Array.isArray(value.main);
   const main = take(value.main);
   const other = take(value.other);
 
@@ -67,7 +68,9 @@ export function readSidebarNav(stored: unknown): SidebarNav {
       seen.add(id);
       const before = defaults.slice(0, i).reverse().find((d) => block.some((e) => e.id === d));
       const at = before ? block.findIndex((e) => e.id === before) + 1 : 0;
-      block.splice(at, 0, { id, on: true });
+      /* The Later page is new to anyone who already arranged the sidebar: it
+         starts off for them, and Settings or the setup turns it on. */
+      block.splice(at, 0, { id, on: !(id === 'month' && arranged) });
     });
   };
   restore(main, MAIN);

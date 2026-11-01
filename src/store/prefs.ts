@@ -363,6 +363,10 @@ export interface Preferences {
   sidebarSearch: boolean;
   /** The numbers beside each list. */
   sidebarCounts: boolean;
+  /** What a Pomodoro session shows when it starts: the toolbar's timer, or the full screen. */
+  pomodoroDisplay: 'discreet' | 'fullscreen';
+  /** The choice above was offered, in the setup or after What's new. */
+  pomodoroAsked: boolean;
   /** What a task row shows, for every list (domain/taskDetails). */
   taskFields: TaskFields;
   /** The order of the chips beneath a task's title. */
@@ -478,6 +482,8 @@ export const defaultPreferences = (locale: Locale): Preferences => ({
   sidebarNav: defaultSidebarNav(),
   sidebarSearch: true,
   sidebarCounts: true,
+  pomodoroDisplay: 'discreet',
+  pomodoroAsked: false,
   taskFields: defaultTaskFields(),
   detailOrder: defaultDetailOrder(),
   taskChips: 'classic',
@@ -558,6 +564,8 @@ export function hydratePreferences(stored: unknown, locale: Locale): Preferences
     sidebarNav: readSidebarNav(s.sidebarNav),
     sidebarSearch: s.sidebarSearch !== false,
     sidebarCounts: s.sidebarCounts !== false,
+    pomodoroDisplay: s.pomodoroDisplay === 'fullscreen' ? 'fullscreen' : 'discreet',
+    pomodoroAsked: s.pomodoroAsked === true,
     taskFields: readTaskFields(s.taskFields),
     detailOrder: readDetailOrder(s.detailOrder),
     // A missing choice is the published text layout, for an old account as much as a new one.

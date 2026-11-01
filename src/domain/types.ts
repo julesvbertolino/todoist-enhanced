@@ -334,6 +334,8 @@ export const SYSTEM_LABELS = {
   quick: 'quick',
   automation: 'automation',
   waiting: 'waiting',
+  /** The month's horizon: tasks for this month with no set day. */
+  month: 'thismonth',
 } as const;
 
 export const DEFAULT_WEEK_LABEL = 'week';
@@ -362,6 +364,13 @@ export const setWeekLabel = (name: string): void => {
   weekLabelName = name.trim() || DEFAULT_WEEK_LABEL;
 };
 
+/** The horizon tags a date replaces: the week's (whatever it is called) and `later`. */
+export const withoutHorizons = (labels: string[]): string[] =>
+  labels.filter((l) => {
+    const name = l.toLowerCase();
+    return name !== weekLabelName.toLowerCase() && name !== SYSTEM_LABELS.month;
+  });
+
 export const ESTIMATE_PREFIX = 'est-';
 
 /** The bucket a task falls into, decided by the display-priority rules in the spec. */
@@ -373,6 +382,7 @@ export type ViewId =
   /** Today on its own, when the sidebar is set to separate it from the week. */
   | 'today'
   | 'upcoming'
+  | 'month'
   | 'someday'
   | 'review'
   | 'dashboard'

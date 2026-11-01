@@ -24,6 +24,7 @@ import { DUST_MONTHS, isDustMonths } from '@/domain/views';
 import type { Locale, TranslationKey } from '@/i18n';
 import { APP_NAME, AUTHOR, AUTHOR_AVATAR_URL, AUTHOR_GITHUB_URL, COFFEE_URL, GITHUB_URL, LINKEDIN_URL, VERSION, X_URL } from '@/app-info';
 import { karmaStanding } from '@/domain/karma';
+import { PomodoroDisplayChoice } from '@/components/PomodoroDisplayChoice';
 import { projectTree } from '@/store/selectors';
 import { intlDate } from '@/lib/intl';
 
@@ -338,6 +339,9 @@ export function SettingsView() {
           {/* Settings that shape the product rather than its formatting. */}
           <section className="setsection" id="features">
             <h2>{t('settings.features')}</h2>
+            <Row title={t('pomodoro.title')} hint={t('pomodoro.settingsIntro')} wide>
+              <PomodoroDisplayChoice value={prefs.pomodoroDisplay} onChange={(pomodoroDisplay) => setPrefs({ pomodoroDisplay, pomodoroAsked: true })} />
+            </Row>
             {/* How the pages are laid out, in one place, with a picture of it. */}
             <h3 className="setsubhead">{t('settings.groupOrganisation')}</h3>
             <p className="setgroup-hint">{t('settings.groupOrganisationHint')}</p>

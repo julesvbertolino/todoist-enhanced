@@ -301,6 +301,8 @@ export function DragProvider({ children }: { children: ReactNode }) {
         return t('drop.quick');
       case 'anytime':
         return t('drop.anytime');
+      case 'month':
+        return t('drop.month');
       case 'someday':
         return t('drop.someday');
       case 'project':
@@ -327,6 +329,7 @@ export function DragProvider({ children }: { children: ReactNode }) {
       case 'day': return formatDayOrName(target.date, locale, dateFormat);
       case 'quick': return t('group.quick');
       case 'anytime': return t('group.anytime');
+      case 'month': return t('nav.month');
       case 'someday': return t('nav.someday');
       case 'step': return t(`step.${target.step}`);
       case 'label': return `@${target.label}`;
@@ -436,7 +439,10 @@ export function DragProvider({ children }: { children: ReactNode }) {
        pointer may well be over nothing by then, so this comes first. */
     if (activeId.startsWith(SUBTASK_DRAG_PREFIX) && pulledOut) {
       const sub = snapshot.items[taskIdOf(activeId)];
-      if (sub?.parent_id && !(event.over && decodeRowTarget(String(event.over.id)))) {
+      /* A subtask dragged to the sidebar is going to a place, not out of its parent:
+         the pointer passes to the left of the list on the way (#This month). */
+      const over = event.over ? String(event.over.id) : null;
+      if (sub?.parent_id && !(over && (decodeRowTarget(over) || decodeTarget(over)))) {
         /* A selection pulled out goes out whole, as it goes in (#166): the
            picked subtasks, each from its own parent, in one step of undo. */
         const group = carried.length > 1 && carried.includes(sub.id) ? carried : [sub.id];

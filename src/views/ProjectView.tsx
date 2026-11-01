@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, Fragment } from 'rea
 import { PageHeader } from '@/components/PageHeader';
 import { SubtasksProvider } from '@/components/TaskRow';
 import { DisplayMenu } from '@/components/DisplayMenu';
+import { PomodoroButton } from '@/components/PomodoroButton';
 import { TaskGroup } from '@/components/TaskGroup';
 import { ModeSurface } from '@/components/ModeSurface';
 import { EditableDescription } from '@/components/EditableDescription';
@@ -388,6 +389,7 @@ function ProjectBody({
         )}
         actions={
           <>
+            <PomodoroButton />
             <DisplayMenu
               viewKey={viewKey}
               pageItems={pool0}

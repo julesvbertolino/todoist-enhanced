@@ -2357,3 +2357,10 @@ html[data-navigation="pointer"] .task:focus-visible::after{content:none}
   .cell-tags .tag-more-narrow{display:inline}
 }
 .cell-tags .tag:first-child{max-width:100%}
+
+.listbox .opt .listbox-search-hint{flex:0 1 45%;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:12px;font-weight:400;text-align:right}
+/* Align the project marker and section glyph on the same optical column. */
+.composer-place-menu .opt > .hash,
+.composer-place-menu .opt > .ic:first-child{width:18px;height:18px;flex:0 0 18px}
+.composer-place-menu .opt[aria-selected="true"] > .ic:first-child{margin-left:0}
+.sheet > .detail-top{flex:none}

@@ -8,6 +8,14 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.27.0
+
+🆕 **Découvrez le minuteur Pomodoro.** Appuyez sur la pastille 25 min en haut d’une page pour 25 minutes de concentration. Le temps défile dans la pastille, avec la pause à côté. Ouvrez une tâche et appuyez sur la pastille pour lier le minuteur à cette tâche, puis passez en plein écran pour travailler dessus.
+
+🆕 **Planifiez le mois avec À tout moment ce mois-ci.** Ce mois-ci est une nouvelle page pour ce que vous voulez faire ce mois-ci, sans jour précis. Glissez une tâche dessus, ou choisissez À tout moment ce mois-ci dans un sélecteur de date. Dans une liste, une telle tâche affiche À tout moment cette semaine ou ce mois-ci à la place de sa date.
+
+🐛 **Retrouvez plus vite un projet ou une section.** Pendant que vous tapez dans le sélecteur de projet, les projets viennent d’abord, puis les sections, et chaque section indique son projet.
+
 ## 2.26.1
 
 🎨 **Les gros comptes s’allègent.** Cocher ou modifier une tâche dans une longue liste, ou recevoir une mise à jour de Todoist, ne redessine plus toutes les autres lignes. L’app charge aussi moins de code au démarrage : les gros projets et Ma semaine restent réactifs.

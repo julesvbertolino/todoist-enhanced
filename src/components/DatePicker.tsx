@@ -727,12 +727,13 @@ function readingText(
  * bar build theirs from this, so the two lists can no longer drift apart.
  */
 export function taskShortcuts(
-  t: (key: 'date.today' | 'date.tomorrow' | 'date.nextWeek' | 'review.to.anytime' | 'review.to.someday') => string,
+  t: (key: 'date.today' | 'date.tomorrow' | 'date.nextWeek' | 'review.to.anytime' | 'review.to.month' | 'review.to.someday') => string,
   locale: 'en' | 'fr',
   go: {
     day: (date: Date, label: string) => void;
     today: () => void;
     anytime: () => void;
+    month: () => void;
     someday: () => void;
   },
 ): DateShortcut[] {
@@ -744,6 +745,7 @@ export function taskShortcuts(
     { key: 'tomorrow', label: t('date.tomorrow'), icon: 'arrow-right', hint: shortDay(tomorrow, locale), onSelect: () => go.day(tomorrow, t('date.tomorrow')) },
     { key: 'nextWeek', label: t('date.nextWeek'), icon: 'upcoming', hint: shortDay(monday, locale), onSelect: () => go.day(monday, t('date.nextWeek')) },
     { key: 'anytime', label: t('review.to.anytime'), icon: 'week', onSelect: go.anytime },
+    { key: 'month', label: t('review.to.month'), icon: 'calendar', onSelect: go.month },
     { key: 'someday', label: t('review.to.someday'), icon: 'someday', onSelect: go.someday },
   ];
 }

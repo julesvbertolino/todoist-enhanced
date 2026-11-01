@@ -228,7 +228,7 @@ test.describe('settings and the panels (third pass)', () => {
     expect(new Set(tops).size).toBe(1);
     await expect(page.locator('#lists .openchoice').getByRole('radio')).toHaveCount(2);
     await expect(page.getByRole('link', { name: 'Open the website' })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Today and My week' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Today and This week' })).toHaveCount(0);
     await expect(page.locator('.coffee-callout').getByRole('link', { name: 'Buy me a coffee' })).toBeVisible();
   });
 
