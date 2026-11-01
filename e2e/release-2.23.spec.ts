@@ -29,11 +29,12 @@ test('project picker uses a short hint in English and French', async ({ demo: pa
 
 test('the full chart column is an accessible target even for zero values', async ({ demo: page }) => {
   await go(page, '#/insights');
-  const chart = page.locator('.chart').filter({ has: page.locator('button.barslot') }).first();
-  const slots = chart.locator('button.barslot');
-  await expect(slots.first()).toBeVisible();
-  const zero = slots.filter({ has: page.locator('.bar[style*="height: 2%"]') }).first();
+  /* Any chart with an empty column: the week's chart has none on a Sunday, once every day has passed. */
+  const emptySlot = page.locator('button.barslot').filter({ has: page.locator('.bar[style*="height: 2%"]') });
+  const chart = page.locator('.chart').filter({ has: emptySlot }).first();
+  const zero = chart.locator('button.barslot').filter({ has: page.locator('.bar[style*="height: 2%"]') }).first();
   await expect(zero).toBeVisible();
+  await zero.scrollIntoViewIfNeeded();
   const box = (await zero.boundingBox())!;
   const mark = (await zero.locator('.bar').boundingBox())!;
   expect(box.height).toBeGreaterThan(mark.height * 3);
