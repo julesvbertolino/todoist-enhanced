@@ -22,6 +22,7 @@ import { displayTaskContent, isUncompletable, toDisplayPriority, type Item } fro
 import { scheduleCalendarTask } from '@/store/calendar';
 import { projectIdOfKey } from '@/domain/projectViews';
 import './calendar.css';
+import { intlDate } from '@/lib/intl';
 
 /** An hour of the day grid: a phone's is shorter, so three days and the hours around now fit one screen (#295). */
 const HOUR_HEIGHT_WIDE = 56;
@@ -262,7 +263,7 @@ export function CalendarSurface({ viewKey, items, onOpen, onAddTaskTo, childrenO
   };
   const clock = (minute: number) => {
     const day = new Date(); day.setHours(0, minute, 0, 0);
-    return new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit', hour12: prefs.hour12 }).format(day);
+    return intlDate(locale, { hour: 'numeric', minute: '2-digit', hour12: prefs.hour12 }).format(day);
   };
   const tint = (item: Item) => options.coloration === 'priority' ? `var(--p${toDisplayPriority(item.priority)})`
     : options.coloration === 'project' ? colorValue(snapshot.projects[item.project_id]?.color)
@@ -332,7 +333,7 @@ export function CalendarSurface({ viewKey, items, onOpen, onAddTaskTo, childrenO
       }
     },
   });
-  const periodTitle = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(anchor);
+  const periodTitle = intlDate(locale, { month: 'long', year: 'numeric' }).format(anchor);
   const navigate = (direction: number) => { setExpanded(null); setAnchor((day) => presentation === 'month' ? addMonths(day, direction) : addDays(day, direction * (presentation === 'week' ? 7 : 3))); };
   const todayVisible = days.some((day) => isSameDay(day, now));
   const nowPosition = minuteOfDay(now) * HOUR_HEIGHT / 60;
@@ -352,7 +353,7 @@ export function CalendarSurface({ viewKey, items, onOpen, onAddTaskTo, childrenO
     <div className={`calendar-body ${drag?.moved ? 'is-dragging' : ''}`}>
       <div className="calendar-main" ref={main} style={{ '--calendar-days': presentation === 'month' ? 7 : days.length, '--calendar-weeks': days.length / 7 } as CSSProperties}>
         {presentation === 'month' ? <>
-          <div className="calendar-month-head">{days.slice(0, 7).map((day) => <span key={toApiDate(day)}>{new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(day)}</span>)}</div>
+          <div className="calendar-month-head">{days.slice(0, 7).map((day) => <span key={toApiDate(day)}>{intlDate(locale, { weekday: 'short' }).format(day)}</span>)}</div>
           <div className="calendar-month">{days.map((day) => {
             const own = sorted.filter((item) => isSameDay(dueDate(item)!, day));
             const key = toApiDate(day);
@@ -364,7 +365,7 @@ export function CalendarSurface({ viewKey, items, onOpen, onAddTaskTo, childrenO
           })}</div>
         </> : <>
           <div className="calendar-day-head"><div />{days.map((day) => <div key={toApiDate(day)} className={isSameDay(day, now) ? 'is-today' : ''}>
-            {new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(day)} <time dateTime={toApiDate(day)}>{day.getDate()}</time>
+            {intlDate(locale, { weekday: 'short' }).format(day)} <time dateTime={toApiDate(day)}>{day.getDate()}</time>
           </div>)}</div>
           <div className="calendar-all-day"><div>{small ? t('calendar.allDayShort') : t('calendar.allDay')}</div>{days.map((day) => <div key={toApiDate(day)} {...cellProps(day, 'all-day')}>
             {sorted.filter((item) => isSameDay(dueDate(item)!, day) && !hasTime(item.due)).map((item) => card(item))}

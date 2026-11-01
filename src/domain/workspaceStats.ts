@@ -1,7 +1,8 @@
 import { differenceInCalendarDays, differenceInDays, differenceInMonths, addMonths, startOfDay, subDays } from 'date-fns';
+import { intlNumber } from '@/lib/intl';
 
 const unit = (locale: string, unit: 'year' | 'month' | 'day', value: number) =>
-  new Intl.NumberFormat(locale, { style: 'unit', unit, unitDisplay: 'long' }).format(value);
+  intlNumber(locale, { style: 'unit', unit, unitDisplay: 'long' }).format(value);
 
 /**
  * How long ago something started, in the two largest units that apply:

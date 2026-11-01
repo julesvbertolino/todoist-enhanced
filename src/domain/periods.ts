@@ -3,6 +3,7 @@ import {
   endOfDay, endOfMonth, endOfQuarter, endOfYear,
   startOfDay, startOfMonth, startOfQuarter, startOfYear,
 } from 'date-fns';
+import { intlDate } from '@/lib/intl';
 
 export type Period = 'day' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
 
@@ -77,14 +78,14 @@ export function previousRange(range: Range): Range {
 export function formatRange(range: Range, intl: string, now = new Date()): string {
   const sameYear = range.since.getFullYear() === now.getFullYear()
     && range.until.getFullYear() === now.getFullYear();
-  const full = new Intl.DateTimeFormat(intl, {
+  const full = intlDate(intl, {
     day: 'numeric', month: 'short', ...(sameYear ? {} : { year: 'numeric' }),
   });
   if (spanOf(range) === 1) return full.format(range.since);
   const sameMonth = range.since.getMonth() === range.until.getMonth()
     && range.since.getFullYear() === range.until.getFullYear();
   const first = sameMonth
-    ? new Intl.DateTimeFormat(intl, { day: 'numeric' }).format(range.since)
+    ? intlDate(intl, { day: 'numeric' }).format(range.since)
     : full.format(range.since);
   return `${first} – ${full.format(range.until)}`;
 }

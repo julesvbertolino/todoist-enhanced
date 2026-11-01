@@ -20,7 +20,7 @@ import { bucketOf, somedayItems, weekItems } from '@/domain/views';
 import { markerStyle, avatarUrl } from '@/domain/colors';
 import { firstName, karmaStanding } from '@/domain/karma';
 import { readProjectIcon } from '@/domain/projectIcons';
-import { ProjectIcon } from './ProjectIconPicker';
+import { ProjectIcon } from './ProjectIcon';
 import type { GroupKey, ViewId } from '@/domain/types';
 import type { DropTarget } from '@/domain/dnd';
 import type { TranslationKey } from '@/i18n';

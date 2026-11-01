@@ -23,6 +23,7 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      - run: npm run check:bundle
 
   # The demo journeys, in a real browser. On pull requests, and by hand from
   # the Actions tab before tagging a release.

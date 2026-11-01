@@ -1,6 +1,6 @@
 import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { confirmUndatedMove } from '@/domain/confirmUndatedMove';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   DndContext, DragOverlay, PointerSensor, pointerWithin, useSensor, useSensors,
   type CollisionDetection, type DragEndEvent, type DragMoveEvent, type DragStartEvent,
@@ -272,13 +272,15 @@ export function DragProvider({ children }: { children: ReactNode }) {
    * how the project's menu opens.
    */
   const phone = usePhoneBehaviour();
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: phone
-        ? { delay: HOLD_MS, tolerance: HOLD_SLOP_PX }
-        : { distance: 6 },
-    }),
-  );
+  /* Memoised: a new options object makes new listeners for every row, and a
+     row that is handed new listeners cannot be left alone when a sync brings
+     nothing for it (#364). */
+  const pointerOptions = useMemo(() => ({
+    activationConstraint: phone
+      ? { delay: HOLD_MS, tolerance: HOLD_SLOP_PX }
+      : { distance: 6 },
+  }), [phone]);
+  const sensors = useSensors(useSensor(PointerSensor, pointerOptions));
 
   /**
    * What the drop did, in the fewest words that still tell it from the others.

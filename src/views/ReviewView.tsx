@@ -24,6 +24,7 @@ import {
   Bars, ChartCard, Donut, SplitBar, seriesColor,
   type BarDatum, type SliceDatum,
 } from '@/components/charts';
+import { intlDate } from '@/lib/intl';
 import { formatRange, rangeFor } from '@/domain/periods';
 import { addDays, format, startOfDay, subDays } from 'date-fns';
 import { displayTaskContent, isUncompletable, toDisplayPriority, type CompletedItem, type Item, type Project } from '@/domain/types';
@@ -786,7 +787,7 @@ export function ReviewView({ onOpen }: ReviewViewProps) {
         const lastWeek = format(subDays(day, 7), 'yyyy-MM-dd');
         return {
           key,
-          label: new Intl.DateTimeFormat(locale, { weekday: 'narrow' }).format(day),
+          label: intlDate(locale, { weekday: 'narrow' }).format(day),
           value: counts.get(key) ?? 0,
           current: key === todayKey,
           reference: before.get(lastWeek) ?? 0,

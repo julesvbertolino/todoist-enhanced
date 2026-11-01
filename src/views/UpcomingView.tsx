@@ -23,6 +23,7 @@ import type { GroupKey } from '@/domain/types';
 import { summariseLoad } from '@/domain/load';
 import { dueDate, daysBetween, formatDayHeading, toApiDate } from '@/domain/dates';
 import { addDays, startOfDay } from 'date-fns';
+import { intlDate } from '@/lib/intl';
 
 interface UpcomingViewProps {
   onOpen: (id: string) => void;
@@ -196,7 +197,7 @@ function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: Upcomi
       {current.mode !== 'calendar' && <div style={{ marginTop: 'var(--s5)', display: 'flex', justifyContent: 'center' }}>
         <div className="upcoming-extend">
           <p className="psub" aria-live="polite">{t('upcoming.visibleThrough', {
-            date: new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(addDays(today, horizon)),
+            date: intlDate(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(addDays(today, horizon)),
           })}</p>
           {hasMoreFuture && <button className="btn" onClick={() => {
             const next = horizon + 15;

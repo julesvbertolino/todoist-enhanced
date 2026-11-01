@@ -4,7 +4,7 @@ import { Overlay } from './Overlay';
 import { Icon } from '../Icon';
 import { Select } from '../Select';
 import { AccessChoice } from '../AccessChoice';
-import { ProjectIcon, ProjectIconGrid } from '../ProjectIconPicker';
+import { ProjectIcon, ProjectIconGrid } from '../ProjectIcon';
 import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
 import { colorValue, markerStyle } from '@/domain/colors';

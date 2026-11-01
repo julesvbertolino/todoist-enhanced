@@ -7,7 +7,7 @@ import { searchRank } from '@/domain/search';
 import { markerStyle } from '@/domain/colors';
 import { readProjectIcon } from '@/domain/projectIcons';
 import { Icon } from '@/components/Icon';
-import { ProjectIcon } from '@/components/ProjectIconPicker';
+import { ProjectIcon } from '@/components/ProjectIcon';
 import { TaskGroup } from '@/components/TaskGroup';
 import { SubtasksProvider } from '@/components/TaskRow';
 import { PageHeader } from '@/components/PageHeader';

@@ -3,7 +3,7 @@ import { EditableTitle } from './EditableTitle';
 import { EditableDescription } from './EditableDescription';
 import { FilterMark } from './FilterMark';
 import { PageMenu } from './PageMenu';
-import { ProjectIconGrid } from './ProjectIconPicker';
+import { ProjectIconGrid } from './ProjectIcon';
 import { useConfirm } from './overlays/Confirm';
 import { useT } from '@/hooks/useT';
 import { navigate } from '@/hooks/useRoute';

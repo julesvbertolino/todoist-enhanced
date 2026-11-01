@@ -43,6 +43,7 @@ import { assignees } from '@/domain/sharing';
 import { displayTaskContent, isUncompletable, toDisplayPriority, toTodoistPriority, type Item } from '@/domain/types';
 import { matchesSearch } from '@/domain/search';
 import { byLabelOrder } from '@/domain/orderKey';
+import { intlDate } from '@/lib/intl';
 
 interface TaskDetailProps {
   taskId: string | null;
@@ -812,7 +813,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
             <p className="detail-done">
               <Icon name="check" size="sm" />
               {t(item.checked ? 'detail.completedOn' : 'detail.completedNext', {
-                date: new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' })
+                date: intlDate(locale, { day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' })
                   .format(new Date(completedOn)),
               })}
             </p>

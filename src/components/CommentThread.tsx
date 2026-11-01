@@ -15,6 +15,7 @@ import type { Note, NoteAttachment } from '@/domain/types';
 import { assignees } from '@/domain/sharing';
 import { encodeMentions, mentionQuery, mentionedUids, renderWithMentions } from '@/domain/mentions';
 import { MultiSelect } from './MultiSelect';
+import { intlDate } from '@/lib/intl';
 
 /* The full palette and its data load the first time somebody reacts (#27). */
 const EmojiPalette = lazy(() => import('./EmojiPalette').then((module) => ({ default: module.EmojiPalette })));
@@ -27,7 +28,7 @@ const LONG_THREAD = 4;
 /** "Today · 10:12", "7 Oct · 16:52": when a comment was written, to the minute. */
 function commentTime(iso: string, locale: 'en' | 'fr'): string {
   const date = new Date(iso);
-  const clock = new Intl.DateTimeFormat(locale === 'fr' ? 'fr-FR' : 'en-GB', {
+  const clock = intlDate(locale === 'fr' ? 'fr-FR' : 'en-GB', {
     hour: '2-digit', minute: '2-digit', hour12: false,
   }).format(date);
   return `${formatRelativeDay(date, locale)} · ${clock}`;

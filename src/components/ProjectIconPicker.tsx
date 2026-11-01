@@ -1,19 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from './Icon';
+import { ProjectIcon } from './ProjectIcon';
 import { useT } from '@/hooks/useT';
 import { matchesSearch } from '@/domain/search';
 import { PROJECT_ICONS, PROJECT_ICON_IDS, PROJECT_ICON_SYNONYMS } from '@/domain/projectIconCatalog';
-
-export { PROJECT_ICONS, PROJECT_ICON_IDS };
-
-export function ProjectIcon({
-  iconId, size, className, style,
-}: { iconId: string; size?: 'sm' | 'md' | 'lg'; className?: string; style?: React.CSSProperties }) {
-  const sizeClass = size === 'sm' ? ' ic-sm' : size === 'lg' ? ' ic-lg' : '';
-  const Glyph = PROJECT_ICONS[iconId];
-  if (!Glyph) return null;
-  return <Glyph className={`ic${sizeClass}${className ? ` ${className}` : ''}`} style={style} aria-hidden="true" />;
-}
 
 interface ProjectIconGridProps {
   value: string | null;

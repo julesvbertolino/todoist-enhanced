@@ -20,7 +20,7 @@ import { AddSectionLine } from '@/components/AddSectionLine';
 import { useConfirm } from '@/components/overlays/Confirm';
 import { Icon } from '@/components/Icon';
 import { ProjectProgress } from '@/components/ProjectProgress';
-import { ProjectIcon, ProjectIconGrid } from '@/components/ProjectIconPicker';
+import { ProjectIcon, ProjectIconGrid } from '@/components/ProjectIcon';
 import { markerStyle } from '@/domain/colors';
 import { TimePanel } from '@/components/TimePanel';
 import { useT } from '@/hooks/useT';

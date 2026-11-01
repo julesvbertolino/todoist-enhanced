@@ -1,4 +1,3 @@
-import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { TodoistMark } from './TodoistMark';
 import { addDays, nextMonday, nextSaturday, startOfDay } from 'date-fns';
 import { confirmUndatedMove } from '@/domain/confirmUndatedMove';
@@ -166,7 +165,10 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
   const removeTask = useStore((s) => s.removeTask);
   const skipOccurrence = useStore((s) => s.skipOccurrence);
   const confirm = useConfirm();
-  const snapshot = useDataSnapshot();
+  /* Narrow reads: a row's actions follow the lists they offer, not every change in the account (#364). */
+  const allProjects = useStore((s) => s.snapshot.projects);
+  const allSections = useStore((s) => s.snapshot.sections);
+  const hasPeople = useStore((s) => assignees(s.snapshot, item.project_id).length > 0);
   const apply = useStore((s) => s.apply);
   const setRecurrence = useStore((s) => s.setRecurrence);
   const toast = useStore((s) => s.toast);
@@ -263,10 +265,10 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
   /* Moving a task means moving it somewhere it can live. Where it sits in time
      is the schedule menu's business, which is the button next to this one. */
   const projects = useMemo(
-    () => Object.values(snapshot.projects)
+    () => Object.values(allProjects)
       .filter((p) => !p.is_deleted && !p.is_archived && !p.is_folder)
       .sort(byChildOrder),
-    [snapshot.projects],
+    [allProjects],
   );
 
   /**
@@ -277,7 +279,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
    * drag down the page into the right group.
    */
   const destinations = useMemo<Destination[]>(() => {
-    const sections = Object.values(snapshot.sections)
+    const sections = Object.values(allSections)
       .filter((s) => !s.is_deleted && !s.is_archived)
       .sort(bySectionOrder);
 
@@ -307,7 +309,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
           current: section.id === item.section_id,
         })),
     ]);
-  }, [projects, snapshot.sections, item.project_id, item.section_id, t]);
+  }, [projects, allSections, item.project_id, item.section_id, t]);
 
   /* Typing narrows the list, on the section's name or on the project's, so
      "rev" finds "In review" wherever it lives. */
@@ -804,7 +806,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
         <Icon name="project" size="sm" />
       </button>
 
-      {(assignees(snapshot, item.project_id).length > 0 || item.responsible_uid) && (
+      {(hasPeople || item.responsible_uid) && (
         <span className={`row-assignee${item.responsible_uid ? ' assigned' : ''}`}>
           <AssigneeField projectId={item.project_id} value={item.responsible_uid}
             onChange={(next) => void assignTask(item.id, next)} iconOnly />
