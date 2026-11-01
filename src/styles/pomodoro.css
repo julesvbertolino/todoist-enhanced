@@ -128,3 +128,7 @@
 .detail-tools .pomo-control{height:34px;font-size:13px}
 .detail-tools .pomo-control>button{height:34px}
 .detail-tools .pomo-pause{width:32px}
+
+/* Left-aligned, the digits' own side bearing would push them in from the label and the buttons. */
+.pomo-fs.linked .pomo-fs-digits{margin-left:-.08em}
+.pomo-fs-timer>*{max-width:100%}

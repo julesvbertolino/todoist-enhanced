@@ -2363,3 +2363,4 @@ html[data-navigation="pointer"] .task:focus-visible::after{content:none}
 .composer-place-menu .opt > .hash,
 .composer-place-menu .opt > .ic:first-child{width:18px;height:18px;flex:0 0 18px}
 .composer-place-menu .opt[aria-selected="true"] > .ic:first-child{margin-left:0}
+.sheet > .detail-top{flex:none}
