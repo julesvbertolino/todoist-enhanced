@@ -15,8 +15,8 @@ import {
 export const ENTRY: Record<SidebarItemId, { icon: IconName; label: TranslationKey }> = {
   inbox: { icon: 'inbox', label: 'nav.inbox' },
   today: { icon: 'calendar', label: 'nav.today' },
-  week: { icon: 'week', label: 'nav.week' },
-  month: { icon: 'calendar', label: 'nav.month' },
+  week: { icon: 'week', label: 'nav.sideWeek' },
+  month: { icon: 'calendar', label: 'nav.sideMonth' },
   upcoming: { icon: 'upcoming', label: 'nav.upcoming' },
   someday: { icon: 'someday', label: 'nav.someday' },
   review: { icon: 'check', label: 'nav.review' },

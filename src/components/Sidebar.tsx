@@ -296,8 +296,8 @@ export function Sidebar({
         return navItem('inbox', 'inbox', 'nav.inbox', counts.inbox,
           inboxId ? { kind: 'project', projectId: inboxId } : undefined);
       case 'today': return navItem('today', 'calendar', 'nav.today', counts.today, { kind: 'today' });
-      case 'week': return navItem('week', 'week', 'nav.week', counts.week, { kind: 'anytime' });
-      case 'month': return navItem('month', 'calendar', 'nav.month', counts.month, { kind: 'month' });
+      case 'week': return navItem('week', 'week', 'nav.sideWeek', counts.week, { kind: 'anytime' });
+      case 'month': return navItem('month', 'calendar', 'nav.sideMonth', counts.month, { kind: 'month' });
       case 'upcoming': return navItem('upcoming', 'upcoming', 'nav.upcoming', 0);
       case 'someday': return navItem('someday', 'someday', 'nav.someday', counts.someday, { kind: 'someday' });
       case 'review': return navItem('review', 'check', 'nav.review', 0);

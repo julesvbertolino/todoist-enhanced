@@ -35,7 +35,7 @@ test('a label with an emoji or an accent in its name opens its own page (#196)',
 test('the sidebar editor says whether This week holds today\u2019s tasks (#195)', async ({ demo: page }) => {
   await go(page, '#/settings');
   await page.getByRole('button', { name: 'Sidebar' }).click();
-  const week = page.locator('.navedit-row').filter({ has: page.getByText('This week', { exact: true }) });
+  const week = page.locator('.navedit-row').filter({ has: page.getByText('Anytime this week', { exact: true }) });
   const today = page.locator('.navedit-row').filter({ has: page.getByText('Today', { exact: true }) });
   await expect(week).toContainText('Today and anytime this week');
   const height = (await week.boundingBox())!.height;

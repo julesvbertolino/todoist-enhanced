@@ -127,6 +127,8 @@ export const en = {
   'nav.inbox': 'Inbox',
   'nav.week': 'This week',
   'nav.month': 'This month',
+  'nav.sideWeek': 'Anytime this week',
+  'nav.sideMonth': 'Anytime this month',
   'pomodoro.start': 'Start a 25 minute Pomodoro',
   'pomodoro.startTask': 'Start a Pomodoro on this task',
   'pomodoro.minutes': '{count} min',

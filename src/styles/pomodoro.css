@@ -109,3 +109,11 @@
 .pomo-fs-task .descview,.pomo-fs-task .descedit,.pomo-fs-label,.pomo-fs-sub{margin-left:30px}
 .pomo-fs-sub{padding-right:2px}
 .pomo-fs-controls .btn{flex:none}
+
+/* The card keeps its size; the description alone scrolls. */
+.pomo-fs-task{display:flex;flex-direction:column;gap:10px;overflow:hidden;width:100%;box-sizing:border-box}
+.pomo-fs-task>*{min-width:0}
+.pomo-fs-desc{flex:0 1 auto;min-height:0;overflow:auto;overflow-wrap:anywhere;margin-left:30px;max-width:calc(100% - 30px)}
+.pomo-fs-task .pomo-fs-desc .descview,.pomo-fs-task .pomo-fs-desc .descedit{margin-left:0;max-width:100%}
+.pomo-fs-subs{flex:none;max-height:32%;overflow:auto}
+.pomo-fs-subs .pomo-fs-label,.pomo-fs-subs .pomo-fs-sub{margin-left:30px}

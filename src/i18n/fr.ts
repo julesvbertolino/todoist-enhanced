@@ -129,6 +129,8 @@ export const fr: Record<TranslationKey, string> = {
   'nav.inbox': 'Boîte de réception',
   'nav.week': 'Cette semaine',
   'nav.month': 'Ce mois-ci',
+  'nav.sideWeek': 'À tout moment cette semaine',
+  'nav.sideMonth': 'À tout moment ce mois-ci',
   'pomodoro.start': 'Lancer un Pomodoro de 25 minutes',
   'pomodoro.startTask': 'Lancer un Pomodoro sur cette tâche',
   'pomodoro.minutes': '{count} min',

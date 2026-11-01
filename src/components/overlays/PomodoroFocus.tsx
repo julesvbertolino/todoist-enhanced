@@ -147,6 +147,7 @@ function TaskPanel({ item }: { item: Item }) {
           {minutes !== null && <span><Icon name="clock" size="sm" />{formatDuration(minutes, locale)}</span>}
         </p>
       )}
+      <div className="pomo-fs-desc">
       {editing ? (
         <DescriptionEditor
           value={description}
@@ -171,8 +172,9 @@ function TaskPanel({ item }: { item: Item }) {
           {item.description ? <DescriptionView value={item.description} onToggle={tick} /> : t('detail.descriptionPlaceholder')}
         </div>
       )}
+      </div>
       {subtasks.length > 0 && (
-        <>
+        <div className="pomo-fs-subs">
           <h2 className="pomo-fs-label">{t('detail.subtasks')}</h2>
           {subtasks.map((child) => (
             <label className={`pomo-fs-sub${child.checked ? ' done' : ''}`} key={child.id}>
@@ -181,7 +183,7 @@ function TaskPanel({ item }: { item: Item }) {
               <span>{displayTaskContent(child)}</span>
             </label>
           ))}
-        </>
+        </div>
       )}
     </article>
   );
