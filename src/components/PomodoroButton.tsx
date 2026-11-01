@@ -5,7 +5,7 @@ import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
 import { usePomodoro } from '@/store/pomodoro';
 import { usePomodoroNow } from '@/hooks/usePomodoroClock';
-import { FOCUS_MS, formatClock, progressAt, remainingAt } from '@/domain/pomodoro';
+import { FOCUS_MS, displayMsAt, formatClock, progressAt } from '@/domain/pomodoro';
 import { displayTaskContent } from '@/domain/types';
 
 /** The ring that fills as the session goes: the pill's own picture of the time. */
@@ -38,6 +38,7 @@ export function PomodoroButton({ taskId = null }: { taskId?: string | null }) {
   /* One timer: a task's pill and the page's show the same session. */
   const active = timer.status !== 'idle';
   const paused = timer.status === 'paused';
+  const nextKey = timer.kind === 'focus' ? 'pomodoro.startBreak' as const : 'pomodoro.startFocus' as const;
 
   useEffect(() => {
     if (!popover) return;
@@ -68,7 +69,7 @@ export function PomodoroButton({ taskId = null }: { taskId?: string | null }) {
     );
   }
 
-  const time = formatClock(remainingAt(timer, now));
+  const time = formatClock(displayMsAt(timer, now));
   return (
     <span className={`pomo-control is-running${paused ? ' is-paused' : ''}${timer.status === 'done' ? ' is-done' : ''}`} ref={wrap}>
       <button
@@ -79,16 +80,16 @@ export function PomodoroButton({ taskId = null }: { taskId?: string | null }) {
         title={t('pomodoro.open')}
         onClick={() => setPopover(popover ? null : owner)}
       >
-        <Ring progress={timer.status === 'done' ? 1 : progressAt(timer, now)} />
+        <Ring progress={timer.status === 'done' ? 0 : progressAt(timer, now)} />
         <span className="pomo-time">{time}</span>
         {timer.taskId && <Link2 className="pomo-linked" size={12} aria-label={t('pomodoro.linkedHere')} />}
       </button>
       <button
         type="button"
         className="pomo-pause"
-        aria-label={timer.status === 'done' ? t('pomodoro.startBreak') : paused ? t('pomodoro.resume') : t('pomodoro.pause')}
-        title={timer.status === 'done' ? t('pomodoro.startBreak') : paused ? t('pomodoro.resume') : t('pomodoro.pause')}
-        onClick={() => (timer.status === 'done' ? usePomodoro.getState().startBreak() : togglePause())}
+        aria-label={timer.status === 'done' ? t(nextKey) : paused ? t('pomodoro.resume') : t('pomodoro.pause')}
+        title={timer.status === 'done' ? t(nextKey) : paused ? t('pomodoro.resume') : t('pomodoro.pause')}
+        onClick={() => (timer.status === 'done' ? usePomodoro.getState().startNext() : togglePause())}
       >
         {paused || timer.status === 'done' ? <Play size={14} strokeWidth={1.7} /> : <Pause size={14} strokeWidth={1.7} />}
       </button>
@@ -102,8 +103,9 @@ function SessionPopover({ openedFrom, anchor, onFullscreen }: { openedFrom: stri
   const timer = usePomodoro((s) => s.timer);
   const now = usePomodoroNow();
   const linked = useStore((s) => (timer.taskId ? s.snapshot.items[timer.taskId] : undefined));
+  const nextKey = timer.kind === 'focus' ? 'pomodoro.startBreak' as const : 'pomodoro.startFocus' as const;
   const phase = timer.status === 'done'
-    ? t('pomodoro.phase.done')
+    ? (timer.kind === 'break' ? t('pomodoro.phase.breakDone') : t('pomodoro.phase.done'))
     : timer.status === 'paused' ? t('pomodoro.phase.paused')
     : timer.kind === 'break' ? t('pomodoro.phase.break') : t('pomodoro.phase.focus');
   /* Fixed to the window, so a header that clips its children cannot hide it. */
@@ -114,7 +116,7 @@ function SessionPopover({ openedFrom, anchor, onFullscreen }: { openedFrom: stri
       <button type="button" className="pomo-popover-expand iconbtn" aria-label={t('pomodoro.fullscreen')} title={t('pomodoro.fullscreen')} onClick={onFullscreen}>
         <Maximize2 size={15} />
       </button>
-      <div className="pomo-popover-time">{formatClock(remainingAt(timer, now))}</div>
+      <div className="pomo-popover-time">{formatClock(displayMsAt(timer, now))}</div>
       <span className="pomo-popover-phase">{phase}</span>
       {linked && linked.id !== openedFrom && <strong className="pomo-popover-task">{displayTaskContent(linked)}</strong>}
       {!openedFrom && !linked && <p className="pomo-popover-free">{t('pomodoro.noTask')}</p>}
@@ -128,9 +130,9 @@ function SessionPopover({ openedFrom, anchor, onFullscreen }: { openedFrom: stri
         </button>
       ))}
       <div className="pomo-popover-actions">
-        <button type="button" className="btn primary" onClick={() => (timer.status === 'done' ? usePomodoro.getState().startBreak() : usePomodoro.getState().togglePause())}>
+        <button type="button" className="btn primary" onClick={() => (timer.status === 'done' ? usePomodoro.getState().startNext() : usePomodoro.getState().togglePause())}>
           {timer.status === 'paused' || timer.status === 'done' ? <Play size={14} /> : <Pause size={14} />}
-          {timer.status === 'done' ? t('pomodoro.startBreak') : timer.status === 'paused' ? t('pomodoro.resume') : t('pomodoro.pause')}
+          {timer.status === 'done' ? t(nextKey) : timer.status === 'paused' ? t('pomodoro.resume') : t('pomodoro.pause')}
         </button>
         <button type="button" className="btn" onClick={() => usePomodoro.getState().end()}>{t('pomodoro.end')}</button>
       </div>

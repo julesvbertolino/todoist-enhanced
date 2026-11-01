@@ -36,6 +36,8 @@ interface PomodoroStore {
   start: (taskId: string | null, fullscreen: boolean) => void;
   togglePause: () => void;
   startBreak: () => void;
+  /** After a session: the break after focus, the next focus after a break. */
+  startNext: () => void;
   end: () => void;
   link: (taskId: string | null) => void;
   setFullscreen: (on: boolean) => void;
@@ -67,6 +69,10 @@ export const usePomodoro = create<PomodoroStore>((set, get) => {
       commit(timer.status === 'paused' ? resume(timer, Date.now()) : pause(timer, Date.now()));
     },
     startBreak: () => commit(startBreak(get().timer, Date.now())),
+    startNext: () => {
+      const { timer } = get();
+      commit(timer.kind === 'focus' ? startBreak(timer, Date.now()) : startFocus(timer, timer.taskId, Date.now()));
+    },
     end: () => commit(endSession(), { fullscreen: false, popover: null }),
     link: (taskId) => commit(linkTask(get().timer, taskId)),
     setFullscreen: (fullscreen) => set({ fullscreen, popover: null }),

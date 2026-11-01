@@ -79,6 +79,12 @@ export function remainingAt(state: PomodoroState, now: number): number {
   return state.remainingMs;
 }
 
+/** What the clock reads: the time left, and once a session is over, the length of the next one. */
+export function displayMsAt(state: PomodoroState, now: number): number {
+  if (state.status === 'done') return state.kind === 'focus' ? BREAK_MS : FOCUS_MS;
+  return remainingAt(state, now);
+}
+
 /** How much of the session has passed, from 0 to 1. */
 export function progressAt(state: PomodoroState, now: number): number {
   const total = lengthOf(state.kind);

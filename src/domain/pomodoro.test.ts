@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  BREAK_MS, FOCUS_MS, endSession, formatClock, idleState, linkTask, pause, progressAt, readPomodoro,
+  BREAK_MS, FOCUS_MS, displayMsAt, endSession, formatClock, idleState, linkTask, pause, progressAt, readPomodoro,
   remainingAt, resume, startBreak, startFocus, tick,
 } from './pomodoro';
 
@@ -62,5 +62,13 @@ describe('the Pomodoro timer', () => {
     expect(readPomodoro(running, T0 + FOCUS_MS + 5).status).toBe('done');
     expect(readPomodoro('junk', T0)).toEqual(idleState());
     expect(readPomodoro({ status: 'running' }, T0)).toEqual(idleState());
+  });
+
+  it('shows the next length once a session is over, not 00:00', () => {
+    const done = tick(startFocus(idleState(), null, T0), T0 + FOCUS_MS);
+    expect(displayMsAt(done, T0 + FOCUS_MS)).toBe(BREAK_MS);
+    const breakDone = tick(startBreak(done, T0), T0 + BREAK_MS);
+    expect(displayMsAt(breakDone, T0 + BREAK_MS)).toBe(FOCUS_MS);
+    expect(displayMsAt(startFocus(idleState(), null, T0), T0 + 60_000)).toBe(FOCUS_MS - 60_000);
   });
 });

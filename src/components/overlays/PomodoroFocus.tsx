@@ -5,7 +5,7 @@ import { useData } from '@/hooks/useData';
 import { useStore } from '@/store/store';
 import { usePomodoro } from '@/store/pomodoro';
 import { usePomodoroNow } from '@/hooks/usePomodoroClock';
-import { formatClock, remainingAt } from '@/domain/pomodoro';
+import { displayMsAt, formatClock } from '@/domain/pomodoro';
 import { colorValue } from '@/domain/colors';
 import { SYSTEM_LABELS, displayTaskContent, toDisplayPriority, weekLabel, type Item } from '@/domain/types';
 import { dueDate, formatRelativeDay } from '@/domain/dates';
@@ -39,20 +39,21 @@ export function PomodoroFocus() {
 
   const paused = timer.status === 'paused';
   const done = timer.status === 'done';
-  const phase = done ? t('pomodoro.phase.done') : paused ? t('pomodoro.phase.paused')
+  const nextKey = timer.kind === 'focus' ? 'pomodoro.startBreak' as const : 'pomodoro.startFocus' as const;
+  const phase = done ? (timer.kind === 'break' ? t('pomodoro.phase.breakDone') : t('pomodoro.phase.done')) : paused ? t('pomodoro.phase.paused')
     : timer.kind === 'break' ? t('pomodoro.phase.break') : t('pomodoro.phase.focus');
   const controls = (
     <div className="pomo-fs-controls">
-      <button type="button" className="btn primary" onClick={() => (done ? usePomodoro.getState().startBreak() : usePomodoro.getState().togglePause())}>
+      <button type="button" className="btn primary" onClick={() => (done ? usePomodoro.getState().startNext() : usePomodoro.getState().togglePause())}>
         {paused || done ? <Play size={15} /> : <Pause size={15} />}
-        {done ? t('pomodoro.startBreak') : paused ? t('pomodoro.resume') : t('pomodoro.pause')}
+        {done ? t(nextKey) : paused ? t('pomodoro.resume') : t('pomodoro.pause')}
       </button>
       <button type="button" className="btn" onClick={() => usePomodoro.getState().end()}>{t('pomodoro.end')}</button>
     </div>
   );
   const clock = (
     <div className="pomo-fs-timer">
-      <div className="pomo-fs-digits" aria-live="off">{formatClock(remainingAt(timer, now))}</div>
+      <div className="pomo-fs-digits" aria-live="off">{formatClock(displayMsAt(timer, now))}</div>
       <span className="pomo-fs-phase">{phase}</span>
       {controls}
     </div>

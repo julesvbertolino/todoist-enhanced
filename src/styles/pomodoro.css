@@ -117,3 +117,14 @@
 .pomo-fs-task .pomo-fs-desc .descview,.pomo-fs-task .pomo-fs-desc .descedit{margin-left:0;max-width:100%}
 .pomo-fs-subs{flex:none;max-height:32%;overflow:auto}
 .pomo-fs-subs .pomo-fs-label,.pomo-fs-subs .pomo-fs-sub{margin-left:30px}
+
+/* Buttons wrap inside the popover rather than leave it. */
+.pomo-popover{width:min(320px,calc(100vw - 24px));box-sizing:border-box}
+.pomo-popover-actions{flex-wrap:wrap}
+.pomo-popover-actions .btn{flex:1 1 auto;min-width:0;white-space:nowrap;padding-inline:12px}
+/* In a task's header the pill keeps its size, whatever the page below it holds. */
+.pomo-control{flex:none;min-width:max-content}
+.pomo-control>button{flex:none}
+.detail-tools .pomo-control{height:34px;font-size:13px}
+.detail-tools .pomo-control>button{height:34px}
+.detail-tools .pomo-pause{width:32px}

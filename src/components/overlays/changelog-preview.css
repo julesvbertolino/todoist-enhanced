@@ -153,3 +153,5 @@
 .cv-focus-side{display:grid;gap:3px;justify-items:start}.cv-focus-side>i{font-style:normal;font-size:8px;color:var(--accent-dark)}.cv-focus-side>strong{font-size:10px}
 .cv-focus-actions{display:flex;gap:5px;margin-top:3px}
 .cv-pill.cv-paused{color:var(--muted);font-weight:500}
+.cv-states{display:grid;grid-template-columns:repeat(3,auto);justify-content:space-around;align-items:start;gap:10px;padding:14px 0 6px}.cv-states>div{display:grid;justify-items:center;gap:8px}.cv-states .cv-pill{height:26px;font-size:11px;padding:0 11px;gap:6px}.cv-states small{font-size:9px;color:var(--muted)}
+.cv-states{gap:6px!important;justify-content:center!important}.cv-states .cv-pill{white-space:nowrap;height:22px;font-size:9.5px;padding:0 8px;gap:4px}.cv-states .cv-pill svg{flex:none}

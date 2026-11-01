@@ -151,6 +151,8 @@ export const en = {
   'pomodoro.phase.paused': 'Paused',
   'pomodoro.phase.break': 'Short break',
   'pomodoro.phase.done': 'Session complete',
+  'pomodoro.phase.breakDone': 'Break over',
+  'pomodoro.startFocus': 'Start focus',
   'pomodoro.title': 'Pomodoro',
   'pomodoro.setupTitle': 'Pomodoro timer: how should it open?',
   'pomodoro.intro': 'Start a 25 minute session from any page, or from a task to keep that task attached. Pick what you see while it runs.',
