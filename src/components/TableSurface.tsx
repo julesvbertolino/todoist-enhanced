@@ -36,6 +36,16 @@ export function TableSurface({ groups, viewKey, childrenOf, onOpen }: {
   const tracks = columns.map((column) => column === 'title'
     ? `18px ${titleSet ? `${widthOf('title')}px` : 'minmax(var(--table-title-min,240px),var(--table-title-max,1fr))'}`
     : `${widthOf(column)}px`);
+  /* Everything up to and including the title stays on the left while the rest scrolls (#298).
+     Each frozen piece sticks at the offset where it already stands: the row's 30px of
+     padding, then the columns before the title, the checkbox, and the title. */
+  const freeze: Record<string, number> = {};
+  let frozenAt = 30;
+  for (const column of columns) {
+    if (column === 'title') { freeze.check = frozenAt; freeze.title = frozenAt + 30; break; }
+    freeze[column] = frozenAt;
+    frozenAt += widthOf(column) + 12;
+  }
   const saveWidth = (column: TableColumn, width: number | null) => {
     const next = { ...current.tableWidths };
     if (width === null) delete next[column]; else next[column] = Math.max(minOf(column), clampColumnWidth(width));
@@ -60,26 +70,33 @@ export function TableSurface({ groups, viewKey, childrenOf, onOpen }: {
   useLayoutEffect(() => {
     const box = scrollRef.current;
     if (!box) return;
-    const measure = () => setRoom(Math.max(240, Math.floor(window.innerHeight - box.getBoundingClientRect().top - 16)));
+    const measure = () => {
+      setRoom(Math.max(240, Math.floor(window.innerHeight - box.getBoundingClientRect().top - 16)));
+      box.style.setProperty('--table-view', `${box.clientWidth}px`);
+    };
+    /* The frozen edge casts a shadow only once something has slid under it. */
+    const slid = () => { box.dataset.scrolled = String(box.scrollLeft > 1); };
     measure();
+    slid();
     window.addEventListener('resize', measure);
+    box.addEventListener('scroll', slid, { passive: true });
     const observer = new ResizeObserver(measure);
     if (box.parentElement) observer.observe(box.parentElement);
-    return () => { window.removeEventListener('resize', measure); observer.disconnect(); };
+    return () => { window.removeEventListener('resize', measure); box.removeEventListener('scroll', slid); observer.disconnect(); };
   }, []);
   const all = [...new Map(groups.flatMap((group) => group.items).map((item) => [item.id, item])).values()];
   const inside = insideOthers(all, childrenOf);
   const total = all.reduce((sum, item) => sum + (inside.has(item.id) ? 0 : effectiveEstimate(item, childrenOf).minutes ?? 0), 0);
-  return <TableContext.Provider value={{ columns, coloration: current.tableColoration ?? 'none' }}>
+  return <TableContext.Provider value={{ columns, coloration: current.tableColoration ?? 'none', freeze }}>
     <div ref={scrollRef} className="table-scroll fullwidth"
       style={room ? { maxHeight: room } : undefined}>
       <div className={`task-table${current.tableWrap ? ' wrap' : ''}`}
-        style={{ '--table-columns': tracks.join(' '), minWidth: 60 + 12 * columns.length + columns.reduce((sum, column) => sum + (column === 'title' && !titleSet ? 240 : widthOf(column)), 0) } as CSSProperties}>
+        style={{ '--table-columns': tracks.join(' '), '--fz-check': `${freeze.check}px`, '--fz-title': `${freeze.title}px`, minWidth: 60 + 12 * columns.length + columns.reduce((sum, column) => sum + (column === 'title' && !titleSet ? 240 : widthOf(column)), 0) } as CSSProperties}>
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={() => setMenu(null)} onDragEnd={onDragEnd}>
           <SortableContext items={columns} strategy={horizontalListSortingStrategy}>
             <div className="table-head">{columns.map((column) => (
               <HeadCell key={column} column={column} open={menu?.column === column}
-                width={widthOf(column)} minWidth={minOf(column)} titleOffset={30}
+                width={widthOf(column)} minWidth={minOf(column)} titleOffset={30} frozenAt={freeze[column]}
                 onResizing={(width) => setLive(width === null ? null : { column, width })}
                 onResized={(width) => saveWidth(column, width)}
                 sort={tableColumnSort[column] === current.sort ? current.tableDescending ? 'descending' : 'ascending' : 'none'}
@@ -96,7 +113,7 @@ export function TableSurface({ groups, viewKey, childrenOf, onOpen }: {
           return <TaskGroup key={group.sectionId ?? group.title ?? index} {...group} viewKey={viewKey}
             items={current.tableDescending ? sorted.reverse() : sorted} childrenOf={childrenOf} onOpen={onOpen} keepWhenEmpty />;
         })}
-        <footer className="table-footer">{t('metrics.tasks', { count: all.length })} · {formatDuration(total, locale)}</footer>
+        <footer className="table-footer"><span>{t('metrics.tasks', { count: all.length })} · {formatDuration(total, locale)}</span></footer>
       </div>
     </div>
   </TableContext.Provider>;
@@ -114,9 +131,9 @@ const isFiltered = (current: ViewPrefs, column: TableColumn): boolean =>
  * while a filter is on), opens the column's menu. The person icon stands alone
  * for the assignee column, with its name as a tooltip.
  */
-function HeadCell({ column, sort, open, filtered, width, minWidth, titleOffset, onResizing, onResized, onSort, onOpen }: {
+function HeadCell({ column, frozenAt, sort, open, filtered, width, minWidth, titleOffset, onResizing, onResized, onSort, onOpen }: {
   column: TableColumn; sort: 'ascending' | 'descending' | 'none'; open: boolean; filtered: boolean;
-  width: number; minWidth: number; titleOffset: number; onResizing: (width: number | null) => void; onResized: (width: number | null) => void;
+  frozenAt?: number; width: number; minWidth: number; titleOffset: number; onResizing: (width: number | null) => void; onResized: (width: number | null) => void;
   onSort: () => void; onOpen: (anchor: HTMLElement) => void;
 }) {
   const { t } = useT();
@@ -127,8 +144,8 @@ function HeadCell({ column, sort, open, filtered, width, minWidth, titleOffset, 
   const name = t(tableColumnLabel[column]);
   const hint = t(sort === 'ascending' ? 'table.menu.sortDesc' : 'table.menu.sortAsc');
   return (
-    <div ref={setNodeRef} aria-sort={sort} className={`${column === 'title' ? 'head-title ' : ''}${isDragging ? 'head-dragging' : ''}${filtered ? ' head-filtered' : ''}${open ? ' head-open' : ''}`.trim() || undefined}
-      style={{ transform: CSS.Translate.toString(transform), transition }}>
+    <div ref={setNodeRef} aria-sort={sort} className={`${column === 'title' ? 'head-title ' : ''}${frozenAt !== undefined && column !== 'title' ? 'head-frozen ' : ''}${isDragging ? 'head-dragging' : ''}${filtered ? ' head-filtered' : ''}${open ? ' head-open' : ''}`.trim() || undefined}
+      style={{ transform: CSS.Translate.toString(transform), transition, ...(frozenAt !== undefined && column !== 'title' ? { left: frozenAt } : {}) }}>
       <button type="button" className="head-sort" aria-label={column === 'assignee' ? `${name}: ${hint}` : undefined} title={column === 'assignee' ? `${name} · ${hint}` : hint}
         {...attributes} {...listeners} aria-roledescription={undefined}
         onClick={onSort}>

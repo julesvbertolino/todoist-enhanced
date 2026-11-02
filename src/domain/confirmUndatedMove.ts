@@ -9,11 +9,11 @@ export function registerMoveConfirmation(next: Ask): () => void {
   return () => { if (ask === next) ask = null; };
 }
 
-/** Dates carry Todoist's repeat rule: an undated destination ends that series. */
+/** Dates carry Todoist's repeat rule: an undated destination (the week, the month, Someday) ends that series. */
 export async function confirmUndatedMove(items: Item[], target: DropTarget | undefined, locale: 'en' | 'fr', removeDate = false): Promise<boolean> {
-  if ((target?.kind !== 'anytime' && target?.kind !== 'someday') || !items.some((it) => it.due?.is_recurring)) return true;
+  if ((target?.kind !== 'anytime' && target?.kind !== 'month' && target?.kind !== 'someday') || !items.some((it) => it.due?.is_recurring)) return true;
   // No UI available: preserve the series rather than silently removing it.
   if (!ask) return false;
-  return ask({ title: translate(locale, 'task.endRepeatTitle'), body: translate(locale, removeDate ? 'task.endRepeatRemoveDateBody' : 'task.endRepeatBody', { destination: translate(locale, target.kind === 'anytime' ? 'group.anytime' : 'nav.someday') }),
+  return ask({ title: translate(locale, 'task.endRepeatTitle'), body: translate(locale, removeDate ? 'task.endRepeatRemoveDateBody' : 'task.endRepeatBody', { destination: translate(locale, target.kind === 'anytime' ? 'group.anytime' : target.kind === 'month' ? 'nav.month' : 'nav.someday') }),
     confirmLabel: translate(locale, 'task.endRepeatMove'), destructive: true });
 }

@@ -175,6 +175,15 @@ function ListSurface(props: ModeSurfaceProps) {
   );
 }
 
+/**
+ * The cards of one column. It scrolls on its own when the column is taller than
+ * the board. The heading and "Add task" keep the column's grey, and the cards
+ * are cut at the edge of a tray with small rounded corners (#300).
+ */
+function ColumnBody({ children }: { children: ReactNode }) {
+  return <div className="colbody"><div className="colcards">{children}</div></div>;
+}
+
 /** A board column is never narrower than 272px, Todoist's own width, so a wide screen shows as many columns as Todoist does (#279). */
 const COLUMN_MIN = 272;
 /** Nor wider than this, past which a column stops reading as a column. They
@@ -236,11 +245,22 @@ function BoardSurface(props: ModeSurfaceProps) {
       setAt(Math.round(board.scrollLeft / Math.max(1, width + gap)));
       const max = board.scrollWidth - board.clientWidth;
       setReach({ left: board.scrollLeft > 1, right: board.scrollLeft < max - 1 });
+      /* A column is as tall as the room left under the page header, and scrolls
+         inside itself beyond that, its heading kept in view (#300). */
+      const screen = board.closest<HTMLElement>('.screen');
+      if (screen) {
+        const top = board.getBoundingClientRect().top - screen.getBoundingClientRect().top + screen.scrollTop;
+        /* On a phone the tab bar and the page dots stand over the bottom of the screen. */
+        const below = window.matchMedia('(max-width:720px)').matches ? 120 : 52;
+        board.style.setProperty('--board-h', `${Math.max(320, screen.clientHeight - top - below)}px`);
+      }
     };
     measure();
     board.addEventListener('scroll', measure, { passive: true });
     const observer = new ResizeObserver(measure);
     observer.observe(board);
+    const page = board.closest('.page');
+    if (page) observer.observe(page);
     return () => {
       board.removeEventListener('scroll', measure);
       observer.disconnect();
@@ -366,7 +386,10 @@ function BoardSurface(props: ModeSurfaceProps) {
               {column.action}
             </div>
             {/* A column is a list its cards take a place in, like a list's
-                group: the place follows the pointer between the cards (#20). */}
+                group: the place follows the pointer between the cards (#20).
+                Its heading and its "Add task" stay put; the cards between
+                them are what scrolls (#300). */}
+            <ColumnBody>
             <RowListContext.Provider value={column.dropTarget && props.sort === 'manual' ? {
               order: props.order ?? 'project',
               ids: column.items.filter((item) => !item.projection).map((item) => item.id),
@@ -388,6 +411,7 @@ function BoardSurface(props: ModeSurfaceProps) {
             {isOver && props.sort === 'manual' && <div className="dropbar" aria-hidden="true" />}
             {/* While a card hovers an empty column, its place stands where the text was. */}
             {column.items.length === 0 && (!isOver || props.sort !== 'manual') && <p className="empty">{t('group.empty')}</p>}
+            </ColumnBody>
             {/* Not a card: a card is a task, and the thing that makes one is
                 the end of the column rather than something sitting in it. */}
             {(column.onAddTask ?? props.addToGroup?.(column.id)) && (

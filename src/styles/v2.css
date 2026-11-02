@@ -379,6 +379,17 @@
 .col.accent-late{background:var(--late-wash)}
 .col.accent-late .chead strong{color:var(--late-dark)}
 .chead{padding:0 6px 8px;margin-bottom:0}
+/* A column is a heading, the cards, and "Add task". Only the cards scroll (#300).
+   The body reaches out over the column's side padding so a card's ring and
+   shadow are never clipped and the scrollbar sits on the column's edge. */
+.board .col{display:flex;flex-direction:column;max-height:var(--board-h,none);padding-bottom:6px}
+.board .col .chead,.board .col .coladd{flex:none}
+.board .col .coladd{margin-top:2px}
+.colbody{flex:1 1 auto;min-height:0;margin:0 -4px;padding:0 4px;border-radius:var(--r-lg);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent}
+/* The shadow a card casts needs a few pixels of room on every side. */
+.colcards{padding:3px 0 4px}
+/* The board fills what is left of the window, so nothing is left to scroll under it. */
+@media(min-width:721px){.page:has(> .mode > .board){padding-bottom:20px}}
 .chead-title{display:block}
 .chead strong{font-size:14px}
 .chead-title small{display:block;margin-top:1px;color:var(--faint);font-size:12px}
@@ -909,7 +920,9 @@ html.dragging-row .task,html.dragging-row .subtaskrow{transition:margin .16s eas
   background:var(--card-bg);box-shadow:0 0 0 1px var(--border),0 4px 12px -4px rgba(0,0,0,.25);
 }
 .col .trow-end .trow-actions > button{width:26px;height:26px;border-radius:8px}
-.col .taskwrap .task ~ .task .trow-end{top:0}
+.col .taskwrap .task ~ .task .trow-end{top:6px}
+/* The pill is centred on the title's first line (the checkbox's middle), not on the card's top edge. */
+.col .task .trow-end{top:13px}
 
 /* Drag and drop, same everywhere: what is carried leaves a faint, dashed place behind, and the
    rows (cards, in a board) part where it will land. */
@@ -2084,7 +2097,6 @@ html{-webkit-tap-highlight-color:transparent}
 @media (max-width:720px){
   .task-table{--table-title-min:150px;--table-title-max:170px}
   .table-scroll{-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
-  .task-table .tmain,.task-table .table-head > div.head-title{box-shadow:6px 0 6px -6px rgba(0,0,0,.18)}
 }
 
 /* Sign-in on a phone: the form first, then the same pitch and picture the
