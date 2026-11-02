@@ -23,6 +23,11 @@ describe('the tour (#159)', () => {
     }
   });
 
+  it('introduces Pomodoro without presenting Todoist filters as an Enhanced feature', () => {
+    expect(tourStops(['2.27.0']).map((stop) => stop.target)).toContain('pomodoro');
+    expect(TOUR_STOPS.map((stop) => stop.target)).not.toContain('filters');
+  });
+
   it('points at each element once', () => {
     const targets = TOUR_STOPS.map((stop) => stop.target);
     expect(new Set(targets).size).toBe(targets.length);

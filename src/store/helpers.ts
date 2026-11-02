@@ -337,11 +337,16 @@ export function explainFailure(error: string, locale: Locale): string {
  * nothing or one that did everything.
  */
 export function explainFailures(
-  failures: Array<{ error: string }>,
+  failures: Array<{ error: string; errorTag?: string; commandType?: string }>,
   total: number,
   locale: Locale,
 ): string {
-  const reason = explainFailure(failures[0].error, locale);
+  const failure = failures[0];
+  const reason = failure.errorTag === 'INVALID_DATE' && failure.commandType === 'item_close'
+    ? (locale === 'fr'
+      ? 'Todoist ne peut pas interpréter la répétition de cette tâche. Ouvrez-la dans Todoist et vérifiez sa règle de répétition avant de réessayer. La tâche n’a pas été terminée.'
+      : 'Todoist could not read this task’s repeat rule. Open the task in Todoist and check its repeat rule before trying again. The task was not completed.')
+    : explainFailure(failure.error, locale);
   const saved = total - failures.length;
   if (saved <= 0) return reason;
   return locale === 'fr'

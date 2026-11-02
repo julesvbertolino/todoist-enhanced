@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import {
-  Image as ImageGlyph, Table2, Sun, Sofa, CalendarX,
+  Image as ImageGlyph, Table2, Sun, Sofa, CalendarX, TextWrap, ChevronsLeftRight,
   ArrowLeft, ArrowRight, ArrowUpDown, BarChart3, Bell, Calendar, CalendarClock,
   CalendarDays, Check, ChevronDown, ChevronUp, Clock, Coffee, CornerDownRight,
   ExternalLink, Filter, Flag, Flame, Folder, GripVertical, Group, Inbox,
@@ -14,7 +14,7 @@ import {
 
 /** Every glyph in the product, named exactly as it was under the old sprite. */
 export type IconName =
-  | 'sun' | 'sofa' | 'calendar-arrow-right' | 'calendar-x' | 'volume' | 'reset'
+  | 'wrap-text' | 'full-width' | 'sun' | 'sofa' | 'calendar-arrow-right' | 'calendar-x' | 'volume' | 'reset'
   | 'arrow-left' | 'arrow-right' | 'bars' | 'bell' | 'board' | 'calendar'
   | 'caret' | 'caret-up' | 'check' | 'clock' | 'close' | 'coffee' | 'comment'
   | 'dashboard' | 'deadline' | 'drag' | 'edit' | 'export' | 'external'
@@ -28,6 +28,7 @@ export type IconName =
 
 /** Lucide (MIT, lucide.dev) — chosen to replace the app's hand-drawn sprite. */
 const ICONS: Record<IconName, LucideIcon> = {
+  'wrap-text': TextWrap, 'full-width': ChevronsLeftRight,
   sun: Sun, sofa: Sofa, 'calendar-arrow-right': Calendar, 'calendar-x': CalendarX, volume: Volume2,
   reset: RotateCcw,
   table: Table2,

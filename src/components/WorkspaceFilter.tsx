@@ -23,7 +23,7 @@ export function WorkspaceFilter({ viewKey }: { viewKey: string }) {
   if (!workspaces.length) return null;
   const selected = current.filters.workspaces;
   const legacy = viewKey === 'matrix' ? prefs.eisenhowerWorkspace : null;
-  return <MultiSelect icon="group" label={t('filter.workspaces')} allLabel={t('filter.any')}
+  return <MultiSelect icon="group" label={t('filter.workspaces')} allLabel={t('filter.anyWorkspace')}
     value={selected.length ? selected : legacy ? [legacy] : null}
     options={[{ value: PERSONAL_WORKSPACE, label: t('nav.myProjects'), visual: <WorkspaceAvatar id={PERSONAL_WORKSPACE} name={t('nav.myProjects')} logo={snapshot.user?.avatar_big} /> },
       ...workspaces.map((workspace) => ({ value: workspace.id, label: workspace.name, visual: <WorkspaceAvatar id={workspace.id} name={workspace.name} logo={workspace.logo_big} /> }))]}

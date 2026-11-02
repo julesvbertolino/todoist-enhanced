@@ -1,10 +1,10 @@
 import { useDataSnapshot } from '@/hooks/useDataSnapshot';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Overlay } from './Overlay';
 import { Icon } from '../Icon';
 import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
-import { EstimateField } from '../EstimateField';
+import { DurationField } from '../DurationField';
 import { formatDuration } from '@/domain/estimates';
 import { toDisplayPriority, type Item } from '@/domain/types';
 import { markerStyle } from '@/domain/colors';
@@ -36,7 +36,6 @@ export function EstimateBulk({ items, onOpen, onDone, resetKey }: EstimateBulkPr
   const { t, locale } = useT();
   const snapshot = useDataSnapshot();
   const setEstimates = useStore((s) => s.setEstimates);
-  const listRef = useRef<HTMLDivElement>(null);
 
   /** What has been typed but not yet written back. */
   const [drafts, setDrafts] = useState<Record<string, number>>({});
@@ -65,14 +64,6 @@ export function EstimateBulk({ items, onOpen, onDone, resetKey }: EstimateBulkPr
       return { ...prev, [id]: minutes };
     });
 
-  /** Tab and Enter walk the column of fields, skipping everything between. */
-  const move = (field: HTMLInputElement, direction: 1 | -1) => {
-    const fields = Array.from(listRef.current?.querySelectorAll('input') ?? []);
-    const next = fields[fields.indexOf(field) + direction];
-    if (next) next.focus();
-    else if (direction === 1) field.blur();
-  };
-
   async function save() {
     if (filled.length === 0 || saving) return;
     setSaving(true);
@@ -87,8 +78,8 @@ export function EstimateBulk({ items, onOpen, onDone, resetKey }: EstimateBulkPr
           <p className="empty">{t('issues.none')}</p>
         ) : (
           <>
-            <div className="estlist" ref={listRef}>
-              {items.map((item, index) => {
+            <div className="estlist">
+              {items.map((item) => {
                 const project = snapshot.projects[item.project_id];
                 return (
                   <div
@@ -116,12 +107,10 @@ export function EstimateBulk({ items, onOpen, onDone, resetKey }: EstimateBulkPr
                       )}
                     </button>
 
-                    <EstimateField
-                      minutes={null}
-                      autoFocus={index === 0}
-                      onChange={(minutes) => record(item.id, minutes)}
+                    <DurationField
+                      minutes={drafts[item.id] ?? null}
+                      placeholder={t('task.estimateChoose')}
                       onCommit={(minutes) => record(item.id, minutes)}
-                      onAdvance={move}
                     />
                   </div>
                 );
@@ -138,7 +127,7 @@ export function EstimateBulk({ items, onOpen, onDone, resetKey }: EstimateBulkPr
           <span className="estfoot-tally">
             {t('issues.estimateFilled', { count: filled.length, total: items.length })}
             {total > 0 && <b>{formatDuration(total, locale)}</b>}
-            <span className="estfoot-hint">{t('issues.estimateHint')}</span>
+
           </span>
           <button className="btn quiet" onClick={onDone}>{t('common.cancel')}</button>
           <button

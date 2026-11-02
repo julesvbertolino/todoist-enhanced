@@ -331,10 +331,10 @@ test('each choice has its mark: a lock, the workspace picture, a globe, and a se
 
 /* ---- the update window and the tour ---------------------------------------- */
 
-test('after an update that did not change the tour, the window offers no tour button (2.5.0)', async ({ page }) => {
-  await openAccount(page, [], '2.4.0');
+test('after an update that did not change the tour, the window offers no tour button', async ({ page }) => {
+  await openAccount(page, [], '2.27.0');
   const dialog = page.locator('.whatsnew');
-  await expect(dialog).toContainText('Choose who can access a project');
+  await expect(dialog).toContainText('Design polishes');
   await expect(dialog.getByRole('button', { name: /tour/i })).toHaveCount(0);
   await expect(dialog.getByRole('button', { name: 'Show me', exact: true })).toHaveCount(0);
   await expect(dialog.getByRole('button', { name: 'Got it' })).toBeVisible();

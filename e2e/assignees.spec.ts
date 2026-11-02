@@ -117,7 +117,7 @@ test('workspace dropdown supports multiple spaces and a deliberate empty selecti
   const checkboxes = picker.getByRole('checkbox');
   for (let index = 0; index < await checkboxes.count(); index++) await checkboxes.nth(index).uncheck();
   await expect(demo.locator('.screen.active [data-task-id]')).toHaveCount(0);
-  await picker.getByRole('button', { name: 'Any', exact: true }).click();
+  await picker.getByRole('button', { name: 'Any workspace', exact: true }).click();
   await expect(row(demo, '203 today mine')).toBeVisible();
 });
 
@@ -267,7 +267,7 @@ test('selecting every assignee or workspace restores the all summary and removes
     await expect(demo.locator('.displaycount')).toHaveText('1');
     await first.check();
     await expect(demo.locator('.displaycount')).toHaveCount(0);
-    await expect(trigger).toHaveAccessibleName(`${label}: ${label === 'Assigned to' ? 'Everyone' : 'Any'}`);
+    await expect(trigger).toHaveAccessibleName(`${label}: ${label === 'Assigned to' ? 'Everyone' : 'Any workspace'}`);
     await trigger.click();
   }
 });
@@ -306,10 +306,10 @@ test('matrix uses workspace multiselect with images and filters across several s
   expect(await choices.count()).toBeGreaterThan(1);
   await expect(picker.locator('.workspace-avatar').first()).toBeVisible();
   for (let index = 0; index < await choices.count(); index++) await choices.nth(index).uncheck();
-  await expect(picker.getByRole('button', { name: 'Any', exact: true })).toHaveAttribute('aria-pressed', 'false');
+  await expect(picker.getByRole('button', { name: 'Any workspace', exact: true })).toHaveAttribute('aria-pressed', 'false');
   await expect(row(demo, '203 today mine')).toHaveCount(0);
-  await picker.getByRole('button', { name: 'Any', exact: true }).click();
-  await expect(picker.getByRole('button', { name: 'Any', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  await picker.getByRole('button', { name: 'Any workspace', exact: true }).click();
+  await expect(picker.getByRole('button', { name: 'Any workspace', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(row(demo, '203 today mine')).toBeVisible();
   await demo.keyboard.press('Escape');
   await expect(demo.getByRole('dialog', { name: 'Display', exact: true })).toBeVisible();

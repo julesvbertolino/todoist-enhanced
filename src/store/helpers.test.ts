@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { advanceDemoRecurrence, branchOf, deletionRoots, explainFailure, partitionQueue, restoreOrder } from './helpers';
+import { advanceDemoRecurrence, branchOf, deletionRoots, explainFailure, explainFailures, partitionQueue, restoreOrder } from './helpers';
 import type { QueuedCommand } from '@/db/idb';
 import { emptySnapshot, type Item } from '@/domain/types';
 import { due, item } from '@/test/items';
@@ -163,6 +163,12 @@ describe('partitionQueue (#129)', () => {
 });
 
 describe('explainFailure (#134)', () => {
+  it('explains an invalid recurring close without changing other date errors', () => {
+    const failure = { error: 'Date is invalid', errorTag: 'INVALID_DATE', commandType: 'item_close' };
+    expect(explainFailures([failure], 1, 'en')).toContain('check its repeat rule');
+    expect(explainFailures([failure], 1, 'fr')).toContain('vérifiez sa règle de répétition');
+    expect(explainFailures([{ ...failure, commandType: 'item_update' }], 1, 'en')).toContain('Date is invalid');
+  });
   it('names a limit in French without an English sentence in the middle', () => {
     const message = explainFailure('Maximum number of projects reached', 'fr');
     expect(message).toMatch(/Limite de projets atteinte/);

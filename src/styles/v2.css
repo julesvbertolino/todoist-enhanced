@@ -2364,3 +2364,46 @@ html[data-navigation="pointer"] .task:focus-visible::after{content:none}
 .composer-place-menu .opt > .ic:first-child{width:18px;height:18px;flex:0 0 18px}
 .composer-place-menu .opt[aria-selected="true"] > .ic:first-child{margin-left:0}
 .sheet > .detail-top{flex:none}
+
+
+/* Release polish: keep the cards and their controls while reducing visual noise. */
+.tagcard { box-shadow:none; }
+.tagcard-mark { background:transparent; width:24px; }
+.tagcard-grip { color:color-mix(in srgb, var(--faint) 70%, transparent); }
+.filtercard-query { white-space:normal; overflow-wrap:anywhere; overflow:visible; }
+.metrics .sep { display:inline; color:var(--muted); }
+.metrics { gap:6px; }
+.pactions .btn.insights-control { width:36px; height:36px; padding:0; display:inline-grid; place-items:center; }
+.propkey { border:0; background:transparent; box-shadow:none; }
+.detail-side .priopills { position:relative; isolation:isolate; display:flex; gap:0; padding:3px; border-radius:12px; background:var(--hover); }
+.detail-side .priopills::before { content:""; position:absolute; z-index:-1; top:3px; bottom:3px; left:3px; width:calc((100% - 6px)/4); border-radius:9px; background:var(--surface); box-shadow:0 1px 4px #0002; transform:translateX(calc((var(--selected) - 1) * 100%)); transition:transform .2s ease; }
+.detail-side .priopills[data-priority="1"] { --selected:1; }.detail-side .priopills[data-priority="2"] { --selected:2; }.detail-side .priopills[data-priority="3"] { --selected:3; }.detail-side .priopills[data-priority="4"] { --selected:4; }
+.detail-side .priopill, .detail-side .priopill[aria-checked="true"] { background:transparent; box-shadow:none; }
+.detail-side .priopill[aria-checked="true"] { text-decoration:underline; text-underline-offset:3px; }
+@media (prefers-reduced-motion:reduce) { .detail-side .priopills::before { transition:none; } }
+.dfields .panelrow > span { display:inline-flex; align-items:center; gap:8px; }
+.dfields .fselect-face { border-radius:12px; }
+.dfields .columnsrow + .fselect { margin-top:calc(-1 * var(--s2)); }
+.columns-caret { transform:rotate(-90deg); }
+.columnsrow .fselect-face[aria-expanded="true"] .columns-caret { transform:rotate(0); }
+
+.dfields .multiselect .fselect-label { display:none; }
+
+.summary-time:not(:disabled):hover { text-decoration:underline solid; text-decoration-thickness:1px; text-decoration-color:color-mix(in srgb,currentColor 45%,transparent); text-underline-offset:4px; }
+.summary-time:not(:disabled) { transition:text-decoration-color .18s ease,color .18s ease; }
+.pactions .btn.insights-control { color:var(--accent-dark); }
+:root[data-theme="dark"] .pactions .btn.insights-control { color:var(--accent-dark); }
+.detail-side .priopill[aria-checked="true"] { text-decoration:none; }
+.propadd { padding:0; line-height:1; }
+.propadd .ic { display:block; }
+.estrow { align-items:start; }
+.estrow > .check { margin-top:9px; }
+.estname { padding-top:7px; }
+.estname .meta { display:flex; align-items:center; gap:4px; }
+.estname .meta .hash { width:auto; height:auto; margin:0; }
+.estrow .durationfield .fselect-face { min-width:125px; }
+
+/* Underline the duration as one uninterrupted phrase. */
+.summary-time:not(:disabled):hover { text-decoration:none; }
+.summary-time:not(:disabled) > span { border-bottom:1px solid transparent; transition:border-color .18s ease; }
+.summary-time:not(:disabled):hover > span { border-bottom-color:color-mix(in srgb,currentColor 45%,transparent); }

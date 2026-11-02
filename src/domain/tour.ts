@@ -26,13 +26,13 @@ export const TOUR_STOPS: TourStop[] = [
   { target: 'folder', since: '1.0.0', title: 'walkthrough.feature.folders', body: 'walkthrough.feature.foldersBody' },
   { target: 'project-icon', since: '1.11.0', title: 'tour.icons', body: 'tour.iconsBody' },
   { target: 'quick', since: '1.0.0', title: 'tour.quick', body: 'tour.quickBody' },
+  { target: 'pomodoro', since: '2.27.0', title: 'tour.pomodoro', body: 'tour.pomodoroBody' },
   { target: 'time', since: '1.19.0', title: 'tour.time', body: 'tour.timeBody' },
   { target: 'subtasks', since: '1.0.0', title: 'tour.subtasks', body: 'tour.subtasksBody' },
   { target: 'review', since: '1.0.0', title: 'tour.review', body: 'tour.reviewBody' },
   { target: 'dashboard', also: ['logbook'], since: '2.0.0', title: 'tour.dashboard', body: 'tour.dashboardBody' },
   { target: 'matrix', since: '1.9.0', title: 'tour.matrix', body: 'tour.matrixBody' },
   { target: 'notifications', since: '2.0.0', title: 'tour.notifications', body: 'tour.notificationsBody' },
-  { target: 'filters', since: '2.2.0', title: 'tour.filters', body: 'tour.filtersBody' },
 ];
 
 /**
