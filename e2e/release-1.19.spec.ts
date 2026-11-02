@@ -139,6 +139,27 @@ test('⌘A then ⌘⌫ deletes the selection with no task under the cursor', asy
   await expect(page.getByRole('dialog')).toContainText(/Delete/);
 });
 
+test('⌘-clicking the cursor row off a selection deletes the tasks still selected, not that row', async ({ demo: page }) => {
+  await go(page, '#/inbox');
+  const list = rows(page);
+  const names = await list.locator('.ttitle').allInnerTexts();
+  expect(names.length).toBeGreaterThanOrEqual(4);
+
+  await list.nth(0).click({ modifiers: ['ControlOrMeta'] });
+  await list.nth(1).click({ modifiers: ['ControlOrMeta'] });
+  await list.nth(2).click({ modifiers: ['ControlOrMeta'] });
+  // The first is unticked: the cursor stays on it, but only the other two are picked.
+  await list.nth(0).click({ modifiers: ['ControlOrMeta'] });
+
+  await page.keyboard.press('ControlOrMeta+Backspace');
+  await expect(page.getByRole('dialog')).toContainText('Delete 2 tasks?');
+  await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
+
+  await expect(row(page, names[1])).toHaveCount(0);
+  await expect(row(page, names[2])).toHaveCount(0);
+  await expect(row(page, names[0])).toHaveCount(1);
+});
+
 test('#154 the Quick group stays on top whatever the page is grouped by', async ({ demo: page }) => {
   await go(page, '#/project/site');
   await page.getByRole('button', { name: 'Display' }).click();

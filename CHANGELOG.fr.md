@@ -8,6 +8,10 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.27.2
+
+🐛 **Supprimez ce que vous avez choisi.** Après avoir retiré une tâche d’une sélection avec ⌘-clic, ⌘⌫ supprime les tâches encore sélectionnées, et non celle que vous venez de décocher. E, T, V et les touches de priorité suivent la même règle.
+
 ## 2.27.1
 
 🎨 **Finitions de l’interface.** Les résumés de page et Analyses sont plus lisibles. Le menu Affichage, les détails des tâches et les pages Tags et Filtres sont épurés ; l’ajout des estimations manquantes est simplifié. La visite présente désormais le minuteur Pomodoro.
