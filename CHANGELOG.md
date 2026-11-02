@@ -40,6 +40,10 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.27.1
+
+🎨 **Design polishes.** Page summaries and Insights are easier to read. The Display menu, task details, Tags and Filters pages are clearer, with a simpler way to estimate tasks missing a duration. The guided tour now introduces the Pomodoro timer.
+
 ## 2.27.0
 
 🆕 **Meet the Pomodoro timer.** Press the 25 min pill at the top of a page to start 25 minutes of focus. It counts down in the pill, with pause beside it. Open a task and press the pill to link the timer to that task, and open it full screen to work on it.

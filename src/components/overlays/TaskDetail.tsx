@@ -1136,14 +1136,23 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
                 options={([1, 2, 3, 4] as const).map((p) => ({ value: String(p), label: `P${p}` }))}
               />
             ) : (
-            <div className="priopills" role="radiogroup" aria-label={t('detail.priority')}>
+            <div className="priopills" data-priority={priority} role="radiogroup" aria-label={t('detail.priority')}>
               {([1, 2, 3, 4] as const).map((p) => (
                 <button
                   key={p}
                   type="button"
                   role="radio"
                   aria-checked={priority === p}
+                  tabIndex={priority === p ? 0 : -1}
                   className={`priopill p${p}`}
+                  onKeyDown={(event) => {
+                    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+                    event.preventDefault();
+                    const direction = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1;
+                    const next = ((p - 1 + direction + 4) % 4 + 1) as 1 | 2 | 3 | 4;
+                    void updateTask(item.id, { priority: toTodoistPriority(next) });
+                    event.currentTarget.parentElement?.querySelector<HTMLButtonElement>(`.priopill.p${next}`)?.focus();
+                  }}
                   onClick={() => void updateTask(item.id, { priority: toTodoistPriority(p) })}
                 >
                   <Icon name="flag" size="sm" />
@@ -1183,7 +1192,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
             </span>
 
             <div className="pills">
-              {visibleLabels.length === 0 && <span className="psub">{t('common.none')}</span>}
+              {visibleLabels.length === 0 && <span className="psub">{t('detail.noTags')}</span>}
               {visibleLabels.map((label) => {
                 const known = Object.values(snapshot.labels).find((l) => l.name === label);
                 return (

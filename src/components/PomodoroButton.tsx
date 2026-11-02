@@ -54,7 +54,7 @@ export function PomodoroButton({ taskId = null }: { taskId?: string | null }) {
 
   if (!active) {
     return (
-      <span className="pomo-control" ref={wrap}>
+      <span className="pomo-control" ref={wrap} data-tour={taskId === null ? "pomodoro" : undefined}>
         <button
           type="button"
           className="pomo-main"
@@ -71,7 +71,7 @@ export function PomodoroButton({ taskId = null }: { taskId?: string | null }) {
 
   const time = formatClock(displayMsAt(timer, now));
   return (
-    <span className={`pomo-control is-running${paused ? ' is-paused' : ''}${timer.status === 'done' ? ' is-done' : ''}`} ref={wrap}>
+    <span className={`pomo-control is-running${paused ? ' is-paused' : ''}${timer.status === 'done' ? ' is-done' : ''}`} ref={wrap} data-tour={taskId === null ? "pomodoro" : undefined}>
       <button
         type="button"
         className="pomo-main"

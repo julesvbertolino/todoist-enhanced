@@ -8,6 +8,10 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.27.1
+
+🎨 **Finitions de l’interface.** Les résumés de page et Analyses sont plus lisibles. Le menu Affichage, les détails des tâches et les pages Tags et Filtres sont épurés ; l’ajout des estimations manquantes est simplifié. La visite présente désormais le minuteur Pomodoro.
+
 ## 2.27.0
 
 🆕 **Découvrez le minuteur Pomodoro.** Appuyez sur la pastille 25 min en haut d’une page pour 25 minutes de concentration. Le temps défile dans la pastille, avec la pause à côté. Ouvrez une tâche et appuyez sur la pastille pour lier le minuteur à cette tâche, puis passez en plein écran pour travailler dessus.
