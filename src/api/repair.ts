@@ -95,7 +95,9 @@ const setDue = (id: string, due: StoredDue, lang: string, uuid: string): Command
   args: {
     id,
     due: {
-      string: due.string, date: due.date, lang,
+      /* Without `is_recurring`, Todoist reads the rewrite as a one-off date
+         and the close that follows ends the series (measured on #432). */
+      string: due.string, date: due.date, lang, is_recurring: true,
       ...(due.timezone ? { timezone: due.timezone } : {}),
     },
   },

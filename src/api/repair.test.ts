@@ -17,7 +17,7 @@ vi.mock('@/db/idb', () => ({
 const sent = vi.mocked(request);
 
 interface Due { string: string; date: string; lang: string; timezone: null; is_recurring: boolean }
-type Wire = { type: string; uuid: string; args: { id: string; due?: { lang: string; string: string; date: string } } };
+type Wire = { type: string; uuid: string; args: { id: string; due?: { lang: string; string: string; date: string; is_recurring?: boolean } } };
 
 /**
  * A Todoist that behaves as the issue measured: a Dutch rule is only readable
@@ -32,6 +32,8 @@ function todoist(initial: Partial<Due> = {}) {
     get due() { return dueOf('a'); },
     set due(value: Due) { dues.a = value; },
     closes: 0,
+    /** Tasks whose whole series was ended by a close. */
+    series: [] as string[],
     log: [] as Wire[],
     answers: new Map<string, unknown>(),
     readable: 'nl',
@@ -53,9 +55,15 @@ function todoist(initial: Partial<Due> = {}) {
       if (state.answers.has(cmd.uuid)) { sync_status[cmd.uuid] = state.answers.get(cmd.uuid); continue; }
       let answer: unknown = 'ok';
       const task = dueOf(cmd.args.id);
-      if (cmd.type === 'item_update' && cmd.args.due) dues[cmd.args.id] = { ...task, ...cmd.args.due };
+      /* Measured on a real account: a rewrite that does not say it is recurring makes it a one-off. */
+      if (cmd.type === 'item_update' && cmd.args.due) {
+        dues[cmd.args.id] = { ...task, ...cmd.args.due, is_recurring: cmd.args.due.is_recurring === true };
+      }
       if (cmd.type === 'item_close') {
-        if (task.lang !== state.readable) {
+        if (!task.is_recurring) {
+          state.series.push(cmd.args.id);
+          answer = 'ok';
+        } else if (task.lang !== state.readable) {
           answer = { error_code: 480, error: 'Date is invalid', error_tag: 'INVALID_DATE' };
         } else {
           state.closes += 1;
@@ -83,6 +91,7 @@ describe('closing a recurring task whose rule and language disagree (#432)', () 
     expect(result.failures).toEqual([]);
     expect(result.delivered).toContain(close.uuid);
     expect(server.closes).toBe(1);
+    expect(server.series).toEqual([]);
     expect(server.due.lang).toBe('nl');
     expect(types(server)).not.toContain('item_complete');
     expect(await loadJournal()).toEqual([]);
@@ -119,11 +128,13 @@ describe('closing a recurring task whose rule and language disagree (#432)', () 
   });
 
   it('leaves a task that is not recurring alone', async () => {
-    const server = todoist({ is_recurring: false });
     const close = command('item_close', { id: 'a' });
+    sent.mockImplementation((async (_path: string, init?: { form?: unknown }) => init?.form
+      ? { sync_status: { [close.uuid]: { error_code: 480, error: 'Date is invalid', error_tag: 'INVALID_DATE' } } }
+      : { due: { string: 'x', date: '2026-11-01', lang: 'en', timezone: null, is_recurring: false } }) as never);
     const result = await sendCommands('token', [close]);
     expect(result.failures).toHaveLength(1);
-    expect(types(server)).toEqual(['item_close']);
+    expect(sent).toHaveBeenCalledTimes(2);
   });
 
   it('keeps the close queued when the network drops between the write and the answer, then finishes without a second close', async () => {
