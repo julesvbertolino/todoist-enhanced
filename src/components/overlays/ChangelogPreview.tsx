@@ -108,6 +108,21 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
       content = <>{title(say('Comments', 'Commentaires'))}<div className="cv-chips">{chip(say('Notify: Anne', 'Notifier : Anne'))}</div><div className="cv-field">{say('Can you check the copy, ', 'Tu peux relire les textes, ')}<span className="cv-chip accent">@Anne</span> ?</div>{row('Anne', 'user', undefined, true)}{row('Sam', 'user')}</>; break;
     case 'subtasks':
       content = <>{row('Prepare the brief tomorrow at 9am', 'checkbox', '9:00')}{row('Review the copy p1', 'checkbox', 'P1')}{row('Choose photos for 30 min', 'checkbox', '30 min')}</>; break;
+    case 'subtaskDetails': {
+      /* Before and after: the same subtasks, first by name only, then with what each one says about itself. */
+      const sub = (name: string, chips: ReactNode) => <div className="cv-sub" key={name}><Icon name="checkbox" size="sm" /><div><b>{name}</b>{chips && <div className="cv-subchips">{chips}</div>}</div></div>;
+      const at = (text: string, icon: IconName, tone = '') => <span className={`cv-subchip ${tone}`}><Icon name={icon} size="sm" />{text}</span>;
+      const names = [say('Write the copy', 'Écrire les textes'), say('Choose the photos', 'Choisir les photos'), say('Build the page', 'Monter la page')];
+      content = <div className="cv-before-after">
+        <div className="cv-before">{names.map((name) => sub(name, null))}</div>
+        <span className="cv-arrow">→</span>
+        <div>
+          {sub(names[0], <>{at('30 min', 'clock')}{at(say('Tomorrow', 'Demain'), 'calendar', 'blue')}</>)}
+          {sub(names[1], <>{at('1 h', 'clock')}{chip('design', 'purple')}</>)}
+          {sub(names[2], <>{at('2 h', 'clock')}{at(say('Friday', 'Vendredi'), 'calendar', 'blue')}</>)}
+        </div>
+      </div>; break;
+    }
     case 'composerImage':
       content = <>{title(say('Add task', 'Ajouter une tâche'))}<div className="cv-field">{say('Review the mockup', 'Relire la maquette')}</div>
         <div className="cv-image-attachment"><span className="cv-image-thumbnail"><Icon name="image" /></span><span>{say('Screenshot.png', 'Capture.png')}<small>{say('Image attached', 'Image jointe')}</small></span><Icon name="close" size="sm" /></div>

@@ -8,7 +8,7 @@ import { useProjectPeople } from '@/hooks/useProjectPeople';
 import { AssigneeBadge } from '../AssigneeBadge';
 import { AssigneeField } from '../AssigneeField';
 import { useCreateTag } from '@/hooks/useCreateTag';
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { copyText, isTemporaryId, todoistTaskUrl } from '@/api/links';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { Overlay } from './Overlay';
@@ -17,7 +17,7 @@ import { Icon } from '../Icon';
 import { ProgressRing } from '../ProgressRing';
 import { PomodoroButton } from '../PomodoroButton';
 import { ChecklistProgress, DescriptionEditor, DescriptionView } from '../Checklist';
-import { toggleItemAt } from '@/domain/checklist';
+import { checklistPreview, toggleItemAt } from '@/domain/checklist';
 import { useT } from '@/hooks/useT';
 import { useMenuKeys } from '@/hooks/useMenuKeys';
 import { useData } from '@/hooks/useData';
@@ -29,9 +29,9 @@ import {
   effectiveEstimate, formatDuration,
 } from '@/domain/estimates';
 import {
-  deadlineDate, dueDate, formatRelativeDay, hasTime, toApiDate, toApiDateTime,
+  deadlineDate, dueDate, formatRelativeDay, formatTime, hasTime, isOverdue, toApiDate, toApiDateTime,
 } from '@/domain/dates';
-import { plainTitle, renderTitle, titleLinks } from '@/domain/markdown';
+import { plainTitle, renderInlineMarkdown, renderTitle, titleLinks } from '@/domain/markdown';
 import { parseShorthand, savedRefusals, type TextRange } from '@/domain/shorthand';
 import { dueForDate } from '@/domain/recurrence';
 import { DurationField } from '../DurationField';
@@ -41,7 +41,7 @@ import { CommentThread } from '../CommentThread';
 import { DateField } from '../DateField';
 import { markerStyle } from '@/domain/colors';
 import { assignees } from '@/domain/sharing';
-import { SYSTEM_LABELS, displayTaskContent, isUncompletable, toDisplayPriority, toTodoistPriority, weekLabel, type Item } from '@/domain/types';
+import { ESTIMATE_PREFIX, SYSTEM_LABELS, displayTaskContent, isUncompletable, toDisplayPriority, toTodoistPriority, weekLabel, type Item } from '@/domain/types';
 import { dropMutation, type DropTarget } from '@/domain/dnd';
 import { taskShortcuts } from '../DatePicker';
 import { matchesSearch } from '@/domain/search';
@@ -85,7 +85,7 @@ function SubtaskRow({ id, done, children }: { id: string; done: boolean; childre
 }
 
 function EditableSubtask({ child, onOpen }: { child: Item; onOpen: (id: string) => void }) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const updateTask = useStore((s) => s.updateTask);
   const toggleTask = useStore((s) => s.toggleTask);
   const removeTask = useStore((s) => s.removeTask);
@@ -100,6 +100,43 @@ function EditableSubtask({ child, onOpen }: { child: Item; onOpen: (id: string) 
   const [refusals, setRefusals] = useState<TextRange[]>([]);
   const editRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  const hour12 = useStore((s) => s.prefs.hour12);
+  const fields = useStore((s) => s.prefs.taskFields);
+  const due = dueDate(child);
+  const deadline = deadlineDate(child);
+  /* A subtask committed to the week or the month with no day is shown by that, as a row does, not by the tag that carries it. */
+  const horizon = child.due ? null : child.labels.some((l) => l.toLowerCase() === weekLabel().toLowerCase())
+    ? 'review.to.anytime' as const
+    : child.labels.some((l) => l.toLowerCase() === SYSTEM_LABELS.month) ? 'review.to.month' as const : null;
+  const labels = child.labels.filter((label) => !label.toLowerCase().startsWith(ESTIMATE_PREFIX)
+    && !(horizon && [weekLabel().toLowerCase(), SYSTEM_LABELS.month].includes(label.toLowerCase())));
+  const preview = fields.description ? checklistPreview(child.description) : '';
+  const { childrenOf } = useData();
+  const { minutes, computed } = effectiveEstimate(child, childrenOf);
+  /* The chips a task row draws, in the order the person chose in Display (a subtask lives in its parent's project, so the project is left out). */
+  const detailOrder = useStore((s) => s.prefs.detailOrder);
+  const labelColours = Object.values(snapshot.labels);
+  const pieces: Partial<Record<string, ReactNode>> = {
+    estimate: fields.estimate && minutes !== null && (
+      <span className="est" title={computed ? t('task.computedEstimate') : undefined}>
+        <Icon name="clock" />{formatDuration(minutes, locale)}{computed && '*'}
+      </span>),
+    date: fields.date && (due ? (
+      <span className={isOverdue(child) ? 'late' : 'at'}>
+        <Icon name="calendar" />
+        {formatRelativeDay(due, locale)}{hasTime(child.due) && ` ${formatTime(due, locale, hour12)}`}
+      </span>) : horizon && (
+      <span className="at tone-later"><Icon name="calendar" />{t(horizon)}</span>)),
+    deadline: fields.deadline && deadline && <span className="deadline"><Icon name="deadline" />{formatRelativeDay(deadline, locale)}</span>,
+    labels: fields.labels && labels.map((label) => (
+      <span className="tag" key={label} style={markerStyle(labelColours.find((l) => l.name === label)?.color)}>
+        <Icon name="tag" size="sm" />{label}
+      </span>)),
+  };
+  const chips = detailOrder.map((chip) => {
+    const piece = pieces[chip];
+    return Array.isArray(piece) ? (piece.length > 0 ? <Fragment key={chip}>{piece}</Fragment> : null) : piece ? <Fragment key={chip}>{piece}</Fragment> : null;
+  });
 
   useEffect(() => {
     if (!editing) {
@@ -186,10 +223,15 @@ function EditableSubtask({ child, onOpen }: { child: Item; onOpen: (id: string) 
           onRefusals={setRefusals}
         />
       ) : (
-        <button className="subtasktitle" onClick={() => onOpen(child.id)}>
-          <AssigneeBadge id={child.responsible_uid} />
-          <span>{plainTitle(displayTaskContent(child))}</span>
-        </button>
+        <span className="subtaskbody">
+          <button className="subtasktitle" onClick={() => onOpen(child.id)}>
+            <AssigneeBadge id={child.responsible_uid} />
+            <span>{plainTitle(displayTaskContent(child))}</span>
+          </button>
+          {/* What the parent's list shows under a subtask, so it need not be opened to be read (#281). */}
+          {preview && <span className="tdesc" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(preview) }} />}
+          {chips.some(Boolean) && <span className="meta">{chips}</span>}
+        </span>
       )}
       <span className="subtaskactions">
         {editing ? (

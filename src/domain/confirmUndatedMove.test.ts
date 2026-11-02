@@ -20,4 +20,11 @@ describe('moving a series to an undated destination (#332)', () => {
     expect(ask.mock.calls).toHaveLength(1); clean();
     expect(await confirmUndatedMove([repeating], { kind: 'someday' }, 'fr')).toBe(false);
   });
+  it('asks for This month as well, whatever the size of the selection', async () => {
+    const ask = vi.fn(async (_request: { body: string }) => false); const clean = registerMoveConfirmation(ask);
+    const selection = [...Array.from({ length: 12 }, () => ({ due: null } as Item)), repeating];
+    expect(await confirmUndatedMove(selection, { kind: 'month' }, 'en')).toBe(false);
+    expect(ask).toHaveBeenCalledTimes(1);
+    expect(ask.mock.calls[0]?.[0]?.body).toContain('This month'); clean();
+  });
 });

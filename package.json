@@ -1,7 +1,7 @@
 {
   "name": "todoist-enhancements",
   "private": true,
-  "version": "2.27.2",
+  "version": "2.28.0",
   "engines": {
     "node": ">=20"
   },

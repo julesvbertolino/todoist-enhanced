@@ -1753,3 +1753,30 @@ html.desktop-app .macapp,html.desktop-app .macapp-line{display:none}
 .task-date-shortcuts button[data-tooltip]:is(:hover,:focus-visible)::after{content:attr(data-tooltip);position:absolute;bottom:calc(100% + 7px);left:50%;transform:translateX(-50%);background:#202020;color:white;border-radius:5px;padding:5px 8px;white-space:nowrap;font-size:11px;pointer-events:none;z-index:5}
 .task-priority-shortcuts{margin-bottom:6px}
 .task-date-shortcuts{border-bottom:0}
+
+/* A subtask in the task panel says what its description, dates and tags are, under its title (#281).
+   The box and the actions line up with the title's first line, whatever is under it, and a row
+   that has something under its title gets room to breathe. */
+.detail-section .subtaskrow{align-items:start;padding-block:3px}
+.detail-section .subtaskrow>.check{margin-top:5px}
+.detail-section .subtaskrow>.subtaskactions{margin-top:1px}
+.detail-section .subtaskrow>.subtaskedit,.detail-section .subtaskrow>.namefield{align-self:center}
+.subtaskbody{display:grid;min-width:0;justify-items:start}
+.subtaskbody .subtasktitle{max-width:100%}
+.subtaskbody .tdesc{max-width:100%;margin-top:-2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.subtaskbody .meta{margin-top:5px;gap:3px 10px}
+.subtaskbody:has(>:is(.tdesc,.meta)){padding-bottom:7px}
+.subtaskrow.done .subtaskbody :is(.tdesc,.meta){opacity:.6}
+
+/* The Quick Add shortcut row in the Mac app: a settings row whose control is a field showing the keys. */
+.quickshortcut{border-top:1px solid var(--border)}
+.quickshortcut-control{display:flex;align-items:center;gap:var(--s3);flex:none}
+.quickshortcut-field{width:156px;min-height:34px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid var(--border-strong);border-radius:var(--r-md);background:var(--surface);color:var(--text);
+  font:inherit;font-size:var(--fs-13);font-weight:600;letter-spacing:.06em;cursor:pointer;transition:border-color .15s ease,box-shadow .15s ease}
+.quickshortcut-field:hover{border-color:var(--muted)}
+.quickshortcut-field.recording{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);color:var(--accent)}
+.quickshortcut-hint{color:var(--muted);font-weight:400;letter-spacing:0}
+.quickshortcut-reset{padding:0;white-space:nowrap;color:var(--muted);font-size:var(--fs-12);background:none}
+.quickshortcut-reset:hover{color:var(--text);text-decoration:underline}
+.quickshortcut-problem{margin:-6px 0 var(--s3);color:var(--late);font-size:var(--fs-12);text-align:right}

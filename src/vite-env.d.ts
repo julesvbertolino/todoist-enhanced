@@ -8,5 +8,10 @@ declare const __OAUTH_DEV_REDIRECT__: string;
 
 interface Window {
   /** Present only inside the desktop app (desktop/), which adds it in its preload script. */
-  enhancedDesktop?: { hideQuickAdd: () => void };
+  enhancedDesktop?: {
+    hideQuickAdd: () => void;
+    /** Added in version 1.1 of the app: an older app has neither. */
+    getQuickAddShortcut?: () => Promise<string>;
+    setQuickAddShortcut?: (accelerator: string) => Promise<{ ok: boolean; shortcut: string }>;
+  };
 }

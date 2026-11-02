@@ -1,3 +1,5 @@
+import { useContext } from 'react';
+import { TableContext } from './TableContext';
 import { Icon } from './Icon';
 import { DateField } from './DateField';
 import { DurationField } from './DurationField';
@@ -29,6 +31,7 @@ export function TableCells({ item, columns, childrenOf, hideProject = false }: {
   const setTaskLabels = useStore((s) => s.setTaskLabels);
   const setRecurrence = useStore((s) => s.setRecurrence);
   const { minutes, computed } = effectiveEstimate(item, childrenOf);
+  const freeze = useContext(TableContext)?.freeze;
   return <>{columns.filter((column) => column !== 'title').map((column) => {
     let content;
     if (column === 'date' || column === 'deadline') {
@@ -80,7 +83,8 @@ export function TableCells({ item, columns, childrenOf, hideProject = false }: {
         onChange={(next) => void assignTask(item.id, next)} iconOnly />;
     }
     else content = item.description;
-    return <div key={column} className={`table-cell table-${column}${column === 'date' ? ` tone-${isOverdue(item) ? 'late' : dateTone(item) ?? 'later'}` : ''}`}
+    const frozen = freeze?.[column];
+    return <div key={column} style={frozen !== undefined ? { left: frozen } : undefined} className={`table-cell table-${column}${frozen !== undefined ? ' cell-frozen' : ''}${column === 'date' ? ` tone-${isOverdue(item) ? 'late' : dateTone(item) ?? 'later'}` : ''}`}
       onClick={(event) => event.stopPropagation()} onMouseDown={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>{content}</div>;
   })}</>;
 }

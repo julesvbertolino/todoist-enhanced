@@ -26,6 +26,8 @@ translation lives in CHANGELOG.fr.md.
   or see ("Resize your sidebar"), in sentence case, ending with a full stop.
   What follows is one or two short sentences: where it is and what it does
   for them.
+- The title names what the person sees or gets, never how it is built. If
+  someone who has not seen the screen would ask "what does that mean?", rewrite it.
 - A picture is added only when it helps to understand the idea. It shows the
   thing itself and carries no title, caption or hint of its own: the entry
   already says what it is. Pictures all sit in the same 16:10 frame.
@@ -39,6 +41,18 @@ translation lives in CHANGELOG.fr.md.
   its X" chains.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
+
+## 2.28.0
+
+🆕 **Choose your Quick Add shortcut.** In the Mac app, open Settings, click the shortcut, then press the keys you want. The shortcut that opens Quick Add over any app is no longer fixed to Option + Space. Needs version 1.1 of the Mac app; Settings shows you where to get it.
+
+🎨 **See a subtask's details at a glance.** Open a task and every subtask now shows its description, duration, date and tags under its name, in the order you chose in Display. No need to open them one by one.
+
+🎨 **Boards that fit your window.** Each column now takes the height of your window and scrolls on its own, with its name and its Add task button always in place. The page itself no longer scrolls under the board.
+
+🎨 **Never lose the task in a wide table.** When a table has more columns than fit, the checkbox and the task's name stay on the left while you scroll sideways, so you always know which row you are reading.
+
+🐛 **A warning before a repeating task loses its date.** Moving several tasks to This month now asks first when one of them repeats, as This week and Someday already did. Before, the repeat rule was removed without a word.
 
 ## 2.27.2
 

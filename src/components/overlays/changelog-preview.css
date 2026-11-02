@@ -155,3 +155,17 @@
 .cv-pill.cv-paused{color:var(--muted);font-weight:500}
 .cv-states{display:grid;grid-template-columns:repeat(3,auto);justify-content:space-around;align-items:start;gap:10px;padding:14px 0 6px}.cv-states>div{display:grid;justify-items:center;gap:8px}.cv-states .cv-pill{height:26px;font-size:11px;padding:0 11px;gap:6px}.cv-states small{font-size:9px;color:var(--muted)}
 .cv-states{gap:6px!important;justify-content:center!important}.cv-states .cv-pill{white-space:nowrap;height:22px;font-size:9.5px;padding:0 8px;gap:4px}.cv-states .cv-pill svg{flex:none}
+
+/* Subtask details: the same three subtasks, bare on the left and complete on the right. */
+.cv-before-after{display:grid;grid-template-columns:1fr 16px 1.3fr;gap:10px;align-items:center}
+.cv-before{opacity:.5}
+.cv-arrow{color:var(--faint);text-align:center;font-size:14px}
+.cv-sub{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--border)}
+.cv-sub:last-child{border-bottom:0}
+.cv-sub>.ic{flex:none;width:13px;height:13px;color:var(--muted);margin-top:0}
+.cv-sub b{display:block;font-size:10px;font-weight:500;line-height:13px}
+.cv-subchips{display:flex;flex-wrap:wrap;gap:3px 9px;align-items:center;margin-top:3px}
+.cv-subchip{display:inline-flex;align-items:center;gap:3px;font-size:9px;color:var(--muted)}
+.cv-subchip .ic{width:10px;height:10px}
+.cv-subchip.blue{color:#3769a2}
+.cv-subchips .cv-chip{padding:1px 5px}

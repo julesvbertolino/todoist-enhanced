@@ -15,6 +15,15 @@
  * the previous public release; improvements to a feature of an earlier release
  * are one 🎨 line titled "<Feature> refinements"; the bold lead is a title in
  * sentence case; a picture shows the idea and carries no caption of its own.
+ *
+ * Wording: write for the person using the app, in the plain, warm tone of
+ * Apple's release notes. Name what they see or do, where they find it, and
+ * what it gives them. Never describe how it is built or use our own words
+ * ("frozen column", "sticky", "scroll container"). The test: someone who has
+ * never seen the screen must know exactly what the line is about. A title
+ * that makes you ask "what does that mean?" has failed, so read each one
+ * aloud before keeping it ("Title stays in view" failed; "Never lose the task
+ * in a wide table" says what it is for).
  */
 
 export type ChangeKind = 'new' | 'design' | 'fix';

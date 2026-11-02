@@ -8,6 +8,18 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.28.0
+
+🆕 **Choisissez votre raccourci d’ajout rapide.** Dans l’app Mac, ouvrez les Réglages, cliquez sur le raccourci, puis appuyez sur les touches de votre choix. Le raccourci qui ouvre l’ajout rapide au-dessus de n’importe quelle app n’est plus figé sur Option + Espace. Il faut la version 1.1 de l’app Mac ; les Réglages vous disent où la trouver.
+
+🎨 **Le détail des sous-tâches, d’un coup d’œil.** Ouvrez une tâche : chaque sous-tâche affiche sa description, sa durée, sa date et ses tags sous son nom, dans l’ordre choisi dans Affichage. Plus besoin de les ouvrir une à une.
+
+🎨 **Des tableaux à la hauteur de votre fenêtre.** Chaque colonne prend la hauteur de la fenêtre et défile seule, avec son nom et son bouton Ajouter une tâche toujours en place. La page ne défile plus sous le tableau.
+
+🎨 **Ne perdez plus la tâche dans une grande table.** Quand une table a plus de colonnes que la place disponible, la case et le nom de la tâche restent à gauche pendant que vous faites défiler sur le côté : vous savez toujours quelle ligne vous lisez.
+
+🐛 **Un avertissement avant qu’une tâche récurrente perde sa date.** Déplacer plusieurs tâches vers Ce mois-ci demande maintenant confirmation quand l’une d’elles se répète, comme pour Cette semaine et Un jour. Avant, la répétition était supprimée sans rien dire.
+
 ## 2.27.2
 
 🐛 **Supprimez ce que vous avez choisi.** Après avoir retiré une tâche d’une sélection avec ⌘-clic, ⌘⌫ supprime les tâches encore sélectionnées, et non celle que vous venez de décocher. E, T, V et les touches de priorité suivent la même règle.
