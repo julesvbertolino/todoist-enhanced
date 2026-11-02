@@ -7,6 +7,7 @@ import { completeSignIn } from '@/api/oauth';
 import { ApiError, NotConnectedError } from '@/api/client';
 import { applySync, applyWrite, sync } from '@/api/sync';
 import { sendCommands, type Command } from '@/api/commands';
+import { settleOrphans } from '@/api/repair';
 import * as idb from '@/db/idb';
 import { emptySnapshot, setWeekLabel } from '@/domain/types';
 import { readKept } from '@/domain/views';
@@ -42,12 +43,22 @@ export async function readAccountSettings(snapshot: ReturnType<typeof emptySnaps
   return { ...snapshot, notes };
 }
 
+/** Who a language repair is done for, and which language the account reads in. */
+const repairAccount = (get: () => AppState) => {
+  const user = get().snapshot.user;
+  return { ...(user?.id ? { userId: user.id } : {}), ...(user?.lang ? { userLang: user.lang } : {}) };
+};
+
 /** Sends everything waiting in the outbox, oldest first. */
 export async function flushQueue(
   get: () => AppState,
   set: (patch: Partial<AppState>) => void,
 ): Promise<boolean> {
   const queue = await idb.readQueue();
+  await settleOrphans(
+    { syncToken: get().snapshot.syncToken, ...repairAccount(get) },
+    new Set(queue.map((cmd) => cmd.uuid)),
+  ).catch(() => undefined);
   if (queue.length === 0) return false;
 
   /* A deletion written to the queue because the page was hidden is still
@@ -70,7 +81,7 @@ export async function flushQueue(
   if (commands.length === 0) return false;
   try {
     const optimistic = get().snapshot;
-    const result = await sendCommands(get().snapshot.syncToken, commands);
+    const result = await sendCommands(get().snapshot.syncToken, commands, repairAccount(get));
     let merged = applyWrite(get().snapshot, result.responses, result.mapping);
 
     /* A refused creation takes its placeholder with it. A refused edit is
@@ -411,7 +422,7 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
     }
 
     try {
-      const result = await sendCommands(after.syncToken, commands);
+      const result = await sendCommands(after.syncToken, commands, repairAccount(get));
       let merged = applyWrite(get().snapshot, result.responses, result.mapping);
       /* Todoist refused some of it, and the screen must not keep what it
          refused: each refused command gives back only the objects it touched,

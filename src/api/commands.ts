@@ -1,5 +1,6 @@
 import { ApiError, request } from './client';
 import type { SyncResponse } from './sync';
+import { loadJournal, repairClose, type RepairContext } from './repair';
 
 /**
  * Writes to Todoist.
@@ -46,7 +47,7 @@ export interface CommandResult {
   /** Todoist's answers, one per request, in the order they were sent. */
   responses: SyncResponse[];
   /** Commands Todoist received and refused, with the reason it gave. */
-  failures: Array<{ uuid: string; error: string }>;
+  failures: Array<{ uuid: string; error: string; errorTag?: string; commandType?: string }>;
   /** Every temporary id Todoist resolved, across all the requests. */
   mapping: Record<string, string>;
   /** The uuids of the commands Todoist received, accepted or refused. */
@@ -108,17 +109,24 @@ function chunk(commands: Command[]): Command[][] {
  */
 export async function sendCommands(
   syncToken: string,
-  commands: Command[],
+  allCommands: Command[],
+  account: Omit<RepairContext, 'syncToken'> = {},
 ): Promise<CommandResult> {
+  const commands = allCommands;
   if (commands.length === 0) {
     throw new Error('sendCommands called with no commands');
   }
+
+  /* A close whose repair is under way is the repair's to finish: sending it
+     again could advance the task a second time (#432). */
+  const resuming = new Set((await loadJournal()).map((entry) => entry.closeUuid));
+  const held = commands.filter((cmd) => resuming.has(cmd.uuid));
 
   const result: CommandResult = {
     responses: [], failures: [], mapping: {}, delivered: [], undelivered: [],
   };
   let token = syncToken;
-  const chunks = chunk(commands);
+  const chunks = chunk(commands.filter((cmd) => !resuming.has(cmd.uuid)));
 
   for (let at = 0; at < chunks.length; at += 1) {
     const batch = chunks[at].map((cmd) =>
@@ -136,7 +144,12 @@ export async function sendCommands(
       result.responses.push(response);
       Object.assign(result.mapping, response.temp_id_mapping ?? {});
       for (const [uuid, status] of Object.entries(response.sync_status ?? {})) {
-        if (status !== 'ok') result.failures.push({ uuid, error: status.error });
+        if (status !== 'ok') {
+          const cmd = batch.find((candidate) => candidate.uuid === uuid);
+          result.failures.push({ uuid, error: status.error,
+            ...(status.error_tag ? { errorTag: status.error_tag } : {}),
+            ...(status.error_tag === 'INVALID_DATE' && cmd?.type === 'item_close' ? { commandType: cmd.type } : {}) });
+        }
       }
       token = response.sync_token ?? token;
     } catch (error) {
@@ -153,7 +166,50 @@ export async function sendCommands(
     result.delivered.push(...batch.map((cmd) => cmd.uuid));
   }
 
+  await repairRefusedCloses(result, commands, held, { ...account, syncToken: token });
   return result;
+}
+
+/**
+ * A recurring task Todoist will not close because it cannot read the rule's
+ * language is repaired here, below every way of ticking a task (#432). What
+ * the network interrupts goes back to the queue with its journal.
+ */
+async function repairRefusedCloses(
+  result: CommandResult,
+  commands: Command[],
+  held: Command[],
+  ctx: RepairContext,
+): Promise<void> {
+  const byUuid = new Map(commands.map((cmd) => [cmd.uuid, cmd]));
+  const targets = [
+    ...result.failures
+      .filter((failure) => failure.errorTag === 'INVALID_DATE' && failure.commandType === 'item_close')
+      .map((failure) => ({ cmd: byUuid.get(failure.uuid), refusal: failure, fresh: true })),
+    ...held.map((cmd) => ({ cmd, refusal: { error: 'Date is invalid', errorTag: 'INVALID_DATE' }, fresh: false })),
+  ];
+  for (const { cmd, refusal, fresh } of targets) {
+    if (!cmd) continue;
+    const outcome = await repairClose(cmd, ctx, refusal);
+    if (fresh) result.failures = result.failures.filter((failure) => failure.uuid !== cmd.uuid);
+    if (outcome.kind === 'interrupted') {
+      result.delivered = result.delivered.filter((uuid) => uuid !== cmd.uuid);
+      result.undelivered.push(cmd);
+      result.error ??= new Error('Repair interrupted');
+      continue;
+    }
+    if (!result.delivered.includes(cmd.uuid)) result.delivered.push(cmd.uuid);
+    if (outcome.kind === 'repaired') {
+      result.responses.push(outcome.response);
+      Object.assign(result.mapping, outcome.response.temp_id_mapping ?? {});
+    } else {
+      result.failures.push({
+        uuid: cmd.uuid, error: outcome.error,
+        ...(outcome.errorTag ? { errorTag: outcome.errorTag } : {}),
+        ...(outcome.errorTag === 'INVALID_DATE' ? { commandType: 'item_close' } : {}),
+      });
+    }
+  }
 }
 
 /* ---------- The commands the product actually issues ---------- */
