@@ -40,6 +40,10 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.27.2
+
+🐛 **Delete what you picked.** After ⌘-clicking a task off a selection, ⌘⌫ now deletes the tasks still selected, not the one you just unticked. E, T, V and the priority keys follow the same rule.
+
 ## 2.27.1
 
 🎨 **Design polishes.** Page summaries and Insights are easier to read. The Display menu, task details, Tags and Filters pages are clearer, with a simpler way to estimate tasks missing a duration. The guided tour now introduces the Pomodoro timer.
