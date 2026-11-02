@@ -125,7 +125,7 @@ test('future occurrences, completed tasks, subtasks and coloration', async ({ de
   await menu.getByRole('switch', { name: 'Show subtasks', exact: true }).click();
   await active(page).getByRole('button', { name: /^Display(?: \d+)?$/ }).click();
   await expect(calendar(page).locator('[data-calendar-task="cal-child"]')).toHaveCount(0);
-  await option(page, 'Coloration', 'Project');
+  await option(page, 'Coloration', 'Colour from project');
   expect(await calendar(page).locator('[data-calendar-task="cal-timed"]').evaluate((el) => getComputedStyle(el).borderLeftWidth)).toBe('0px');
 });
 

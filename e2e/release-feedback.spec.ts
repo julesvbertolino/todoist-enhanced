@@ -53,7 +53,7 @@ test('Table mode choices stack their icons, priorities have flags and row colour
   await expect(table.locator('[data-table-colored]')).toHaveCount(0);
   await display.click();
   await menu.getByRole('button', { name: 'Colour each row', exact: true }).click();
-  await page.getByRole('option', { name: 'By priority', exact: true }).click();
+  await page.getByRole('option', { name: 'Priority colours', exact: true }).click();
   await display.click();
   await expect(table.locator('[data-table-colored]').first()).toBeVisible();
   const rootX = await table.locator('.task:not([data-depth]) > .check').first().evaluate((node) => node.getBoundingClientRect().left);
