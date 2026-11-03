@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('fourth pass', () => {
   test('the tour never drops its highlight between two stops, even when a stop goes missing (#5)', async ({ page }) => {
-    await page.addInitScript(() => localStorage.setItem('skipSetup', '1'));
+    await page.addInitScript(() => { localStorage.setItem('skipSetup', '1'); localStorage.setItem('e2eLegacyDemo', '1'); });
     await page.goto('/');
     await page.getByRole('button', { name: 'Explore with demo data' }).click();
     await page.evaluate(() => window.dispatchEvent(new Event('enhanced:tour')));

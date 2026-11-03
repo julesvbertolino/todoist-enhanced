@@ -316,6 +316,8 @@ export const fr: Record<TranslationKey, string> = {
   'project.left': 'Vous avez quitté « {name} »',
   'project.duplicated': '« {name} » créé',
   'project.deleteTitle': 'Supprimer ce projet ?',
+  'project.cantDeleteTitle': 'Ce projet ne peut pas encore être supprimé',
+  'project.cantDeleteBody': 'Dans un espace de travail, Todoist ne supprime qu’un projet archivé. Archivez « {name} » pour le garder, ou supprimez-le : il est archivé d’abord, puis supprimé.',
   'project.deleteBody': 'Supprime « {name} » et ses {count} tâches. Todoist conserve un projet supprimé pendant sept jours.',
   'project.deleteBody_one': 'Supprime « {name} » et sa tâche. Todoist conserve un projet supprimé pendant sept jours.',
   'project.deleteBody_other': 'Supprime « {name} » et ses {count} tâches. Todoist conserve un projet supprimé pendant sept jours.',

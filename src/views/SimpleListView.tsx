@@ -12,6 +12,7 @@ import { SubtasksProvider } from '@/components/TaskRow';
 import { DisplayMenu } from '@/components/DisplayMenu';
 import { PomodoroButton } from '@/components/PomodoroButton';
 import { ModeSurface } from '@/components/ModeSurface';
+import { TableSurface } from '@/components/TableSurface';
 import { TaskGroup } from '@/components/TaskGroup';
 import { Icon } from '@/components/Icon';
 import { TimePanel } from '@/components/TimePanel';
@@ -255,6 +256,8 @@ function SimpleListBody({
   const hireNoteOpen = useStore((s) => s.hireNote);
   const commaFilter = kind === 'filter' && (filterResult.parts?.length ?? 0) > 1
     && current.mode === 'list' && current.group === 'none';
+  const commaBoard = kind === 'filter' && (filterResult.parts?.length ?? 0) > 1
+    && current.mode === 'board' && current.group === 'none';
   const flatList = !commaFilter && !(kind === 'filter' && (filterResult.error || !filter))
     && current.mode === 'list' && (current.group === 'none' || scoped.length === 0);
   const hireInList = commaFilter || flatList
@@ -328,11 +331,18 @@ function SimpleListBody({
         <p className="empty filtererror" role="alert">{t('filters.refused', { reason: filterResult.error })}</p>
       )}
 
-      {/* A query with commas is several lists, one under the other, each
-          headed by its part of the query, as Todoist draws it. Grouping or a
-          board from the Display menu takes over from these. */}
+      {/* A query with commas is several lists, one under the other. Explicit
+          grouping and board presentation still use their existing behaviour. */}
       {current.mode === 'calendar' && !(kind === 'filter' && (filterResult.error || !filter)) ? (
         <CalendarSurface key={viewKey} viewKey={viewKey} items={pool0} childrenOf={childrenOf} onOpen={onOpen} onAddTaskTo={onAddTaskTo} />
+      ) : kind === 'filter' && filter && !filterResult.error && (filterResult.parts?.length ?? 0) > 1
+        && current.mode === 'table' && current.group === 'none' ? (
+        <TableSurface viewKey={viewKey} childrenOf={childrenOf} onOpen={onOpen} groups={filterResult.parts!.map((part) => {
+          const ownMatches = new Set(part.ids);
+          const partChildrenOf = (id: string) => allChildrenOf(id).filter((child) => ownMatches.has(child.id));
+          return { title: part.query, items: applyFilters(filterPool(part.ids), current.filters, snapshot, partChildrenOf),
+            childrenOf: partChildrenOf, onOpen };
+        })} />
       ) : kind === 'filter' && (filterResult.parts?.length ?? 0) > 1
         && current.mode === 'list' && current.group === 'none' ? (
         <div className="mode">
@@ -388,7 +398,13 @@ function SimpleListBody({
           firstGroupLead={hireNoteOpen ? <HireNote /> : undefined}
           /* A board with no grouping is its one column, led by Quick: blue,
              and a place to look rather than somewhere to drop. */
-          boardColumns={current.mode === 'board' && current.group === 'none'
+          boardColumns={commaBoard ? filterResult.parts!.map((part, index) => {
+            const ownMatches = new Set(part.ids);
+            const partChildrenOf = (id: string) => allChildrenOf(id).filter((child) => ownMatches.has(child.id));
+            return { id: `query-${index}`, title: part.query,
+              items: sortItems(applyFilters(filterPool(part.ids), current.filters, snapshot, partChildrenOf), current.sort, partChildrenOf, order, snapshot),
+              childrenOf: partChildrenOf };
+          }) : current.mode === 'board' && current.group === 'none'
             ? [
                 ...(split.quick.length > 0
                   ? [{ id: 'quick', title: t('group.quick'), items: split.quick, accent: 'quick' as const }]
@@ -402,7 +418,7 @@ function SimpleListBody({
           sort={current.sort}
           onOpen={onOpen}
           order={order}
-          addToGroup={addToGroup}
+          addToGroup={commaBoard ? undefined : addToGroup}
         />
       )}
       {kind === 'filter' && <FilterSheet target={filterSheet} onClose={() => setFilterSheet(null)} />}

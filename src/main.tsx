@@ -30,7 +30,24 @@ startTabStops();
 watchInstall();
 watchAppUpdate();
 
-createRoot(document.getElementById('root')!).render(
+const params = new URLSearchParams(window.location.search);
+const desktopReturn = !window.enhancedDesktop && /^desktop_[A-Za-z0-9_-]+$/.test(params.get('state') ?? '')
+  && (params.has('code') || params.has('error'));
+if (desktopReturn) {
+  const scheme = params.get('state')?.startsWith('desktop_test_') ? 'enhanced-todoist-test' : 'enhanced-todoist';
+  const result = new URL(`${scheme}://oauth/callback`);
+  for (const key of ['code', 'error', 'state']) {
+    const value = params.get(key);
+    if (value) result.searchParams.set(key, value);
+  }
+  window.history.replaceState(null, '', window.location.pathname);
+  const root = document.getElementById('root')!;
+  const link = document.createElement('a');
+  link.href = result.href;
+  link.textContent = 'Return to Enhanced for Todoist / Revenir à Enhanced for Todoist';
+  root.append(link);
+  window.location.assign(result.href);
+} else createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
       <App />

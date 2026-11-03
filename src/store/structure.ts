@@ -414,7 +414,14 @@ export const createStructureSlice: Slice<StructureSlice> = (_set, get) => ({
     const project = snapshot.projects[id];
     if (!project) return;
 
-    await get().apply([command('project_delete', { id })], (current) => {
+    /* In a workspace Todoist refuses to delete a project that is not archived
+       ("Only archived projects can be deleted", reported as a bare "Forbidden"),
+       so the two go out together; the person was told so in the confirmation. */
+    const commands = [
+      ...(project.workspace_id && !project.is_archived ? [command('project_archive', { id })] : []),
+      command('project_delete', { id }),
+    ];
+    await get().apply(commands, (current) => {
       const projects = { ...current.projects };
       const sections = { ...current.sections };
       const items = { ...current.items };

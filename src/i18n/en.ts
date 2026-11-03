@@ -314,6 +314,8 @@ export const en = {
   'project.left': '“{name}” left',
   'project.duplicated': '“{name}” created',
   'project.deleteTitle': 'Delete this project?',
+  'project.cantDeleteTitle': 'This project can’t be deleted yet',
+  'project.cantDeleteBody': 'In a workspace, Todoist only deletes an archived project. Archive “{name}” to keep it, or delete it: it is archived first, then deleted.',
   'project.deleteBody': 'Deletes “{name}” and the {count} tasks in it. Todoist keeps a deleted project for seven days.',
   'project.deleteBody_one': 'Deletes “{name}” and the task in it. Todoist keeps a deleted project for seven days.',
   'project.deleteBody_other': 'Deletes “{name}” and the {count} tasks in it. Todoist keeps a deleted project for seven days.',

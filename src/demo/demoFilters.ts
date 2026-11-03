@@ -27,11 +27,11 @@ function demoFilters(locale: Locale): DemoFilter[] {
   });
   return [
     {
-      filter: make('f1', fr ? 'Rapides du jour' : 'Quick for today', '(today | overdue) & @quick', 'sky_blue', 1, true),
+      filter: make('f1', fr ? 'Rapides du jour' : 'Quick for today', '(today | overdue) & @quick', 'sky_blue', 1, false),
       parts: [(item) => dueNow(item) && hasLabel(item, 'quick')],
     },
     {
-      filter: make('f2', fr ? 'Urgent' : 'Urgent', 'p1 | p2', 'red', 2, true),
+      filter: make('f2', fr ? 'Urgent' : 'Urgent', 'p1 | p2', 'red', 2, false),
       parts: [(item) => item.priority >= 3],
     },
     {

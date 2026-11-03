@@ -109,9 +109,10 @@ export function TableSurface({ groups, viewKey, childrenOf, onOpen }: {
         {menu && <TableHeaderMenu column={menu.column} anchor={menu.anchor} current={current} pageItems={all}
           onChange={(patch) => setViewPrefs(viewKey, patch)} onClose={() => setMenu(null)} />}
         {groups.map((group, index) => {
-          const sorted = sortItems(group.items, current.sort, childrenOf, group.reorderable || 'project', snapshot);
-          return <TaskGroup key={group.sectionId ?? group.title ?? index} {...group} viewKey={viewKey}
-            items={current.tableDescending ? sorted.reverse() : sorted} childrenOf={childrenOf} onOpen={onOpen} keepWhenEmpty />;
+          const groupChildren = group.childrenOf ?? childrenOf;
+          const sorted = sortItems(group.items, current.sort, groupChildren, group.reorderable || 'project', snapshot);
+          return <TaskGroup key={`${group.sectionId ?? group.title ?? ''}-${index}`} {...group} viewKey={viewKey}
+            items={current.tableDescending ? sorted.reverse() : sorted} childrenOf={groupChildren} onOpen={onOpen} keepWhenEmpty />;
         })}
         <footer className="table-footer"><span>{t('metrics.tasks', { count: all.length })} · {formatDuration(total, locale)}</span></footer>
       </div>

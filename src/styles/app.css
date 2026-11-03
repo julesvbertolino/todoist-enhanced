@@ -799,6 +799,11 @@ ul{margin:0;padding:0;list-style:none}
   padding:14px 10px 14px 32px;margin-left:-26px;width:calc(100% + 26px);
   min-height:62px;border-radius:var(--r-md);text-align:left;cursor:pointer}
 .task:hover{background:var(--row-hover)}
+/* A plain list row needs no blank second line when only its title is shown. */
+.group .task{min-height:44px}
+.group .subtasks .task{min-height:48px}
+.task-table .group .task{min-height:48px}
+@media(max-width:720px){.task-table .group .task{min-height:58px}}
 .task.done .ttitle{color:var(--faint);text-decoration:line-through}
 .drag{position:absolute;left:0;top:50%;width:24px;height:40px;display:grid;place-items:center;
   border-radius:var(--r-sm);color:var(--faint);opacity:0;transform:translateY(-50%);cursor:grab}

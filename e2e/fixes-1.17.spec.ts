@@ -264,7 +264,7 @@ test('#130 in the demo, ticking a daily 14:00 task brings it back tomorrow at 14
    `demo` fixture opens the demo itself and fails on anything logged. */
 bare('#128 with site storage blocked, the connect screen appears and the demo still opens', async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem('skipSetup', '1');
+    { localStorage.setItem('skipSetup', '1'); localStorage.setItem('e2eLegacyDemo', '1'); };
     Object.defineProperty(window, 'sessionStorage', {
       get() { throw new DOMException('The operation is insecure.', 'SecurityError'); },
     });
@@ -287,7 +287,7 @@ bare('#128 with site storage blocked, the connect screen appears and the demo st
 
 bare('#128 a crash while drawing shows a message and a Reload button, not a white page', async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem('skipSetup', '1');
+    { localStorage.setItem('skipSetup', '1'); localStorage.setItem('e2eLegacyDemo', '1'); };
   });
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore with demo data' }).click();
