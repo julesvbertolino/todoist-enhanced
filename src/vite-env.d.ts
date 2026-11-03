@@ -13,5 +13,7 @@ interface Window {
     /** Added in version 1.1 of the app: an older app has neither. */
     getQuickAddShortcut?: () => Promise<string>;
     setQuickAddShortcut?: (accelerator: string) => Promise<{ ok: boolean; shortcut: string }>;
+    openSignIn?: (url: string) => Promise<boolean>;
+    testMode?: boolean;
   };
 }

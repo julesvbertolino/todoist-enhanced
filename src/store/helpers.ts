@@ -1,5 +1,5 @@
 /** What more than one slice of the store needs: pure helpers, and the module state they share. */
-import { addDays, addWeeks, nextDay, type Day } from 'date-fns';
+import { addDays, addWeeks, nextDay, startOfDay, type Day } from 'date-fns';
 import type { Command } from '@/api/commands';
 import * as idb from '@/db/idb';
 import type { QueuedCommand } from '@/db/idb';
@@ -31,7 +31,10 @@ export function advanceDemoRecurrence(snapshot: Snapshot, id: string): Snapshot 
   const named = weekdays.findIndex((words) => new RegExp(`${opener}(?:${words})\\b`).test(rule));
 
   let next: Date;
-  if (/\b(?:every day|daily|tous les jours|chaque jour|quotidien(?:ne)?)\b/.test(rule)) {
+  if (/\b(?:every|tous les|toutes les)!/.test(rule)) {
+    // "every! week": counted from the day it is ticked, not from the date it stood on.
+    next = addDays(startOfDay(new Date()), 7);
+  } else if (/\b(?:every day|daily|tous les jours|chaque jour|quotidien(?:ne)?)\b/.test(rule)) {
     next = addDays(current, 1);
   } else if (named >= 0) {
     // "every Monday": the next Monday after the date it stands on.

@@ -28,7 +28,7 @@ base.describe('sign-in and the first run (third pass)', () => {
   });
 
   base('the tour can be walked back, and ends on "Skip tour"', async ({ page }) => {
-    await page.addInitScript(() => localStorage.setItem('skipSetup', '1'));
+    await page.addInitScript(() => { localStorage.setItem('skipSetup', '1'); localStorage.setItem('e2eLegacyDemo', '1'); });
     await page.goto('/');
     await page.getByRole('button', { name: 'Explore with demo data' }).click();
     await page.evaluate(() => window.dispatchEvent(new Event('enhanced:tour')));

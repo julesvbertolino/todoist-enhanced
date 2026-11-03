@@ -180,6 +180,7 @@ export interface Collaborator {
   email: string;
   full_name: string;
   image_id: string | null;
+  avatar_big?: string | null;
 }
 
 /**

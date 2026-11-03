@@ -8,6 +8,22 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.29.0
+
+🎨 **La barre latérale retient ses sections repliées.** Repliez Favoris, Mes projets, un espace de travail ou un dossier dans la barre latérale : ils restent repliés après un rechargement ou à votre retour. Chaque compte garde les siens.
+
+🎨 **Les échéances apparaissent le bon jour.** Une tâche dont l’échéance est aujourd’hui s’affiche maintenant dans Aujourd’hui et Ma semaine, et sous le jour de son échéance dans À venir, même si sa date de début est un autre jour. Elle n’apparaît jamais deux fois sur la même page.
+
+🎨 **Des tâches plus compactes.** Une tâche qui n’a qu’un titre prend moins de place dans les listes : plus de tâches tiennent à l’écran. Les tables et la version téléphone gardent leur taille.
+
+🐛 **Supprimez un projet de votre espace de travail.** Todoist ne supprime un projet d’espace de travail que s’il est archivé, ce qui finissait par une erreur. La confirmation le dit maintenant, et l’app archive puis supprime le projet d’un seul geste.
+
+🐛 **Gardez votre tri en vous reconnectant.** Le regroupement et le tri choisis sur un tag, un filtre ou À venir suivent maintenant votre compte : ils sont toujours là après une déconnexion et une reconnexion.
+
+🐛 **Les filtres à virgules gardent leurs groupes.** Un filtre composé de plusieurs requêtes séparées par des virgules montre chaque requête comme un groupe dans Table et Tableau, comme il le fait déjà en liste.
+
+🐛 **Le menu de date se ferme quand vous choisissez.** Dans la fenêtre de nouvelle tâche, choisir Aujourd’hui ou une date rapide ferme maintenant le menu, comme celui de l’échéance.
+
 ## 2.28.0
 
 🆕 **Choisissez votre raccourci d’ajout rapide.** Dans l’app Mac, ouvrez les Réglages, cliquez sur le raccourci, puis appuyez sur les touches de votre choix. Le raccourci qui ouvre l’ajout rapide au-dessus de n’importe quelle app n’est plus figé sur Option + Espace. Il faut la version 1.1 de l’app Mac ; les Réglages vous disent où la trouver.

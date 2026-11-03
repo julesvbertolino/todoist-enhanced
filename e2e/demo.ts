@@ -15,6 +15,8 @@ export const test = base.extend<{ demo: Page }>({
     // The demo account has been through the first run, so no tour stands in front.
     await page.addInitScript(() => {
       localStorage.setItem('skipSetup', '1');
+      // The steps below name the demo's projects and tasks as they were before 2.29.
+      localStorage.setItem('e2eLegacyDemo', '1');
     });
     await page.goto('/');
     await page.getByRole('button', { name: 'Explore with demo data' }).click();

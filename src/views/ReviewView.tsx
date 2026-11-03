@@ -160,11 +160,12 @@ export function ReviewView({ onOpen }: ReviewViewProps) {
       completed,
       inboxProjectId: snapshot.user?.inbox_project_id ?? null,
       now: new Date(),
+      weekStartsOn: (startDay % 7) as 0 | 1 | 2 | 3 | 4 | 5 | 6,
       quietAfterDays: prefs.quietAfterDays,
       weeklyCapacityMinutes: capacity,
       childrenOf,
     }),
-    [cadence, roots, snapshot.projects, snapshot.user?.inbox_project_id, completed,
+    [cadence, roots, snapshot.projects, snapshot.user?.inbox_project_id, completed, startDay,
       prefs.quietAfterDays, capacity, childrenOf],
   );
 

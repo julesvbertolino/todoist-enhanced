@@ -56,8 +56,10 @@ export interface SyncedView {
  *
  * Everything in the Settings panel — the general ones, the matrix, the look
  * (accent, theme, density) — and part of each project's Display control (see
- * SyncedView). Not whether the sidebar is folded, which is a matter of the
- * window in front of you, nor the display of pages other than projects.
+ * SyncedView), and of every other page that has one: a tag, a filter,
+ * Upcoming. Without them a sort chosen on a tag page was gone after signing out
+ * and back in. Not whether the sidebar is folded, which is a matter of the
+ * window in front of you.
  */
 export type SyncedPreferences = Omit<Preferences, 'sidebarCollapsed' | 'activeViews' | 'views'> & {
   views: Record<string, SyncedView>;
@@ -68,7 +70,6 @@ export function syncedPreferences(prefs: Preferences): SyncedPreferences {
   /* Sorted, so two devices holding the same settings write the same text
      and never take turns rewriting the comment. */
   const projectViews_ = Object.entries(views)
-    .filter(([key]) => key.startsWith('project:'))
     .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
     .map(([key, view]): [string, SyncedView] => [key, {
       mode: view.mode,
@@ -124,8 +125,7 @@ export function settingsCommentMatches(content: string, prefs: Preferences): boo
 
 /**
  * Settings from the account laid over the ones on this device: the device
- * keeps what does not travel (the folded sidebar, the display of pages other
- * than projects), the account decides the rest.
+ * keeps what does not travel (the folded sidebar), the account decides the rest.
  */
 export function mergeSynced(
   local: Preferences,
@@ -138,7 +138,7 @@ export function mergeSynced(
   const hydrated = hydratePreferences({ ...local, ...settings, eisenhowerHorizon: legacyMatrixHorizon, views: undefined, estimateStorage: settings.estimateStorage ?? null }, locale);
   const views = { ...local.views };
   for (const [key, shared] of Object.entries(remoteViews ?? {})) {
-    if (!key.startsWith('project:') || !shared) continue;
+    if (!shared) continue;
     const mine = local.views[key] ?? defaultViewPrefs(key);
     views[key] = {
       ...mine,

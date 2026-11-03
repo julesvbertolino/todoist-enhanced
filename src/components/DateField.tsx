@@ -166,7 +166,13 @@ export function DateField({
         label={label}
         min={min}
         max={max}
-        shortcuts={shortcuts}
+        /* A quick choice that sets the field itself, like "Today" in the
+           composer, never goes through onPick, so the panel would stay open
+           behind it. A deadline closed because it has no choices of its own. */
+        shortcuts={shortcuts?.map((choice) => ({
+          ...choice,
+          onSelect: () => { choice.onSelect(); close(true); },
+        }))}
         withTime={withTime}
         onPick={(iso, how) => { onChange(iso, how); close(true); }}
         recurrence={recurrence}

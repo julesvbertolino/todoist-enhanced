@@ -94,7 +94,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
   const projects = entries.filter(({ project }) => !project.is_folder).map(({ project }) => project);
   const demoArchive = projects[0] ? [{ ...projects[0], id: 'demo-archive', name: t('workspace.demoArchive'), is_archived: true, archived_date: subDays(new Date(), 200).toISOString() }] : [];
   const archive = demo ? [...Object.values(snapshot.projects).filter((p) => belongs(p) && p.is_archived), ...demoArchive] : extra.archive;
-  const members = (demo ? [{ user_id: 'demo-user', full_name: snapshot.user?.full_name ?? 'Sam', user_email: snapshot.user?.email ?? '', role: 'ADMIN' }, { user_id: 'demo-alex', full_name: 'Alex Martin', user_email: 'alex@example.com', role: 'MEMBER' }] : extra.members)?.filter((member) => !member.is_deleted);
+  const members = (demo ? [{ user_id: 'demo-user', full_name: snapshot.user?.full_name ?? 'Sam', user_email: snapshot.user?.email ?? '', role: 'ADMIN' }, ...Object.values(snapshot.collaborators).map((person) => ({ user_id: person.id, full_name: person.full_name, user_email: person.email, role: 'MEMBER', is_deleted: false }))] : extra.members)?.filter((member) => !member.is_deleted);
   const weeks = demo ? weeklyCompletions(buildDemoCompleted(locale), new Date()) : extra.weeks;
   const now = new Date();
   const dateFormat = intlDate(locale === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' });

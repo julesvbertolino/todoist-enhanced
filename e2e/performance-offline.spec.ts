@@ -4,7 +4,7 @@ test.use({ serviceWorkers: 'allow' });
 
 test('pre-cached pages and the description editor open offline', async ({ page, context }) => {
   test.skip(process.env.PLAYWRIGHT_DEV === '1', 'The service worker is tested against the production build');
-  await page.addInitScript(() => localStorage.setItem('skipSetup', '1'));
+  await page.addInitScript(() => { localStorage.setItem('skipSetup', '1'); localStorage.setItem('e2eLegacyDemo', '1'); });
   await page.goto('/');
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.reload();

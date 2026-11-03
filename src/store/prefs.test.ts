@@ -20,11 +20,16 @@ describe('syncedPreferences', () => {
     expect(synced).not.toHaveProperty('sidebarCollapsed');
   });
 
-  it("shares a project's display, and not other pages'", () => {
+  it("shares a project's display and the other pages' too, so a sort survives signing out", () => {
+    const tag = { ...defaultViewPrefs('label:work'), sort: 'alphabetical' as const };
     const synced = syncedPreferences(prefs({
-      views: { 'project:site': boardProject, week: defaultViewPrefs('week') },
+      views: { 'project:site': boardProject, 'label:work': tag },
     }));
-    expect(Object.keys(synced.views)).toEqual(['project:site']);
+    expect(Object.keys(synced.views).sort()).toEqual(['label:work', 'project:site']);
+    expect(synced.views['label:work']).toMatchObject({ sort: 'alphabetical' });
+    expect(synced.views['label:work']).not.toHaveProperty('filters');
+    const back = mergeSynced(prefs(), JSON.parse(JSON.stringify(synced)), 'en');
+    expect(back.views['label:work'].sort).toBe('alphabetical');
     expect(synced.views['project:site']).toMatchObject({ mode: 'board' });
     expect(synced.views['project:site']).not.toHaveProperty('filters');
   });

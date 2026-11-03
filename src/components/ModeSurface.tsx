@@ -45,6 +45,8 @@ interface ModeSurfaceProps {
     id: string;
     title: string;
     items: Item[];
+    /** A filter query can have a different set of matching children in each column. */
+    childrenOf?: (id: string) => Item[];
     dropTarget?: DropTarget;
     /** Adds a task straight into this column, from the end of it. */
     onAddTask?: () => void;
@@ -352,9 +354,10 @@ function BoardSurface(props: ModeSurfaceProps) {
         style={page ? ({ '--colw': `${page.width}px` } as React.CSSProperties) : undefined}
       >
         {columns.map((column) => {
+          const columnChildrenOf = column.childrenOf ?? props.childrenOf;
           /* The column's own header line: time, what is still unestimated and,
              where the column is a day, how full it is. */
-          const load = summariseLoad(column.items, props.childrenOf, column.capacityMinutes ?? null);
+          const load = summariseLoad(column.items, columnChildrenOf, column.capacityMinutes ?? null);
           const parts = [
             load.estimatedMinutes > 0 ? formatDuration(load.estimatedMinutes, locale) : null,
             /* What has no estimate is not counted here: a column says its time
@@ -400,7 +403,7 @@ function BoardSurface(props: ModeSurfaceProps) {
               <DraggableTask
                 key={item.id}
                 item={item}
-                childrenOf={props.childrenOf}
+                childrenOf={columnChildrenOf}
                 onOpen={props.onOpen}
                 showProject={props.showProject}
                 showSection={column.accent === 'quick' || props.group === 'step'}

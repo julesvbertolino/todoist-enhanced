@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Icon } from './Icon';
 import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
-import { useConfirm } from './overlays/Confirm';
+import { useChoice, useConfirm } from './overlays/Confirm';
 import { navigate } from '@/hooks/useRoute';
 import { usePhoneBehaviour } from '@/hooks/useTouchLayout';
 import type { Project } from '@/domain/types';
@@ -40,6 +40,7 @@ export function ProjectMenu({
 }: ProjectMenuProps) {
   const { t } = useT();
   const confirm = useConfirm();
+  const choose = useChoice();
   const items = useStore((s) => s.snapshot.items);
   const updateProjectFields = useStore((s) => s.updateProjectFields);
   const archiveProject = useStore((s) => s.archiveProject);
@@ -138,13 +139,28 @@ export function ProjectMenu({
 
   async function remove() {
     onClose();
-    const ok = await confirm({
-      title: t('project.deleteTitle'),
-      body: t('project.deleteBody', { name: project.name, count: openTaskCount }),
-      confirmLabel: t('project.delete'),
-      destructive: true,
-    });
-    if (!ok) return;
+    /* A workspace project must be archived before Todoist deletes it, so the
+       question is Todoist's own: archive it, or delete it, which archives and
+       deletes in the one call. */
+    if (project.workspace_id && !project.is_archived) {
+      const choice = await choose({
+        title: t('project.cantDeleteTitle'),
+        body: t('project.cantDeleteBody', { name: project.name }),
+        alternateLabel: t('project.archive'),
+        confirmLabel: t('project.delete'),
+        destructive: true,
+      });
+      if (choice === 'cancel') return;
+      if (choice === 'alternate') { await archiveProject(project.id); return; }
+    } else {
+      const ok = await confirm({
+        title: t('project.deleteTitle'),
+        body: t('project.deleteBody', { name: project.name, count: openTaskCount }),
+        confirmLabel: t('project.delete'),
+        destructive: true,
+      });
+      if (!ok) return;
+    }
     /* A page cannot stand on a project that no longer exists, so leaving it is
        part of the deletion rather than something to discover afterwards. */
     if (window.location.hash.includes(project.id)) navigate('week');

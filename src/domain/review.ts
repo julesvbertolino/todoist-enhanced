@@ -1,8 +1,8 @@
-import { addDays, startOfDay } from 'date-fns';
+import { addDays, endOfWeek, startOfDay } from 'date-fns';
 import type { CompletedItem, Item, Project } from './types';
 import { anytimeItems, bucketOf, isOpen, weekItems } from './views';
 import { effectiveEstimate, estimateOf } from './estimates';
-import { dueDate } from './dates';
+import { deadlineDate, dueDate } from './dates';
 
 /**
  * A review is a pass over the things a week quietly accumulates.
@@ -76,6 +76,7 @@ export interface ReviewInput {
   completed: CompletedItem[];
   inboxProjectId: string | null;
   now: Date;
+  weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
   /** How long a project may go untouched before the review mentions it. */
   quietAfterDays: number;
   /** The week's capacity, so the last step can say whether the next one fits. */
@@ -153,6 +154,10 @@ function contentOf(
 ): Pick<ReviewStep, 'items' | 'projects' | 'completed'> {
   const empty = { items: [] as Item[], projects: [] as Project[], completed: [] as CompletedItem[] };
   const { roots, now } = input;
+  const deadlineThisWeek = (item: Item) => {
+    const deadline = deadlineDate(item);
+    return deadline !== null && deadline >= startOfDay(now) && deadline <= endOfWeek(now, { weekStartsOn: input.weekStartsOn ?? 1 });
+  };
 
   switch (id) {
     case 'overdue':
@@ -186,7 +191,7 @@ function contentOf(
           const bucket = bucketOf(i, now);
           const inPlay = cadence === 'daily'
             ? bucket === 'overdue' || bucket === 'today'
-            : bucket === 'overdue' || bucket === 'today' || bucket === 'anytime';
+            : bucket === 'overdue' || bucket === 'today' || bucket === 'anytime' || deadlineThisWeek(i);
           return inPlay && estimateOf(i) === null;
         }),
       };
@@ -201,7 +206,7 @@ function contentOf(
       /* Everything the coming week is carrying, which is exactly what My week
          shows and measures. The step is the same reading, at the moment it is
          still cheap to change. */
-      return { ...empty, items: weekItems(roots, now) };
+      return { ...empty, items: roots.filter((item) => weekItems([item], now).length > 0 || deadlineThisWeek(item)) };
 
     case 'stats':
       /* The figures are read from the same completions the first step lists,

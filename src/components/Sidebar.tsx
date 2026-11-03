@@ -1,4 +1,5 @@
 import { ProjectProgress } from './ProjectProgress';
+import { readFolderState, writeFolderState } from '@/domain/folderState';
 import { matrixVisibleItems } from '@/domain/eisenhower';
 import { SidebarResize } from './SidebarResize';
 import { isToday } from '@/domain/dates';
@@ -110,8 +111,30 @@ export function Sidebar({
   const draggingProjectId = useStore((s) => s.draggingProjectId);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  const folderOwner = demo ? null : snapshot.user?.id;
+  const [folderState, setFolderState] = useState<{ owner: string | null; values: Record<string, boolean> }>({ owner: null, values: {} });
+  const openFolders = folderState.owner === folderOwner ? folderState.values : {};
+  useEffect(() => {
+    if (!folderOwner) { setFolderState({ owner: null, values: {} }); return; }
+    const read = () => {
+      try {
+        const values = readFolderState(localStorage, folderOwner);
+        setFolderState({ owner: folderOwner, values });
+      } catch { setFolderState({ owner: folderOwner, values: {} }); }
+    };
+    read();
+    window.addEventListener('enhanced:folders-changed', read);
+    window.addEventListener('storage', read);
+    return () => { window.removeEventListener('enhanced:folders-changed', read); window.removeEventListener('storage', read); };
+  }, [folderOwner]);
+  const toggleFolder = (id: string) => {
+    const values = { ...openFolders, [id]: !(openFolders[id] ?? true) };
+    setFolderState({ owner: folderOwner ?? null, values });
+    if (!folderOwner) return;
+    try {
+      if (writeFolderState(localStorage, folderOwner, values)) window.dispatchEvent(new Event('enhanced:folders-changed'));
+    } catch { /* Keep the choice for this session if storage is unavailable. */ }
+  };
   /** The project row whose action menu is open, and the button it hangs from. */
   const [rowMenu, setRowMenu] = useState<{ key: string; anchor: HTMLElement } | null>(null);
 
@@ -216,8 +239,10 @@ export function Sidebar({
     };
   }, [menuOpen]);
 
-  const toggleGroup = (key: string) =>
-    setOpenGroups((prev) => ({ ...prev, [key]: !(prev[key] ?? true) }));
+  /* The groups (favourites, my projects, a workspace) are remembered with the
+     folders, under a prefix no project id can have. */
+  const isGroupOpen = (key: string) => openFolders[`group:${key}`] ?? true;
+  const toggleGroup = (key: string) => toggleFolder(`group:${key}`);
 
   const workspaceOrder = useStore((s) => s.prefs.workspaceOrder);
   const workspaces = useMemo(() => projectTree(snapshot, workspaceOrder), [snapshot, workspaceOrder]);
@@ -329,7 +354,7 @@ export function Sidebar({
               drag a project into. */}
           {node.nativeFolder ? <div className="navrow">
             <button className="navitem folderitem" aria-expanded={isOpen}
-              onClick={() => setOpenFolders((prev) => ({ ...prev, [project.id]: !isOpen }))}>
+              onClick={() => toggleFolder(project.id)}>
               <Icon name="project" /><span className="label">{project.name}</span>
               <Icon name={isOpen ? 'caret-up' : 'caret'} size="sm" className="disclose" />
             </button>
@@ -338,7 +363,7 @@ export function Sidebar({
               className="navitem folderitem"
               data-tour="folder"
               aria-expanded={isOpen}
-              onClick={() => setOpenFolders((prev) => ({ ...prev, [project.id]: !isOpen }))}
+              onClick={() => toggleFolder(project.id)}
             >
               <Icon name="project" />
               <span className="label">{project.name}</span>
@@ -429,7 +454,7 @@ export function Sidebar({
                 className={`navtwist${folderLike ? ' foldertoggle' : ''}`}
                 aria-expanded={childrenOpen}
                 aria-label={project.name}
-                onClick={() => setOpenFolders((prev) => ({ ...prev, [project.id]: !childrenOpen }))}
+                onClick={() => toggleFolder(project.id)}
               >
                 <Icon name={childrenOpen ? 'caret-up' : 'caret'} size="sm" />
               </button>
@@ -583,7 +608,7 @@ export function Sidebar({
         {(favourites.labels.length > 0 || favourites.projects.length > 0 || favourites.filters.length > 0) && (
           <SideGroup
             title={t('nav.favourites')}
-            open={openGroups.favourites ?? true}
+            open={isGroupOpen('favourites')}
             onToggle={() => toggleGroup('favourites')}
             /* The whole section, not its heading: "put this in there" is
                aimed at the box, and asking for the one line of text at the
@@ -619,7 +644,7 @@ export function Sidebar({
               title={workspace.name ?? t('nav.myProjects')}
               logo={workspace.workspaceId ? snapshot.workspaces[workspace.workspaceId]?.logo_big ?? null : null}
               workspaceId={workspace.workspaceId}
-              open={openGroups[key] ?? true}
+              open={isGroupOpen(key)}
               onOpen={() => navigate('workspace', key)}
               onToggle={() => toggleGroup(key)}
               onAdd={() => onProjectSheet({
