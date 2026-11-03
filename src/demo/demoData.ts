@@ -10,9 +10,9 @@ import { SITE_URL } from '@/app-info';
 import { demoFilterRecords } from './demoFilters';
 import { buildLegacyDemoCompleted, buildLegacyDemoSnapshot } from './demoData.legacy';
 
-/** The end-to-end tests' own demo: see demoData.legacy.ts. Never true in a production build. */
+/** The end-to-end tests' own demo: see demoData.legacy.ts. Only a dev server or a build made for the tests (VITE_E2E_LEGACY_DEMO) has it. */
 const legacy = (): boolean => {
-  if (!import.meta.env.DEV) return false;
+  if (!import.meta.env.DEV && import.meta.env.VITE_E2E_LEGACY_DEMO !== '1') return false;
   try { return localStorage.getItem('e2eLegacyDemo') === '1'; } catch { return false; }
 };
 

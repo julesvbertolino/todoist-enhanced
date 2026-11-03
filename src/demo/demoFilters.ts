@@ -20,18 +20,18 @@ const dueNow = (item: Item) => {
   return bucket === 'overdue' || bucket === 'today';
 };
 
-function demoFilters(locale: Locale): DemoFilter[] {
+function demoFilters(locale: Locale, starred = false): DemoFilter[] {
   const fr = locale === 'fr';
   const make = (id: string, name: string, query: string, color: string, order: number, favourite: boolean): Filter => ({
     id, name, query, color, item_order: order, is_deleted: false, is_favorite: favourite,
   });
   return [
     {
-      filter: make('f1', fr ? 'Rapides du jour' : 'Quick for today', '(today | overdue) & @quick', 'sky_blue', 1, false),
+      filter: make('f1', fr ? 'Rapides du jour' : 'Quick for today', '(today | overdue) & @quick', 'sky_blue', 1, starred),
       parts: [(item) => dueNow(item) && hasLabel(item, 'quick')],
     },
     {
-      filter: make('f2', fr ? 'Urgent' : 'Urgent', 'p1 | p2', 'red', 2, false),
+      filter: make('f2', fr ? 'Urgent' : 'Urgent', 'p1 | p2', 'red', 2, starred),
       parts: [(item) => item.priority >= 3],
     },
     {
@@ -44,8 +44,9 @@ function demoFilters(locale: Locale): DemoFilter[] {
   ];
 }
 
-export function demoFilterRecords(locale: Locale): Record<string, Filter> {
-  return Object.fromEntries(demoFilters(locale).map(({ filter }) => [filter.id, filter]));
+/** `starred` is the end-to-end tests' demo, whose first two filters sit in Favourites. */
+export function demoFilterRecords(locale: Locale, starred = false): Record<string, Filter> {
+  return Object.fromEntries(demoFilters(locale, starred).map(({ filter }) => [filter.id, filter]));
 }
 
 /** The ids each part of a demo filter matches, or null for a filter the demo does not know. */

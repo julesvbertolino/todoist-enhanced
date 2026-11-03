@@ -419,7 +419,7 @@ export function buildLegacyDemoSnapshot(locale: Locale = 'en', seed = 20260914):
     projects,
     sections,
     labels,
-    filters: demoFilterRecords(locale),
+    filters: demoFilterRecords(locale, true),
     workspaces,
     collaborators: {
       'demo-alex': { id: 'demo-alex', email: 'alex@demo.test', full_name: 'Alex Martin', image_id: null },

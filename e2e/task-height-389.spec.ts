@@ -1,5 +1,7 @@
 import { test, expect, go } from './demo';
 
+test.skip(process.env.PLAYWRIGHT_DEV !== '1', 'Run npm run e2e:release for the controlled development fixtures');
+
 test('title-only list rows are shorter, while table and phone rows remain usable', async ({ demo: page }) => {
   await page.evaluate(() => {
     const store = (window as unknown as { __store: { getState: () => any; setState: (value: any) => void } }).__store; // eslint-disable-line @typescript-eslint/no-explicit-any
