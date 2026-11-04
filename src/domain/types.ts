@@ -478,9 +478,9 @@ export type TableColumn = 'title' | 'date' | 'deadline' | 'priority' | 'estimate
  * page, so a page only ever holds what the user changed on it.
  */
 export interface MatrixOverrides {
-  urgent?: import('@/store/prefs').EisenhowerUrgencyRule[];
-  important?: import('@/store/prefs').EisenhowerPriority[];
-  layout?: import('@/store/prefs').MatrixLayout;
+  urgent?: ('overdue' | 'today' | 'tomorrow' | 'after-tomorrow' | 'next-seven' | 'week')[];
+  important?: (1 | 2 | 3 | 4)[];
+  layout?: 'list' | 'matrix';
 }
 
 export interface ViewPrefs {
