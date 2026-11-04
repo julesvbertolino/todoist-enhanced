@@ -6,6 +6,7 @@ import { ColumnsMenu } from './ColumnsMenu';
 import { AssigneeSelect } from './AssigneeFilter';
 import { GROUP_ICON, GROUP_ORDER, SORT_ICON } from './DisplayMenu';
 import { MODE_ICON } from './viewModes';
+import { MatrixLayoutToggle, MatrixRules, usePageMatrix } from './MatrixRules';
 import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
 import { markerStyle } from '@/domain/colors';
@@ -45,6 +46,7 @@ export function DisplayFields({
   const isCalendar = value.mode === 'calendar';
   const calendar = calendarPrefs(value, viewKey);
   const setCalendar = (patch: Partial<CalendarPrefs>) => onChange({ calendar: { ...calendar, ...patch } });
+  const matrix = usePageMatrix(value.matrix, (next) => onChange({ matrix: next }));
   const filters = value.filters;
   const setFilters = (patch: Partial<ViewPrefs['filters']>) => onChange({ filters: { ...filters, ...patch } });
   const shownGroup = groups.includes(value.group) ? value.group : groups[0];
@@ -88,6 +90,11 @@ export function DisplayFields({
           </div>
         </div>
       )}
+      {value.mode === 'matrix' && (
+        <div className="dfield-stack matrix-display-settings">
+          <MatrixLayoutToggle scope={matrix} />
+        </div>
+      )}
       {isCalendar && (
         <div className="calendar-display-settings">
           <div className="segmented small calendar-presentations" role="group" aria-label={t('calendar.presentation')}>
@@ -116,7 +123,7 @@ export function DisplayFields({
 
       <hr />
       <div className="panelgrid">
-        {!isCalendar && (
+        {!isCalendar && value.mode !== 'matrix' && (
           <Select label={t('toolbar.group')} value={shownGroup} onChange={(option) => onChange({ group: option as GroupKey })}
             options={[...groups].sort((a, b) => GROUP_ORDER.indexOf(a) - GROUP_ORDER.indexOf(b)).map((group) => ({
               value: group, label: t(`group.${group}` as TranslationKey), icon: GROUP_ICON[group],
@@ -172,6 +179,12 @@ export function DisplayFields({
           </div>
         )}
       </div>
+      {value.mode === 'matrix' && (
+        <>
+          <hr />
+          <MatrixRules scope={matrix} />
+        </>
+      )}
     </div>
   );
 }

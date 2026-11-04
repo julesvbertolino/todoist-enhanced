@@ -29,11 +29,13 @@ export function isQuick(item: Item): boolean {
  *
  * A real date always wins over the `week` label; nothing is ever corrected
  * silently, so a task carrying both is placed by its date and separately
- * surfaces as a conflict.
+ * surfaces as a conflict. A deadline already past makes the task overdue, as
+ * a deadline of today makes it due today, whatever its start date.
  */
 export function bucketOf(item: Item, now = new Date()): Bucket {
   if (item.due && isOverdue(item, now)) return 'overdue';
   const deadline = deadlineDate(item);
+  if (deadline && deadline < startOfDay(now)) return 'overdue';
   if (deadline && isSameDay(deadline, now)) return 'today';
   if (item.due) {
     if (isToday(item, now)) return 'today';

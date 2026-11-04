@@ -1,11 +1,12 @@
 import { bucketOf } from './views';
 import { differenceInCalendarDays, endOfWeek, endOfMonth, addDays, endOfDay } from 'date-fns';
-import { dueDate } from './dates';
-import { toDisplayPriority, type Item } from './types';
-import type {
-  EisenhowerPriority, EisenhowerUrgencyRule, MatrixHorizon,
+import { deadlineDate, dueDate } from './dates';
+import { toDisplayPriority, type Item, type MatrixOverrides } from './types';
+import {
+  viewPrefs,
+  type EisenhowerPriority, type EisenhowerUrgencyRule, type MatrixHorizon, type MatrixLayout, type Preferences,
 } from '@/store/prefs';
-import { byChildOrder } from './orderKey';
+import { rootItems } from '@/store/selectors';
 
 export type EisenhowerQuadrant =
   | 'urgent-important'
@@ -50,6 +51,8 @@ export function eisenhowerUrgencyRule(
   now = new Date(),
   weekLabel = 'week',
 ): EisenhowerUrgencyRule | null {
+  const deadline = deadlineDate(item);
+  if (deadline && differenceInCalendarDays(deadline, now) < 0) return 'overdue';
   const due = dueDate(item);
   if (due) {
     const days = differenceInCalendarDays(due, now);
@@ -63,18 +66,6 @@ export function eisenhowerUrgencyRule(
   return item.labels.some((label) => label.toLowerCase() === weekLabel.toLowerCase())
     ? 'week'
     : null;
-}
-
-/** Due date, then displayed priority, then Todoist's existing manual order. */
-export function sortEisenhower(items: Item[]): Item[] {
-  return [...items].sort((a, b) => {
-    const aDue = dueDate(a)?.getTime() ?? Number.POSITIVE_INFINITY;
-    const bDue = dueDate(b)?.getTime() ?? Number.POSITIVE_INFINITY;
-    return aDue - bDue
-      || toDisplayPriority(a.priority) - toDisplayPriority(b.priority)
-      || byChildOrder(a, b)
-      || a.id.localeCompare(b.id);
-  });
 }
 
 /** The roots visible on the matrix, shared with its sidebar count. */
@@ -92,4 +83,80 @@ export function matrixVisibleItems(items: Item[], projects: Record<string, impor
     if (!includeSomeday && bucket === 'someday') return false;
     return !workspace || (projects[item.project_id]?.workspace_id ?? 'personal') === workspace;
   });
+}
+
+/** What decides where a task lands on the matrix, and what the matrix shows. */
+export interface MatrixSettings {
+  horizon: MatrixHorizon;
+  includeSomeday: boolean;
+  workspace: string | null;
+  startDay: number;
+  urgentRules: EisenhowerUrgencyRule[];
+  importantPriorities: EisenhowerPriority[];
+  weekLabel: string;
+  /** "Show subtasks": off lists the top-level tasks only. */
+  subtasks: boolean;
+}
+
+/**
+ * The cards of the matrix (#448): the top-level tasks, plus every open
+ * subtask that has a date or a priority of its own. Such a subtask is a card
+ * in the quadrant its own date and priority give it, and is also listed in the
+ * folded subtasks of its parent, which keeps all of them. A subtask with
+ * neither only appears there, so the matrix is not flooded by the dozens of
+ * undated P4 steps of a checklist.
+ *
+ * Returns the cards and the ids of the subtasks drawn as cards, which the
+ * workload counts once. The sidebar count reads the same cards.
+ */
+export function matrixRoots(
+  items: Item[],
+  projects: Record<string, import('./types').Project>,
+  settings: MatrixSettings,
+): { cards: Item[]; promoted: Set<string> } {
+  const { horizon, includeSomeday, workspace, startDay } = settings;
+  const onMatrix = (list: Item[]) => matrixVisibleItems(list, projects, horizon, includeSomeday, workspace, startDay);
+  const roots = rootItems(items);
+  const rootVisible = new Set(onMatrix(roots).map((item) => item.id));
+  if (!settings.subtasks) return { cards: roots.filter((item) => rootVisible.has(item.id)), promoted: new Set() };
+
+  const visible = new Set(onMatrix(items).map((item) => item.id));
+  const hasOwn = (item: Item) => Boolean(item.due) || toDisplayPriority(item.priority) !== 4;
+  const promoted = new Set<string>();
+  const cards = items.filter((item) => {
+    if (!item.parent_id) return visible.has(item.id);
+    if (!hasOwn(item) || !visible.has(item.id)) return false;
+    promoted.add(item.id);
+    return true;
+  });
+  return { cards, promoted };
+}
+
+/** The matrix's settings as the page and the sidebar count both read them. */
+export function matrixSettings(prefs: Preferences, startDay: number | undefined): MatrixSettings {
+  const view = viewPrefs(prefs, 'matrix');
+  return {
+    horizon: prefs.eisenhowerHorizon,
+    includeSomeday: prefs.eisenhowerIncludeSomeday,
+    workspace: view.filters.workspaces.length ? null : prefs.eisenhowerWorkspace,
+    startDay: startDay ?? 1,
+    urgentRules: prefs.eisenhowerUrgent,
+    importantPriorities: prefs.eisenhowerImportant,
+    weekLabel: prefs.weekLabel,
+    subtasks: view.filters.showSubtasks,
+  };
+}
+
+/**
+ * The rules and the layout a matrix uses: the page's own where the user
+ * changed them there, the Matrix page's everywhere else.
+ */
+export function matrixRulesFor(prefs: Preferences, own?: MatrixOverrides): {
+  urgent: EisenhowerUrgencyRule[]; important: EisenhowerPriority[]; layout: MatrixLayout;
+} {
+  return {
+    urgent: own?.urgent ?? prefs.eisenhowerUrgent,
+    important: own?.important ?? prefs.eisenhowerImportant,
+    layout: own?.layout ?? prefs.eisenhowerLayout,
+  };
 }

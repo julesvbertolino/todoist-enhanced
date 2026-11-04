@@ -400,7 +400,7 @@ export type ViewId =
   | 'insights'
   | 'search';
 
-export type DisplayMode = 'list' | 'board' | 'focus' | 'calendar' | 'table';
+export type DisplayMode = 'list' | 'board' | 'focus' | 'calendar' | 'table' | 'matrix';
 
 export interface CalendarPrefs {
   presentation: '3-days' | 'week' | 'month';
@@ -473,7 +473,19 @@ export const defaultFilters = (viewKey?: string): ViewFilters => ({
 
 export type TableColumn = 'title' | 'date' | 'deadline' | 'priority' | 'estimate' | 'labels' | 'description' | 'project' | 'assignee';
 
+/**
+ * A page's own matrix settings (#450). What it leaves out follows the Matrix
+ * page, so a page only ever holds what the user changed on it.
+ */
+export interface MatrixOverrides {
+  urgent?: import('@/store/prefs').EisenhowerUrgencyRule[];
+  important?: import('@/store/prefs').EisenhowerPriority[];
+  layout?: import('@/store/prefs').MatrixLayout;
+}
+
 export interface ViewPrefs {
+  /** Set only when the user changed the matrix rules or layout on this page. */
+  matrix?: MatrixOverrides;
   tableColumns?: TableColumn[];
   /** Every column, the title included, shown or not, in the order Display lists them: a column switched on again returns to its place. */
   tableOrder?: TableColumn[];
@@ -523,7 +535,8 @@ export const defaultViewPrefs = (viewKey?: string): ViewPrefs => ({
   mode: 'list',
   group: defaultGroup(viewKey),
   /* Upcoming is read in time order: by date (then Todoist's own order within
-     a day) inside each day, week or month (#98). */
-  sort: viewKey === 'upcoming' ? 'due' : 'priority',
+     a day) inside each day, week or month (#98). The matrix keeps the order it
+     always had, date then priority, and lets it be changed (#447). */
+  sort: viewKey === 'upcoming' ? 'due' : viewKey === 'matrix' ? 'smart' : 'priority',
   filters: defaultFilters(viewKey),
 });

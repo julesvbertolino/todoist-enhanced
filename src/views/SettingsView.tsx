@@ -18,7 +18,7 @@ import { avatarUrl } from '@/domain/colors';
 import { formatDuration, parseDurationInput } from '@/domain/estimates';
 import { defaultCapacity, weeklyCapacity, type DailyCapacity } from '@/domain/load';
 import { DATE_FORMATS, formatDay, type DateFormat } from '@/domain/dates';
-import { HOME_VIEWS, type HomeView } from '@/store/prefs';
+import { FALLBACK_HOME, HOME_VIEWS, type HomeView } from '@/store/prefs';
 import { DEFAULT_WEEK_LABEL } from '@/domain/types';
 import { DUST_MONTHS, isDustMonths } from '@/domain/views';
 import type { Locale, TranslationKey } from '@/i18n';
@@ -235,10 +235,10 @@ export function SettingsView() {
 
             <Row title={t('settings.homepage')} hint={t('settings.homepageHint')}>
               <Select
-                value={prefs.homepage}
+                value={prefs.homepage === 'matrix' && !prefs.eisenhowerEnabled ? FALLBACK_HOME : prefs.homepage}
                 onChange={(value) => setPrefs({ homepage: value as HomeView })}
                 ariaLabel={t('settings.homepage')}
-                options={HOME_VIEWS.map((view) => ({ value: view, label: t(`nav.${view}` as TranslationKey) }))}
+                options={HOME_VIEWS.filter((view) => view !== 'matrix' || prefs.eisenhowerEnabled).map((view) => ({ value: view, label: t(`nav.${view}` as TranslationKey) }))}
               />
             </Row>
             <Row title={t('settings.naturalDates')} hint={t('settings.naturalDatesHint')}>

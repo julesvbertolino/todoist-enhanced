@@ -49,7 +49,7 @@ import { compareVersions, hasChanges, parseChangelog, unseenReleases } from './d
 import { VERSION } from './app-info';
 import { hasOnboarded, shouldAskEstimateStorage } from './domain/onboarding';
 import { useStore } from './store/store';
-import type { Accent, DarkStyle, Theme } from './store/prefs';
+import { FALLBACK_HOME, type Accent, type DarkStyle, type Theme } from './store/prefs';
 import { ACCENT_TOKENS, accentFamily, backdropGradient, hexToHsl } from './domain/accent';
 import { useT } from './hooks/useT';
 import { useSelectionBlocks } from './hooks/useSelectionBlocks';
@@ -76,7 +76,8 @@ export function App() {
   const init = useStore((s) => s.init);
   const startPolling = useStore((s) => s.startPolling);
   const locale = useStore((s) => s.prefs.locale);
-  const homepage = useStore((s) => s.prefs.homepage);
+  /* The matrix is optional: switched off while it is the homepage, the app opens on the week instead of an empty page (#449). */
+  const homepage = useStore((s) => s.prefs.homepage === 'matrix' && !s.prefs.eisenhowerEnabled ? FALLBACK_HOME : s.prefs.homepage);
   const theme = useStore((s) => s.prefs.theme);
   const darkStyle = useStore((s) => s.prefs.darkStyle);
   const accent = useStore((s) => s.prefs.accent);

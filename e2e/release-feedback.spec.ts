@@ -43,7 +43,7 @@ test('Table mode choices stack their icons, priorities have flags and row colour
   const display = active(page).getByRole('button', { name: /^Display(?: \d+)?$/ });
   await display.click();
   const menu = page.getByRole('dialog', { name: 'Display', exact: true });
-  await expect(menu.locator('.display-modes button')).toHaveCount(4);
+  await expect(menu.locator('.display-modes button')).toHaveCount(5);
   expect(await menu.locator('.display-modes button').first().evaluate((node) => getComputedStyle(node).flexDirection)).toBe('column');
   await menu.getByRole('button', { name: 'Table', exact: true }).click();
   await expect(menu.getByRole('button', { name: 'Reverse sort' })).toHaveCount(0);
