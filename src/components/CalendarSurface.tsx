@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
-import { addDays, addMonths, isSameDay } from 'date-fns';
+import { addDays, addMonths, differenceInCalendarDays, isSameDay } from 'date-fns';
 import { Icon } from './Icon';
 import { CalendarDayPopover } from './CalendarDayPopover';
 import { TaskActions } from './TaskActions';
@@ -70,6 +70,7 @@ export function CalendarSurface({ viewKey, items, onOpen, onAddTaskTo, childrenO
   useEffect(() => { items.forEach((item) => knownIds.current.add(item.id)); }, [items]);
   const activeSelection = useRef<SlotSelection | null>(null);
   const [selection, setSelection] = useState<SlotSelection | null>(null);
+  const picked = useStore((s) => s.selection);
   const activeDrag = useRef<Drag | null>(null);
   const suppressClick = useRef(false);
   const scroll = useRef<HTMLDivElement>(null);
@@ -167,12 +168,37 @@ export function CalendarSurface({ viewKey, items, onOpen, onAddTaskTo, childrenO
   const visibleItems = useMemo(() => {
     if (!drag?.moved || !drag.placement) return forecast.items;
     const { day, minute, duration } = drag.placement;
-    return [...forecast.items.filter((item) => item.id !== drag.item.id), { ...drag.item, due: calendarDue(drag.item, day, minute), labels: withEstimate(drag.item.labels, duration), duration: { amount: duration, unit: 'minute' as const } }];
-  }, [forecast.items, drag]);
+    const held = { ...drag.item, due: calendarDue(drag.item, day, minute), labels: withEstimate(drag.item.labels, duration), duration: { amount: duration, unit: 'minute' as const } };
+    const from = dueDate(drag.item);
+    /* The other picked cards travel with the one held: shown where they will
+       land, by the same offset onSave applies (#323). */
+    const group = drag.kind === 'move' && from && picked.length > 1 && picked.includes(drag.item.id) ? new Set(picked) : null;
+    if (!group || !from) return [...forecast.items.filter((item) => item.id !== drag.item.id), held];
+    /* Several picked cards change day only: each keeps its own time, or stays all day. */
+    const days = differenceInCalendarDays(day, from);
+    const shifted = (item: Item) => {
+      const date = dueDate(item)!;
+      return { ...item, due: calendarDue(item, addDays(date, days), hasTime(item.due) ? minuteOfDay(date) : null) };
+    };
+    return [...forecast.items.map((item) => group.has(item.id) && item.id !== drag.item.id && !item.checked && dueDate(item) ? shifted(item) : item)
+      .filter((item) => item.id !== drag.item.id), shifted(drag.item)];
+  }, [forecast.items, drag, picked]);
   const sorted = sortItems(visibleItems, current.sort, childrenOf, 'day', snapshot);
   const onSave = (id: string, place: Placement, resize: boolean) => {
-    void scheduleCalendarTask(id, place.day, place.minute, resize ? place.duration : undefined)
-      .catch(() => useStore.getState().toast(t('calendar.failed'), undefined, { tone: 'error' }));
+    const failed = () => useStore.getState().toast(t('calendar.failed'), undefined, { tone: 'error' });
+    const { selection: chosen, snapshot: current } = useStore.getState();
+    const from = current.items[id] && dueDate(current.items[id]);
+    /* Several picked cards change day only: each keeps its time, or stays all day (#323). */
+    if (!resize && from && chosen.length > 1 && chosen.includes(id)) {
+      const days = differenceInCalendarDays(place.day, from);
+      void Promise.all(chosen.map((other) => {
+        const item = current.items[other], date = item && dueDate(item);
+        if (!item || !date) return Promise.resolve();
+        return scheduleCalendarTask(other, addDays(date, days), hasTime(item.due) ? minuteOfDay(date) : null);
+      })).catch(failed);
+      return;
+    }
+    void scheduleCalendarTask(id, place.day, place.minute, resize ? place.duration : undefined).catch(failed);
   };
   const addToSlot = (day: Date, minute: number | null, duration = 30) => {
     const date = new Date(day);
@@ -268,6 +294,12 @@ export function CalendarSurface({ viewKey, items, onOpen, onAddTaskTo, childrenO
   const tint = (item: Item) => options.coloration === 'priority' ? `var(--p${toDisplayPriority(item.priority)})`
     : options.coloration === 'project' ? colorValue(snapshot.projects[item.project_id]?.color)
       : colorValue(Object.values(snapshot.labels).find((label) => item.labels.includes(label.name) && !label.name.startsWith('est-'))?.color);
+  /** ⌘/Ctrl+click picks a card instead of opening it; the bulk bar edits the ones picked (#323). */
+  const choose = (event: { metaKey: boolean; ctrlKey: boolean }, item: Item) => {
+    if (!(event.metaKey || event.ctrlKey) || item.checked || item.projection || item.id.startsWith('calendar-done:')) return false;
+    if (!suppressClick.current) useStore.getState().toggleSelection(item.id);
+    return true;
+  };
   const open = (item: Item) => {
     if (suppressClick.current) return;
     if (item.id.startsWith('calendar-done:')) {
@@ -288,9 +320,10 @@ export function CalendarSurface({ viewKey, items, onOpen, onAddTaskTo, childrenO
     const readonly = item.checked || !!item.projection;
     const date = dueDate(item);
     return <article key={item.id} data-calendar-task={item.id}
-      className={`calendar-card ${block ? `calendar-block ${calendarMinutes(item) <= 30 ? 'is-short' : ''}` : 'calendar-chip'} ${noDate ? 'calendar-undated-card' : ''} ${item.checked ? 'is-completed' : ''} ${item.projection ? 'is-forecast' : ''}`}
+      className={`calendar-card ${block ? `calendar-block ${calendarMinutes(item) <= 30 ? 'is-short' : ''}` : 'calendar-chip'} ${noDate ? 'calendar-undated-card' : ''} ${item.checked ? 'is-completed' : ''} ${item.projection ? 'is-forecast' : ''} ${picked.includes(item.id) ? 'is-picked' : ''}`}
+      aria-selected={picked.includes(item.id) || undefined}
       style={{ '--event-color': tint(item), ...style } as CSSProperties}
-      onClick={(event) => { if (!(event.target as HTMLElement).closest('button,input')) open(item); }}
+      onClick={(event) => { if (!(event.target as HTMLElement).closest('button,input') && !choose(event, item)) open(item); }}
       onPointerDown={(event) => { if (!(event.target as HTMLElement).closest('button,input')) begin(event, item, 'move'); }}>
       {block && !readonly && <button className="calendar-resize start" aria-label={t('calendar.resizeStart', { title: displayTaskContent(item) })}
         onPointerDown={(event) => begin(event, item, 'start')} onKeyDown={(event) => resizeKey(event, item, 'start')} />}
@@ -303,7 +336,7 @@ export function CalendarSurface({ viewKey, items, onOpen, onAddTaskTo, childrenO
             onClick={() => { completionTick(item); void useStore.getState().toggleTask(item.id); }}>{item.checked && <Icon name="check" size="sm" />}</button>}
           {item.projection && <span className="calendar-forecast-mark" title={t('upcoming.projectionHint')} aria-label={t('upcoming.projectionHint')}><Icon name="repeat" size="sm" /></span>}
           <button className="calendar-card-title" onPointerDown={(event) => begin(event, item, 'move')}
-            onClick={() => open(item)} title={displayTaskContent(item)}>{displayTaskContent(item)}</button>
+            onClick={(event) => { if (!choose(event, item)) open(item); }} title={displayTaskContent(item)}>{displayTaskContent(item)}</button>
         </div>
         {block && date && <small>{clock(minuteOfDay(date))} · {formatDuration(calendarMinutes(item), locale)}</small>}
         {noDate && <>

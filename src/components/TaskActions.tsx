@@ -21,8 +21,8 @@ import { useStore } from '@/store/store';
 import { useConfirm } from './overlays/Confirm';
 import { effectiveEstimate } from '@/domain/estimates';
 import { DurationChooser } from './DurationField';
-import { DatePicker, shortDay, taskShortcuts, type RecurrenceReading } from './DatePicker';
-import { nextOccurrence } from '@/domain/nextOccurrence';
+import { DatePicker, taskShortcuts, type RecurrenceReading } from './DatePicker';
+import { nextOccurrence, nextOccurrenceLabel } from '@/domain/nextOccurrence';
 import { dueDate, isOverdue, formatDayOrName, formatTime, toApiDate } from '@/domain/dates';
 import { dueForDate } from '@/domain/recurrence';
 import { withoutHorizons } from '@/domain/types';
@@ -564,7 +564,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
                       onClick={() => { setMenu('none'); void skipOccurrence(item.id); }}
                     >
                       <span><Icon name="repeat" size="sm" /> {t('task.nextOccurrence')}</span>
-                      {nextDate && <small>{shortDay(nextDate, locale)}</small>}
+                      {nextDate && <small>{nextOccurrenceLabel(nextDate, locale)}</small>}
                     </button>
                   )}
                   {item.due && (

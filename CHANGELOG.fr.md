@@ -8,9 +8,21 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.31.0
+
+🆕 **Passez facilement d’Aujourd’hui aux autres jours.** Un petit chevron à côté du titre d’Aujourd’hui, et d’Aujourd’hui dans Cette semaine, ouvre un sélecteur de date. Un autre jour liste ce qui y est prévu, vous pouvez y ajouter ou y déposer des tâches, et Aujourd’hui dans le sélecteur vous ramène au jour même.
+
+🎨 **Déplacez plusieurs événements du Calendrier d’un coup.** ⌘-clic (Ctrl-clic sous Windows) sur des événements pour les choisir, puis glissez-en un : tous changent de jour ensemble, chacun gardant son horaire, et ceux sur la journée y restent. Un événement seul se déplace toujours où vous voulez, heure comprise.
+
+🎨 **Une deadline peut rendre une tâche urgente dans la matrice d’Eisenhower.** Les règles d’urgence de la matrice lisent désormais la deadline d’une tâche en plus de sa date de début : une tâche prévue plus tard avec une deadline demain tombe dans les cadrans urgents. « Sans date, avec @semaine » devient simplement « Dans la semaine ».
+
+🎨 **Voyez où tombe « Prochaine occurrence ».** La date de début d’une tâche récurrente propose Prochaine occurrence et, comme le menu de la ligne, indique le jour où elle tombe. Les répétitions par mois et par an sont lues aussi.
+
+🐛 **Les tâches récurrentes comptent dans Analyses et le Tableau de bord.** Chaque fois que vous terminez une tâche récurrente, elle apparaît dans les graphiques, la série, le score de concentration et « terminées cette semaine », comme dans Todoist. Le total de tâches terminées d’un projet ne change pas.
+
 ## 2.30.0
 
-🆕 **Voyez un projet en matrice.** Dans Affichage, choisissez Matrice à côté de Liste, Tableau, Table et Calendrier, sur un projet, un tag, un filtre ou la Boîte de réception. Ses tâches se répartissent dans les quatre cadrans d'Eisenhower, avec les mêmes règles d'urgence et d'importance, réglables dans Affichage, même dans une vue enregistrée.
+🆕 **Vue Matrice dans les projets.** Dans Affichage, choisissez Matrice à côté de Liste, Tableau, Table et Calendrier, sur un projet, un tag, un filtre ou la Boîte de réception. Ses tâches se répartissent dans les quatre cadrans d'Eisenhower, avec les mêmes règles d'urgence et d'importance, réglables dans Affichage, même dans une vue enregistrée.
 
 🎨 **La matrice d'Eisenhower peut être votre page d'accueil.** Dans les Réglages, choisissez la matrice d'Eisenhower comme page d'accueil et l'app s'ouvre dessus. Si vous désactivez la matrice, l'app s'ouvre sur Cette semaine.
 

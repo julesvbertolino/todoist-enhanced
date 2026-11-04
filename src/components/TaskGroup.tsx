@@ -15,6 +15,8 @@ import type { Item } from '@/domain/types';
 
 export interface TaskGroupProps {
   title?: string;
+  /** A control kept right after the title, outside the button that folds the group. */
+  titleExtra?: ReactNode;
   items: Item[];
   childrenOf: (id: string) => Item[];
   onOpen: (id: string) => void;
@@ -61,7 +63,7 @@ export interface TaskGroupProps {
 }
 
 export function TaskGroup({
-  title, items, childrenOf, onOpen, tint, actions,
+  title, titleExtra, items, childrenOf, onOpen, tint, actions,
   showProject = true, showSection = false, defaultCollapsed = false, dropTarget, onAddTask, accent,
   sectionId, projectId, onRename, onDelete, reorderable, viewKey, keepWhenEmpty = false, lead, draggable = true,
   subtitle, dust = false, collapsible = true, cards = false,
@@ -89,6 +91,12 @@ export function TaskGroup({
   const totalMinutes = items.reduce(
     (acc, item) => acc + (effectiveEstimate(item, childrenOf).minutes ?? 0),
     0,
+  );
+  const stats = (
+    <span className="gstats">
+      <span className="gcount">{t('metrics.tasks', { count: items.length })}</span>
+      {totalMinutes > 0 && <span className="gtime">{formatDuration(totalMinutes, locale)}</span>}
+    </span>
   );
 
   // The meaning stays in the heading's colour rather than a panel behind it.
@@ -131,7 +139,7 @@ export function TaskGroup({
             className="gtoggle"
             aria-expanded={collapsible ? !collapsed : undefined}
             onClick={collapsible ? () => setCollapsed((v) => !v) : undefined}
-            style={collapsible ? undefined : { cursor: 'default' }}
+            style={collapsible ? (titleExtra ? { flex: '0 1 auto' } : undefined) : { cursor: 'default' }}
           >
             {onRename && sectionId ? (
               <SectionName
@@ -146,11 +154,23 @@ export function TaskGroup({
             )}
             {subtitle && <span className="gsub">{subtitle}</span>}
             {/* The round count follows the title, then the time (#185). */}
-            <span className="gstats">
-              <span className="gcount">{t('metrics.tasks', { count: items.length })}</span>
-              {totalMinutes > 0 && <span className="gtime">{formatDuration(totalMinutes, locale)}</span>}
-            </span>
+            {!titleExtra && stats}
           </button>
+          {/* A control after the title splits the toggle in two, so the chevron
+              sits against the name and the count still follows it. */}
+          {titleExtra && (
+            <>
+              {titleExtra}
+              <button
+                className="gtoggle"
+                tabIndex={-1}
+                aria-hidden="true"
+                onClick={collapsible ? () => setCollapsed((v) => !v) : undefined}
+              >
+                {stats}
+              </button>
+            </>
+          )}
           {actions && <span className="gactions">{actions}</span>}
           {sectionId ? (
             onDelete && projectId && (

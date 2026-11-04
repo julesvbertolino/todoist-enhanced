@@ -128,3 +128,5 @@
 .popover.estimatesheet .estchip{padding:5px 7px;min-height:28px;font-size:12px}
 .popover.estimatesheet .estfield{width:100%}
 .popover.rowmenu .task-menu-back{margin:0 0 5px;padding:6px 8px;min-height:30px}
+
+.calendar-card.is-picked{outline:2px solid var(--accent);outline-offset:-1px;background:color-mix(in srgb,var(--accent) 16%,var(--surface))}

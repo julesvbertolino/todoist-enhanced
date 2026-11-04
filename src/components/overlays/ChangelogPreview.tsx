@@ -172,7 +172,7 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
     case 'workspaces':
       content = <>{title(say('Workspaces', 'Espaces de travail'))}{row(say('My projects', 'Mes projets'), 'project', '✓', true)}{row('Studio', 'group', '✓', true)}<div className="cv-indent">{row(design, 'project', '8')}{row(say('Brand identity', 'Identité visuelle'), 'project', '5')}</div></>; break;
     case 'forecast': case 'skipRepeat':
-      content = <>{title(say('Upcoming', 'Prochainement'))}{row(say('Daily check', 'Point quotidien'), 'repeat', chip(say('Today', 'Aujourd’hui'), 'accent'))}<div className="cv-forecast">{row(say('Daily check', 'Point quotidien'), 'repeat', say('Tomorrow', 'Demain'))}{row(say('Daily check', 'Point quotidien'), 'repeat', say('Friday', 'Vendredi'))}</div>{kind === 'skipRepeat' && <div className="cv-footnote">↪ {say('Skip to next occurrence', 'Passer à l’occurrence suivante')}</div>}</>; break;
+      content = <>{title(say('Upcoming', 'Prochainement'))}{row(say('Daily check', 'Point quotidien'), 'repeat', chip(say('Today', 'Aujourd’hui'), 'accent'))}<div className="cv-forecast">{row(say('Daily check', 'Point quotidien'), 'repeat', say('Tomorrow', 'Demain'))}{row(say('Daily check', 'Point quotidien'), 'repeat', say('Friday', 'Vendredi'))}</div>{kind === 'skipRepeat' && <div className="cv-footnote">↪ {say('Next occurrence', 'Prochaine occurrence')}</div>}</>; break;
     case 'search': case 'searchSections':
       content = <><div className="cv-field cv-search"><Icon name="search" size="sm" />{say('design', 'maquette')}<kbd>⌘K</kbd></div>{row(say('Review the design', 'Relire la maquette'), 'checkbox', '↵', true)}{row(design, 'project')}{row(say('In review', 'À relire'), 'section')}<div className="cv-footnote">{say('See all results', 'Voir tous les résultats')} →</div></>; break;
     case 'parser': case 'rejectParser': content = parsed; break;
@@ -236,14 +236,17 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
       content = <>{title(design)}{row(say('Show completed tasks', 'Afficher les tâches terminées'), 'eye', '✓', true)}<div className="cv-completed">{row(review, 'check', '30 min')}{row(say('Send the proposal', 'Envoyer le devis'), 'check', '15 min')}</div></>; break;
     case 'projectMatrix':
       content = <>
-        <div className="cv-modes cv-modes-five">{([['list', say('List', 'Liste'), false], ['board', say('Board', 'Tableau'), false], ['table', 'Table', false], ['calendar', say('Calendar', 'Calendrier'), false], ['dashboard', 'Matrix', true]] as Array<[IconName, string, boolean]>)
-          .map(([icon, label, on]) => <span key={label} className={on ? 'on' : ''}><Icon name={icon} size="sm" /><small>{label}</small></span>)}</div>
+        <div className="cv-mx-head"><Icon name="project" size="sm" /><b>Website</b><span className="cv-mx-tab">Matrix</span></div>
         <div className="cv-matrix cv-project-matrix">
-          <div><b>{say('Urgent and important', 'Urgent et important')}</b>{row(say('Publish the site', 'Publier le site'), 'checkbox', 'P1')}</div>
+          <div><b>{say('Urgent and important', 'Urgent et important')}</b>{row(say('Publish the site', 'Publier le site'), 'checkbox', 'P1')}{row(say('Fix the contact form', 'Corriger le formulaire'), 'checkbox', 'P1')}</div>
           <div><b>{say('Not urgent but important', 'Pas urgent mais important')}</b>{row(say('Plan the launch', 'Préparer le lancement'), 'checkbox', 'P2')}</div>
           <div><b>{say('Urgent but not important', 'Urgent mais pas important')}</b>{row(review, 'checkbox', 'P3')}</div>
           <div><b>{say('Not urgent, not important', 'Ni urgent ni important')}</b>{row(say('Tidy the files', 'Ranger les fichiers'), 'checkbox')}</div>
         </div></>; break;
+    case 'dayNav':
+      content = <>
+        <div className="cv-mx-head"><b style={{ fontSize: 15 }}>{say('Tomorrow', 'Demain')}</b><span className="cv-daynav"><svg width="9" height="9" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 3h8L5 8z" fill="currentColor" /></svg></span></div>
+        {row(say('Send the invoice', 'Envoyer la facture'), 'checkbox', '9:30')}{row(say('Plan the launch', 'Préparer le lancement'), 'checkbox', 'P2')}{row(review, 'checkbox')}</>; break;
     case 'matrix':
       content = <>{title(say('Eisenhower Matrix', 'Matrice d’Eisenhower'))}<div className="cv-matrix">{[say('Do', 'Faire'), say('Plan', 'Planifier'), say('Delegate', 'Déléguer'), say('Eliminate', 'Éliminer')].map((label, i) => <div key={label}><b>{label}</b><span>{[3, 5, 2, 1][i]}</span></div>)}</div></>; break;
     case 'swipe':

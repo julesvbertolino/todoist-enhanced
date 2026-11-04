@@ -1,10 +1,10 @@
 import { useMemo, type ReactNode } from 'react';
 import { useDataSnapshot } from '@/hooks/useDataSnapshot';
-import { LocalFoldProvider, ParentChipProvider, SubtasksProvider } from '@/components/TaskRow';
+import { DeadlineUrgentProvider, LocalFoldProvider, ParentChipProvider, SubtasksProvider } from '@/components/TaskRow';
 import { TaskGroup } from '@/components/TaskGroup';
 import { useT } from '@/hooks/useT';
 import {
-  EISENHOWER_QUADRANTS, eisenhowerQuadrant, matrixRoots, matrixRulesFor,
+  EISENHOWER_QUADRANTS, eisenhowerQuadrant, matrixRoots, matrixRulesFor, urgentByDeadline,
   type EisenhowerQuadrant, type MatrixSettings,
 } from '@/domain/eisenhower';
 import type { Item, MatrixOverrides, SortKey } from '@/domain/types';
@@ -48,8 +48,13 @@ export function MatrixBoard({ cards, childrenOf, sort, settings, layout, onOpen,
     ])) as Record<EisenhowerQuadrant, Item[]>;
   }, [cards, settings, sort, childrenOf, snapshot, workspaceOrder]);
 
+  const byDeadline = useMemo(() => {
+    const now = new Date();
+    return new Set(cards.filter((item) => urgentByDeadline(item, now, settings.urgentRules, settings.weekLabel)).map((item) => item.id));
+  }, [cards, settings.urgentRules, settings.weekLabel]);
+
   return (
-    <SubtasksProvider value={settings.subtasks}><ParentChipProvider value><LocalFoldProvider value>
+    <DeadlineUrgentProvider value={byDeadline}><SubtasksProvider value={settings.subtasks}><ParentChipProvider value><LocalFoldProvider value>
       <div className={layout === 'matrix' ? 'eisenhower-grid' : 'eisenhower-list'}>
         {EISENHOWER_QUADRANTS.map((quadrant, index) => (
           <div className={`quadrant ${quadrant}`} key={quadrant}>
@@ -68,7 +73,7 @@ export function MatrixBoard({ cards, childrenOf, sort, settings, layout, onOpen,
           </div>
         ))}
       </div>
-    </LocalFoldProvider></ParentChipProvider></SubtasksProvider>
+    </LocalFoldProvider></ParentChipProvider></SubtasksProvider></DeadlineUrgentProvider>
   );
 }
 

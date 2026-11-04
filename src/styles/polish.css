@@ -32,6 +32,12 @@
 :root:not([data-chips="classic"]) :is(.task, .tcard, .preview-task) .meta > .sect .ic{color:var(--faint)}
 :root:not([data-chips="classic"]) :is(.task, .tcard, .preview-task) .meta > .late:not(.repeatdot){--chip-fg:var(--late-dark)}
 :root:not([data-chips="classic"]) :is(.task, .tcard, .preview-task) .meta > .deadline{--chip-fg:var(--deadline)}
+.meta .deadline.drives-urgency{font-weight:650}
+.daynav{display:inline-flex;align-items:center;gap:2px;margin-left:0;vertical-align:middle;font-size:13px;font-weight:500;opacity:.55;transition:opacity .15s}
+.phead:hover .daynav,.ghead:hover .daynav,.daynav:focus-within{opacity:1}
+.daynav-chevron{display:inline-grid;place-items:center;width:16px;height:24px;border:0;padding:0;background:transparent;color:var(--muted,inherit);cursor:pointer}
+.daynav-chevron:hover,.daynav-chevron[aria-expanded=true]{color:var(--text,inherit)}
+.ghead .daynav{margin-left:0}
 
 :root[data-chips="inherited"] :is(.task, .tcard, .preview-task) .meta > .at{
   --chip-fg:var(--date-fg,var(--info));
@@ -625,3 +631,5 @@
 
 /* A tag keeps room around its icon, as the other chips do around theirs. */
 :root:not([data-chips="classic"]) :is(.task, .tcard, .preview-task) .meta > .tag{padding:2px 8px 2px 7px;margin-block:-1px}
+
+

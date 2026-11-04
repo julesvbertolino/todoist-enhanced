@@ -68,6 +68,9 @@ export const LocalFoldProvider = LocalFold.Provider;
 const ParentChip = createContext(false);
 
 export const ParentChipProvider = ParentChip.Provider;
+/** The cards the Matrix put in an urgent quadrant because of their deadline (#329). */
+const DeadlineUrgent = createContext<ReadonlySet<string> | null>(null);
+export const DeadlineUrgentProvider = DeadlineUrgent.Provider;
 
 interface TaskRowProps {
   item: Item;
@@ -181,6 +184,7 @@ function TaskRowView({
   const selectRange = useStore((s) => s.selectRange);
   const showSubtasks = useContext(ShowSubtasks) && !item.projection;
   const showParentChip = useContext(ParentChip) && depth === 0;
+  const deadlineDrivesUrgency = Boolean(useContext(DeadlineUrgent)?.has(item.id));
   const fields = useStore((s) => s.prefs.taskFields);
   const detailOrder = useStore((s) => s.prefs.detailOrder);
 
@@ -350,7 +354,11 @@ function TaskRowView({
       </span>
     ),
     deadline: deadline && (
-      <span className="deadline" key="deadline">
+      <span
+        className={`deadline${deadlineDrivesUrgency ? ' drives-urgency' : ''}`}
+        key="deadline"
+        title={deadlineDrivesUrgency ? t('matrix.urgentByDeadline') : undefined}
+      >
         <Icon name="deadline" />
         {/* Past, a deadline reads like a late date: "Yesterday", then "3d late" (#451). */}
         {deadlineLate >= 2

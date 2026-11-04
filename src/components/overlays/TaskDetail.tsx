@@ -31,6 +31,7 @@ import {
 import {
   deadlineDate, dueDate, formatRelativeDay, formatTime, hasTime, isOverdue, toApiDate, toApiDateTime,
 } from '@/domain/dates';
+import { nextOccurrence, nextOccurrenceLabel } from '@/domain/nextOccurrence';
 import { plainTitle, renderInlineMarkdown, renderTitle, titleLinks } from '@/domain/markdown';
 import { parseShorthand, savedRefusals, type TextRange } from '@/domain/shorthand';
 import { dueForDate } from '@/domain/recurrence';
@@ -322,6 +323,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
   const overlayId = useId();
 
   const item = taskId ? snapshot.items[taskId] : null;
+  const skipDate = item ? nextOccurrence(item) : null;
   useEffect(() => {
     if (!item || !takeCommentsRequest(item.id)) return;
     const frame = requestAnimationFrame(() => {
@@ -1103,25 +1105,19 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
                 minutes: computed ? null : minutes,
                 onChange: (value) => void updateTask(item.id, { estimateMinutes: value }),
               }}
+              /* Skipping one occurrence belongs to the date, in its picker, as
+                 in the row's schedule menu (#352). */
+              skip={item.due?.is_recurring ? {
+                label: t('task.nextOccurrence'),
+                title: t('task.nextOccurrenceHint'),
+                hint: skipDate ? nextOccurrenceLabel(skipDate, locale) : undefined,
+                onSkip: () => void skipOccurrence(item.id),
+              } : undefined}
               onClearRecurrence={() => {
                 if (!item.due?.is_recurring) return;
                 void updateTask(item.id, { due: { ...item.due, string: item.due.date, is_recurring: false } });
               }}
             />
-            {/* The row's own schedule menu has offered this for a while
-                (TaskActions.tsx) — closing the panel to reach it, just to skip
-                one occurrence of the task already open, was the gap. */}
-            {item.due?.is_recurring && (
-              <button
-                type="button"
-                className="proplink"
-                title={t('task.nextOccurrenceHint')}
-                onClick={() => void skipOccurrence(item.id)}
-              >
-                <Icon name="repeat" size="sm" />
-                {t('task.nextOccurrence')}
-              </button>
-            )}
           </div>
 
           {/* On a phone the properties other than the date are one row of chips, as in

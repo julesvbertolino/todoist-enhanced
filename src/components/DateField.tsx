@@ -54,6 +54,8 @@ interface DateFieldProps {
   showRecurrenceClear?: boolean;
   /** The task's duration, offered on its own line at the picker's foot. */
   duration?: DurationControl;
+  /** Skips the occurrence the date is on, with the day it lands on said quietly (#352). */
+  skip?: { onSkip: () => void; hint?: string; label: string; title?: string };
 }
 
 /**
@@ -68,7 +70,7 @@ interface DateFieldProps {
 export function DateField({
   value, onChange, label, placeholder, min, max, clearable = true, shortcuts,
   variant = 'field', icon = 'calendar', withTime = false,
-  recurrence = null, onRecurrence, onClearRecurrence, showRecurrenceClear = true, duration,
+  recurrence = null, onRecurrence, onClearRecurrence, showRecurrenceClear = true, duration, skip,
 }: DateFieldProps) {
   const chip = variant === 'chip';
   const { t, locale } = useT();
@@ -182,14 +184,29 @@ export function DateField({
         /* Leaving from inside the panel hands the focus back to the field it
            opened from, rather than to the page once the panel is gone. */
         onEscape={() => close()}
-        footer={value && clearable ? (
-          <button
-            type="button"
-            className="opt"
-            onClick={() => { onChange(''); close(true); }}
-          >
-            <span><Icon name="close" size="sm" /> {t('date.clear')}</span>
-          </button>
+        footer={(skip || (value && clearable)) ? (
+          <>
+            {skip && (
+              <button
+                type="button"
+                className="opt"
+                title={skip.title}
+                onClick={() => { skip.onSkip(); close(true); }}
+              >
+                <span><Icon name="repeat" size="sm" /> {skip.label}</span>
+                {skip.hint && <small>{skip.hint}</small>}
+              </button>
+            )}
+            {value && clearable && (
+              <button
+                type="button"
+                className="opt"
+                onClick={() => { onChange(''); close(true); }}
+              >
+                <span><Icon name="close" size="sm" /> {t('date.clear')}</span>
+              </button>
+            )}
+          </>
         ) : undefined}
       />
     </div>

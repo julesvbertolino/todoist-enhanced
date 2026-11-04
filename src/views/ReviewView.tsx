@@ -16,6 +16,7 @@ import { completionTick } from '@/store/tick';
 import { navigate } from '@/hooks/useRoute';
 import { rootItems } from '@/store/selectors';
 import { markerStyle } from '@/domain/colors';
+import { nextOccurrence, nextOccurrenceLabel } from '@/domain/nextOccurrence';
 import { formatDuration, effectiveEstimate } from '@/domain/estimates';
 import { dueDate, formatRelativeDay } from '@/domain/dates';
 import { summariseInsights } from '@/domain/insights';
@@ -538,6 +539,7 @@ export function ReviewView({ onOpen }: ReviewViewProps) {
                 }}
               >
                 {t('review.nextOccurrence')}
+                {nextOccurrence(item) && <small> · {nextOccurrenceLabel(nextOccurrence(item)!, locale)}</small>}
               </button>
             )}
             {s.actions.map((action) => (
