@@ -8,6 +8,18 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.30.0
+
+🆕 **Voyez un projet en matrice.** Dans Affichage, choisissez Matrice à côté de Liste, Tableau, Table et Calendrier, sur un projet, un tag, un filtre ou la Boîte de réception. Ses tâches se répartissent dans les quatre cadrans d'Eisenhower, avec les mêmes règles d'urgence et d'importance, réglables dans Affichage, même dans une vue enregistrée.
+
+🎨 **La matrice d'Eisenhower peut être votre page d'accueil.** Dans les Réglages, choisissez la matrice d'Eisenhower comme page d'accueil et l'app s'ouvre dessus. Si vous désactivez la matrice, l'app s'ouvre sur Cette semaine.
+
+🎨 **La matrice s'affine.** Affichage propose un tri pour les quatre cadrans, retenu d'une visite à l'autre. Une sous-tâche avec sa propre date ou priorité a sa carte, avec le nom de son parent, et chaque parent garde toutes ses sous-tâches repliées dessous. Un interrupteur Afficher les sous-tâches ne garde que le premier niveau.
+
+🐛 **Une deadline dépassée met la tâche en retard.** Une tâche dont la deadline est passée compte maintenant comme en retard dans Ma semaine, sur la matrice et dans les compteurs de la barre latérale, même si sa date de début est à venir. Sa pastille indique Hier ou le nombre de jours de retard.
+
+🐛 **Les cartes sélectionnées restent colorées.** Sur la matrice, une carte sur laquelle vous faites ⌘-clic est teintée d'un bord à l'autre, et garde sa teinte quand vous la survolez.
+
 ## 2.29.0
 
 🎨 **La barre latérale retient ses sections repliées.** Repliez Favoris, Mes projets, un espace de travail ou un dossier dans la barre latérale : ils restent repliés après un rechargement ou à votre retour. Chaque compte garde les siens.

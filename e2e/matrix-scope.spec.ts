@@ -16,7 +16,7 @@ test('matrix date scope changes the visible tasks and sidebar count', async ({ d
   await page.getByRole('button', { name: 'Show until' }).click();
   await page.getByRole('option', { name: 'All future dates' }).click();
   await expect(page.locator('.screen.active [data-task-id="future-scope"]')).toBeVisible();
-  const matrixCount = await page.locator('.screen.active [data-task-id]').count();
+  const matrixCount = await page.locator('.screen.active [data-task-id]').evaluateAll((nodes) => nodes.filter((node) => !node.closest('[data-depth]')).length);
   await expect(page.locator('.sidebar').getByRole('button', { name: /Eisenhower Matrix/ }).locator('.count')).toHaveText(String(matrixCount));
   await expect(page.locator('.sidebar').getByRole('button', { name: 'Upcoming' }).locator('.count')).toHaveCount(0);
 });

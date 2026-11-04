@@ -20,6 +20,16 @@ describe('deadline today', () => {
   });
 });
 
+describe('deadline in the past', () => {
+  it('makes the task overdue, whatever its start date', () => {
+    const noStart = item({ id: 'a', deadline: { date: '2026-10-05', lang: 'en' } });
+    const future = item({ id: 'b', due: due('2026-10-09'), deadline: { date: '2026-10-05', lang: 'en' } });
+    expect(bucketOf(noStart, NOW)).toBe('overdue');
+    expect(bucketOf(future, NOW)).toBe('overdue');
+    expect(ids(groupWeek([noStart, future], NOW).overdue)).toEqual(['a', 'b']);
+  });
+});
+
 describe('splitQuick', () => {
   it.each([
     ['overdue', { id: 'a', labels: ['est-3'], due: due('2026-10-05') }],

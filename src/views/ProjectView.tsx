@@ -13,6 +13,7 @@ import { DisplayMenu } from '@/components/DisplayMenu';
 import { PomodoroButton } from '@/components/PomodoroButton';
 import { TaskGroup } from '@/components/TaskGroup';
 import { ModeSurface } from '@/components/ModeSurface';
+import { MatrixSurface } from '@/components/MatrixBoard';
 import { EditableDescription } from '@/components/EditableDescription';
 import { EditableTitle } from '@/components/EditableTitle';
 import { ProjectMenu } from '@/components/ProjectMenu';
@@ -393,7 +394,7 @@ function ProjectBody({
             <DisplayMenu
               viewKey={viewKey}
               pageItems={pool0}
-              modes={['list', 'board', 'table', 'calendar']}
+              modes={['list', 'board', 'table', 'calendar', 'matrix']}
               groups={PROJECT_GROUPS}
               completedToggle
               showWorkspaces={false}
@@ -454,6 +455,8 @@ function ProjectBody({
               dropTarget: { kind: 'section' as const, sectionId: group.id, projectId },
               onAddTask: () => onAddTaskTo({ projectId, sectionId: group.id }) })),
           ]} />
+      ) : current.mode === 'matrix' ? (
+        <MatrixSurface items={scoped} childrenOf={childrenOf} sort={current.sort} showSubtasks={current.filters.showSubtasks} matrix={current.matrix} onOpen={onOpen} />
       ) : current.mode === 'calendar' ? (
         <CalendarSurface key={viewKey} viewKey={viewKey} items={pool0} onOpen={onOpen} onAddTaskTo={onAddTaskTo} />
       ) : current.mode === 'board' ? (

@@ -85,6 +85,8 @@ export function Select({
   const { t } = useT();
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
+  /* The list scrolls to follow the keyboard, never the pointer: scrolling under a moving mouse made it run away. */
+  const pointerMoved = useRef(false);
   const [query, setQuery] = useState('');
   const [position, setPosition] = useState<{ top: number; left: number; width: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -147,6 +149,7 @@ export function Select({
   // The highlighted row is kept in view as the highlight moves.
   useEffect(() => {
     if (!open) return;
+    if (pointerMoved.current) { pointerMoved.current = false; return; }
     listRef.current
       ?.querySelector<HTMLElement>('[data-active="true"]')
       ?.scrollIntoView({ block: 'nearest' });
@@ -180,6 +183,7 @@ export function Select({
   }
 
   function onKeyDown(event: React.KeyboardEvent) {
+    pointerMoved.current = false;
     if (!open) {
       if (['Enter', ' ', 'ArrowDown', 'ArrowUp'].includes(event.key)) {
         event.preventDefault();
@@ -241,7 +245,7 @@ export function Select({
           aria-selected={option.value === value}
           data-active={at === active || undefined}
           className={`opt${at === active ? ' active' : ''}${option.sub && !(flattenSearch && query.trim()) ? ' sectionopt' : ''}${option.danger ? ' danger' : ''}`}
-          onMouseEnter={() => setActive(at)}
+          onMouseEnter={() => { pointerMoved.current = true; setActive(at); }}
           onMouseDown={(event) => { event.preventDefault(); choose(at); }}
         >
           {option.visual}

@@ -11,6 +11,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { SubtasksProvider } from '@/components/TaskRow';
 import { DisplayMenu } from '@/components/DisplayMenu';
 import { PomodoroButton } from '@/components/PomodoroButton';
+import { MatrixSurface } from '@/components/MatrixBoard';
 import { ModeSurface } from '@/components/ModeSurface';
 import { TableSurface } from '@/components/TableSurface';
 import { TaskGroup } from '@/components/TaskGroup';
@@ -275,7 +276,7 @@ function SimpleListBody({
             <DisplayMenu
               viewKey={viewKey}
               pageItems={pool0}
-              modes={['list', 'board', 'table', 'calendar']}
+              modes={kind === 'label' || kind === 'filter' || kind === 'inbox' ? ['list', 'board', 'table', 'calendar', 'matrix'] : ['list', 'board', 'table', 'calendar']}
               groups={['none', 'project', 'priority', 'label', 'step', 'estimate', 'day', 'month', 'year']}
             />
             <InsightsButton onClick={onInsights} />
@@ -333,7 +334,9 @@ function SimpleListBody({
 
       {/* A query with commas is several lists, one under the other. Explicit
           grouping and board presentation still use their existing behaviour. */}
-      {current.mode === 'calendar' && !(kind === 'filter' && (filterResult.error || !filter)) ? (
+      {current.mode === 'matrix' && !(kind === 'filter' && (filterResult.error || !filter)) ? (
+        <MatrixSurface items={scoped} childrenOf={childrenOf} sort={current.sort} showSubtasks={current.filters.showSubtasks} matrix={current.matrix} onOpen={onOpen} showProject />
+      ) : current.mode === 'calendar' && !(kind === 'filter' && (filterResult.error || !filter)) ? (
         <CalendarSurface key={viewKey} viewKey={viewKey} items={pool0} childrenOf={childrenOf} onOpen={onOpen} onAddTaskTo={onAddTaskTo} />
       ) : kind === 'filter' && filter && !filterResult.error && (filterResult.parts?.length ?? 0) > 1
         && current.mode === 'table' && current.group === 'none' ? (

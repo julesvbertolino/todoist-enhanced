@@ -1,6 +1,6 @@
 import { ProjectProgress } from './ProjectProgress';
 import { readFolderState, writeFolderState } from '@/domain/folderState';
-import { matrixVisibleItems } from '@/domain/eisenhower';
+import { matrixRoots, matrixSettings } from '@/domain/eisenhower';
 import { SidebarResize } from './SidebarResize';
 import { isToday } from '@/domain/dates';
 import { viewPrefs } from '@/store/prefs';
@@ -197,8 +197,7 @@ export function Sidebar({
         const filters = viewPrefs(prefs, 'matrix').filters;
         const scoped = assigneeItems(snapshot, filters.assignees);
         const workspaceItems = filters.workspaces.length ? Object.fromEntries(Object.entries(scoped).filter(([, item]) => filters.workspaces.includes(snapshot.projects[item.project_id]?.workspace_id ?? 'personal'))) : scoped;
-        const roots = rootItems(openItems({ ...snapshot, items: workspaceItems }));
-        return matrixVisibleItems(roots, snapshot.projects, prefs.eisenhowerHorizon, prefs.eisenhowerIncludeSomeday, filters.workspaces.length ? null : prefs.eisenhowerWorkspace, snapshot.user?.start_day ?? 1).length;
+        return matrixRoots(openItems({ ...snapshot, items: workspaceItems }), snapshot.projects, matrixSettings(prefs, snapshot.user?.start_day)).cards.length;
       })(),
       month: monthItems(scope('month')).length,
       someday: somedayItems(scope('someday')).length,

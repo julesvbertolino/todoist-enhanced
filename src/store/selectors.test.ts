@@ -373,3 +373,10 @@ describe('date group titles', () => {
     expect(groupItems(items, 'year', snapshot, named).map((g) => g.title)).toEqual(['No date', 'year 2031']);
   });
 });
+
+describe('alphabetical sort', () => {
+  it('reads an uncompletable task by the title it shows, not by its "* " marker', () => {
+    const list = [item({ id: 'u', content: '* U header' }), item({ id: 't2', content: 'T two' }), item({ id: 't1', content: 'T one' })];
+    expect(sortItems(list, 'alphabetical', () => []).map((i) => i.id)).toEqual(['t1', 't2', 'u']);
+  });
+});

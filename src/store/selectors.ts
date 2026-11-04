@@ -1,7 +1,7 @@
 import { STEPS, stepOf, type Step } from '@/domain/steps';
 import { matchesAssignee, assigneeName } from '@/domain/assignees';
 import {
-  toDisplayPriority,
+  displayTaskContent, toDisplayPriority,
   type GroupKey, type Item, type Project, type Snapshot,
   type SortKey, type ViewFilters,
 } from '@/domain/types';
@@ -350,7 +350,7 @@ export function sortItems(
           || manualCompare(a, b, order);
       }
       case 'alphabetical':
-        return a.content.localeCompare(b.content);
+        return displayTaskContent(a).localeCompare(displayTaskContent(b));
       case 'estimate-asc':
       case 'estimate-desc': {
         const direction = sort === 'estimate-asc' ? 1 : -1;

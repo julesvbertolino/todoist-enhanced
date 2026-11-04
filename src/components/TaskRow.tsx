@@ -1,3 +1,4 @@
+import { differenceInCalendarDays } from 'date-fns';
 import { TaskCommentBadge } from './TaskCommentBadge';
 import { tableRowColor } from '@/domain/table';
 import { TableContext } from './TableContext';
@@ -59,6 +60,14 @@ const FOLD_SETTLE_MS = 400;
 const ShowSubtasks = createContext(true);
 
 export const SubtasksProvider = ShowSubtasks.Provider;
+
+/** A subtask listed on its own, away from its parent, says whose it is (#448). */
+/** The Matrix folds every task's subtasks until asked, on this page only: Todoist's own fold flag is left alone (#448). */
+const LocalFold = createContext(false);
+export const LocalFoldProvider = LocalFold.Provider;
+const ParentChip = createContext(false);
+
+export const ParentChipProvider = ParentChip.Provider;
 
 interface TaskRowProps {
   item: Item;
@@ -171,6 +180,7 @@ function TaskRowView({
   const setSelectionAnchor = useStore((s) => s.setSelectionAnchor);
   const selectRange = useStore((s) => s.selectRange);
   const showSubtasks = useContext(ShowSubtasks) && !item.projection;
+  const showParentChip = useContext(ParentChip) && depth === 0;
   const fields = useStore((s) => s.prefs.taskFields);
   const detailOrder = useStore((s) => s.prefs.detailOrder);
 
@@ -192,8 +202,11 @@ function TaskRowView({
   const foldTimer = useRef<{ timer: ReturnType<typeof setTimeout>; send: () => void } | null>(null);
   const storedFoldRef = useRef(storedFold);
   storedFoldRef.current = storedFold;
-  const expanded = !(wantedFold ?? storedFold);
+  const localFold = useContext(LocalFold);
+  const [localFolded, setLocalFolded] = useState(true);
+  const expanded = localFold ? !localFolded : !(wantedFold ?? storedFold);
   const toggleFold = () => {
+    if (localFold) { setLocalFolded((folded) => !folded); return; }
     const next = expanded;
     setWantedFold(next);
     if (foldTimer.current) clearTimeout(foldTimer.current.timer);
@@ -293,6 +306,7 @@ function TaskRowView({
 
   const lateDays = late ? overdueBy(item) : 0;
   const lateness = lateDays >= 2 ? lateLabel(lateDays, t) : null;
+  const deadlineLate = deadline ? Math.max(0, differenceInCalendarDays(new Date(), deadline)) : 0;
 
   /* Each chip under the title, keyed so the row can draw them in any order. */
   const chips: Record<DetailChip, React.ReactNode> = {
@@ -338,7 +352,10 @@ function TaskRowView({
     deadline: deadline && (
       <span className="deadline" key="deadline">
         <Icon name="deadline" />
-        {formatRelativeDay(deadline, locale)}
+        {/* Past, a deadline reads like a late date: "Yesterday", then "3d late" (#451). */}
+        {deadlineLate >= 2
+          ? <span title={formatRelativeDay(deadline, locale)}>{lateLabel(deadlineLate, t)}</span>
+          : formatRelativeDay(deadline, locale)}
       </span>
     ),
     project: projectVisible && project && (
@@ -524,7 +541,7 @@ function TaskRowView({
             />
           )}
 
-          {table && parent && (
+          {(table || showParentChip) && parent && (
             /* Todoist marks a subtask in its table; here the mark also says whose it is, and opens it. */
             <button type="button" className="parentchip" title={t('detail.subtaskOf') + ' ' + parent.content}
               onClick={(e) => { e.stopPropagation(); onOpen(parent.id); }}

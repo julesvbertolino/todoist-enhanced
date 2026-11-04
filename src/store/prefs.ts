@@ -42,6 +42,7 @@ export interface SyncedView {
   showSubtasks: boolean;
   showCompleted: boolean;
   calendar?: ViewPrefs['calendar'];
+  matrix?: ViewPrefs['matrix'];
   /**
    * Only on a saved view of a project (#333): its filters are what it is for,
    * so they go with it. The project's own first view keeps them on the device.
@@ -74,6 +75,7 @@ export function syncedPreferences(prefs: Preferences): SyncedPreferences {
     .map(([key, view]): [string, SyncedView] => [key, {
       mode: view.mode,
       ...(view.calendar ? { calendar: view.calendar } : {}),
+      ...(view.matrix ? { matrix: view.matrix } : {}),
       group: view.group,
       sort: view.sort,
       showSubtasks: view.filters.showSubtasks,
@@ -144,6 +146,7 @@ export function mergeSynced(
       ...mine,
       mode: shared.mode ?? mine.mode,
       calendar: shared.calendar ?? mine.calendar,
+      matrix: shared.matrix ?? mine.matrix,
       group: shared.group ?? mine.group,
       sort: shared.sort ?? mine.sort,
       filters: {
@@ -159,10 +162,13 @@ export function mergeSynced(
 
 /** The views that make sense as a landing page: no view that needs an id. */
 export const HOME_VIEWS = [
-  'week', 'today', 'inbox', 'upcoming', 'someday', 'dashboard', 'insights', 'labels',
+  'week', 'today', 'inbox', 'upcoming', 'someday', 'matrix', 'dashboard', 'insights', 'labels',
 ] as const satisfies readonly ViewId[];
 
 export type HomeView = (typeof HOME_VIEWS)[number];
+
+/** Where the app opens when the chosen homepage is a view that is switched off. */
+export const FALLBACK_HOME: HomeView = 'week';
 
 /**
  * How much room a list gives each task.

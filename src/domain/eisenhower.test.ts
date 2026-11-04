@@ -64,3 +64,71 @@ describe('matrix visible date horizon', () => {
     } finally { vi.useRealTimers(); }
   });
 });
+
+describe('matrixRoots (#448)', () => {
+  const settings = {
+    horizon: 'all' as const, includeSomeday: true, workspace: null, startDay: 1,
+    urgentRules: ['overdue', 'today'] as ('overdue' | 'today')[], importantPriorities: [1, 2] as (1 | 2)[],
+    weekLabel: 'week', subtasks: true,
+  };
+  const ids = (list: { id: string }[]) => list.map((t) => t.id).sort();
+  const today = due('2026-09-24');
+  const run = (tasks: ReturnType<typeof item>[], over = {}) =>
+    import('./eisenhower').then(({ matrixRoots }) => matrixRoots(tasks, {}, { ...settings, ...over }));
+
+  it('lists a subtask due today on its own when its parent is somewhere else', async () => {
+    const tasks = [
+      item({ id: 'parent', priority: p(4) }),
+      item({ id: 'a', parent_id: 'parent', due: today, priority: p(1) }),
+      item({ id: 'b', parent_id: 'parent', due: today }),
+    ];
+    const { cards, promoted } = await run(tasks);
+    expect(ids(cards)).toEqual(['a', 'b', 'parent']);
+    expect(ids([...promoted].map((id) => ({ id })))).toEqual(['a', 'b']);
+  });
+
+  it('lists a subtask on its own even in its parent\'s quadrant', async () => {
+    const tasks = [item({ id: 'parent', due: today, priority: p(3) }), item({ id: 'a', parent_id: 'parent', due: today, priority: p(3) })];
+    const { cards, promoted } = await run(tasks);
+    expect(ids(cards)).toEqual(['a', 'parent']);
+    expect(ids([...promoted].map((id) => ({ id })))).toEqual(['a']);
+  });
+
+  it('never lifts a subtask with neither a date nor a priority', async () => {
+    const tasks = [item({ id: 'parent', due: today, priority: p(1) }), item({ id: 'a', parent_id: 'parent' })];
+    expect(ids((await run(tasks)).cards)).toEqual(['parent']);
+  });
+
+  it('lists the subtask when its parent is outside the chosen horizon', async () => {
+    const tasks = [item({ id: 'parent', due: due('2026-12-01') }), item({ id: 'a', parent_id: 'parent', due: today })];
+    expect(ids((await run(tasks, { horizon: 'today' })).cards)).toEqual(['a']);
+  });
+
+  it('shows top-level tasks only with "Show subtasks" off', async () => {
+    const tasks = [item({ id: 'parent' }), item({ id: 'a', parent_id: 'parent', due: today, priority: p(1) })];
+    const { cards, promoted } = await run(tasks, { subtasks: false });
+    expect(ids(cards)).toEqual(['parent']);
+    expect(promoted.size).toBe(0);
+  });
+
+  it('follows a subtask of a subtask by the same rule', async () => {
+    const tasks = [
+      item({ id: 'parent' }),
+      item({ id: 'a', parent_id: 'parent', due: today, priority: p(1) }),
+      item({ id: 'b', parent_id: 'a', due: today, priority: p(1) }),
+    ];
+    expect(ids((await run(tasks)).cards)).toEqual(['a', 'b', 'parent']);
+  });
+});
+
+describe('matrixRulesFor', () => {
+  it('follows the Matrix page until a page changes a setting, and only that one', async () => {
+    const { matrixRulesFor } = await import('./eisenhower');
+    const { defaultPreferences } = await import('@/store/prefs');
+    const prefs = { ...defaultPreferences('en'), eisenhowerUrgent: ['overdue'] as ('overdue')[], eisenhowerImportant: [1] as 1[] };
+    expect(matrixRulesFor(prefs).urgent).toEqual(['overdue']);
+    const own = matrixRulesFor(prefs, { important: [1, 2] });
+    expect(own.important).toEqual([1, 2]);
+    expect(own.urgent).toEqual(['overdue']);
+  });
+});

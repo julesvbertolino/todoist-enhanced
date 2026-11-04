@@ -1,5 +1,6 @@
 import { useDataSnapshot } from '@/hooks/useDataSnapshot';
-import { defaultViewPrefs } from '@/domain/types';
+import { defaultViewPrefs, type SortKey } from '@/domain/types';
+import { SORT_ICON } from '@/components/DisplayMenu';
 import { viewPrefs } from '@/store/prefs';
 import { AssigneeFilter } from '@/components/AssigneeFilter';
 import { useEffect, useRef, useState } from 'react';
@@ -9,17 +10,16 @@ import { useStore } from '@/store/store';
 import { PERSONAL_WORKSPACE } from '@/store/selectors';
 import { Select } from './Select';
 import { WorkspaceFilter } from './WorkspaceFilter';
-import {
-  MATRIX_HORIZONS,
-  EISENHOWER_PRIORITIES,
-  EISENHOWER_URGENCY_RULES,
-  type EisenhowerPriority,
-  type EisenhowerUrgencyRule,
-  type MatrixLayout,
-  type MatrixHorizon,
-} from '@/store/prefs';
+import { MATRIX_HORIZONS, type MatrixHorizon } from '@/store/prefs';
 import type { TranslationKey } from '@/i18n';
 import { PanelSheet } from '@/components/SheetChrome';
+import { MatrixLayoutToggle, MatrixRules, useGlobalMatrix } from '@/components/MatrixRules';
+
+/** The sorts that mean something across every project: not manual order, which belongs to one list. */
+const MATRIX_SORTS: SortKey[] = [
+  'smart', 'priority', 'due', 'deadline', 'project', 'added-desc', 'added-asc',
+  'estimate-asc', 'estimate-desc', 'alphabetical',
+];
 
 /**
  * The matrix uses the same Display surface as every task view, while keeping
@@ -31,13 +31,16 @@ export function EisenhowerDisplayMenu() {
   const prefs = useStore((s) => s.prefs);
   const setPrefs = useStore((s) => s.setPrefs);
   const snapshot = useDataSnapshot();
+  const scope = useGlobalMatrix();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const workspaceSelection = viewPrefs(prefs, 'matrix').filters.workspaces;
   const workspaceChanged = workspaceSelection.length > 0 && ![PERSONAL_WORKSPACE, ...Object.keys(snapshot.workspaces)].every((id) => workspaceSelection.includes(id));
   /* Matrix or list is how the page is drawn, not a setting on what it
      shows: like list or board on the other pages, it does not count. */
-  const changed = Number(JSON.stringify(viewPrefs(prefs, 'matrix').filters.assignees) !== JSON.stringify(defaultViewPrefs('matrix').filters.assignees)) + Number(prefs.eisenhowerUrgent.join('|') !== 'overdue|today')
+  const view = viewPrefs(prefs, 'matrix');
+  const base = defaultViewPrefs('matrix');
+  const changed = Number(view.sort !== base.sort) + Number(view.filters.showSubtasks !== base.filters.showSubtasks) + Number(JSON.stringify(viewPrefs(prefs, 'matrix').filters.assignees) !== JSON.stringify(defaultViewPrefs('matrix').filters.assignees)) + Number(prefs.eisenhowerUrgent.join('|') !== 'overdue|today')
     + Number(prefs.eisenhowerImportant.join('|') !== '1|2')
     + Number(prefs.eisenhowerHorizon !== 'week')
     + Number(prefs.eisenhowerIncludeSomeday)
@@ -72,19 +75,6 @@ export function EisenhowerDisplayMenu() {
   });
   };
 
-  const toggleUrgent = (rule: EisenhowerUrgencyRule) => setPrefs({
-    eisenhowerUrgent: prefs.eisenhowerUrgent.includes(rule)
-      ? prefs.eisenhowerUrgent.filter((value) => value !== rule)
-      : EISENHOWER_URGENCY_RULES.filter((value) =>
-        value === rule || prefs.eisenhowerUrgent.includes(value)),
-  });
-  const toggleImportant = (priority: EisenhowerPriority) => setPrefs({
-    eisenhowerImportant: prefs.eisenhowerImportant.includes(priority)
-      ? prefs.eisenhowerImportant.filter((value) => value !== priority)
-      : EISENHOWER_PRIORITIES.filter((value) =>
-        value === priority || prefs.eisenhowerImportant.includes(value)),
-  });
-
   return (
     <div className="displaywrap" ref={ref}>
       <button
@@ -108,24 +98,29 @@ export function EisenhowerDisplayMenu() {
 
           <WorkspaceFilter viewKey="matrix" />
           <AssigneeFilter viewKey="matrix" />
-          <div className="segmented">
-            {(['list', 'matrix'] as MatrixLayout[]).map((layout) => (
-              <button
-                key={layout}
-                aria-pressed={prefs.eisenhowerLayout === layout}
-                onClick={() => setPrefs({ eisenhowerLayout: layout })}
-              >
-                <Icon name={layout === 'list' ? 'list' : 'dashboard'} size="sm" />
-                <small>{t(`matrix.layout.${layout}` as TranslationKey)}</small>
-              </button>
-            ))}
-          </div>
+          <MatrixLayoutToggle scope={scope} />
+
+          <hr />
+          <h5>{t('toolbar.sortBy')}</h5>
+          <Select ariaLabel={t('toolbar.sortBy')} value={view.sort}
+            options={MATRIX_SORTS.map((sort) => ({ value: sort, label: t(`sort.${sort}` as TranslationKey), icon: SORT_ICON[sort] }))}
+            onChange={(sort) => useStore.getState().setViewPrefs('matrix', { sort: sort as SortKey })} />
 
           <hr />
           <h5>{t('matrix.visible')}</h5>
           <Select ariaLabel={t('matrix.dateHorizon')} value={prefs.eisenhowerHorizon}
             options={MATRIX_HORIZONS.map(value => ({ value, label: t(`matrix.horizon.${value}` as TranslationKey), face: `${t('matrix.dateHorizon')}: ${t(`matrix.horizon.${value}` as TranslationKey)}` }))}
             onChange={value => setPrefs({ eisenhowerHorizon: value as MatrixHorizon })} />
+          <div className="panelrow">
+            <span>{t('filter.showSubtasks')}</span>
+            <button
+              className="switch"
+              role="switch"
+              aria-checked={view.filters.showSubtasks}
+              aria-label={t('filter.showSubtasks')}
+              onClick={() => useStore.getState().setViewPrefs('matrix', { filters: { ...view.filters, showSubtasks: !view.filters.showSubtasks } })}
+            />
+          </div>
           <div className="panelrow">
             <span>{t('matrix.includeSomeday')}</span>
             <button
@@ -138,35 +133,7 @@ export function EisenhowerDisplayMenu() {
           </div>
 
 
-          {/* Toggle pills, like the filters of every other Display panel (#23). */}
-          <h5>{t('matrix.urgent')}</h5>
-          <div className="chiprow">
-            {EISENHOWER_URGENCY_RULES.map((rule) => (
-              <button
-                key={rule}
-                className="chip"
-                aria-pressed={prefs.eisenhowerUrgent.includes(rule)}
-                onClick={() => toggleUrgent(rule)}
-              >
-                {rule === 'week' ? t('matrix.urgent.week', { label: prefs.weekLabel }) : t(`matrix.urgent.${rule}` as TranslationKey)}
-              </button>
-            ))}
-          </div>
-
-          <h5>{t('matrix.important')}</h5>
-          <div className="chiprow">
-            {EISENHOWER_PRIORITIES.map((priority) => (
-              <button
-                key={priority}
-                className="chip"
-                aria-pressed={prefs.eisenhowerImportant.includes(priority)}
-                onClick={() => toggleImportant(priority)}
-              >
-                <span className="flagdot" style={{ background: `var(--p${priority})` }} />
-                P{priority}
-              </button>
-            ))}
-          </div>
+          <MatrixRules scope={scope} />
         </PanelSheet>
       )}
     </div>
