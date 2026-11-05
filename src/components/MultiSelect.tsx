@@ -18,10 +18,16 @@ interface MultiSelectProps {
   popupClassName?: string;
   /** How many selected labels to spell out on the face. */
   maxSummaryLabels?: number;
+  /**
+   * A filter you build up by choosing (#394). With no restriction (null) the
+   * "any" option is the one selected and no box is ticked; choosing an entry
+   * restricts to it, and un-ticking the last one lifts the restriction.
+   */
+  include?: boolean;
 }
 
 /** A compact multi-selection with real keyboard-operable checkboxes. */
-export function MultiSelect({ label, value, options, onChange, allLabel, icon, variant = 'field', face, popupClassName, maxSummaryLabels = 2 }: MultiSelectProps) {
+export function MultiSelect({ label, value, options, onChange, allLabel, icon, variant = 'field', face, popupClassName, maxSummaryLabels = 2, include = false }: MultiSelectProps) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -49,7 +55,7 @@ export function MultiSelect({ label, value, options, onChange, allLabel, icon, v
   }, [open]);
   useDismissiblePopover(open, button, popup, () => setOpen(false));
   const labels = options.filter((option) => value?.includes(option.value)).map((option) => option.label);
-  const allSelected = value === null || (options.length > 0 && options.every((option) => value.includes(option.value)));
+  const allSelected = value === null || (include ? value.length === 0 : options.length > 0 && options.every((option) => value.includes(option.value)));
   const summary = allSelected ? (allLabel ?? t('assignee.everyone'))
     : labels.length === 0 ? t('assignee.nobody')
     : labels.length <= maxSummaryLabels ? labels.join(maxSummaryLabels > 2 ? ', ' : ' + ') : t('assignee.selected', { count: labels.length });
@@ -70,7 +76,13 @@ export function MultiSelect({ label, value, options, onChange, allLabel, icon, v
         {options.map((option) => <label key={option.value}>
           {option.visual && <span className="multiselect-avatar">{option.visual}</span>}
           <span className="multiselect-label">{option.label}</span>
-          <input type="checkbox" checked={value === null || value.includes(option.value)} onChange={() => {
+          <input type="checkbox" checked={include ? Boolean(value?.includes(option.value)) : value === null || value.includes(option.value)} onChange={() => {
+            if (include) {
+              const selected = value ?? [];
+              const next = selected.includes(option.value) ? selected.filter((id) => id !== option.value) : [...selected, option.value];
+              onChange(next.length === 0 ? null : next);
+              return;
+            }
             const selected = value ?? options.map((entry) => entry.value);
             const next = selected.includes(option.value) ? selected.filter((id) => id !== option.value) : [...selected, option.value];
             onChange(options.every((entry) => next.includes(entry.value)) ? null : next);

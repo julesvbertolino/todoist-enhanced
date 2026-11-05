@@ -13,7 +13,11 @@ import { useStore } from '@/store/store';
 import { completionTick } from '@/store/tick';
 import { viewPrefs } from '@/store/prefs';
 import { applyFilters, sortItems } from '@/store/selectors';
-import { calendarDue, calendarLanes, calendarMinutes, calendarPrefs, calendarRange, minuteOfDay, snapMinutes } from '@/domain/calendar';
+import { calendarDue, calendarLanes, calendarMinutes, calendarPrefs, calendarRange, minuteOfDay, readUndatedSource, snapMinutes } from '@/domain/calendar';
+import { Select, type SelectOption } from './Select';
+import { useFilterResult } from '@/hooks/useFilterResult';
+import { hasLabel } from '@/domain/views';
+import { byChildOrder } from '@/domain/orderKey';
 import { daysBetween, dueDate, hasTime, toApiDate, toApiDateTime } from '@/domain/dates';
 import { withEstimate, formatDuration } from '@/domain/estimates';
 import { colorValue } from '@/domain/colors';
@@ -42,7 +46,7 @@ interface CalendarSurfaceProps {
 
 export function CalendarSurface({ viewKey, items, onOpen, onAddTaskTo, childrenOf: pageChildrenOf }: CalendarSurfaceProps) {
   const { t, locale } = useT();
-  const { snapshot, childrenOf: allChildrenOf } = useData(viewKey);
+  const { snapshot, items: allItems, childrenOf: allChildrenOf } = useData(viewKey);
   const childrenOf = pageChildrenOf ?? allChildrenOf;
   const prefs = useStore((s) => s.prefs);
   const current = viewPrefs(prefs, viewKey);
@@ -164,7 +168,52 @@ export function CalendarSurface({ viewKey, items, onOpen, onAddTaskTo, childrenO
     const done = pool.filter((item) => item.checked && item.due && toApiDate(dueDate(item)!) >= toApiDate(range.first) && toApiDate(dueDate(item)!) <= toApiDate(range.last));
     return { items: [...visible, ...done], unsupported: options.futureOccurrences && projected.unsupported };
   }, [pool, options.futureOccurrences, range.first.getTime(), range.last.getTime()]); // eslint-disable-line react-hooks/exhaustive-deps
-  const undated = sortItems(pool.filter((item) => !item.due && !item.checked), current.sort, childrenOf, 'day', snapshot);
+  /* The No date panel's source (#429). A project, tag or filter that has since
+     gone falls back to the page itself, and says so. */
+  const wanted = readUndatedSource(options.undatedSource ?? 'view');
+  const sourceFilter = wanted.kind === 'filter' ? snapshot.filters?.[wanted.id] : undefined;
+  const sourceAnswer = useFilterResult(sourceFilter && !sourceFilter.is_deleted ? sourceFilter : undefined);
+  const sourceGone = (wanted.kind === 'project' && !(snapshot.projects[wanted.id] && !snapshot.projects[wanted.id].is_deleted && !snapshot.projects[wanted.id].is_archived))
+    || (wanted.kind === 'label' && !Object.values(snapshot.labels).some((label) => !label.is_deleted && label.name === wanted.id))
+    || (wanted.kind === 'filter' && !(sourceFilter && !sourceFilter.is_deleted));
+  const source = sourceGone || (wanted.kind === 'view' && viewKey === 'upcoming') ? (viewKey === 'upcoming' ? { kind: 'all' as const } : { kind: 'view' as const }) : wanted;
+  const sourceWaiting = source.kind === 'filter' && !sourceAnswer.error && sourceAnswer.parts === null;
+  const sourceFailed = source.kind === 'filter' ? sourceAnswer.error : null;
+  const undated = useMemo(() => {
+    if (source.kind === 'view') return sortItems(pool.filter((item) => !item.due && !item.checked), current.sort, childrenOf, 'day', snapshot);
+    let candidates = allItems.filter((item) => !item.due && !item.checked && !item.is_deleted && (current.filters.showSubtasks || !item.parent_id));
+    if (source.kind === 'project') {
+      const inside = new Set<string>([source.id]);
+      for (let grew = true; grew;) {
+        grew = false;
+        for (const project of Object.values(snapshot.projects)) {
+          if (project.parent_id && inside.has(project.parent_id) && !inside.has(project.id)) { inside.add(project.id); grew = true; }
+        }
+      }
+      candidates = candidates.filter((item) => inside.has(item.project_id));
+    } else if (source.kind === 'label') {
+      candidates = candidates.filter((item) => hasLabel(item, source.id));
+    } else if (source.kind === 'filter') {
+      const ids = new Set(sourceAnswer.parts?.flatMap((part) => part.ids) ?? []);
+      candidates = candidates.filter((item) => ids.has(item.id));
+    }
+    return sortItems(applyFilters(candidates, { ...current.filters, includeScheduled: true }, snapshot, childrenOf), current.sort, childrenOf, 'day', snapshot);
+  }, [source.kind, (source as { id?: string }).id, pool, allItems, current.filters, current.sort, childrenOf, snapshot, sourceAnswer.parts]); // eslint-disable-line react-hooks/exhaustive-deps
+  const sourceOptions = useMemo<SelectOption[]>(() => {
+    const projects = Object.values(snapshot.projects).filter((project) => !project.is_deleted && !project.is_archived && !project.is_folder)
+      .sort(byChildOrder);
+    return [
+      ...(viewKey === 'upcoming' ? [] : [{ value: 'view', label: t('calendar.sourceView'), icon: 'calendar' as const }]),
+      { value: 'all', label: t('calendar.sourceAll'), icon: 'inbox' as const },
+      ...projects.map((project) => ({ value: `project:${project.id}`, label: project.name, marker: project.color, searchHint: t('nav.projects') })),
+      ...Object.values(snapshot.labels).filter((label) => !label.is_deleted && !label.name.startsWith('est-') && !label.name.startsWith('step-'))
+        .sort((a, b) => a.item_order - b.item_order).map((label) => ({ value: `label:${label.name}`, label: label.name, icon: 'tag' as const })),
+      ...Object.values(snapshot.filters ?? {}).filter((filter) => !filter.is_deleted)
+        .map((filter) => ({ value: `filter:${filter.id}`, label: filter.name, icon: 'filter' as const })),
+    ];
+  }, [snapshot.projects, snapshot.labels, snapshot.filters, viewKey, t]);
+  const sourceValue = source.kind === 'view' || source.kind === 'all' ? source.kind : `${source.kind}:${source.id}`;
+  const chooseSource = (value: string) => useStore.getState().setViewPrefs(viewKey, { calendar: { ...options, undatedSource: value } });
   const visibleItems = useMemo(() => {
     if (!drag?.moved || !drag.placement) return forecast.items;
     const { day, minute, duration } = drag.placement;
@@ -429,8 +478,15 @@ export function CalendarSurface({ viewKey, items, onOpen, onAddTaskTo, childrenO
       </div>
       {sidebar && <aside id={`calendar-undated-${viewKey}`} className="calendar-undated" aria-label={t('calendar.undated')}>
         <header><h3>{t('calendar.undated')} <small>{undated.length}</small></h3><button className="iconbtn" ref={closeSide} aria-label={t('calendar.close')} onClick={() => { setSidebar(false); sideToggle.current?.focus(); }}><Icon name="close" size="sm" /></button></header>
+        <div className="calendar-source">
+          <Select ariaLabel={t('calendar.source')} value={sourceValue} options={sourceOptions} onChange={chooseSource} />
+        </div>
+        {sourceGone && <p className="calendar-source-note" role="status">{t('calendar.sourceGone')}</p>}
         <p className="calendar-drag-hint"><Icon name="drag" size="sm" />{t('calendar.dragHint')}</p>
-        <div className="calendar-undated-list">{undated.map((item) => card(item, false, undefined, true))}{undated.length === 0 && <p className="empty">{t('calendar.empty')}</p>}</div>
+        <div className="calendar-undated-list">{undated.map((item) => card(item, false, undefined, true))}
+          {sourceFailed && <p className="empty" role="alert">{t('calendar.sourceFailed')}</p>}
+          {sourceWaiting && <p className="empty">{t('calendar.sourceLoading')}</p>}
+          {!sourceFailed && !sourceWaiting && undated.length === 0 && <p className="empty">{t(source.kind === 'view' ? 'calendar.empty' : 'calendar.emptySource')}</p>}</div>
         <footer>{t('calendar.resizeHint')}</footer>
       </aside>}
     </div>

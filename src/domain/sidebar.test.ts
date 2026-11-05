@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  defaultSidebarNav, moveSidebarEntry, readSidebarNav, toggleSidebarEntry, visibleSidebarNav,
+  defaultSidebarNav, isUntouchedSidebarNav, moveSidebarEntry, startingSidebarNav, readSidebarNav, toggleSidebarEntry, visibleSidebarNav,
 } from './sidebar';
 
 const ids = (entries: { id: string }[]) => entries.map((e) => e.id);
@@ -85,5 +85,16 @@ describe('moveSidebarEntry', () => {
   it('does nothing for an entry that is not in the block', () => {
     const nav = defaultSidebarNav();
     expect(moveSidebarEntry(nav, 'main', 'labels', 0)).toBe(nav);
+  });
+});
+
+describe('the setup starting point (#413)', () => {
+  it('switches on only Inbox and My week', () => {
+    const on = [...startingSidebarNav().main, ...startingSidebarNav().other].filter((entry) => entry.on).map((entry) => entry.id);
+    expect(on).toEqual(['inbox', 'week']);
+  });
+  it('is recognised as untouched only before anyone arranged the navigation', () => {
+    expect(isUntouchedSidebarNav(defaultSidebarNav())).toBe(true);
+    expect(isUntouchedSidebarNav(startingSidebarNav())).toBe(false);
   });
 });

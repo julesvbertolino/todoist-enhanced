@@ -42,6 +42,24 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.32.0
+
+🆕 **Links to Todoist open in Enhanced.** A link to another task, project, tag or filter you have now opens right here, from a title, a description or a comment, instead of taking you to Todoist. In the description editor, ⌘-click (Ctrl-click on Windows) follows it. Links to anything else open as before.
+
+🎨 **Choose where the No date panel looks.** In the Calendar, the No date panel has a menu: this page, everywhere, one project, one tag or a saved filter. Plan from Upcoming with only the tasks of a project, then drag them into your week.
+
+🎨 **Tag filters start from Any tag.** In Display, no tag is ticked until you choose one, so picking a single tag no longer means unticking all the others. Choosing Any tag clears the selection.
+
+🎨 **Search finds projects and tags first.** Type a few letters and the project or tag you are after now comes before a task that matches just as well.
+
+🎨 **Setup starts with Inbox and My week.** In the first setup, the sidebar begins with only those two on. Add the others when you need them.
+
+🎨 **Your workspaces and photo in the sidebar.** Settings shows each workspace's picture beside its name when you order them, and My projects shows your own photo, in the sidebar and in that list.
+
+🐛 **Tags in a table follow your Todoist order.** The tag menu of a task in a table lists your tags in the order of your Todoist tag list.
+
+🐛 **Move sections on your phone.** Hold a section's grip and drag it to another place. Scrolling the page still scrolls.
+
 ## 2.31.0
 
 🆕 **Switch from Today to other days easily.** A small chevron beside the title of Today, and beside Today in This week, opens a date picker. Another day lists what is planned on it, you can add or drop tasks into it, and Today in the picker takes you back.

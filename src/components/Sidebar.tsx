@@ -641,8 +641,8 @@ export function Sidebar({
             <SideGroup
               key={key}
               title={workspace.name ?? t('nav.myProjects')}
-              logo={workspace.workspaceId ? snapshot.workspaces[workspace.workspaceId]?.logo_big ?? null : null}
-              workspaceId={workspace.workspaceId}
+              logo={workspace.workspaceId ? snapshot.workspaces[workspace.workspaceId]?.logo_big ?? null : snapshot.user?.avatar_big ?? null}
+              workspaceId={workspace.workspaceId ?? 'personal'}
               open={isGroupOpen(key)}
               onOpen={() => navigate('workspace', key)}
               onToggle={() => toggleGroup(key)}

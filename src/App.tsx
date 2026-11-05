@@ -12,6 +12,7 @@ import { BulkBar } from './components/BulkBar';
 import { DragProvider } from './components/dnd/DragProvider';
 import { Composer } from './components/overlays/Composer';
 import { TaskDetail } from './components/overlays/TaskDetail';
+import { useTodoistLinks } from './hooks/useTodoistLinks';
 import { Issues } from './components/overlays/Issues';
 import { Search } from './components/overlays/Search';
 import { Shortcuts } from './components/overlays/Shortcuts';
@@ -843,6 +844,8 @@ function AppShell({
   }, [route.view, route.id]);
 
   const openTask = useCallback((id: string) => setOpenTaskId(id), [setOpenTaskId]);
+  // A link to a Todoist item the app has opens here instead of in Todoist (#419).
+  useTodoistLinks(openTask, useCallback(() => setOpenTaskId(null), [setOpenTaskId]));
   const addTask = () => {
     setPlacement(placementForPage(route, snapshot.user?.inbox_project_id));
     setComposerOpen(true);

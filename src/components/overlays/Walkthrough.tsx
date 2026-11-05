@@ -8,6 +8,7 @@ import {
 } from '../Choosers';
 import { DetailsEditor } from '../DetailsEditor';
 import { SidebarNavEditor } from '../SidebarNavEditor';
+import { isUntouchedSidebarNav, startingSidebarNav } from '@/domain/sidebar';
 import { WorkspacePreview, type PreviewStage } from '../WorkspacePreview';
 import { useT } from '@/hooks/useT';
 import { usePhoneBehaviour } from '@/hooks/useTouchLayout';
@@ -77,6 +78,13 @@ export function Walkthrough({
 
   // Replaying it starts from the first screen, with what is chosen now.
   useEffect(() => { if (open) { setStep(0); previous.current = 0; setMotion('enter'); } }, [open]);
+
+  /* Only Inbox and My week start switched on (#413). Someone who already
+     arranged the navigation keeps their choices when replaying the setup. */
+  useEffect(() => {
+    if (open && isUntouchedSidebarNav(prefs.sidebarNav)) setPrefs({ sidebarNav: startingSidebarNav() });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const [leaving, setLeaving] = useState(false);
   /* A scene leaves quickly and the next one rises; two that share a picture

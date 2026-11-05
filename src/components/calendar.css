@@ -130,3 +130,8 @@
 .popover.rowmenu .task-menu-back{margin:0 0 5px;padding:6px 8px;min-height:30px}
 
 .calendar-card.is-picked{outline:2px solid var(--accent);outline-offset:-1px;background:color-mix(in srgb,var(--accent) 16%,var(--surface))}
+
+/* Where the No date panel takes its tasks from (#429). */
+.calendar-source{padding:10px 10px 0}
+.calendar-source .fselect,.calendar-source .fselect-face{width:100%}
+.calendar-source-note{margin:8px 10px 0;font-size:var(--fs-12, 12px);color:var(--muted)}

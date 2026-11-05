@@ -41,6 +41,13 @@ export const fr: Record<TranslationKey, string> = {
   "calendar.save": "Planifier",
   "calendar.cancel": "Annuler",
   "calendar.empty": "Aucune tâche sans date",
+  "calendar.source": "D’où viennent les tâches sans date",
+  "calendar.sourceView": "Cette page",
+  "calendar.sourceAll": "Partout",
+  "calendar.sourceGone": "Cette source n’existe plus : la page est affichée à la place.",
+  "calendar.sourceFailed": "Todoist n’a pas pu lire ce filtre, ses tâches ne sont donc pas listées.",
+  "calendar.sourceLoading": "Lecture du filtre…",
+  "calendar.emptySource": "Aucune tâche sans date ici",
   "calendar.failed": "La modification du calendrier n’a pas pu être enregistrée.",
 
   "upcoming.extend": "Afficher 15 jours de plus",

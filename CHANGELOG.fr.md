@@ -8,6 +8,24 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.32.0
+
+🆕 **Les liens Todoist s’ouvrent dans Enhanced.** Un lien vers une autre tâche, un projet, un tag ou un filtre que vous avez s’ouvre maintenant ici, depuis un titre, une description ou un commentaire, au lieu de vous envoyer dans Todoist. Dans l’éditeur de description, ⌘-clic (Ctrl-clic sous Windows) le suit. Les autres liens s’ouvrent comme avant.
+
+🎨 **Choisissez d’où viennent les tâches sans date.** Dans le Calendrier, le panneau Sans date a un menu : cette page, partout, un projet, un tag ou un filtre enregistré. Planifiez depuis Prochainement avec seulement les tâches d’un projet, puis glissez-les dans votre semaine.
+
+🎨 **Les filtres de tags partent de « Tous les tags ».** Dans Affichage, aucun tag n’est coché tant que vous n’en choisissez pas : pour n’en garder qu’un, plus besoin de décocher tous les autres. « Tous les tags » efface la sélection.
+
+🎨 **La recherche trouve d’abord projets et tags.** Tapez quelques lettres : le projet ou le tag que vous cherchez passe avant une tâche qui correspond aussi bien.
+
+🎨 **La configuration commence par Boîte de réception et Cette semaine.** À la première configuration, la barre latérale démarre avec ces deux entrées seulement. Ajoutez les autres quand vous en avez besoin.
+
+🎨 **Vos espaces et votre photo dans la barre latérale.** Les réglages montrent l’image de chaque espace à côté de son nom quand vous les classez, et Mes projets affiche votre photo, dans la barre latérale et dans cette liste.
+
+🐛 **Les tags d’un tableau suivent l’ordre de Todoist.** Le menu des tags d’une tâche dans un tableau les liste dans l’ordre de votre liste de tags Todoist.
+
+🐛 **Déplacez les sections sur téléphone.** Maintenez la poignée d’une section et glissez-la ailleurs. Faire défiler la page continue de la faire défiler.
+
 ## 2.31.0
 
 🆕 **Passez facilement d’Aujourd’hui aux autres jours.** Un petit chevron à côté du titre d’Aujourd’hui, et d’Aujourd’hui dans Cette semaine, ouvre un sélecteur de date. Un autre jour liste ce qui y est prévu, vous pouvez y ajouter ou y déposer des tâches, et Aujourd’hui dans le sélecteur vous ramène au jour même.

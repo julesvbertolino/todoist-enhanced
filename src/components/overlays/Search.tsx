@@ -174,7 +174,9 @@ export function Search({ open, onClose, onOpen, seed = '' }: SearchProps) {
       const score = rank(project.name);
       if (score < 0) continue;
       found.push({
-        score,
+        /* A project beats a task that matches just as well: reaching one is
+           what the palette is most often used for (#358). */
+        score: score - 0.5,
         hit: {
           key: `project-${project.id}`,
           marker: <span className="hash" style={markerStyle(project.color)}>#</span>,
@@ -189,7 +191,7 @@ export function Search({ open, onClose, onOpen, seed = '' }: SearchProps) {
       const score = rank(label.name);
       if (score < 0) continue;
       found.push({
-        score,
+        score: score - 0.5,
         hit: {
           key: `label-${label.id}`,
           icon: 'tag',
