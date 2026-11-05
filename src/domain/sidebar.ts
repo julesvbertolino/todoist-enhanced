@@ -36,8 +36,8 @@ export const defaultSidebarNav = (): SidebarNav => ({
   other: OTHER.map((id) => ({ id, on: true })),
 });
 
-/** What the setup starts from (#413): Inbox and My week on, the rest off until chosen. */
-export const STARTING_SIDEBAR_ON: readonly SidebarItemId[] = ['inbox', 'week'];
+/** What the setup starts from (#413): Inbox, Anytime this week, Anytime this month, Upcoming and Someday on, the rest off until chosen. */
+export const STARTING_SIDEBAR_ON: readonly SidebarItemId[] = ['inbox', 'week', 'month', 'upcoming', 'someday'];
 
 export const startingSidebarNav = (): SidebarNav => {
   const nav = defaultSidebarNav();

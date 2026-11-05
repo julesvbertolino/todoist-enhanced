@@ -89,9 +89,9 @@ describe('moveSidebarEntry', () => {
 });
 
 describe('the setup starting point (#413)', () => {
-  it('switches on only Inbox and My week', () => {
+  it('switches on Inbox, this week, this month, Upcoming and Someday', () => {
     const on = [...startingSidebarNav().main, ...startingSidebarNav().other].filter((entry) => entry.on).map((entry) => entry.id);
-    expect(on).toEqual(['inbox', 'week']);
+    expect(on).toEqual(['inbox', 'week', 'month', 'upcoming', 'someday']);
   });
   it('is recognised as untouched only before anyone arranged the navigation', () => {
     expect(isUntouchedSidebarNav(defaultSidebarNav())).toBe(true);

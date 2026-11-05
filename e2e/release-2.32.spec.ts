@@ -7,16 +7,18 @@ test('#394 the tag filter starts on Any tag and builds up a selection', async ({
   const panel = page.getByRole('dialog', { name: 'Display', exact: true });
   await panel.getByRole('button', { name: /^Tags: Any tag/ }).click();
   const list = page.getByRole('dialog', { name: 'Tags', exact: true });
-  await expect(list.locator('.multiselect-all')).toHaveAttribute('aria-pressed', 'true');
-  await expect(list.locator('input:checked')).toHaveCount(0);
-  await list.getByLabel('week').check();
-  await expect(list.locator('.multiselect-all')).toHaveAttribute('aria-pressed', 'false');
+  const any = list.getByLabel('Any tag');
+  await expect(any).toBeChecked();
   await expect(list.locator('input:checked')).toHaveCount(1);
-  await list.getByLabel('week').uncheck();
-  await expect(list.locator('.multiselect-all')).toHaveAttribute('aria-pressed', 'true');
   await list.getByLabel('week').check();
-  await list.locator('.multiselect-all').click();
-  await expect(list.locator('input:checked')).toHaveCount(0);
+  await expect(any).not.toBeChecked();
+  await expect(list.getByLabel('week')).toBeChecked();
+  await list.getByLabel('week').uncheck();
+  await expect(any).toBeChecked();
+  await list.getByLabel('week').check();
+  await any.check();
+  await expect(list.getByLabel('week')).not.toBeChecked();
+  await expect(any).toBeChecked();
 });
 
 test('#358 a project beats a task that matches as well', async ({ demo: page }) => {
@@ -27,23 +29,29 @@ test('#358 a project beats a task that matches as well', async ({ demo: page }) 
   await expect(first).toHaveAttribute('id', /^(project|label|go)-/);
 });
 
-test('#429 the No date panel can take its tasks from elsewhere', async ({ demo: page }) => {
-  await go(page, '#/upcoming');
+test('#429 the No date panel looks at this page or everywhere', async ({ demo: page }) => {
+  await go(page, '#/project/site');
   const active = page.locator('.screen.active');
   await active.getByRole('button', { name: /^Display/ }).click();
   await page.getByRole('dialog', { name: 'Display', exact: true }).getByRole('button', { name: 'Calendar', exact: true }).click();
   await active.getByRole('button', { name: /^Display/ }).click();
   await active.locator('.calendar').getByRole('button', { name: /^No date:/ }).click();
   const panel = active.locator('.calendar-undated');
-  await expect(panel.getByRole('button', { name: /Where undated tasks come from/ })).toContainText('Everywhere');
-  await expect(panel.locator('.calendar-undated-card').first()).toBeVisible();
-  const everywhere = await panel.locator('.calendar-undated-card').count();
-  await panel.getByRole('button', { name: /Where undated tasks come from/ }).click();
-  await page.getByRole('option', { name: 'week', exact: true }).click();
-  const tagged = await panel.locator('.calendar-undated-card').count();
-  expect(tagged).toBeGreaterThan(0);
-  expect(tagged).toBeLessThan(everywhere);
-  await expect(panel.locator('h3 small')).toHaveText(String(tagged));
+  const source = panel.getByRole('group', { name: 'Where undated tasks come from' });
+  await expect(source.getByRole('button', { name: 'This page' })).toHaveAttribute('aria-pressed', 'true');
+  const here = await panel.locator('.calendar-undated-card').count();
+  await source.getByRole('button', { name: 'Everywhere' }).click();
+  await expect(source.getByRole('button', { name: 'Everywhere' })).toHaveAttribute('aria-pressed', 'true');
+  await expect.poll(() => panel.locator('.calendar-undated-card').count()).toBeGreaterThan(here);
+  await expect(panel.locator('h3 small')).toHaveText(String(await panel.locator('.calendar-undated-card').count()));
+  // Upcoming only lists dated tasks, so its panel always looks everywhere.
+  await go(page, '#/upcoming');
+  await active.getByRole('button', { name: /^Display/ }).click();
+  await page.getByRole('dialog', { name: 'Display', exact: true }).getByRole('button', { name: 'Calendar', exact: true }).click();
+  await active.getByRole('button', { name: /^Display/ }).click();
+  await active.locator('.calendar').getByRole('button', { name: /^No date:/ }).click();
+  await expect(active.locator('.calendar-undated .calendar-source')).toHaveCount(0);
+  await expect(active.locator('.calendar-undated .calendar-undated-card').first()).toBeVisible();
 });
 
 test('#419 a link to a Todoist item Enhanced has opens it here, not in a new tab', async ({ demo: page }) => {
@@ -75,4 +83,42 @@ test('#419 a link to a Todoist item Enhanced has opens it here, not in a new tab
     detail.getByRole('link', { name: 'elsewhere' }).click(),
   ]);
   await tab.close();
+});
+
+test.describe('#360', () => {
+test.use({ viewport: { width: 600, height: 1800 } });
+test('in a narrow window a section is pulled by its heading, with no grip', async ({ demo: page }) => {
+  await go(page, '#/project/site');
+  const names = () => page.locator('.screen.active .gnamefield, .screen.active .gnamearea').evaluateAll((els) => els.map((e) => (e as HTMLTextAreaElement).value));
+  await expect(page.locator('.screen.active .sectiondrag:visible')).toHaveCount(0);
+  expect(await names()).toEqual(['To do', 'In progress', 'To review']);
+  const heads = page.locator('.screen.active .ghead:has(.sectiondrag)');
+  await expect(heads).toHaveCount(3);
+  await page.waitForTimeout(800);
+  await heads.nth(0).scrollIntoViewIfNeeded();
+  const first = (await heads.nth(0).boundingBox())!;
+  const last = (await heads.nth(2).boundingBox())!;
+  const x = first.x + 120;
+  await page.mouse.move(x, first.y + first.height / 2);
+  await page.mouse.down();
+  for (let step = 1; step <= 15; step++) await page.mouse.move(x, first.y + first.height / 2 + (last.y - 40 - first.y - first.height / 2) * step / 15);
+  await page.mouse.up();
+  await expect.poll(names).toEqual(['In progress', 'To do', 'To review']);
+});
+});
+
+test('#413 the setup starts with Inbox, this week, this month, Upcoming and Someday', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Explore with demo data' }).click();
+  const setup = page.locator('.setup');
+  await expect(setup).toBeVisible();
+  const list = setup.locator('.navedit-list');
+  for (let step = 0; step < 4 && !(await list.first().isVisible()); step++) {
+    await setup.getByRole('button', { name: /^Continue/ }).click();
+  }
+  await expect(list.first()).toBeVisible();
+  const on = await setup.locator('.navedit-row').evaluateAll((rows) => rows.filter((row) => (row.querySelector('input[type=checkbox]') as HTMLInputElement | null)?.checked).map((row) => row.textContent ?? ''));
+  expect(on.map((label) => ['Inbox', 'Anytime this week', 'Anytime this month', 'Upcoming', 'Someday'].find((name) => label.startsWith(name)) ?? label))
+    .toEqual(['Inbox', 'Anytime this week', 'Anytime this month', 'Upcoming', 'Someday']);
+  expect(on).toHaveLength(5);
 });

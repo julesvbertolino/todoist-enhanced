@@ -408,11 +408,10 @@ export interface CalendarPrefs {
   completed: boolean;
   coloration: 'priority' | 'project' | 'tag';
   /**
-   * Where the No date panel takes its tasks from (#429): `view` (the page the
-   * calendar belongs to), `all`, or `project:<id>`, `label:<name>`,
-   * `filter:<id>`. Kept per view, like the other calendar settings.
+   * Where the No date panel takes its tasks from (#429): the page the
+   * calendar belongs to (`view`) or `all`. Kept per view, like the rest.
    */
-  undatedSource?: string;
+  undatedSource?: 'view' | 'all';
 }
 
 export type GroupKey =

@@ -46,19 +46,19 @@ translation lives in CHANGELOG.fr.md.
 
 🆕 **Links to Todoist open in Enhanced.** A link to another task, project, tag or filter you have now opens right here, from a title, a description or a comment, instead of taking you to Todoist. In the description editor, ⌘-click (Ctrl-click on Windows) follows it. Links to anything else open as before.
 
-🎨 **Choose where the No date panel looks.** In the Calendar, the No date panel has a menu: this page, everywhere, one project, one tag or a saved filter. Plan from Upcoming with only the tasks of a project, then drag them into your week.
+🎨 **No date tasks from this page or everywhere.** In the Calendar, the No date panel can list the undated tasks of this page, or of all your projects. Pick a day for tasks from anywhere without leaving the page you plan from.
 
-🎨 **Tag filters start from Any tag.** In Display, no tag is ticked until you choose one, so picking a single tag no longer means unticking all the others. Choosing Any tag clears the selection.
+🎨 **Tag filters start from Any tag.** In Display, Any tag is ticked and no tag is, until you choose one. Picking a single tag no longer means unticking all the others, and ticking Any tag again clears your choice.
 
-🎨 **Search finds projects and tags first.** Type a few letters and the project or tag you are after now comes before a task that matches just as well.
+🎨 **Search finds projects and tags first.** Type a few letters and the project or tag you are after, with its own icon, now comes before a task that matches just as well. Sections are searched by default too.
 
-🎨 **Setup starts with Inbox and My week.** In the first setup, the sidebar begins with only those two on. Add the others when you need them.
+🎨 **A lighter sidebar to start with.** The first setup begins with Inbox, Anytime this week, Anytime this month, Upcoming and Someday. Switch on the rest when you need them.
 
 🎨 **Your workspaces and photo in the sidebar.** Settings shows each workspace's picture beside its name when you order them, and My projects shows your own photo, in the sidebar and in that list.
 
-🐛 **Tags in a table follow your Todoist order.** The tag menu of a task in a table lists your tags in the order of your Todoist tag list.
+🐛 **Tags in a table follow your Todoist order.** The tag menu of a task in a table lists your tags in the order of your Todoist tag list, in a smaller menu that fits the table.
 
-🐛 **Move sections on your phone.** Hold a section's grip and drag it to another place. Scrolling the page still scrolls.
+🐛 **Move sections on your phone.** Hold a section's heading with your finger, then drag it to another place. The grip gives way to the heading on a phone and in a narrow window.
 
 ## 2.31.0
 

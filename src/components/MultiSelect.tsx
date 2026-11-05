@@ -24,10 +24,12 @@ interface MultiSelectProps {
    * restricts to it, and un-ticking the last one lifts the restriction.
    */
   include?: boolean;
+  /** A smaller list, for a control inside a table cell (#430). */
+  compact?: boolean;
 }
 
 /** A compact multi-selection with real keyboard-operable checkboxes. */
-export function MultiSelect({ label, value, options, onChange, allLabel, icon, variant = 'field', face, popupClassName, maxSummaryLabels = 2, include = false }: MultiSelectProps) {
+export function MultiSelect({ label, value, options, onChange, allLabel, icon, variant = 'field', face, popupClassName, maxSummaryLabels = 2, include = false, compact = false }: MultiSelectProps) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -37,11 +39,11 @@ export function MultiSelect({ label, value, options, onChange, allLabel, icon, v
   useLayoutEffect(() => {
     if (!open || !button.current) return;
     const rect = button.current.getBoundingClientRect();
-    const width = Math.min(Math.max(rect.width, 240), window.innerWidth - 16);
+    const width = Math.min(Math.max(rect.width, compact ? 180 : 240), window.innerWidth - 16);
     const height = popup.current?.offsetHeight ?? 240;
     setPosition({ width, left: Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)),
       top: rect.bottom + 4 + height <= window.innerHeight - 8 ? rect.bottom + 4 : Math.max(8, rect.top - height - 4) });
-  }, [open, options.length]);
+  }, [open, options.length, compact]);
   useEffect(() => {
     if (!open) return;
     const dismiss = () => setOpen(false);
@@ -69,10 +71,17 @@ export function MultiSelect({ label, value, options, onChange, allLabel, icon, v
         aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen((previous) => !previous)}>
         {face ?? <>{icon && <Icon name={icon} size="sm" />}<span className="fselect-label">{label}</span><span className="fselect-value">{summary}</span><Icon name="caret" size="sm" /></>}
       </button>
-      {open && createPortal(<div ref={popup} className={`multiselect-options${popupClassName ? ` ${popupClassName}` : ''}`} role="dialog" aria-label={label}
+      {open && createPortal(<div ref={popup} className={`multiselect-options${compact ? ' compact' : ''}${popupClassName ? ` ${popupClassName}` : ''}`} role="dialog" aria-label={label}
         onMouseDown={(event) => event.stopPropagation()}
         style={{ position: 'fixed', zIndex: 1000, width: position?.width, left: position?.left ?? -9999, top: position?.top ?? -9999, maxWidth: 'calc(100vw - 16px)', maxHeight: 'min(240px, calc(100vh - 16px))' }}>
-        <button type="button" className="multiselect-all" aria-pressed={allSelected} onClick={() => onChange(null)}><Icon name="check" size="sm" />{allLabel ?? t('assignee.everyone')}</button>
+        {include
+          /* A filter you build by choosing: "Any tag" is a line like the others, ticked while nothing is chosen. */
+          ? <label className="multiselect-any">
+            <span className="multiselect-label">{allLabel ?? t('assignee.everyone')}</span>
+            <input type="checkbox" checked={allSelected} onChange={() => onChange(null)} />
+            <span className="multiselect-check" aria-hidden="true"><Icon name="check" size="sm" /></span>
+          </label>
+          : <button type="button" className="multiselect-all" aria-pressed={allSelected} onClick={() => onChange(null)}><Icon name="check" size="sm" />{allLabel ?? t('assignee.everyone')}</button>}
         {options.map((option) => <label key={option.value}>
           {option.visual && <span className="multiselect-avatar">{option.visual}</span>}
           <span className="multiselect-label">{option.label}</span>

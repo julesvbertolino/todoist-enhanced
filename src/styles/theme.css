@@ -1790,16 +1790,17 @@ button.subprog[aria-expanded="false"]{background:var(--subtle)}
 .sectionmenu .opt.danger:hover{background:var(--late-wash)}
 .sectionmenu .menuhint{margin:4px 12px 6px;font-size:var(--fs-12);color:var(--muted)}
 @media (hover:none),(max-width:720px){
-  .sectiondrag,.gcaret,.gmore{opacity:1}
-  .sectiondrag,.gcaret{position:static;margin-left:0}
-  .ghead{flex-wrap:nowrap}
+  .gcaret,.gmore{opacity:1}
+  .gcaret{position:static;margin-left:0}
+  /* No grip here: the whole heading is held and dragged (#360). */
+  .sectiondrag{display:none}
+  .ghead{flex-wrap:nowrap;-webkit-touch-callout:none}
+  /* Without this the browser takes a held finger for a scroll and the drag never starts. */
+  .gheadblock:has(.sectiondrag) .ghead{touch-action:none;-webkit-user-select:none;user-select:none}
+  .gheadblock:has(.sectiondrag) .ghead textarea,.gheadblock:has(.sectiondrag) .ghead input{-webkit-user-select:text;user-select:text}
 }
 .sectiondrag:active{cursor:grabbing}
-/* On a phone the grip is held, then dragged (#360). Without these the browser
-   takes the touch for a scroll, a text selection or iOS's callout and the drag
-   never starts. */
 .sectiondrag{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-@media (hover:none),(max-width:720px){.sectiondrag{width:32px;height:32px}}
 
 /* The preview of a section in flight. */
 .dragoverlay.section{font-weight:700}

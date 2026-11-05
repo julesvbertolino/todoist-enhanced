@@ -1335,6 +1335,12 @@ kbd{padding:2px 5px;border:1px solid var(--border-strong);border-radius:var(--r-
 .multiselect-all { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; margin-bottom: 5px; border: 0; border-radius: 8px; background: var(--surface); color: var(--text); text-align: left; }
 .multiselect-all[aria-pressed="true"] { background: var(--btn-soft); }
 .multiselect-all:hover { background: var(--hover); }
+/* In a table cell the list is as light as the cell: smaller type, tighter lines (#430). */
+.multiselect-options.compact { font-size: var(--fs-13, 13px); padding: 4px; }
+.multiselect-options.compact label { gap: 8px; padding: 4px 6px; }
+.multiselect-options.compact .multiselect-check { width: 16px; height: 16px; border-radius: 4px; }
+.multiselect-options.compact .multiselect-all { padding: 5px 8px; font-size: inherit; margin-bottom: 3px; }
+.multiselect-any { margin-bottom: 5px; padding-bottom: 7px !important; border-bottom: 1px solid var(--border); border-radius: 7px 7px 0 0 !important; }
 
 .row-assignee:not(.assigned) .fselect-face:is(:hover, .open) .person-avatar { color: var(--text); }
 .col .trow-end .row-assignee .fselect-face { width: 26px; height: 26px; min-height: 26px; border-radius: 8px; }

@@ -79,7 +79,7 @@ export function Walkthrough({
   // Replaying it starts from the first screen, with what is chosen now.
   useEffect(() => { if (open) { setStep(0); previous.current = 0; setMotion('enter'); } }, [open]);
 
-  /* Only Inbox and My week start switched on (#413). Someone who already
+  /* Only Inbox, Anytime this week and month, Upcoming and Someday start switched on (#413). Someone who already
      arranged the navigation keeps their choices when replaying the setup. */
   useEffect(() => {
     if (open && isUntouchedSidebarNav(prefs.sidebarNav)) setPrefs({ sidebarNav: startingSidebarNav() });

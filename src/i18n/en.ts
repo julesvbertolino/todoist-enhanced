@@ -42,9 +42,6 @@ export const en = {
   "calendar.source": "Where undated tasks come from",
   "calendar.sourceView": "This page",
   "calendar.sourceAll": "Everywhere",
-  "calendar.sourceGone": "That source is gone: showing this page instead.",
-  "calendar.sourceFailed": "Todoist could not read this filter, so its tasks are not listed.",
-  "calendar.sourceLoading": "Reading the filter…",
   "calendar.emptySource": "No undated tasks here",
   "calendar.failed": "The calendar change could not be saved.",
 

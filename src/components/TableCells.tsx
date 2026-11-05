@@ -56,7 +56,7 @@ export function TableCells({ item, columns, childrenOf, hideProject = false }: {
     else if (column === 'estimate') content = computed ? <span>{formatDuration(minutes ?? 0, locale)} *</span>
       : <DurationField compact minutes={minutes} placeholder={t('table.noDuration')}
         onCommit={async (value) => { await setEstimates([{ id: item.id, minutes: value }]); }} />;
-    else if (column === 'labels') content = <MultiSelect label={t('detail.labels')} allLabel={t('filter.anyTag')} value={item.labels.filter((label) => !label.startsWith('est-'))}
+    else if (column === 'labels') content = <MultiSelect compact label={t('detail.labels')} allLabel={t('filter.anyTag')} value={item.labels.filter((label) => !label.startsWith('est-'))}
       face={item.labels.some((label) => !label.startsWith('est-'))
         ? <span className="cell-tags">{(() => {
           const names = item.labels.filter((label) => !label.startsWith('est-'));
