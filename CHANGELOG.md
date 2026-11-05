@@ -42,9 +42,21 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.31.0
+
+🆕 **Switch from Today to other days easily.** A small chevron beside the title of Today, and beside Today in This week, opens a date picker. Another day lists what is planned on it, you can add or drop tasks into it, and Today in the picker takes you back.
+
+🎨 **Move several Calendar events at once.** ⌘-click (Ctrl-click on Windows) events to pick them, then drag one: they all change day together, each keeping its time, and all-day events stay all day. A single event still moves anywhere, time included. Esc lets go of the selection.
+
+🎨 **Deadlines can make a task urgent in the Eisenhower Matrix.** The urgent rules of the Matrix now read a task's deadline as well as its start date, so a task planned for later with a deadline tomorrow lands in the urgent quadrants. "No date, tagged @week" is now simply Anytime this week.
+
+🎨 **See when Next occurrence lands.** The start date of a repeating task now offers Next occurrence, and, like the row menu, it says on which day the next occurrence falls. Repeats by month and by year are read too.
+
+🐛 **Repeating tasks count in Insights and the Dashboard.** Each time you complete a repeating task, it shows in the charts, the streak, the focus score and "completed this week", as it does in Todoist. A project's total of completed tasks stays as it was.
+
 ## 2.30.0
 
-🆕 **See a project as a Matrix.** In Display, pick Matrix next to List, Board, Table and Calendar, on a project, a tag, a filter or the Inbox. Its tasks fall into the four quadrants of the Eisenhower Matrix, with the same urgent and important rules, set right in Display, and it works in a saved view too.
+🆕 **Matrix view in projects.** In Display, pick Matrix next to List, Board, Table and Calendar, on a project, a tag, a filter or the Inbox. Its tasks fall into the four quadrants of the Eisenhower Matrix, with the same urgent and important rules, set right in Display, and it works in a saved view too.
 
 🎨 **The Eisenhower Matrix can be your homepage.** In Settings, pick Eisenhower Matrix as your homepage and the app opens on it. If you turn the Matrix off, the app opens on This week instead.
 

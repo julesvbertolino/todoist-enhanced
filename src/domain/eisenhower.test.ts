@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { eisenhowerQuadrant, eisenhowerUrgencyRule } from './eisenhower';
+import { eisenhowerDeadlineRule, eisenhowerQuadrant, eisenhowerUrgencyRule, urgentByDeadline } from './eisenhower';
 import type { TodoistPriority } from './types';
 import { due, item } from '@/test/items';
 
@@ -130,5 +130,41 @@ describe('matrixRulesFor', () => {
     const own = matrixRulesFor(prefs, { important: [1, 2] });
     expect(own.important).toEqual([1, 2]);
     expect(own.urgent).toEqual(['overdue']);
+  });
+});
+
+describe('deadlines drive urgency (#329)', () => {
+  const dl = (date: string | null) => (date ? { date, lang: 'en', string: date } : null);
+  const week = due('2026-09-27');
+
+  it.each([
+    ['2026-09-24', 'today'],
+    ['2026-09-25', 'tomorrow'],
+    ['2026-09-26', 'after-tomorrow'],
+    ['2026-10-01', 'next-seven'],
+    ['2026-10-02', null],
+    ['2026-09-20', null],
+  ])('a deadline on %s is %s', (date, rule) => {
+    expect(eisenhowerDeadlineRule(item({ deadline: dl(date) }), now)).toBe(rule);
+  });
+
+  it('a task planned later with a close deadline is urgent only when a deadline rule is on', () => {
+    const task = item({ due: due('2026-10-20'), deadline: dl('2026-09-26'), priority: p(1) });
+    expect(eisenhowerQuadrant(task, now, ['overdue', 'today'])).toBe('not-urgent-important');
+    expect(eisenhowerQuadrant(task, now, ['overdue', 'today', 'after-tomorrow'])).toBe('urgent-important');
+    expect(urgentByDeadline(task, now, ['overdue', 'today', 'after-tomorrow'])).toBe(true);
+    expect(urgentByDeadline(task, now, ['overdue', 'today'])).toBe(false);
+  });
+
+  it('keeps the date rules as they were, and the earlier of date and deadline wins', () => {
+    const both = item({ due: due('2026-09-24'), deadline: dl('2026-09-30') });
+    expect(eisenhowerQuadrant(both, now)).toBe('urgent-not-important');
+    expect(urgentByDeadline(both, now, ['overdue', 'today', 'next-seven'])).toBe(false);
+    expect(eisenhowerQuadrant(item({ due: week }), now)).toBe('not-urgent-not-important');
+  });
+
+  it('counts a past deadline as overdue, and never makes a task with neither urgent', () => {
+    expect(eisenhowerQuadrant(item({ due: due('2026-10-20'), deadline: dl('2026-09-20') }), now)).toBe('urgent-not-important');
+    expect(eisenhowerQuadrant(item(), now, ['overdue', 'today', 'today', 'next-seven'])).toBe('not-urgent-not-important');
   });
 });

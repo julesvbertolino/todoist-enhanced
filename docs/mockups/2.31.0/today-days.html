@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>#345 · Today view: other days · five proposals</title>
+<style>
+:root{--bg:#f4f3f1;--surface:#fff;--text:#202020;--muted:#666;--border:#f0f0f0;--line:#e6e4e1;--hover:#f0efee;--accent:#d1453b;--accent-soft:#feefe5;--accent-dark:#b03830;--p1:#d1453b;--p2:#eb8909;--p3:#246fe0;--p4:#8a8a8a;--deadline:#7a5cb9;--late-bg:#fff3f0;--late:#b83640;--blue-bg:#f4f7fc;--blue:#246fe0;--green:#2a8a3e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 "SF Pro Text","SF Pro",-apple-system,system-ui,"Segoe UI",Inter,sans-serif;padding:28px 20px 60px}
+.wrap{max-width:1040px;margin:0 auto}
+h1{font-size:21px;margin:0 0 4px}
+.lead{color:var(--muted);margin:0 0 18px;max-width:760px}
+.settle{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:16px;font-size:13px}
+.settle b{font-weight:650}
+.seg{display:inline-flex;background:var(--hover);border-radius:9px;padding:2px}
+.seg button{border:0;background:transparent;padding:4px 11px;border-radius:7px;font:inherit;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--surface);color:var(--text);box-shadow:0 1px 3px #0000001a}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px;font:inherit;cursor:pointer;color:var(--text)}
+.tabs button[aria-selected=true]{background:var(--text);color:#fff;border-color:var(--text)}
+.note{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:0 0 14px;font-size:13px}
+.note ul{margin:6px 0 0;padding-left:18px;color:var(--muted)}
+.stage{display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap}
+.frame{background:var(--surface);border-radius:16px;box-shadow:0 8px 30px #0000000f;padding:26px 28px 22px;flex:1;min-width:360px;position:relative;overflow:hidden}
+.frame.phone{flex:none;width:390px;min-width:390px;padding:16px 14px;border:10px solid #202020;border-radius:36px;min-height:640px}
+.head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+h2.ptitle{font-size:26px;margin:0;font-weight:700;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:12.5px;margin:3px 0 14px}
+.sub b{color:var(--text);font-weight:650}
+.iconbtn{border:0;background:var(--hover);color:var(--text);width:30px;height:30px;border-radius:9px;cursor:pointer;font:inherit;font-size:16px;line-height:1}
+.iconbtn:hover{background:#e6e4e1}
+.btn{border:0;background:var(--hover);padding:5px 12px;border-radius:9px;font:inherit;font-size:12.5px;cursor:pointer;color:var(--text);font-weight:600}
+.btn:hover{background:#e6e4e1}
+.btn[hidden]{display:none}
+.group{border-radius:14px;padding:6px 14px 10px;margin:0 0 14px}
+.group.late{background:var(--late-bg)}.group.day{background:transparent;padding-left:0;padding-right:0}
+.gt{display:flex;align-items:center;gap:8px;font-weight:650;font-size:13.5px;padding:8px 0}
+.late .gt{color:var(--late)}
+.pill{font-weight:500;font-size:11px;background:var(--hover);border-radius:999px;padding:1px 8px;color:var(--muted)}
+.late .pill{background:#f9d9d5;color:var(--late)}
+.task{display:flex;gap:11px;padding:9px 0;align-items:flex-start;cursor:default}
+.task+.task{border-top:1px solid var(--border)}.late .task+.task{border-top-color:#fbe0dc}
+.box{flex:none;width:17px;height:17px;border-radius:5px;border:2px solid var(--p4);margin-top:2px;cursor:pointer;background:transparent;padding:0;position:relative}
+.box.p1{border-color:var(--p1)}.box.p2{border-color:var(--p2)}.box.p3{border-color:var(--p3)}
+.box.done{background:currentColor}.box.done::after{content:"✓";position:absolute;inset:-3px 0 0 1px;color:#fff;font-size:11px;font-weight:700;text-align:center}
+.done+.tx .ti{text-decoration:line-through;color:var(--muted)}
+.ti{font-size:14.5px}.de{font-size:12px;color:var(--muted)}
+.mt{display:flex;gap:10px;font-size:11.5px;color:var(--muted);margin-top:3px;flex-wrap:wrap}.mt .dl{color:var(--late)}.mt .pj{color:var(--deadline);font-weight:600}.mt .tm{color:var(--green)}
+.add{display:flex;gap:8px;align-items:center;color:var(--muted);padding:9px 0;cursor:pointer;font-size:13px;border:0;background:none;font:inherit;width:100%;text-align:left}
+.add:hover{color:var(--text)}
+.add-form{display:flex;gap:8px;padding:6px 0}.add-form input{flex:1;border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit}
+.empty{color:var(--muted);padding:18px 0;font-size:13px}
+.hint{position:absolute;right:16px;bottom:14px;background:#202020;color:#fff;border-radius:8px;padding:5px 10px;font-size:11.5px;opacity:0;transition:.2s;pointer-events:none}
+.hint.on{opacity:.92}
+kbd{font:600 11px ui-monospace,Menlo,monospace;background:var(--hover);border-radius:5px;padding:1px 6px;border:1px solid var(--line);color:var(--text)}
+.hint kbd{background:#444;border-color:#555;color:#fff}
+/* A */ .nav{display:inline-flex;gap:4px;margin-left:6px}
+/* C: day strip */ .strip{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:2px 0 14px}
+.strip button{border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:7px 2px 6px;font:inherit;cursor:pointer;text-align:center;color:var(--text)}
+.strip button small{display:block;color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:.03em}
+.strip button b{display:block;font-size:16px;font-weight:650}
+.strip button i{display:block;font-style:normal;font-size:10.5px;color:var(--muted);margin-top:1px}
+.strip button[aria-pressed=true]{background:var(--accent-soft);border-color:#f2c6b3;color:var(--accent-dark)}
+.strip button[aria-pressed=true] small,.strip button[aria-pressed=true] i{color:var(--accent-dark)}
+.strip button.today b{color:var(--accent)}
+/* D: popover calendar */ .titlebtn{border:0;background:none;font:inherit;padding:0;cursor:pointer;display:inline-flex;align-items:center;gap:8px;border-radius:10px;color:var(--text)}
+.titlebtn:hover h2{color:var(--accent-dark)}.titlebtn .chev{color:var(--muted);font-size:15px}
+.pop{position:absolute;left:28px;top:70px;z-index:5;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 40px #00000026;padding:12px;width:268px}
+.pop[hidden]{display:none}
+.pop .ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-weight:650}
+.pop .g{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.pop .g span{font-size:10.5px;color:var(--muted);padding:3px 0}
+.pop .g button{border:0;background:none;border-radius:50%;aspect-ratio:1;font:inherit;font-size:12.5px;cursor:pointer;color:var(--text);position:relative}
+.pop .g button:hover{background:var(--hover)}.pop .g button.sel{background:var(--accent);color:#fff}.pop .g button.now{font-weight:700;color:var(--accent)}.pop .g button.sel.now{color:#fff}
+.pop .g button i{position:absolute;left:50%;bottom:3px;width:3px;height:3px;border-radius:50%;background:var(--muted);transform:translateX(-50%)}
+.pop .shortcuts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+/* B: phone */ .swipearea{touch-action:pan-y;cursor:grab;transition:transform .22s ease;min-height:430px}
+.dots{display:flex;justify-content:center;gap:5px;margin:8px 0 0}.dots i{width:6px;height:6px;border-radius:50%;background:#ddd}.dots i.on{background:var(--accent)}
+.phone .ptitle{font-size:23px}.phone .frame-note{font-size:11px;color:var(--muted);text-align:center;margin-top:6px}
+.sidecol{flex:1;min-width:260px;font-size:13px;color:var(--muted)}
+.sidecol .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.sidecol b{color:var(--text)}
+@media(max-width:700px){.frame{min-width:0}.frame.phone{width:100%;min-width:0}}
+</style>
+<body><div class="wrap">
+<h1>#345 · Today view: move to other days — five proposals</h1>
+<p class="lead">Interactive mockups drawn with the app’s real colours, type and spacing. Today is <b>Wed 4 Nov</b>. Every proposal keeps the list layout; tick tasks, add one, change day, then tell me which one you want. The two switches below settle the open questions for all five.</p>
+
+<div class="settle" id="settle">
+  <span><b>“Behind schedule” on another day:</b></span>
+  <span class="seg" data-key="late"><button aria-pressed="false" data-v="hide">Hide it</button><button aria-pressed="true" data-v="keep">Keep it</button></span>
+  <span><b>Title on another day:</b></span>
+  <span class="seg" data-key="title"><button aria-pressed="true" data-v="date">Thu 5 Nov</button><button aria-pressed="false" data-v="rel">Tomorrow, then date</button></span>
+</div>
+
+<div class="tabs" role="tablist" id="tabs"></div>
+<div id="stage"></div>
+</div>
+
+<script>
+/* ---------- data: the demo's tasks, spread over the days around today (offset 0 = Wed 4 Nov) ---------- */
+const TODAY = new Date(2026, 10, 4);
+const LATE = [
+  {id:'l1',t:'Check the quote before sending',d:'Verify the quantities and the expiry date.',p:1,m:'40 min',dl:'4d late',pj:'Inbox'},
+  {id:'l2',t:'Prepare the kick-off meeting',d:'Before the call: walk through the plan, list the decisions needed.',p:2,m:'25 min',dl:'Yesterday',pj:'Inbox'},
+  {id:'l3',t:'Take out the recycling',d:'',p:2,m:'1 h',dl:'Today 14:00',pj:'Inbox'},
+  {id:'l4',t:'Back up the photos',d:'Copy to the external drive, then open one file to check.',p:3,m:'30 min',dl:'Today 09:30',pj:'Vermilion Books'},
+];
+const BY_DAY = {
+  '-1':[{id:'y1',t:'Send the weekly report',p:2,m:'20 min',pj:'Website'}],
+  0:[{id:'a1',t:'Choose the site typeface',d:'Compare two families on a real screen, not in the editor.',p:4,m:'3 min',pj:'Home'},{id:'a2',t:'Send this month’s invoice',p:3,m:'10 min',pj:'Inbox'}],
+  1:[{id:'b1',t:'Book the November train',p:3,m:'15 min',pj:'Personal'},{id:'b2',t:'Call the printer',d:'Ask about the A3 proofs.',p:2,m:'10 min',pj:'Website'},{id:'b3',t:'Water the plants',p:4,m:'5 min',pj:'Home'}],
+  2:[{id:'c1',t:'Clear the mailbox',p:4,m:'30 min',pj:'Inbox'},{id:'c2',t:'Prepare the kick-off meeting',p:1,m:'25 min',pj:'Website'}],
+  3:[{id:'d1',t:'Prepare the demo',d:'Check the data, then run it twice.',p:2,m:'1 h',pj:'Website'}],
+  4:[],
+  5:[{id:'f1',t:'Plan the week',p:3,m:'30 min',pj:'Personal'},{id:'f2',t:'Pay the insurance',p:1,m:'5 min',pj:'Inbox'}],
+  6:[{id:'g1',t:'Review the copy',p:3,m:'45 min',pj:'Website'}],
+  7:[{id:'h1',t:'Renew the passport appointment',p:2,m:'10 min',pj:'Personal'}],
+};
+const done = new Set(); const added = {};
+const set = {late:'keep',title:'date'};
+let day = 0, tab = 'A';
+
+const fmt = (o, opts) => new Intl.DateTimeFormat('en-GB', opts).format(new Date(TODAY.getTime() + o * 86400000));
+const dateLabel = o => fmt(o, {weekday:'short', day:'numeric', month:'short'}).replace(',', '');
+const titleOf = o => o === 0 ? 'Today' : (set.title === 'rel' && o === 1) ? 'Tomorrow' : (set.title === 'rel' && o === -1) ? 'Yesterday' : dateLabel(o);
+const tasksOf = o => [...(BY_DAY[o] || []), ...(added[o] || [])];
+const mins = list => list.reduce((s, x) => s + (parseInt(x.m) * (/h/.test(x.m) ? 60 : 1) || 0), 0);
+const dur = m => m >= 60 ? `${Math.floor(m/60)} h ${m%60 ? (m%60) + '' : ''}`.trim() : `${m} min`;
+const showLate = () => day === 0 || set.late === 'keep';
+
+const taskHTML = x => `<div class="task"><button class="box p${x.p}${done.has(x.id) ? ' done' : ''}" style="color:var(--p${x.p})" data-tick="${x.id}" aria-label="Complete ${x.t}"></button><div class="tx"><div class="ti">${x.t}</div>${x.d ? `<div class="de">${x.d}</div>` : ''}<div class="mt"><span>◷ ${x.m}</span>${x.dl ? `<span class="dl">${x.dl}</span>` : ''}${x.pj ? `<span class="pj"># ${x.pj}</span>` : ''}</div></div></div>`;
+function listHTML(o) {
+  const own = tasksOf(o), late = showLate() ? LATE : [];
+  const open = [...late, ...own].filter(x => !done.has(x.id));
+  let h = '';
+  if (late.length) h += `<div class="group late"><div class="gt">Behind schedule <span class="pill">${late.length} tasks · ${dur(mins(late))}</span></div>${late.map(taskHTML).join('')}</div>`;
+  h += `<div class="group day"><div class="gt">${o === 0 ? 'Today' : dateLabel(o)} <span class="pill">${own.length} ${own.length === 1 ? 'task' : 'tasks'} · ${dur(mins(own))}</span></div>${own.length ? own.map(taskHTML).join('') : '<div class="empty">Nothing planned for this day.</div>'}<div data-addslot><button class="add" data-add>＋ Add task <small style="margin-left:auto;color:var(--muted)">on ${o === 0 ? 'today' : dateLabel(o)}</small></button></div></div>`;
+  return {html: h, n: late.length + own.length, m: mins([...late, ...own])};
+}
+const subHTML = o => { const {n, m} = listHTML(o); return `<b>${n}</b> tasks · <b>${dur(m)}</b> estimated${o !== 0 ? ` · <a href="#" data-today style="color:var(--accent-dark);text-decoration:none;font-weight:600">back to today</a>` : ''}`; };
+
+/* ---------- the five proposals ---------- */
+const VARIANTS = {
+  A:{name:'A · Arrows by the title', note:'Two small arrows next to the title, and a “Today” button that only appears away from today.', points:['Cheapest to build, the same pattern as the 3-day and week Calendar.','Reads at a glance on desktop and in a side panel; on a phone the arrows are 30 px targets.','Nothing shows what is on the other days until you go there.'],
+    render:() => `<div class="head"><h2 class="ptitle">${titleOf(day)}</h2><span class="nav"><button class="iconbtn" data-step="-1" aria-label="Previous day">‹</button><button class="iconbtn" data-step="1" aria-label="Next day">›</button></span><button class="btn" data-today ${day === 0 ? 'hidden' : ''}>Today</button></div><div class="sub">${subHTML(day)}</div>${listHTML(day).html}`},
+  B:{name:'B · Swipe on phone, arrows on desktop', note:'Drag the list sideways on the phone (with the mouse here). The same arrows appear on wide screens.', points:['The most natural gesture on a phone; the dots show your place.','Risk: row swipe actions already use horizontal drags. Rule: a drag that starts on the row’s checkbox or action zone keeps its job; a drag on the title area changes day.','Not discoverable alone, so the arrows stay on desktop and a first-use hint is shown once.'],
+    phone:true,
+    render:() => `<div class="head"><h2 class="ptitle">${titleOf(day)}</h2>${day !== 0 ? '<button class="btn" data-today style="margin-left:auto">Today</button>' : ''}</div><div class="sub">${subHTML(day)}</div><div class="swipearea" id="swipe">${listHTML(day).html}</div><div class="dots">${[-1,0,1,2,3,4,5].map(o => `<i class="${o === day ? 'on' : ''}"></i>`).join('')}</div><div class="frame-note">← swipe the list → · desktop shows ‹ › arrows</div>`},
+  C:{name:'C · A day strip above the list', note:'A strip of the next 7 days with their counts. Click a day to look at it.', points:['Shows the load of the week before you pick a day, useful for planning tomorrow.','Takes a line of height and overlaps My week; on a phone it scrolls sideways.','The strip makes “Today” a place among others rather than the home view.'],
+    render:() => `<div class="head"><h2 class="ptitle">${titleOf(day)}</h2></div><div class="sub">${subHTML(day)}</div><div class="strip">${[0,1,2,3,4,5,6].map(o => `<button class="${o === 0 ? 'today' : ''}" aria-pressed="${o === day}" data-go="${o}"><small>${fmt(o, {weekday:'short'})}</small><b>${fmt(o, {day:'numeric'})}</b><i>${(() => { const n = tasksOf(o).length + (o === 0 ? LATE.length : 0); return n + (n === 1 ? ' task' : ' tasks'); })()}</i></button>`).join('')}</div>${listHTML(day).html}`},
+  D:{name:'D · A date picker on the title', note:'Click the title: a small calendar jumps to any day, with a dot where tasks exist.', points:['Reaches any date, across a month or a year, in two clicks.','Slower for the common “just tomorrow” case, so it has Today / Tomorrow shortcuts.','Hides the feature behind a click, but needs no extra chrome on the page.'],
+    render:() => `<div class="head"><button class="titlebtn" data-pop><h2 class="ptitle">${titleOf(day)}</h2><span class="chev">▾</span></button></div><div class="sub">${subHTML(day)}</div>${listHTML(day).html}<div class="pop" id="pop" hidden></div>`},
+  E:{name:'E · Keyboard: [ and ]', note:'Press [ and ] (or ← →) to change day. A hint says so, once.', points:['Zero chrome and the fastest for people who already use the keyboard.','Completely invisible without a hint: pair it with A or C rather than ship it alone.','On a phone there is no keyboard, so it only helps desktop.'],
+    render:() => `<div class="head"><h2 class="ptitle">${titleOf(day)}</h2><span class="pill" style="margin-left:4px"><kbd>[</kbd> <kbd>]</kbd> change day</span></div><div class="sub">${subHTML(day)}</div>${listHTML(day).html}<div class="hint" id="hint"></div>`},
+};
+
+/* ---------- render ---------- */
+const stage = document.getElementById('stage'), tabs = document.getElementById('tabs');
+tabs.innerHTML = Object.entries(VARIANTS).map(([k, v]) => `<button role="tab" data-tab="${k}" aria-selected="${k === tab}">${v.name}</button>`).join('');
+function draw() {
+  const v = VARIANTS[tab];
+  tabs.querySelectorAll('button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === tab));
+  stage.innerHTML = `<div class="note"><b>${v.name}.</b> ${v.note}<ul>${v.points.map(p => `<li>${p}</li>`).join('')}</ul></div><div class="stage"><div class="frame${v.phone ? ' phone' : ''}" id="frame">${v.render()}</div>${v.phone ? '<div class="sidecol"><div class="card"><b>On a wide screen</b><br>The same ‹ › arrows as A sit by the title; the swipe is a phone-only addition.</div><div class="card"><b>The day you see</b><br>Add task puts the task on the shown day. Ticking works as on Today.</div></div>' : ''}</div>`;
+  wireSwipe();
+}
+const go = o => { day = Math.max(-1, Math.min(7, o)); draw(); if (tab === 'E') flash(`${titleOf(day)}  ·  ${day === 0 ? '' : '[ ] to move'}`); };
+function flash(text) { const h = document.getElementById('hint'); if (!h) return; h.innerHTML = text + ' <kbd>[</kbd><kbd>]</kbd>'; h.classList.add('on'); setTimeout(() => h.classList.remove('on'), 1400); }
+function popHTML() {
+  const base = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+  const first = (base.getDay() + 6) % 7, days = new Date(TODAY.getFullYear(), TODAY.getMonth() + 1, 0).getDate();
+  let cells = ['M','T','W','T','F','S','S'].map(x => `<span>${x}</span>`).join('') + '<span></span>'.repeat(first);
+  for (let d = 1; d <= days; d += 1) { const o = d - TODAY.getDate(); cells += `<button class="${o === day ? 'sel ' : ''}${o === 0 ? 'now' : ''}" data-go="${o}">${d}${tasksOf(o).length ? '<i></i>' : ''}</button>`; }
+  return `<div class="ph"><button class="iconbtn" disabled>‹</button><span>November 2026</span><button class="iconbtn" disabled>›</button></div><div class="g">${cells}</div><div class="shortcuts"><button class="btn" data-go="0">Today</button><button class="btn" data-go="1">Tomorrow</button><button class="btn" data-go="7">Next week</button></div>`;
+}
+function wireSwipe() {
+  const el = document.getElementById('swipe'); if (!el) return;
+  let x0 = null;
+  el.onpointerdown = e => { if (e.target.closest('.box,button,input')) return; x0 = e.clientX; el.setPointerCapture(e.pointerId); el.style.transition = 'none'; };
+  el.onpointermove = e => { if (x0 === null) return; el.style.transform = `translateX(${(e.clientX - x0) * .6}px)`; };
+  el.onpointerup = e => { if (x0 === null) return; const dx = e.clientX - x0; x0 = null; el.style.transition = ''; if (Math.abs(dx) > 70) go(day + (dx < 0 ? 1 : -1)); else el.style.transform = ''; };
+}
+
+document.addEventListener('click', e => {
+  const t = e.target;
+  const b = t.closest('[data-tab]'); if (b) { tab = b.dataset.tab; draw(); return; }
+  const seg = t.closest('.seg button'); if (seg) { set[seg.parentElement.dataset.key] = seg.dataset.v; seg.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === seg)); draw(); return; }
+  if (t.closest('[data-today]')) { e.preventDefault(); go(0); return; }
+  const step = t.closest('[data-step]'); if (step) { go(day + Number(step.dataset.step)); return; }
+  const g = t.closest('[data-go]'); if (g) { go(Number(g.dataset.go)); return; }
+  if (t.closest('[data-pop]')) { const p = document.getElementById('pop'); p.innerHTML = popHTML(); p.hidden = !p.hidden; return; }
+  if (!t.closest('#pop')) { const p = document.getElementById('pop'); if (p) p.hidden = true; }
+  const tick = t.closest('[data-tick]'); if (tick) { const id = tick.dataset.tick; done.has(id) ? done.delete(id) : done.add(id); const keep = document.getElementById('swipe')?.scrollTop; draw(); return; }
+  if (t.closest('[data-add]')) { const slot = t.closest('[data-addslot]'); slot.innerHTML = `<form class="add-form"><input autofocus placeholder="Task name"><button class="btn">Add</button></form>`; slot.querySelector('input').focus(); return; }
+});
+document.addEventListener('submit', e => { e.preventDefault(); const v = e.target.querySelector('input').value.trim(); if (v) { (added[day] = added[day] || []).push({id: 'n' + Math.random(), t: v, p: 4, m: '15 min'}); } draw(); });
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input')) return;
+  if (tab === 'E' && (e.key === '[' || e.key === 'ArrowLeft')) go(day - 1);
+  if (tab === 'E' && (e.key === ']' || e.key === 'ArrowRight')) go(day + 1);
+  if (tab === 'B' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) go(day + (e.key === 'ArrowRight' ? 1 : -1));
+});
+draw();
+</script>
+</html>

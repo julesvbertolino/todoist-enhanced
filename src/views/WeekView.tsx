@@ -3,7 +3,9 @@ import { CalendarSurface } from '@/components/CalendarSurface';
 import { pageClass } from '@/domain/pageLayout';
 import { InsightsButton } from '@/components/InsightsButton';
 import { HireNote } from '@/components/HireNote';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { addDays, startOfDay } from 'date-fns';
+import { DayPicker, dayTitle } from '@/components/DayNav';
 import { PageHeader } from '@/components/PageHeader';
 import { SubtasksProvider } from '@/components/TaskRow';
 import { DisplayMenu } from '@/components/DisplayMenu';
@@ -24,7 +26,7 @@ import { summariseLoad, weeklyCapacity } from '@/domain/load';
 import { toApiDate, isToday } from '@/domain/dates';
 import { dueForDate } from '@/domain/recurrence';
 import { weekLabel } from '@/domain/types';
-import { placementFor, type TaskPlacement } from '@/domain/dnd';
+import { placementFor, type DropTarget, type TaskPlacement } from '@/domain/dnd';
 import type { GroupKey, Item } from '@/domain/types';
 
 /**
@@ -75,7 +77,7 @@ function addToGroupFor(group: GroupKey, key: string): TaskPlacement | undefined 
 function WeekBody({
   onOpen, onInsights, onUnestimated, onAddTaskTo, scope = 'all',
 }: WeekViewProps) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const timePill = useTimePill();
   const { snapshot, items, childrenOf } = useData(scope === 'today' ? 'today' : 'week');
   const prefs = useStore((s) => s.prefs);
@@ -86,21 +88,34 @@ function WeekBody({
      business following you to the rest of the week. */
   const viewKey = scope === 'today' ? 'today' : 'week';
   const current = viewPrefs(prefs, viewKey);
+  /* Today can be moved to the days around it (#345). Another day is a plain
+     list of what is planned that day: nothing is "behind schedule" on it. */
+  const [offset, setOffset] = useState(0);
+  useEffect(() => setOffset(0), [scope]);
+  const day = useMemo(() => (scope !== 'anytime' && offset !== 0 ? addDays(startOfDay(new Date()), offset) : null), [scope, offset]);
+  const here: DropTarget = day ? { kind: 'day', date: day } : { kind: 'today' };
+  const title = scope === 'today' ? dayTitle(day ? offset : 0, locale, t) : t('nav.week');
+  /* The chevron sits after the title of Today, and after the Today group of This week. */
+  const dayNav = scope !== 'anytime' && current.mode !== 'calendar' ? <DayPicker offset={offset} onChange={setOffset} /> : null;
 
   const pool = useMemo(() => {
     const roots = datedRoots(items, snapshot, current.group, { subtasks: current.filters.showSubtasks, layout: current.group === 'none', quick: prefs.showQuickGroup });
     const now = new Date();
     const inScope =
-      scope === 'today'
+      scope === 'today' && day
+        ? roots.filter((i) => bucketOf(i, day) === 'today')
+        : scope === 'today'
         ? roots.filter((i) => {
             const bucket = bucketOf(i, now);
             return bucket === 'overdue' || bucket === 'today';
           })
         : scope === 'anytime'
           ? anytimeItems(roots, now)
-          : weekItems(roots, now);
+          : day
+            ? [...roots.filter((i) => bucketOf(i, day) === 'today'), ...anytimeItems(roots, now)]
+            : weekItems(roots, now);
     return inScope;
-  }, [items, snapshot, scope, current.group, current.filters.showSubtasks, prefs.showQuickGroup]);
+  }, [items, snapshot, scope, day, current.group, current.filters.showSubtasks, prefs.showQuickGroup]);
   const scoped = useMemo(
     () => applyFilters(pool, { ...current.filters, includeScheduled: true }, snapshot, childrenOf)
       .filter((item) => scope !== 'all' || current.filters.includeScheduled || !isToday(item)),
@@ -108,14 +123,14 @@ function WeekBody({
   );
 
   const groups = useMemo(
-    () => groupWeek(scoped, new Date(), prefs.showQuickGroup),
-    [scoped, prefs.showQuickGroup],
+    () => groupWeek(scoped, day ?? new Date(), prefs.showQuickGroup),
+    [scoped, prefs.showQuickGroup, day],
   );
 
   /* Today is measured against today's hours, not the week's. A day page
      showing "12 % of capacity" would be describing a week it does not draw. */
   const capacity = scope === 'today'
-    ? prefs.dailyCapacity[new Date().getDay()]
+    ? prefs.dailyCapacity[(day ?? new Date()).getDay()]
     : weeklyCapacity(prefs.dailyCapacity, prefs.weeklyCapacityOverride);
   const load = useMemo(
     () => summariseLoad(scoped, childrenOf, capacity),
@@ -176,8 +191,8 @@ function WeekBody({
            not made quick by being dragged here. */
         ? [{ id: 'quick', title: t('group.quick'), items: groups.quick, accent: 'quick' as const }]
         : []),
-      { id: 'untimed', title: t('group.untimed'), items: groups.untimed,
-        dropTarget: { kind: 'today' as const } },
+      { id: 'untimed', title: day ? title : t('group.untimed'), items: groups.untimed,
+        dropTarget: here },
       { id: 'timed', title: t('group.timed'), items: groups.timed },
     ];
     const anytime = [
@@ -191,13 +206,13 @@ function WeekBody({
       .map((column) => ({
         ...column, items: sortItems(column.items, current.sort, childrenOf, 'day', snapshot, true, prefs.workspaceOrder),
         /* Each column a task can be added to has the line to do it, empty or full. */
-        onAddTask: column.id === 'quick' ? () => onAddTaskTo(placementFor({ kind: 'quick' }))
-          : column.id === 'untimed' || column.id === 'timed' ? () => onAddTaskTo(placementFor({ kind: 'today' }))
+        onAddTask: column.id === 'quick' ? (day ? undefined : () => onAddTaskTo(placementFor({ kind: 'quick' })))
+          : column.id === 'untimed' || column.id === 'timed' ? () => onAddTaskTo(placementFor(here))
             : column.id === 'anytime' ? () => onAddTaskTo(placementFor({ kind: 'anytime' }))
               : undefined,
       }));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- placementFor and onAddTaskTo are stable for a page.
-  }, [groups, prefs.showQuickGroup, current.sort, childrenOf, snapshot, t, scope]);
+  }, [groups, prefs.showQuickGroup, current.sort, childrenOf, snapshot, t, scope, day]);
 
   /* Whether one of the groups below is drawn with its own "Add task" line. */
   const hasAddLine = (scope !== 'anytime' && (
@@ -208,7 +223,7 @@ function WeekBody({
     <div className={pageClass(current)}>
       <PageHeader
         hireNote={current.mode === 'board'}
-        title={t(scope === 'today' ? 'nav.today' : 'nav.week')}
+        title={scope === 'today' && dayNav ? <>{title}{dayNav}</> : title}
         actions={
           <>
             <PomodoroButton />
@@ -228,7 +243,7 @@ function WeekBody({
       />
       {current.mode !== 'calendar' && <TimePanel
         pageItems={scoped}
-        pageLabel={t(scope === 'today' ? 'nav.today' : 'nav.week')}
+        pageLabel={title}
         onOpen={onOpen}
         onUnestimated={onUnestimated}
       />}
@@ -271,21 +286,22 @@ function WeekBody({
               reorderable={byHand}
               viewKey={viewKey}
               accent="quick"
-              onAddTask={() => onAddTaskTo(placementFor({ kind: 'quick' }))}
+              onAddTask={day ? undefined : () => onAddTaskTo(placementFor({ kind: 'quick' }))}
             />
           )}
 
           <TaskGroup
-            title={t('group.untimed')}
+            title={day ? dayTitle(offset, locale, t) : t('group.untimed')}
+            titleExtra={scope === 'all' ? dayNav : undefined}
             items={sortedGroup(groups.untimed)}
             lead={hireNoteOpen ? <HireNote /> : undefined}
-            keepWhenEmpty={hireNoteOpen}
+            keepWhenEmpty={hireNoteOpen || scope === 'all'}
             childrenOf={childrenOf}
             onOpen={onOpen}
             reorderable={byHand}
             viewKey={viewKey}
-            dropTarget={{ kind: 'today' }}
-            onAddTask={() => onAddTaskTo(placementFor({ kind: 'today' }))}
+            dropTarget={here}
+            onAddTask={() => onAddTaskTo(placementFor(here))}
           />
 
           <TaskGroup
@@ -293,7 +309,7 @@ function WeekBody({
             items={groups.timed}
             childrenOf={childrenOf}
             onOpen={onOpen}
-            onAddTask={() => onAddTaskTo(placementFor({ kind: 'today' }))}
+            onAddTask={() => onAddTaskTo(placementFor(here))}
           />
           </>
           )}
@@ -317,7 +333,7 @@ function WeekBody({
           {!hasAddLine && (
             <button
               className="addline sectionadd"
-              onClick={() => onAddTaskTo(placementFor({ kind: scope === 'today' ? 'today' : 'anytime' }))}
+              onClick={() => onAddTaskTo(placementFor(scope === 'today' ? here : { kind: 'anytime' }))}
             >
               <Icon name="plus" size="sm" />
               {t('nav.addTaskHere')}

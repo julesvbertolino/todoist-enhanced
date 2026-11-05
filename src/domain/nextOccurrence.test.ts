@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { nextOccurrence } from './nextOccurrence';
+import { nextOccurrence, nextOccurrenceLabel } from './nextOccurrence';
 import { item } from '@/test/items';
 
 // Wednesday 7 October 2026, mid-morning.
@@ -18,6 +18,20 @@ describe('where "skip to next occurrence" lands (#153)', () => {
     expect(day(nextOccurrence(recurring('every mon, wed, fri', '2026-10-07T18:00:00'), now))).toBe('2026-10-9');
     expect(day(nextOccurrence(recurring('every weekday', '2026-10-09'), now))).toBe('2026-10-12');
     expect(day(nextOccurrence(recurring('tous les lundis', '2026-10-12'), now))).toBe('2026-10-19');
+  });
+
+  it('reads a month or a year when the day is safe (#352)', () => {
+    expect(day(nextOccurrence(recurring('every month', '2026-10-15'), now))).toBe('2026-11-15');
+    expect(day(nextOccurrence(recurring('every 2 months', '2026-10-15'), now))).toBe('2026-12-15');
+    expect(day(nextOccurrence(recurring('every year', '2026-10-15'), now))).toBe('2027-10-15');
+    expect(nextOccurrence(recurring('every month', '2026-10-31'), now)).toBeNull();
+  });
+
+  it('names the date by weekday under a week, by short date after (#352)', () => {
+    expect(nextOccurrenceLabel(new Date(2026, 9, 8), 'en', now)).toBe('Thu');
+    expect(nextOccurrenceLabel(new Date(2026, 9, 13), 'en', now)).toBe('Tue');
+    expect(nextOccurrenceLabel(new Date(2026, 9, 14), 'en', now)).toBe('14 Oct');
+    expect(nextOccurrenceLabel(new Date(2026, 9, 14), 'fr', now)).toBe('14 oct.');
   });
 
   it('does not let a time of day change the date', () => {

@@ -37,12 +37,42 @@ export function eisenhowerQuadrant(
 ): EisenhowerQuadrant {
   const important = importantPriorities.includes(toDisplayPriority(item.priority));
   const rule = eisenhowerUrgencyRule(item, now, weekLabel);
-  const urgent = rule !== null && urgentRules.includes(rule);
+  const deadlineRule = eisenhowerDeadlineRule(item, now);
+  /* Urgent through its date or through its deadline: either is enough (#329). */
+  const urgent = (rule !== null && urgentRules.includes(rule))
+    || (deadlineRule !== null && urgentRules.includes(deadlineRule));
 
   if (urgent && important) return 'urgent-important';
   if (!urgent && important) return 'not-urgent-important';
   if (urgent) return 'urgent-not-important';
   return 'not-urgent-not-important';
+}
+
+/**
+ * The urgency bucket its deadline gives a task, apart from its date: a task
+ * planned "anytime this week" with a deadline on Sunday is not urgent by its
+ * date, and is by its deadline. A deadline already past is `overdue`, which
+ * `eisenhowerUrgencyRule` reads.
+ */
+export function eisenhowerDeadlineRule(item: Item, now = new Date()): EisenhowerUrgencyRule | null {
+  const deadline = deadlineDate(item);
+  if (!deadline) return null;
+  const days = differenceInCalendarDays(deadline, now);
+  if (days < 0) return null;
+  if (days === 0) return 'today';
+  if (days === 1) return 'tomorrow';
+  if (days === 2) return 'after-tomorrow';
+  return days <= 7 ? 'next-seven' : null;
+}
+
+/** True when the deadline is what makes a task urgent, so its card can say so. */
+export function urgentByDeadline(
+  item: Item, now: Date, urgentRules: EisenhowerUrgencyRule[], weekLabel = 'week',
+): boolean {
+  const deadline = eisenhowerDeadlineRule(item, now);
+  if (deadline === null || !urgentRules.includes(deadline)) return false;
+  const date = eisenhowerUrgencyRule(item, now, weekLabel);
+  return date === null || !urgentRules.includes(date);
 }
 
 /** The single, non-overlapping urgency bucket a task belongs to. */
