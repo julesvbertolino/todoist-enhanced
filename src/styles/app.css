@@ -1335,6 +1335,8 @@ kbd{padding:2px 5px;border:1px solid var(--border-strong);border-radius:var(--r-
 .multiselect-all { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; margin-bottom: 5px; border: 0; border-radius: 8px; background: var(--surface); color: var(--text); text-align: left; }
 .multiselect-all[aria-pressed="true"] { background: var(--btn-soft); }
 .multiselect-all:hover { background: var(--hover); }
+/* The list reads at the size of the field that opens it, not the page's body text. */
+.multiselect-options { font-size: var(--fs-14, 14px); }
 /* In a table cell the list is as light as the cell: smaller type, tighter lines (#430). */
 .multiselect-options.compact { font-size: var(--fs-13, 13px); padding: 4px; }
 .multiselect-options.compact label { gap: 8px; padding: 4px 6px; }

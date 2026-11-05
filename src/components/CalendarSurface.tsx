@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import { addDays, addMonths, differenceInCalendarDays, isSameDay } from 'date-fns';
 import { Icon } from './Icon';
+import { bucketOf } from '@/domain/views';
 import { CalendarDayPopover } from './CalendarDayPopover';
 import { TaskActions } from './TaskActions';
 import type { TaskPlacement } from '@/domain/dnd';
@@ -164,14 +165,21 @@ export function CalendarSurface({ viewKey, items, onOpen, onAddTaskTo, childrenO
     const done = pool.filter((item) => item.checked && item.due && toApiDate(dueDate(item)!) >= toApiDate(range.first) && toApiDate(dueDate(item)!) <= toApiDate(range.last));
     return { items: [...visible, ...done], unsupported: options.futureOccurrences && projected.unsupported };
   }, [pool, options.futureOccurrences, range.first.getTime(), range.last.getTime()]); // eslint-disable-line react-hooks/exhaustive-deps
-  /* The No date panel's source (#429): the page the calendar belongs to, or
-     everywhere. Upcoming lists dated tasks only, so it always looks everywhere. */
-  const everywhere = viewKey === 'upcoming' || options.undatedSource === 'all';
+  /* The No date panel's source (#429). A project, the Inbox, a tag or a filter
+     is a place of its own: its calendar is for its own tasks, and one dropped
+     in from elsewhere would leave it. Only the planning pages (this week, this
+     month) can look everywhere, and Upcoming always does. */
+  const chooses = viewKey === 'week' || viewKey === 'month';
+  const everywhere = viewKey === 'upcoming' || (chooses && options.undatedSource === 'all');
   const undated = useMemo(() => {
-    if (!everywhere) return sortItems(pool.filter((item) => !item.due && !item.checked), current.sort, childrenOf, 'day', snapshot);
+    if (!everywhere) {
+      /* This week's own undated tasks are the ones tagged for the week: any other undated task belongs to another page. */
+      const here = pool.filter((item) => !item.due && !item.checked && (viewKey !== 'week' || bucketOf(item) === 'anytime'));
+      return sortItems(here, current.sort, childrenOf, 'day', snapshot);
+    }
     const candidates = allItems.filter((item) => !item.due && !item.checked && !item.is_deleted && (current.filters.showSubtasks || !item.parent_id));
     return sortItems(applyFilters(candidates, { ...current.filters, includeScheduled: true }, snapshot, childrenOf), current.sort, childrenOf, 'day', snapshot);
-  }, [everywhere, pool, allItems, current.filters, current.sort, childrenOf, snapshot]);
+  }, [everywhere, viewKey, pool, allItems, current.filters, current.sort, childrenOf, snapshot]);
   const chooseSource = (value: 'view' | 'all') => useStore.getState().setViewPrefs(viewKey, { calendar: { ...options, undatedSource: value } });
   const visibleItems = useMemo(() => {
     if (!drag?.moved || !drag.placement) return forecast.items;
@@ -437,7 +445,7 @@ export function CalendarSurface({ viewKey, items, onOpen, onAddTaskTo, childrenO
       </div>
       {sidebar && <aside id={`calendar-undated-${viewKey}`} className="calendar-undated" aria-label={t('calendar.undated')}>
         <header><h3>{t('calendar.undated')} <small>{undated.length}</small></h3><button className="iconbtn" ref={closeSide} aria-label={t('calendar.close')} onClick={() => { setSidebar(false); sideToggle.current?.focus(); }}><Icon name="close" size="sm" /></button></header>
-        {viewKey !== 'upcoming' && <div className="calendar-source segmented" role="group" aria-label={t('calendar.source')}>
+        {chooses && <div className="calendar-source segmented" role="group" aria-label={t('calendar.source')}>
           <button type="button" aria-pressed={!everywhere} onClick={() => chooseSource('view')}>{t('calendar.sourceView')}</button>
           <button type="button" aria-pressed={everywhere} onClick={() => chooseSource('all')}>{t('calendar.sourceAll')}</button>
         </div>}

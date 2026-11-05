@@ -29,29 +29,33 @@ test('#358 a project beats a task that matches as well', async ({ demo: page }) 
   await expect(first).toHaveAttribute('id', /^(project|label|go)-/);
 });
 
-test('#429 the No date panel looks at this page or everywhere', async ({ demo: page }) => {
-  await go(page, '#/project/site');
-  const active = page.locator('.screen.active');
-  await active.getByRole('button', { name: /^Display/ }).click();
-  await page.getByRole('dialog', { name: 'Display', exact: true }).getByRole('button', { name: 'Calendar', exact: true }).click();
-  await active.getByRole('button', { name: /^Display/ }).click();
-  await active.locator('.calendar').getByRole('button', { name: /^No date:/ }).click();
-  const panel = active.locator('.calendar-undated');
-  const source = panel.getByRole('group', { name: 'Where undated tasks come from' });
+test('#429 only the planning pages choose where the No date panel looks', async ({ demo: page }) => {
+  const openPanel = async (hash: string) => {
+    await go(page, hash);
+    const active = page.locator('.screen.active');
+    await active.getByRole('button', { name: /^Display/ }).click();
+    await page.getByRole('dialog', { name: 'Display', exact: true }).getByRole('button', { name: 'Calendar', exact: true }).click();
+    await active.getByRole('button', { name: /^Display/ }).click();
+    await active.locator('.calendar').getByRole('button', { name: /^No date:/ }).click();
+    return active.locator('.calendar-undated');
+  };
+  // A project is a place of its own: its calendar lists its own undated tasks, with nothing to choose.
+  const project = await openPanel('#/project/site');
+  await expect(project.locator('.calendar-source')).toHaveCount(0);
+  await expect(project.locator('.calendar-undated-card').first()).toBeVisible();
+  // This week can look at the page or everywhere.
+  const week = await openPanel('#/week');
+  const source = week.getByRole('group', { name: 'Where undated tasks come from' });
   await expect(source.getByRole('button', { name: 'This page' })).toHaveAttribute('aria-pressed', 'true');
-  const here = await panel.locator('.calendar-undated-card').count();
+  const here = await week.locator('.calendar-undated-card').count();
   await source.getByRole('button', { name: 'Everywhere' }).click();
   await expect(source.getByRole('button', { name: 'Everywhere' })).toHaveAttribute('aria-pressed', 'true');
-  await expect.poll(() => panel.locator('.calendar-undated-card').count()).toBeGreaterThan(here);
-  await expect(panel.locator('h3 small')).toHaveText(String(await panel.locator('.calendar-undated-card').count()));
+  await expect.poll(() => week.locator('.calendar-undated-card').count()).toBeGreaterThan(here);
+  await expect(week.locator('h3 small')).toHaveText(String(await week.locator('.calendar-undated-card').count()));
   // Upcoming only lists dated tasks, so its panel always looks everywhere.
-  await go(page, '#/upcoming');
-  await active.getByRole('button', { name: /^Display/ }).click();
-  await page.getByRole('dialog', { name: 'Display', exact: true }).getByRole('button', { name: 'Calendar', exact: true }).click();
-  await active.getByRole('button', { name: /^Display/ }).click();
-  await active.locator('.calendar').getByRole('button', { name: /^No date:/ }).click();
-  await expect(active.locator('.calendar-undated .calendar-source')).toHaveCount(0);
-  await expect(active.locator('.calendar-undated .calendar-undated-card').first()).toBeVisible();
+  const upcoming = await openPanel('#/upcoming');
+  await expect(upcoming.locator('.calendar-source')).toHaveCount(0);
+  await expect(upcoming.locator('.calendar-undated-card').first()).toBeVisible();
 });
 
 test('#419 a link to a Todoist item Enhanced has opens it here, not in a new tab', async ({ demo: page }) => {

@@ -44,9 +44,9 @@ translation lives in CHANGELOG.fr.md.
 
 ## 2.32.0
 
-🆕 **Links to Todoist open in Enhanced.** A link to another task, project, tag or filter you have now opens right here, from a title, a description or a comment, instead of taking you to Todoist. In the description editor, ⌘-click (Ctrl-click on Windows) follows it. Links to anything else open as before.
+🆕 **Open Todoist links from inside a task.** When a task's title, description or comment holds a link to another task, project, tag or filter of yours, a click opens it in Enhanced instead of Todoist. In the description editor, ⌘-click (Ctrl-click on Windows) follows it. Other links open as before.
 
-🎨 **No date tasks from this page or everywhere.** In the Calendar, the No date panel can list the undated tasks of this page, or of all your projects. Pick a day for tasks from anywhere without leaving the page you plan from.
+🎨 **Plan any task from My week.** In the Calendar of My week and Anytime this month, the No date panel can list the undated tasks of the page or of all your projects, so you can give a day to any of them. On My week, the page's own list is now just what you tagged for the week.
 
 🎨 **Tag filters start from Any tag.** In Display, Any tag is ticked and no tag is, until you choose one. Picking a single tag no longer means unticking all the others, and ticking Any tag again clears your choice.
 

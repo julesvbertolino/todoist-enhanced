@@ -80,7 +80,9 @@
  .calendar-month-cell{padding:2px}.calendar-month-cell .check{display:none}.calendar-month-cell .calendar-card-title{font-size:10px}.calendar-month-cell .calendar-card-heading{gap:0}.calendar-month-head span{font-size:10px}.calendar-more{font-size:10px}
 }
 
-.calendar-day-head,.calendar-all-day{margin-right:var(--calendar-scrollbar,0px)}
+.calendar-day-head{margin-right:var(--calendar-scrollbar,0px)}
+/* The all day row has a scrollbar of its own when it holds many tasks. Reserving its gutter, as the hours below do, keeps its column lines on theirs. */
+.calendar-all-day{scrollbar-gutter:stable}
 .calendar-block.is-short{padding:2px 4px}
 .calendar-block.is-short .calendar-card-title{-webkit-line-clamp:1}
 .calendar-block.is-short small{font-size:9px;line-height:1;margin-top:0}

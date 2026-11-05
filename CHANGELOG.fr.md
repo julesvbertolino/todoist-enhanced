@@ -10,9 +10,9 @@ Chaque ligne est marquée :
 
 ## 2.32.0
 
-🆕 **Les liens Todoist s’ouvrent dans Enhanced.** Un lien vers une autre tâche, un projet, un tag ou un filtre que vous avez s’ouvre maintenant ici, depuis un titre, une description ou un commentaire, au lieu de vous envoyer dans Todoist. Dans l’éditeur de description, ⌘-clic (Ctrl-clic sous Windows) le suit. Les autres liens s’ouvrent comme avant.
+🆕 **Ouvrez les liens Todoist depuis une tâche.** Quand le titre, la description ou un commentaire d’une tâche contient un lien vers une autre tâche, un projet, un tag ou un filtre à vous, un clic l’ouvre dans Enhanced au lieu de Todoist. Dans l’éditeur de description, ⌘-clic (Ctrl-clic sous Windows) le suit. Les autres liens s’ouvrent comme avant.
 
-🎨 **Tâches sans date de cette page ou de partout.** Dans le Calendrier, le panneau Sans date peut lister les tâches sans date de cette page, ou de tous vos projets. Choisissez un jour pour des tâches venues d’ailleurs sans quitter la page où vous planifiez.
+🎨 **Planifiez n’importe quelle tâche depuis Cette semaine.** Dans le Calendrier de Cette semaine et de Ce mois-ci, le panneau Sans date peut lister les tâches sans date de la page ou de tous vos projets, pour donner un jour à n’importe laquelle. Sur Cette semaine, la liste de la page se limite désormais à ce que vous avez marqué pour la semaine.
 
 🎨 **Les filtres de tags partent de « Tous les tags ».** Dans Affichage, « Tous les tags » est coché et aucun tag ne l’est, tant que vous n’en choisissez pas. Pour n’en garder qu’un, plus besoin de décocher tous les autres, et recocher « Tous les tags » efface votre choix.
 
