@@ -42,6 +42,10 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.32.3
+
+🐛 **Reliability improvements.** Syncing with Todoist holds up better: it no longer stays on “Sync failed” over one workspace or an old session, a change is never sent twice or undone on screen for a moment, and a setting changed just before closing the app is kept. When a sync does fail, click the status to see why and copy the details.
+
 ## 2.32.2
 
 🐛 **Quick Add always uses your own account.** In the Mac app, a task added with the global shortcut now always lands on the account you are signed in with in the main window. If the Quick Add window is ever on another account, it says so, reloads on the right one and sends nothing.

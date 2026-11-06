@@ -8,6 +8,10 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.32.3
+
+🐛 **Améliorations de fiabilité.** La synchronisation tient mieux : plus de blocage sur « Échec de la synchronisation », aucune modification envoyée deux fois ni annulée un instant à l’écran, et un réglage changé juste avant de fermer l’app est gardé. En cas d’échec, cliquez sur le statut pour voir la raison et copier le détail.
+
 ## 2.32.2
 
 🐛 **L’ajout rapide utilise toujours votre compte.** Dans l’app Mac, une tâche ajoutée avec le raccourci global arrive désormais toujours sur le compte connecté dans la fenêtre principale. Si la fenêtre d’ajout rapide est un jour sur un autre compte, elle le dit, se recharge sur le bon et n’envoie rien.
