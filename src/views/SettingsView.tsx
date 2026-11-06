@@ -58,6 +58,7 @@ export function SettingsView() {
   const setLocale = useStore((s) => s.setLocale);
   const disconnect = useStore((s) => s.disconnect);
   const user = useStore((s) => s.snapshot.user);
+  const workspaceList = useStore((s) => s.snapshot.workspaces);
   const karma = karmaStanding(user?.karma);
 
   const current = useCurrentSection();
@@ -311,7 +312,8 @@ export function SettingsView() {
             {groupsInSidebar.length > 1 && (
               <Row title={t('settings.workspaceOrder')} hint={t('settings.workspaceOrderHint')} wide>
                 <div className="wsgroups"><GroupOrderEditor
-                  groups={groupsInSidebar.map((g) => ({ id: g.workspaceId ?? 'personal', name: g.name ?? t('nav.myProjects') }))}
+                  groups={groupsInSidebar.map((g) => ({ id: g.workspaceId ?? 'personal', name: g.name ?? t('nav.myProjects'), avatar: true,
+                    logo: g.workspaceId ? workspaceList[g.workspaceId]?.logo_big ?? null : user?.avatar_big ?? null }))}
                   onChange={(workspaceOrder) => setPrefs({ workspaceOrder })}
                 /></div>
               </Row>

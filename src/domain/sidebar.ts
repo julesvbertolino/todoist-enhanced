@@ -36,6 +36,24 @@ export const defaultSidebarNav = (): SidebarNav => ({
   other: OTHER.map((id) => ({ id, on: true })),
 });
 
+/** What the setup starts from (#413): Inbox, Anytime this week, Anytime this month, Upcoming and Someday on, the rest off until chosen. */
+export const STARTING_SIDEBAR_ON: readonly SidebarItemId[] = ['inbox', 'week', 'month', 'upcoming', 'someday'];
+
+export const startingSidebarNav = (): SidebarNav => {
+  const nav = defaultSidebarNav();
+  return {
+    main: nav.main.map((entry) => ({ ...entry, on: STARTING_SIDEBAR_ON.includes(entry.id) })),
+    other: nav.other.map((entry) => ({ ...entry, on: STARTING_SIDEBAR_ON.includes(entry.id) })),
+  };
+};
+
+/** True while nobody has touched the navigation: every entry is still on, in its default place. */
+export const isUntouchedSidebarNav = (nav: SidebarNav): boolean => {
+  const base = defaultSidebarNav();
+  const same = (a: SidebarEntry[], b: SidebarEntry[]) => a.length === b.length && a.every((entry, i) => entry.id === b[i].id && entry.on === b[i].on);
+  return same(nav.main, base.main) && same(nav.other, base.other);
+};
+
 const isItem = (value: unknown): value is SidebarItemId =>
   typeof value === 'string' && (SIDEBAR_ITEMS as readonly string[]).includes(value);
 

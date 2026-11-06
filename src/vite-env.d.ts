@@ -14,6 +14,8 @@ interface Window {
     getQuickAddShortcut?: () => Promise<string>;
     setQuickAddShortcut?: (accelerator: string) => Promise<{ ok: boolean; shortcut: string }>;
     openSignIn?: (url: string) => Promise<boolean>;
+    /** Added in version 1.1.1 of the app: an older app does not say its version. */
+    getVersion?: () => Promise<string | null>;
     testMode?: boolean;
   };
 }

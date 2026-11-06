@@ -311,7 +311,10 @@
 .updatebtn.announced{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 45%,transparent)}
 /* Phone, or a collapsed sidebar: no line to point at, so the card stands on its own. */
 .updatecard.floating{position:fixed;z-index:19;left:16px;right:auto;bottom:16px;width:300px}
-@media (max-width:720px){.updatecard.floating{left:12px;right:12px;width:auto;bottom:calc(64px + 12px + env(safe-area-inset-bottom))}}
+/* The Mac app's own update card sits at the other corner, so it never lands on the web update card. */
+.updatecard.macupdate{left:auto;right:16px}
+.updatecard-apply{display:inline-flex;align-items:center;text-decoration:none}
+@media (max-width:720px){.updatecard.floating{left:12px;right:12px;width:auto;bottom:calc(64px + 12px + env(safe-area-inset-bottom))}.updatecard.macupdate{left:12px;right:12px}}
 @keyframes updateIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.updatecard{animation:none}}
 

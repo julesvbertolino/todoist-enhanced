@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useMemo } from 'react';
 import { TableContext } from './TableContext';
 import { Icon } from './Icon';
 import { DateField } from './DateField';
@@ -11,6 +11,7 @@ import { effectiveEstimate, formatDuration } from '@/domain/estimates';
 import { dateTone, isOverdue } from '@/domain/dates';
 import { toDisplayPriority, toTodoistPriority, type Item, type TableColumn, type DisplayPriority } from '@/domain/types';
 import { tableColumnLabel } from '@/domain/table';
+import { byLabelOrder } from '@/domain/orderKey';
 import { markerStyle } from '@/domain/colors';
 import { ProjectIcon } from './ProjectIcon';
 import { AssigneeField } from './AssigneeField';
@@ -32,6 +33,9 @@ export function TableCells({ item, columns, childrenOf, hideProject = false }: {
   const setRecurrence = useStore((s) => s.setRecurrence);
   const { minutes, computed } = effectiveEstimate(item, childrenOf);
   const freeze = useContext(TableContext)?.freeze;
+  /* The tag picker lists the tags in the order of Todoist's own tag list (#430). */
+  const orderedTags = useMemo(() => Object.values(allLabels)
+    .filter((label) => !label.is_deleted && !label.name.startsWith('est-')).sort(byLabelOrder), [allLabels]);
   return <>{columns.filter((column) => column !== 'title').map((column) => {
     let content;
     if (column === 'date' || column === 'deadline') {
@@ -52,7 +56,7 @@ export function TableCells({ item, columns, childrenOf, hideProject = false }: {
     else if (column === 'estimate') content = computed ? <span>{formatDuration(minutes ?? 0, locale)} *</span>
       : <DurationField compact minutes={minutes} placeholder={t('table.noDuration')}
         onCommit={async (value) => { await setEstimates([{ id: item.id, minutes: value }]); }} />;
-    else if (column === 'labels') content = <MultiSelect label={t('detail.labels')} allLabel={t('filter.anyTag')} value={item.labels.filter((label) => !label.startsWith('est-'))}
+    else if (column === 'labels') content = <MultiSelect compact label={t('detail.labels')} allLabel={t('filter.anyTag')} value={item.labels.filter((label) => !label.startsWith('est-'))}
       face={item.labels.some((label) => !label.startsWith('est-'))
         ? <span className="cell-tags">{(() => {
           const names = item.labels.filter((label) => !label.startsWith('est-'));
@@ -63,9 +67,9 @@ export function TableCells({ item, columns, childrenOf, hideProject = false }: {
           {names.length > 1 && <span className="tag-more tag-more-narrow">+{names.length - 1}</span>}</>;
         })()}</span>
         : <span className="cell-tags is-none"><Icon name="plus" size="sm" /></span>}
-      options={Object.values(allLabels).filter((label) => !label.is_deleted && !label.name.startsWith('est-')).map((label) => ({ value: label.name, label: label.name }))}
+      options={orderedTags.map((label) => ({ value: label.name, label: label.name }))}
       onChange={(labels) => void setTaskLabels(item.id, [...item.labels.filter((label) => label.startsWith('est-')),
-        ...(labels ?? Object.values(allLabels).filter((label) => !label.is_deleted && !label.name.startsWith('est-')).map((label) => label.name))])} />;
+        ...(labels ?? orderedTags.map((label) => label.name))])} />;
     else if (column === 'project') {
       const project = allProjects[item.project_id];
       const section = item.section_id ? allSections[item.section_id] : undefined;

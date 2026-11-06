@@ -8,6 +8,26 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.32.0
+
+🆕 **Ouvrez les liens Todoist depuis une tâche.** Quand le titre, la description ou un commentaire d’une tâche contient un lien vers une autre tâche, un projet, un tag ou un filtre à vous, un clic l’ouvre dans Enhanced au lieu de Todoist. Dans l’éditeur de description, ⌘-clic (Ctrl-clic sous Windows) le suit. Les autres liens s’ouvrent comme avant.
+
+🆕 **Sachez quand une nouvelle app Mac est sortie.** Dans l’app Mac, une carte vous prévient maintenant qu’une version plus récente peut être téléchargée, avec un bouton pour la récupérer. Remplacez l’ancienne app dans Applications. Elle ne s’affiche qu’une fois par version.
+
+🎨 **Planifiez n’importe quelle tâche depuis Cette semaine.** Dans le Calendrier de Cette semaine et de Ce mois-ci, le panneau Sans date peut lister les tâches sans date de la page ou de tous vos projets, pour donner un jour à n’importe laquelle. Sur Cette semaine, la liste de la page se limite désormais à ce que vous avez marqué pour la semaine.
+
+🎨 **Choisissez les tags que vous voulez voir.** Dans Affichage, cochez les tags à montrer au lieu de décocher ceux dont vous ne voulez pas. « Tous les tags » reste coché tant que vous n’en choisissez pas, et le recocher efface votre choix.
+
+🎨 **La recherche trouve d’abord projets et tags.** Tapez quelques lettres : le projet ou le tag que vous cherchez, avec son icône, passe avant une tâche qui correspond aussi bien. Les sections sont aussi cherchées par défaut.
+
+🎨 **Améliorations de la configuration.** La première configuration commence avec Boîte de réception, Cette semaine, Ce mois-ci, Prochainement et Un jour dans votre barre latérale. Activez le reste quand vous en avez besoin.
+
+🎨 **Améliorations de la barre latérale.** Les réglages montrent l’image de chaque espace à côté de son nom quand vous les classez, et Mes projets affiche votre photo, dans la barre latérale et dans cette liste.
+
+🐛 **Les tags d’un tableau suivent l’ordre de Todoist.** Le menu des tags d’une tâche dans un tableau les liste dans l’ordre de votre liste de tags Todoist, dans un menu plus petit qui s’accorde au tableau.
+
+🐛 **Déplacez les sections sur téléphone.** Maintenez le doigt sur le titre d’une section, puis glissez-la ailleurs. La poignée laisse la place au titre sur téléphone et dans une fenêtre étroite.
+
 ## 2.31.0
 
 🆕 **Passez facilement d’Aujourd’hui aux autres jours.** Un petit chevron à côté du titre d’Aujourd’hui, et d’Aujourd’hui dans Cette semaine, ouvre un sélecteur de date. Un autre jour liste ce qui y est prévu, vous pouvez y ajouter ou y déposer des tâches, et Aujourd’hui dans le sélecteur vous ramène au jour même.

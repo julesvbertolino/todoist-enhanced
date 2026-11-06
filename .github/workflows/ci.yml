@@ -30,7 +30,9 @@ jobs:
   e2e:
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # The suite has grown past fifteen minutes: the run of release 2.32.0 was
+    # cancelled by this limit, not by a failing test.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -42,7 +44,7 @@ jobs:
       - run: npx playwright test
       # Controlled fixtures use Vite source modules and never call real Todoist accounts.
       - name: Development release scenarios
-        run: npx playwright test e2e/assignees.spec.ts e2e/next-release.spec.ts e2e/release-refinements.spec.ts e2e/composer-regressions.spec.ts e2e/release-2.5.spec.ts e2e/calendar.spec.ts e2e/release-feedback.spec.ts e2e/release-2.17.spec.ts e2e/workspace-2.16.spec.ts e2e/matrix-scope.spec.ts e2e/project-progress-395.spec.ts e2e/deadlines-438.spec.ts e2e/filter-table-317.spec.ts e2e/task-height-389.spec.ts
+        run: npx playwright test e2e/assignees.spec.ts e2e/next-release.spec.ts e2e/release-refinements.spec.ts e2e/composer-regressions.spec.ts e2e/release-2.5.spec.ts e2e/calendar.spec.ts e2e/release-feedback.spec.ts e2e/release-2.17.spec.ts e2e/workspace-2.16.spec.ts e2e/matrix-scope.spec.ts e2e/project-progress-395.spec.ts e2e/deadlines-438.spec.ts e2e/filter-table-317.spec.ts e2e/task-height-389.spec.ts e2e/release-2.32.spec.ts
         env:
           PLAYWRIGHT_DEV: '1'
           PLAYWRIGHT_PORT: '4174'

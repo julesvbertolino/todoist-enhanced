@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { archFromHint, isMacComputer } from './macApp';
+import { archFromHint, isMacComputer, macAppNeedsUpdate } from './macApp';
 
 describe('isMacComputer', () => {
   it('knows a Mac from its platform, in Chromium or elsewhere', () => {
@@ -28,5 +28,21 @@ describe('archFromHint', () => {
     expect(archFromHint(undefined)).toBeNull();
     expect(archFromHint('')).toBeNull();
     expect(archFromHint('mips')).toBeNull();
+  });
+});
+
+describe('macAppNeedsUpdate', () => {
+  it('offers a newer app to an older one', () => {
+    expect(macAppNeedsUpdate('1.1.0', '1.1.1')).toBe(true);
+    expect(macAppNeedsUpdate('1.0.9', '1.1.0')).toBe(true);
+  });
+  it('leaves an app that is up to date, or newer, alone', () => {
+    expect(macAppNeedsUpdate('1.1.1', '1.1.1')).toBe(false);
+    expect(macAppNeedsUpdate('1.2.0', '1.1.1')).toBe(false);
+  });
+  it('counts an app that does not say its version as 1.1.0', () => {
+    expect(macAppNeedsUpdate(null, '1.1.1')).toBe(true);
+    expect(macAppNeedsUpdate(undefined, '1.1.0')).toBe(false);
+    expect(macAppNeedsUpdate('garbage', '1.1.1')).toBe(true);
   });
 });

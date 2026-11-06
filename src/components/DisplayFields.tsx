@@ -153,7 +153,7 @@ export function DisplayFields({
         />
         {tagOptions.length > 0 && (
           <MultiSelect
-            icon="tag" label={t('filter.labels')} allLabel={t('filter.anyTag')} value={filters.labels.length > 0 ? filters.labels : null}
+            icon="tag" include label={t('filter.labels')} allLabel={t('filter.anyTag')} value={filters.labels.length > 0 ? filters.labels : null}
             options={tagOptions} onChange={(next) => setFilters({ labels: next ?? [] })}
           />
         )}

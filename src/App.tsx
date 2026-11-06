@@ -12,6 +12,7 @@ import { BulkBar } from './components/BulkBar';
 import { DragProvider } from './components/dnd/DragProvider';
 import { Composer } from './components/overlays/Composer';
 import { TaskDetail } from './components/overlays/TaskDetail';
+import { useTodoistLinks } from './hooks/useTodoistLinks';
 import { Issues } from './components/overlays/Issues';
 import { Search } from './components/overlays/Search';
 import { Shortcuts } from './components/overlays/Shortcuts';
@@ -39,6 +40,7 @@ const EisenhowerView = lazy(() => import('./views/EisenhowerView').then((module)
 import { ConnectView } from './views/ConnectView';
 import { EstimateStorageDialog } from './components/overlays/EstimateStorageDialog';
 import { Walkthrough } from './components/overlays/Walkthrough';
+import { LaunchPopup } from './components/launch/LaunchPopup';
 import { PomodoroFocus } from './components/overlays/PomodoroFocus';
 import { PomodoroAsk } from './components/overlays/PomodoroAsk';
 import { usePomodoro } from './store/pomodoro';
@@ -67,6 +69,7 @@ import type { TranslationKey } from './i18n';
 import { useUpdateReady } from './lib/appUpdate';
 import { usePhone } from './hooks/usePhone';
 import { UpdateCard } from './components/UpdateCard';
+import { MacUpdateCard } from './components/MacUpdateCard';
 
 export function App() {
   useLabelRenames();
@@ -438,6 +441,9 @@ export function App() {
       <EstimateConversion target={conversionRequest.target} openRequest={conversionRequest.request} hideTrigger />
       <ShareSheet projectId={shareProject} onClose={() => setShareProject(null)} />
       <PomodoroFocus />
+      {/* Product Hunt launch day only: delete with src/components/launch and src/domain/launch.ts. */}
+      <LaunchPopup ready={!QUICK_ADD && ready && (connected || demo) && !tourOpen && !walkthroughOpen && !whatsNew} />
+      <MacUpdateCard enabled={!QUICK_ADD && ready && (connected || demo) && !tourOpen && !walkthroughOpen && !whatsNew} />
       <PomodoroAsk open={askPomodoro && !pomodoroAsked} onClose={() => setAskPomodoro(false)} />
       <Walkthrough
         open={walkthroughOpen}
@@ -843,6 +849,8 @@ function AppShell({
   }, [route.view, route.id]);
 
   const openTask = useCallback((id: string) => setOpenTaskId(id), [setOpenTaskId]);
+  // A link to a Todoist item the app has opens here instead of in Todoist (#419).
+  useTodoistLinks(openTask, useCallback(() => setOpenTaskId(null), [setOpenTaskId]));
   const addTask = () => {
     setPlacement(placementForPage(route, snapshot.user?.inbox_project_id));
     setComposerOpen(true);

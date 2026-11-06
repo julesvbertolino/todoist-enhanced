@@ -73,7 +73,8 @@ test('the Display menu offers only the tags of the page in front', async ({ demo
     const names = await page.locator('.multiselect-options label .multiselect-label').allInnerTexts();
     await page.keyboard.press('Escape');
     await page.keyboard.press('Escape');
-    return names.map((n) => n.trim());
+    // "Any tag" is the first line of the list (#394); the rest are the page's tags.
+    return names.map((n) => n.trim()).filter((n) => n !== 'Any tag');
   };
   await go(page, '#/inbox');
   const inbox = await tagsOf();

@@ -42,6 +42,26 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.32.0
+
+🆕 **Open Todoist links from inside a task.** When a task's title, description or comment holds a link to another task, project, tag or filter of yours, a click opens it in Enhanced instead of Todoist. In the description editor, ⌘-click (Ctrl-click on Windows) follows it. Other links open as before.
+
+🆕 **Know when a new Mac app is out.** In the Mac app, a card now tells you when a newer version can be downloaded, with a button to get it. Put the new app over the old one in Applications. It shows once per version.
+
+🎨 **Plan any task from Anytime this week.** In the Calendar of Anytime this week and Anytime this month, the No date panel can list the undated tasks of the page or of all your projects, so you can give a day to any of them. On Anytime this week, the page's own list is now just what you tagged for the week.
+
+🎨 **Choose the tags you want to see.** In Display, pick the tags to show instead of unticking the ones you do not want. Any tag is ticked until you pick one, and ticking it again clears your choice.
+
+🎨 **Search finds projects and tags first.** Type a few letters and the project or tag you are after, with its own icon, now comes before a task that matches just as well. Sections are searched by default too.
+
+🎨 **Setup improvements.** The first setup now begins with Inbox, Anytime this week, Anytime this month, Upcoming and Someday in your sidebar. Switch on the rest when you need them.
+
+🎨 **Sidebar improvements.** Settings shows each workspace's picture beside its name when you order them, and My projects shows your own photo, in the sidebar and in that list.
+
+🐛 **Tags in a table follow your Todoist order.** The tag menu of a task in a table lists your tags in the order of your Todoist tag list, in a smaller menu that fits the table.
+
+🐛 **Move sections on your phone.** Hold a section's heading with your finger, then drag it to another place. The grip gives way to the heading on a phone and in a narrow window.
+
 ## 2.31.0
 
 🆕 **Switch from Today to other days easily.** A small chevron beside the title of Today, and beside Today in This week, opens a date picker. Another day lists what is planned on it, you can add or drop tasks into it, and Today in the picker takes you back.

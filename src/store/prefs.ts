@@ -503,7 +503,7 @@ export const defaultPreferences = (locale: Locale): Preferences => ({
   weekLayout: 'unified',
   weekLabel: DEFAULT_WEEK_LABEL,
   quietAfterDays: 14,
-  includeSectionsInSearch: false,
+  includeSectionsInSearch: true,
   eisenhowerEnabled: false,
   eisenhowerLayout: 'matrix',
   eisenhowerUrgent: ['overdue', 'today'],
@@ -593,7 +593,7 @@ export function hydratePreferences(stored: unknown, locale: Locale): Preferences
     quietAfterDays: Number.isFinite(s.quietAfterDays) && (s.quietAfterDays as number) > 0
       ? Math.round(s.quietAfterDays as number)
       : base.quietAfterDays,
-    includeSectionsInSearch: s.includeSectionsInSearch === true,
+    includeSectionsInSearch: s.includeSectionsInSearch !== false,
     eisenhowerEnabled: s.eisenhowerEnabled === true,
     eisenhowerLayout: isMatrixLayout(s.eisenhowerLayout)
       ? s.eisenhowerLayout

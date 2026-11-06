@@ -81,6 +81,18 @@ export function TaskGroup({
   };
   const [menuOpen, setMenuOpen] = useState(false);
   const moreRef = useRef<HTMLButtonElement>(null);
+  /* A real section is dragged by its grip, and by its whole heading when there
+     is no room for a grip: held with a finger, or pulled with a mouse in a
+     narrow window (#360). */
+  const sectionDrag = useDraggable({ id: `section:${sectionId ?? ''}`, disabled: !sectionId });
+  const headPress = (event: React.PointerEvent<HTMLElement>) => {
+    const target = event.target as HTMLElement;
+    if (!sectionId || target.closest('.gcaret, .gmore, .sectiondrag')) return;
+    const touch = event.pointerType === 'touch';
+    /* A mouse pulling a heading is only for a narrow window, and never from a field it would select text in. */
+    if (!touch && (!window.matchMedia('(max-width: 720px)').matches || target.closest('textarea, input'))) return;
+    sectionDrag.listeners?.onPointerDown?.(event);
+  };
 
   // An empty derived grouping is noise. A real section is not: it is somewhere
   // you chose to make, and a section you just created has to be visible before
@@ -117,10 +129,21 @@ export function TaskGroup({
           carries the field you name it in. */}
       {(title || sectionId) && (
         <div className="gheadblock">
-        <div className="ghead">
+        <div className="ghead" ref={sectionId ? sectionDrag.setNodeRef : undefined} onPointerDown={sectionId ? headPress : undefined}>
           {/* A section is dragged by its own handle, so a click on the heading
               still collapses it. */}
-          {sectionId && <SectionHandle id={sectionId} label={t('section.move')} />}
+          {sectionId && (
+            <span
+              ref={sectionDrag.setActivatorNodeRef}
+              className="sectiondrag"
+              title={t('section.move')}
+              aria-label={t('section.move')}
+              {...sectionDrag.attributes}
+              {...sectionDrag.listeners}
+            >
+              <Icon name="drag" size="sm" />
+            </span>
+          )}
           {/* The caret sits in the gutter, left of the title, so the titles
               stay lined up with the tasks under them (#185) — on every group,
               a derived one as much as a real section. */}
@@ -427,19 +450,3 @@ export function SectionName({
   );
 }
 
-/** The grip a section is dragged by. */
-function SectionHandle({ id, label }: { id: string; label: string }) {
-  const { attributes, listeners, setNodeRef } = useDraggable({ id: `section:${id}` });
-  return (
-    <span
-      ref={setNodeRef}
-      className="sectiondrag"
-      title={label}
-      aria-label={label}
-      {...attributes}
-      {...listeners}
-    >
-      <Icon name="drag" size="sm" />
-    </span>
-  );
-}

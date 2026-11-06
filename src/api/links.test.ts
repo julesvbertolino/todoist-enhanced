@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { isTemporaryId, projectEmail, todoistTaskUrl } from './links';
+import { isTemporaryId, parseTodoistUrl, projectEmail, todoistTaskUrl } from './links';
 import { request } from './client';
 
 vi.mock('./client', async (importOriginal) => ({
@@ -27,5 +27,28 @@ describe('links', () => {
     expect(sent).toHaveBeenCalledWith('/emails', {
       method: 'PUT', json: { obj_type: 'project', obj_id: 'p1' },
     });
+  });
+});
+
+describe('parseTodoistUrl (#419)', () => {
+  it('reads the addresses the app builds', () => {
+    expect(parseTodoistUrl('https://app.todoist.com/app/task/6X7rM8997g3RQmvh')).toEqual({ kind: 'task', id: '6X7rM8997g3RQmvh' });
+    expect(parseTodoistUrl('https://app.todoist.com/app/project/6X7rM8997g3RQmvh')).toEqual({ kind: 'project', id: '6X7rM8997g3RQmvh' });
+    expect(parseTodoistUrl('https://app.todoist.com/app/label/abc123')).toEqual({ kind: 'label', id: 'abc123' });
+    expect(parseTodoistUrl('https://app.todoist.com/app/filter/f1')).toEqual({ kind: 'filter', id: 'f1' });
+    expect(parseTodoistUrl('https://app.todoist.com/app/section/s1')).toEqual({ kind: 'section', id: 's1' });
+  });
+  it('reads slugged and older addresses', () => {
+    expect(parseTodoistUrl('https://app.todoist.com/app/task/call-the-garage-6X7rM8997g3RQmvh')).toMatchObject({ kind: 'task', id: '6X7rM8997g3RQmvh' });
+    expect(parseTodoistUrl('https://todoist.com/app/project/my-site-123')).toMatchObject({ kind: 'project', id: '123' });
+    expect(parseTodoistUrl('https://todoist.com/showTask?id=8123456789')).toEqual({ kind: 'task', id: '8123456789' });
+    expect(parseTodoistUrl('https://app.todoist.com/app/task/6X7rM8997g3RQmvh/')).toEqual({ kind: 'task', id: '6X7rM8997g3RQmvh' });
+  });
+  it('leaves everything else alone', () => {
+    expect(parseTodoistUrl('https://github.com/app/task/123')).toBeNull();
+    expect(parseTodoistUrl('https://app.todoist.com/app/today')).toBeNull();
+    expect(parseTodoistUrl('https://todoist.com/showTask')).toBeNull();
+    expect(parseTodoistUrl('mailto:me@example.com')).toBeNull();
+    expect(parseTodoistUrl('not a url')).toBeNull();
   });
 });

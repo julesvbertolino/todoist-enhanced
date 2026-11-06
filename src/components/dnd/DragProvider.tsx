@@ -28,7 +28,6 @@ import { Icon } from '@/components/Icon';
 import {
   type RowList, TASK_DROP_EVENT, TASK_PLACE_EVENT, type TaskDropRequest, type TaskPlaceRequest,
 } from './RowList';
-import { usePhoneBehaviour } from '@/hooks/useTouchLayout';
 import { PRESS_HOLD_EVENT, projectRowAttr } from './ProjectRowSortable';
 import { byChildOrder, bySectionOrder, keyBetween, keysInOrder } from '@/domain/orderKey';
 
@@ -271,15 +270,26 @@ export function DragProvider({ children }: { children: ReactNode }) {
    * already uses to mean "this one" — and letting go of it without moving is
    * how the project's menu opens.
    */
-  const phone = usePhoneBehaviour();
+  /* Which kind of pointer pressed last decides the rule, not the width of the
+     window: a narrow desktop window still has a mouse, which pulls at once,
+     and a finger always has to hold. The options are read when a press
+     starts, so the getter answers for that press (#360). */
+  const lastPointer = useRef<string>('mouse');
+  useEffect(() => {
+    const remember = (event: PointerEvent) => { lastPointer.current = event.pointerType || 'mouse'; };
+    window.addEventListener('pointerdown', remember, true);
+    return () => window.removeEventListener('pointerdown', remember, true);
+  }, []);
   /* Memoised: a new options object makes new listeners for every row, and a
      row that is handed new listeners cannot be left alone when a sync brings
      nothing for it (#364). */
   const pointerOptions = useMemo(() => ({
-    activationConstraint: phone
-      ? { delay: HOLD_MS, tolerance: HOLD_SLOP_PX }
-      : { distance: 6 },
-  }), [phone]);
+    get activationConstraint() {
+      return lastPointer.current === 'touch'
+        ? { delay: HOLD_MS, tolerance: HOLD_SLOP_PX }
+        : { distance: 6 };
+    },
+  }), []);
   const sensors = useSensors(useSensor(PointerSensor, pointerOptions));
 
   /**
