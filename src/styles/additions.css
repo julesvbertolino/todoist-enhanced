@@ -1780,3 +1780,16 @@ html.desktop-app .macapp,html.desktop-app .macapp-line{display:none}
 .quickshortcut-reset{padding:0;white-space:nowrap;color:var(--muted);font-size:var(--fs-12);background:none}
 .quickshortcut-reset:hover{color:var(--text);text-decoration:underline}
 .quickshortcut-problem{margin:-6px 0 var(--s3);color:var(--late);font-size:var(--fs-12);text-align:right}
+
+/* Sync details (#469): why the last sync did not go through, and what to do. */
+.syncstatus.on{background:var(--hover, rgba(0,0,0,.05));border-radius:var(--r-sm)}
+.anchored.syncpanel{width:320px}
+.syncpanel-body{display:grid;gap:var(--s2)}
+.syncpanel-title{margin:0;font-weight:600;font-size:var(--fs-13);color:var(--text)}
+.syncpanel-reason{margin:0;font-size:var(--fs-12);color:var(--muted);line-height:1.45}
+.syncpanel-code{color:var(--faint);font-variant-numeric:tabular-nums}
+.syncpanel-facts{display:grid;grid-template-columns:1fr auto;gap:4px var(--s3);margin:0;font-size:var(--fs-12)}
+.syncpanel-facts dt{color:var(--muted)}
+.syncpanel-facts dd{margin:0;color:var(--text);text-align:right;font-variant-numeric:tabular-nums}
+.syncpanel-actions{display:flex;justify-content:flex-end;gap:var(--s2);margin-top:var(--s1)}
+.syncpanel-note{margin:0;font-size:var(--fs-11);color:var(--faint);line-height:1.4}

@@ -81,7 +81,8 @@ export async function verifyEstimateWrites(
       const items = { ...snapshot.items };
       for (const patch of patches) items[patch.id] = { ...patch.item, ...patch.fields, id: patch.id };
       return { ...snapshot, items };
-    }));
+      /* Always called from inside a write's or a flush's turn with Todoist. */
+    }, { inTurn: true }));
     if (notify) get().toast(translate(get().prefs.locale, commands.some((cmd) => handled.has(cmd.uuid) && cmd.estimateMinutes === null) ? 'estimates.clearFailed' : 'estimates.fallback'), undefined, { tone: 'error' });
   }
   return { pending, handled };

@@ -1,4 +1,4 @@
-import { request } from './client';
+import { ApiError, NotConnectedError, request } from './client';
 import type {
   Collaborator, CollaboratorState, Filter, Folder, Item, Label, LiveNotification, Note, Project, Reminder,
   Section, Snapshot, TodoistUser, Workspace,
@@ -23,6 +23,8 @@ export interface SyncResponse {
   folders?: Folder[];
   /** Complete REST folder collections read alongside this response. */
   refreshedFolderWorkspaces?: string[];
+  /** Workspaces whose folders could not be read this time: their folders are kept as they were (#466). */
+  failedFolderWorkspaces?: Array<{ id: string; error: unknown }>;
   notes?: Note[];
   /** Comments on projects rather than tasks; kept in the same collection as task comments. */
   project_notes?: Note[];
@@ -60,7 +62,7 @@ export async function sync(syncToken: string, signal?: AbortSignal, knownWorkspa
     timeoutMs: syncToken === '*' ? FULL_SYNC_TIMEOUT_MS : undefined,
   });
   // A new session/full sync and workspace changes always refresh immediately.
-  // A failed read never advances the timer, so the next poll retries.
+  // Folders are read again ten minutes after the last attempt, failed or not.
   if (!response.full_sync && syncToken !== '*' && !response.workspaces?.length && lastFolderRefresh && Date.now() - lastFolderRefresh < FOLDER_REFRESH_INTERVAL_MS) {
     return response;
   }
@@ -68,21 +70,37 @@ export async function sync(syncToken: string, signal?: AbortSignal, knownWorkspa
   // so renames, deletions and existing folders reach incremental clients too.
   const workspaces = Object.values(mergeCollection(knownWorkspaces, response.workspaces, response.full_sync));
   const teams = workspaces.filter((w) => !w.is_deleted && !w.is_archived);
-  const folders = await Promise.all(teams.map(async (workspace) => {
-    const all: Folder[] = [];
-    let cursor: string | null = null;
-    do {
-      const query = new URLSearchParams({ workspace_id: workspace.id, limit: '200' });
-      if (cursor) query.set('cursor', cursor);
-      const page = await request<{ results: Folder[]; next_cursor: string | null }>(`/folders?${query}`, { signal });
-      all.push(...page.results);
-      cursor = page.next_cursor;
-    } while (cursor);
-    return all;
+  /* One workspace whose folders cannot be read (a guest without access, a
+     workspace that has gone, a slow answer) used to fail the whole sync,
+     the tasks it had just read included, and on every poll after (#466). Its
+     folders are now kept as they were and read again with the others later. */
+  const results = await Promise.all(teams.map(async (workspace) => {
+    try {
+      const all: Folder[] = [];
+      let cursor: string | null = null;
+      do {
+        const query = new URLSearchParams({ workspace_id: workspace.id, limit: '200' });
+        if (cursor) query.set('cursor', cursor);
+        const page = await request<{ results: Folder[]; next_cursor: string | null }>(`/folders?${query}`, { signal });
+        all.push(...page.results);
+        cursor = page.next_cursor;
+      } while (cursor);
+      return { id: workspace.id, folders: all };
+    } catch (error) {
+      // A caller that gave up, or a token that is no longer valid, is everyone's problem.
+      if (signal?.aborted || error instanceof NotConnectedError || (error instanceof ApiError && error.isAuthError)) throw error;
+      return { id: workspace.id, folders: null, error };
+    }
   }));
   lastFolderRefresh = Date.now();
-  return { ...response, folders: [...(response.folders ?? []), ...folders.flat()], refreshedFolderWorkspaces: [...new Set([...Object.keys(knownWorkspaces), ...workspaces.map((w) => w.id)])] };
-
+  const failed = results.filter((result) => result.folders === null);
+  const unread = new Set(failed.map((result) => result.id));
+  return {
+    ...response,
+    folders: [...(response.folders ?? []), ...results.flatMap((result) => result.folders ?? [])],
+    refreshedFolderWorkspaces: [...new Set([...Object.keys(knownWorkspaces), ...workspaces.map((w) => w.id)])].filter((id) => !unread.has(id)),
+    ...(failed.length ? { failedFolderWorkspaces: failed.map((result) => ({ id: result.id, error: result.error })) } : {}),
+  };
 }
 
 type Keyed = { id: string; is_deleted?: boolean };
@@ -133,7 +151,10 @@ export function applySync(snapshot: Snapshot, response: SyncResponse): Snapshot 
   const removed = response.refreshedFolderWorkspaces ?? [];
   const retained = Object.values(snapshot.folders ?? {}).filter((folder) => !removed.includes(folder.workspace_id));
   const incomingFolders = [...retained, ...(response.folders ?? [])];
-  const folders = removed.length ? mergeCollection(snapshot.folders ?? {}, incomingFolders, true) : mergeCollection(snapshot.folders ?? {}, response.folders, full);
+  /* A workspace whose folders could not be read keeps the ones it had, on a
+     full read as on an incremental one (#466). */
+  const keepUnread = (response.failedFolderWorkspaces ?? []).length > 0;
+  const folders = removed.length || keepUnread ? mergeCollection(snapshot.folders ?? {}, incomingFolders, true) : mergeCollection(snapshot.folders ?? {}, response.folders, full);
   const counts = {
     ...(full ? {} : snapshot.completedProjectCounts),
     ...Object.fromEntries((response.completed_info ?? []).filter((info) => info.project_id && !info.section_id && !info.item_id && Number.isFinite(info.completed_items))

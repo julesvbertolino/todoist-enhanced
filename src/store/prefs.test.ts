@@ -322,10 +322,3 @@ describe('the Full width switch (#403)', () => {
   });
 });
 
-describe('the launch invitation memory', () => {
-  it('starts empty and keeps the id of the invitation the account was shown', () => {
-    expect(hydratePreferences({}, 'en').launchSeen).toBe('');
-    expect(hydratePreferences({ launchSeen: 'producthunt-2026-11' }, 'en').launchSeen).toBe('producthunt-2026-11');
-    expect(hydratePreferences({ launchSeen: 42 }, 'en').launchSeen).toBe('');
-  });
-});

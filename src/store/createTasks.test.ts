@@ -1,13 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { resetIdbMemory } from '@/test/idbMemory';
 
-vi.mock('@/db/idb', () => ({
-  savePrefs: vi.fn(async () => {}),
-  saveSnapshot: vi.fn(async () => {}),
-  enqueue: vi.fn(async () => {}),
-  dequeue: vi.fn(async () => {}),
-  updateQueued: vi.fn(async () => {}),
-  readQueue: vi.fn(async () => []),
-}));
+vi.mock('@/db/idb', async () => (await import('@/test/idbMemory')).idbMemory());
 vi.mock('@/api/commands', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/commands')>()),
   sendCommands: vi.fn(),
@@ -28,6 +22,7 @@ const ok = (commands: Command[]): CommandResult => ({
 beforeEach(() => {
   vi.stubGlobal('navigator', { onLine: true });
   vi.clearAllMocks();
+  resetIdbMemory();
   sent.mockImplementation(async (_token, commands) => ok(commands));
   useStore.setState({ prefs: defaultPreferences('en'), connected: false, demo: false, snapshot: emptySnapshot(), toasts: [], undoStack: [], pendingCount: 0, syncState: 'idle' });
 });

@@ -40,7 +40,6 @@ const EisenhowerView = lazy(() => import('./views/EisenhowerView').then((module)
 import { ConnectView } from './views/ConnectView';
 import { EstimateStorageDialog } from './components/overlays/EstimateStorageDialog';
 import { Walkthrough } from './components/overlays/Walkthrough';
-import { LaunchPopup } from './components/launch/LaunchPopup';
 import { PomodoroFocus } from './components/overlays/PomodoroFocus';
 import { PomodoroAsk } from './components/overlays/PomodoroAsk';
 import { usePomodoro } from './store/pomodoro';
@@ -450,8 +449,6 @@ export function App() {
       <EstimateConversion target={conversionRequest.target} openRequest={conversionRequest.request} hideTrigger />
       <ShareSheet projectId={shareProject} onClose={() => setShareProject(null)} />
       <PomodoroFocus />
-      {/* Product Hunt launch day only: delete with src/components/launch and src/domain/launch.ts. */}
-      <LaunchPopup ready={!QUICK_ADD && ready && (connected || demo) && !tourOpen && !walkthroughOpen && !whatsNew} />
       <MacUpdateCard enabled={!QUICK_ADD && ready && (connected || demo) && !tourOpen && !walkthroughOpen && !whatsNew} />
       <PomodoroAsk open={askPomodoro && !pomodoroAsked} onClose={() => setAskPomodoro(false)} />
       <Walkthrough

@@ -45,13 +45,68 @@ const tourPreferences = (prefs: Preferences): Preferences => ({
   projectViews: {},
 });
 
+/**
+ * When this device last changed a setting that has not reached the account yet.
+ *
+ * A setting changed and the app closed within the write's 300 ms, or changed
+ * while the settings were already being written, stayed on this device only.
+ * The next launch then read the account's older settings over it, and the
+ * setting jumped back. Kept on the device, so a relaunch knows that its own
+ * settings are newer than the account's and writes them instead of taking
+ * the account's.
+ */
+export const PREFS_DIRTY_KEY = 'preferences-dirty';
+let dirtySince: number | null = null;
+/** Changes to the settings since launch: a write only clears the mark it saw. */
+let dirtyGeneration = 0;
+/** A change made here arrived while the settings were being written: write again after. */
+let writeAgain = false;
+
+export async function loadPrefsDirty(): Promise<void> {
+  const stored = await idb.loadPrefs<number>(PREFS_DIRTY_KEY);
+  dirtySince = typeof stored === 'number' && Number.isFinite(stored) ? stored : null;
+}
+
+export function prefsDirtySince(): number | null {
+  return dirtySince;
+}
+
+function markPrefsDirty() {
+  dirtyGeneration += 1;
+  if (dirtySince !== null) return;
+  dirtySince = Date.now();
+  void idb.savePrefs(PREFS_DIRTY_KEY, dirtySince);
+}
+
+export function clearPrefsDirty(generation?: number) {
+  if (generation !== undefined && generation !== dirtyGeneration) return;
+  if (dirtySince === null) return;
+  dirtySince = null;
+  void idb.savePrefs(PREFS_DIRTY_KEY, null);
+}
+
+/** For tests. */
+export function resetPrefsDirty() {
+  dirtySince = null; dirtyGeneration = 0; writeAgain = false;
+  if (preferencesWriteTimer) { clearTimeout(preferencesWriteTimer); preferencesWriteTimer = null; }
+}
+
 export function schedulePreferencesWrite(get: () => AppState) {
   if (!get().connected || get().demo) return;
+  markPrefsDirty();
   if (preferencesWriteTimer) window.clearTimeout(preferencesWriteTimer);
   preferencesWriteTimer = window.setTimeout(() => {
     preferencesWriteTimer = null;
     void get().ensurePreferencesTask(true);
   }, 300);
+}
+
+/** The page is going away: a settings write still waiting its 300 ms goes now. */
+export function flushPreferencesWrite(get: () => AppState) {
+  if (!preferencesWriteTimer) return;
+  window.clearTimeout(preferencesWriteTimer);
+  preferencesWriteTimer = null;
+  void get().ensurePreferencesTask(true);
 }
 
 /** Every settings comment on the Inbox, the current one first. */
@@ -83,6 +138,17 @@ export function legacySettingsTask(snapshot: Snapshot) {
 export function remotePreferences(snapshot: Snapshot, local: Preferences): Preferences | null {
   const comment = settingsComments(snapshot)[0];
   const remote = comment ? readSettingsComment(comment.content) : null;
+  /* This device changed a setting the account has not received yet: its
+     settings are the newer ones, and they are written rather than replaced.
+     Settings written to the account after that change, from another device,
+     are newer still and win. */
+  if (remote && dirtySince !== null) {
+    if ((remote.savedAt ?? 0) < dirtySince) {
+      const seen = latestSeenRelease(snapshot.user?.id, local.seenVersion);
+      return seen !== local.seenVersion ? { ...local, seenVersion: seen } : null;
+    }
+    clearPrefsDirty();
+  }
   if (remote) {
     const merged = mergeSynced(local, remote, local.locale);
     return { ...merged, seenVersion: latestSeenRelease(snapshot.user?.id, merged.seenVersion) };
@@ -157,6 +223,7 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
     if (tourPrefsBackup) {
       tourPrefsBackup = { ...tourPrefsBackup, ...patch };
       tourPrefsChanged = true;
+      if (get().connected && !get().demo) markPrefsDirty();
       void idb.savePrefs(PREFS_KEY, tourPrefsBackup);
       set({ prefs: tourPreferences({ ...get().prefs, ...patch }) });
       return;
@@ -220,8 +287,12 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
    * 1.12 gets the comment and loses the task.
    */
   async ensurePreferencesTask(localChange = false) {
-    if (!get().connected || get().demo || creatingPreferencesTask || tourSnapshotBackup) return;
+    if (!get().connected || get().demo || tourSnapshotBackup) return;
+    /* Already writing: a change made here since would be lost if this call
+       simply stopped, and the next sync would read the old settings back. */
+    if (creatingPreferencesTask) { if (localChange) writeAgain = true; return; }
     creatingPreferencesTask = true;
+    const generation = dirtyGeneration;
     try {
       let snapshot = get().snapshot;
       const inbox = snapshot.user?.inbox_project_id;
@@ -271,7 +342,13 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
       for (const duplicate of duplicates) commands.push(command('note_delete', { id: duplicate.id }));
       const legacy = legacySettingsTask(snapshot);
       if (legacy) commands.push(deleteItem(legacy.id));
-      if (commands.length === 0) return;
+      if (commands.length === 0) {
+        // The account already says this, unless what says so is still waiting to go.
+        const queued = (await idb.readQueue()).some((cmd) => (cmd.type === 'note_update' && cmd.args.id === current?.id)
+          || (cmd.type === 'note_add' && String(cmd.args.content ?? '').startsWith(SETTINGS_COMMENT_MARKER)));
+        if (!queued) clearPrefsDirty(generation);
+        return;
+      }
 
       const written = commands.some((cmd) => cmd.type === 'note_add' || cmd.type === 'note_update');
       await get().apply(commands, (state) => {
@@ -289,8 +366,16 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
         if (legacy) delete items[legacy.id];
         return { ...state, notes, items };
       });
+      /* Delivered: the account has this device's settings. Still in the
+         outbox: the mark stays, and the next launch writes them again. */
+      const sent = new Set(commands.map((cmd) => cmd.uuid));
+      if (written && !(await idb.readQueue()).some((cmd) => sent.has(cmd.uuid))) clearPrefsDirty(generation);
     } finally {
       creatingPreferencesTask = false;
+      if (writeAgain) {
+        writeAgain = false;
+        window.setTimeout(() => void get().ensurePreferencesTask(true), 0);
+      }
     }
   },
   /**
