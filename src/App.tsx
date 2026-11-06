@@ -377,7 +377,16 @@ export function App() {
     return () => window.removeEventListener('enhanced:changelog', show);
   }, []);
 
+  /* theme-boot.js marks the Quick Add window transparent before its first
+     paint; the sign-in page it shows before there is an account needs its
+     background back. */
+  useEffect(() => {
+    if (QUICK_ADD) document.documentElement.classList.toggle('quickadd', !ready || connected);
+  }, [ready, connected]);
+
   if (!ready) {
+    // The Quick Add window stays clear until the composer can be drawn.
+    if (QUICK_ADD) return null;
     return <div className="connect"><p className="empty">{t('common.loading')}</p></div>;
   }
 

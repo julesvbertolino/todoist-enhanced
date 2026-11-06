@@ -183,7 +183,7 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
       /* A page load that is Todoist sending the person back from its consent
          page finishes the sign-in first, so what follows finds a connection. */
       const signIn = await completeSignIn();
-      if (signIn === 'signed-in') sessionRemove('demo');
+      if (signIn === 'signed-in') { sessionRemove('demo'); auth.forgetPastedToken(); }
       if (signIn === 'denied' || signIn === 'failed') set({ signInError: signIn });
 
       const [storedPrefs, snapshot, queue, storedKept] = await Promise.all([
@@ -411,6 +411,16 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
        there — nothing is sent or queued with the demo's ids. */
     if (get().demo || tourSnapshotBackup) {
       set({ snapshot: after });
+      return {};
+    }
+
+    /* A window still on another account than the device's (the Quick Add
+       window after the main one changed account) sends nothing: the token is
+       the device's, the projects and ids it names are the other account's. It
+       starts over on the device's account instead. */
+    if (!mayWriteAs(before.user?.id, accountOnDevice())) {
+      get().toast(translate(get().prefs.locale, 'sync.otherAccount'), undefined, { tone: 'error' });
+      window.setTimeout(() => window.location.reload(), 2500);
       return {};
     }
 

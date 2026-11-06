@@ -7,7 +7,13 @@
   is stored; "system" is still resolved against the device here, the
   same way the app resolves it afterwards.
 */
+/* The desktop app's Quick Add window is transparent, and only the composer
+   is drawn in it. The page says so before its first paint: marked later, by
+   the app itself, the window showed the full opaque loading page for an
+   instant each time it loaded again, a flash of the whole app before the
+   composer. */
 try {
+  if (window.location && /[?&]quickadd(?:[=&]|$)/.test(window.location.search)) document.documentElement.classList.add('quickadd');
   var choice = localStorage.getItem('theme');
   var dark = choice === 'dark' ||
     (choice !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);

@@ -66,3 +66,27 @@ export function watchAccount(store: Watched): () => void {
   sync();
   return () => { unsubscribe(); window.removeEventListener('storage', onStorage); };
 }
+
+interface WindowState {
+  ready: boolean;
+  connected: boolean;
+  demo: boolean;
+  snapshot: { user: { id: string | number } | null };
+}
+
+/**
+ * Whether a window kept open in the background (the desktop app's Quick Add)
+ * no longer matches what the device is signed in to, and must load again
+ * before anything is typed in it. Checked each time it is shown: the storage
+ * event that reloads it can be missed (the demo ignores it, a window that was
+ * not signed in has no account to compare), and a task sent from a window in
+ * the wrong state lands in the wrong place or nowhere.
+ */
+export function outOfStep(state: WindowState, device: { signedIn: boolean; account: string | null }): boolean {
+  if (!state.ready) return false;
+  // The demo, or the sign-in page, while the device has an account.
+  if (state.demo || !state.connected) return device.signedIn;
+  // An account, while the device has signed out.
+  if (!device.signedIn) return true;
+  return !mayWriteAs(state.snapshot.user?.id, device.account);
+}
