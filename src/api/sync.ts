@@ -34,7 +34,7 @@ export interface SyncResponse {
   collaborators_states?: CollaboratorState[];
   user?: TodoistUser;
   temp_id_mapping?: Record<string, string>;
-  sync_status?: Record<string, 'ok' | { error_code: number; error: string }>;
+  sync_status?: Record<string, 'ok' | { error_code: number; error: string; error_tag?: string }>;
 }
 
 /**

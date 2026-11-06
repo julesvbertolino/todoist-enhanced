@@ -33,7 +33,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: development ? `npm run dev -- --host ${HOST} --port ${PORT} --strictPort` : `npm run build && npm run preview -- --host ${HOST} --port ${PORT} --strictPort`,
+    command: development ? `npm run dev -- --host ${HOST} --port ${PORT} --strictPort` : `VITE_E2E_LEGACY_DEMO=1 npm run build && npm run preview -- --host ${HOST} --port ${PORT} --strictPort`,
     url: `http://${HOST}:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,

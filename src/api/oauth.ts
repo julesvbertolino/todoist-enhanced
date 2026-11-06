@@ -117,7 +117,8 @@ export function builtForElsewhere(): string | null {
 /** Leaves for Todoist's consent page. The page is gone after this. */
 export async function beginSignIn(): Promise<boolean> {
   const verifier = randomString(64);
-  const state = randomString(24);
+  const desktop = window.enhancedDesktop?.openSignIn;
+  const state = `${desktop ? (window.enhancedDesktop?.testMode ? 'desktop_test_' : 'desktop_') : ''}${randomString(24)}`;
   /* The verifier has to survive the round trip through Todoist's page, and this
      is the only place it can. With site storage blocked it cannot, so the page
      stays where it is and says so, rather than leaving for a sign-in that could
@@ -134,7 +135,10 @@ export async function beginSignIn(): Promise<boolean> {
   url.searchParams.set('redirect_uri', redirectUri());
   url.searchParams.set('code_challenge', await challengeOf(verifier));
   url.searchParams.set('code_challenge_method', 'S256');
-  window.location.assign(url.toString());
+  if (desktop) {
+    const opened = await desktop(url.toString());
+    if (!opened) { sessionRemove(PENDING_KEY); return false; }
+  } else window.location.assign(url.toString());
   return true;
 }
 
@@ -164,9 +168,9 @@ export async function completeSignIn(): Promise<SignInResult> {
   }
   window.history.replaceState(null, '', `${window.location.pathname}${pending?.route ?? ''}`);
 
-  if (error) return error === 'access_denied' ? 'denied' : 'failed';
   // No pending sign-in, or not ours: never exchange a code this tab did not ask for.
   if (!pending || params.get('state') !== pending.state) return 'failed';
+  if (error) return error === 'access_denied' ? 'denied' : 'failed';
 
   try {
     const response = await fetch(TOKEN_URL, {

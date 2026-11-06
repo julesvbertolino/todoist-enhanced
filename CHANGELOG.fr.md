@@ -8,6 +8,98 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.32.1
+
+🐛 **Voyez où tombe la prochaine occurrence d’une tâche en retard.** Sur une tâche récurrente en retard, Prochaine occurrence indique maintenant le jour où elle va tomber, dans le menu de date et dans le menu de la ligne. Un jour déjà passé devient demain.
+
+## 2.32.0
+
+🆕 **Ouvrez les liens Todoist depuis une tâche.** Quand le titre, la description ou un commentaire d’une tâche contient un lien vers une autre tâche, un projet, un tag ou un filtre à vous, un clic l’ouvre dans Enhanced au lieu de Todoist. Dans l’éditeur de description, ⌘-clic (Ctrl-clic sous Windows) le suit. Les autres liens s’ouvrent comme avant.
+
+🆕 **Sachez quand une nouvelle app Mac est sortie.** Dans l’app Mac, une carte vous prévient maintenant qu’une version plus récente peut être téléchargée, avec un bouton pour la récupérer. Remplacez l’ancienne app dans Applications. Elle ne s’affiche qu’une fois par version.
+
+🎨 **Planifiez n’importe quelle tâche depuis Cette semaine.** Dans le Calendrier de Cette semaine et de Ce mois-ci, le panneau Sans date peut lister les tâches sans date de la page ou de tous vos projets, pour donner un jour à n’importe laquelle. Sur Cette semaine, la liste de la page se limite désormais à ce que vous avez marqué pour la semaine.
+
+🎨 **Choisissez les tags que vous voulez voir.** Dans Affichage, cochez les tags à montrer au lieu de décocher ceux dont vous ne voulez pas. « Tous les tags » reste coché tant que vous n’en choisissez pas, et le recocher efface votre choix.
+
+🎨 **La recherche trouve d’abord projets et tags.** Tapez quelques lettres : le projet ou le tag que vous cherchez, avec son icône, passe avant une tâche qui correspond aussi bien. Les sections sont aussi cherchées par défaut.
+
+🎨 **Améliorations de la configuration.** La première configuration commence avec Boîte de réception, Cette semaine, Ce mois-ci, Prochainement et Un jour dans votre barre latérale. Activez le reste quand vous en avez besoin.
+
+🎨 **Améliorations de la barre latérale.** Les réglages montrent l’image de chaque espace à côté de son nom quand vous les classez, et Mes projets affiche votre photo, dans la barre latérale et dans cette liste.
+
+🐛 **Les tags d’un tableau suivent l’ordre de Todoist.** Le menu des tags d’une tâche dans un tableau les liste dans l’ordre de votre liste de tags Todoist, dans un menu plus petit qui s’accorde au tableau.
+
+🐛 **Déplacez les sections sur téléphone.** Maintenez le doigt sur le titre d’une section, puis glissez-la ailleurs. La poignée laisse la place au titre sur téléphone et dans une fenêtre étroite.
+
+## 2.31.0
+
+🆕 **Passez facilement d’Aujourd’hui aux autres jours.** Un petit chevron à côté du titre d’Aujourd’hui, et d’Aujourd’hui dans Cette semaine, ouvre un sélecteur de date. Un autre jour liste ce qui y est prévu, vous pouvez y ajouter ou y déposer des tâches, et Aujourd’hui dans le sélecteur vous ramène au jour même.
+
+🎨 **Déplacez plusieurs événements du Calendrier d’un coup.** ⌘-clic (Ctrl-clic sous Windows) sur des événements pour les choisir, puis glissez-en un : tous changent de jour ensemble, chacun gardant son horaire, et ceux sur la journée y restent. Un événement seul se déplace toujours où vous voulez, heure comprise.
+
+🎨 **Une deadline peut rendre une tâche urgente dans la matrice d’Eisenhower.** Les règles d’urgence de la matrice lisent désormais la deadline d’une tâche en plus de sa date de début : une tâche prévue plus tard avec une deadline demain tombe dans les cadrans urgents. « Sans date, avec @semaine » devient simplement « Dans la semaine ».
+
+🎨 **Voyez où tombe « Prochaine occurrence ».** La date de début d’une tâche récurrente propose Prochaine occurrence et, comme le menu de la ligne, indique le jour où elle tombe. Les répétitions par mois et par an sont lues aussi.
+
+🐛 **Les tâches récurrentes comptent dans Analyses et le Tableau de bord.** Chaque fois que vous terminez une tâche récurrente, elle apparaît dans les graphiques, la série, le score de concentration et « terminées cette semaine », comme dans Todoist. Le total de tâches terminées d’un projet ne change pas.
+
+## 2.30.0
+
+🆕 **Vue Matrice dans les projets.** Dans Affichage, choisissez Matrice à côté de Liste, Tableau, Table et Calendrier, sur un projet, un tag, un filtre ou la Boîte de réception. Ses tâches se répartissent dans les quatre cadrans d'Eisenhower, avec les mêmes règles d'urgence et d'importance, réglables dans Affichage, même dans une vue enregistrée.
+
+🎨 **La matrice d'Eisenhower peut être votre page d'accueil.** Dans les Réglages, choisissez la matrice d'Eisenhower comme page d'accueil et l'app s'ouvre dessus. Si vous désactivez la matrice, l'app s'ouvre sur Cette semaine.
+
+🎨 **La matrice s'affine.** Affichage propose un tri pour les quatre cadrans, retenu d'une visite à l'autre. Une sous-tâche avec sa propre date ou priorité a sa carte, avec le nom de son parent, et chaque parent garde toutes ses sous-tâches repliées dessous. Un interrupteur Afficher les sous-tâches ne garde que le premier niveau.
+
+🐛 **Une deadline dépassée met la tâche en retard.** Une tâche dont la deadline est passée compte maintenant comme en retard dans Ma semaine, sur la matrice et dans les compteurs de la barre latérale, même si sa date de début est à venir. Sa pastille indique Hier ou le nombre de jours de retard.
+
+🐛 **Les cartes sélectionnées restent colorées.** Sur la matrice, une carte sur laquelle vous faites ⌘-clic est teintée d'un bord à l'autre, et garde sa teinte quand vous la survolez.
+
+## 2.29.0
+
+🎨 **La barre latérale retient ses sections repliées.** Repliez Favoris, Mes projets, un espace de travail ou un dossier dans la barre latérale : ils restent repliés après un rechargement ou à votre retour. Chaque compte garde les siens.
+
+🎨 **Les échéances apparaissent le bon jour.** Une tâche dont l’échéance est aujourd’hui s’affiche maintenant dans Aujourd’hui et Ma semaine, et sous le jour de son échéance dans À venir, même si sa date de début est un autre jour. Elle n’apparaît jamais deux fois sur la même page.
+
+🎨 **Des tâches plus compactes.** Une tâche qui n’a qu’un titre prend moins de place dans les listes : plus de tâches tiennent à l’écran. Les tables et la version téléphone gardent leur taille.
+
+🐛 **Supprimez un projet de votre espace de travail.** Todoist ne supprime un projet d’espace de travail que s’il est archivé, ce qui finissait par une erreur. La confirmation le dit maintenant, et l’app archive puis supprime le projet d’un seul geste.
+
+🐛 **Gardez votre tri en vous reconnectant.** Le regroupement et le tri choisis sur un tag, un filtre ou À venir suivent maintenant votre compte : ils sont toujours là après une déconnexion et une reconnexion.
+
+🐛 **Les filtres à virgules gardent leurs groupes.** Un filtre composé de plusieurs requêtes séparées par des virgules montre chaque requête comme un groupe dans Table et Tableau, comme il le fait déjà en liste.
+
+🐛 **Le menu de date se ferme quand vous choisissez.** Dans la fenêtre de nouvelle tâche, choisir Aujourd’hui ou une date rapide ferme maintenant le menu, comme celui de l’échéance.
+
+## 2.28.0
+
+🆕 **Choisissez votre raccourci d’ajout rapide.** Dans l’app Mac, ouvrez les Réglages, cliquez sur le raccourci, puis appuyez sur les touches de votre choix. Le raccourci qui ouvre l’ajout rapide au-dessus de n’importe quelle app n’est plus figé sur Option + Espace. Il faut la version 1.1 de l’app Mac ; les Réglages vous disent où la trouver.
+
+🎨 **Le détail des sous-tâches, d’un coup d’œil.** Ouvrez une tâche : chaque sous-tâche affiche sa description, sa durée, sa date et ses tags sous son nom, dans l’ordre choisi dans Affichage. Plus besoin de les ouvrir une à une.
+
+🎨 **Des tableaux à la hauteur de votre fenêtre.** Chaque colonne prend la hauteur de la fenêtre et défile seule, avec son nom et son bouton Ajouter une tâche toujours en place. La page ne défile plus sous le tableau.
+
+🎨 **Ne perdez plus la tâche dans une grande table.** Quand une table a plus de colonnes que la place disponible, la case et le nom de la tâche restent à gauche pendant que vous faites défiler sur le côté : vous savez toujours quelle ligne vous lisez.
+
+🐛 **Un avertissement avant qu’une tâche récurrente perde sa date.** Déplacer plusieurs tâches vers Ce mois-ci demande maintenant confirmation quand l’une d’elles se répète, comme pour Cette semaine et Un jour. Avant, la répétition était supprimée sans rien dire.
+
+## 2.27.2
+
+🐛 **Supprimez ce que vous avez choisi.** Après avoir retiré une tâche d’une sélection avec ⌘-clic, ⌘⌫ supprime les tâches encore sélectionnées, et non celle que vous venez de décocher. E, T, V et les touches de priorité suivent la même règle.
+
+## 2.27.1
+
+🎨 **Finitions de l’interface.** Les résumés de page et Analyses sont plus lisibles. Le menu Affichage, les détails des tâches et les pages Tags et Filtres sont épurés ; l’ajout des estimations manquantes est simplifié. La visite présente désormais le minuteur Pomodoro.
+
+## 2.27.0
+
+🆕 **Découvrez le minuteur Pomodoro.** Appuyez sur la pastille 25 min en haut d’une page pour 25 minutes de concentration. Le temps défile dans la pastille, avec la pause à côté. Ouvrez une tâche et appuyez sur la pastille pour lier le minuteur à cette tâche, puis passez en plein écran pour travailler dessus.
+
+🆕 **Planifiez le mois avec À tout moment ce mois-ci.** Ce mois-ci est une nouvelle page pour ce que vous voulez faire ce mois-ci, sans jour précis. Glissez une tâche dessus, ou choisissez À tout moment ce mois-ci dans un sélecteur de date. Dans une liste, une telle tâche affiche À tout moment cette semaine ou ce mois-ci à la place de sa date.
+
+🐛 **Retrouvez plus vite un projet ou une section.** Pendant que vous tapez dans le sélecteur de projet, les projets viennent d’abord, puis les sections, et chaque section indique son projet.
+
 ## 2.26.1
 
 🎨 **Les gros comptes s’allègent.** Cocher ou modifier une tâche dans une longue liste, ou recevoir une mise à jour de Todoist, ne redessine plus toutes les autres lignes. L’app charge aussi moins de code au démarrage : les gros projets et Ma semaine restent réactifs.

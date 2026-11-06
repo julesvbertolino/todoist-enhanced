@@ -1,11 +1,15 @@
 export type ChangelogVisual =
-  'tableLayout' | 'projectProgress' | 'focusedIcons' | 'darkAmoled' | 'threadOrder' | 'nlpShorthands' | 'taskComments' | 'boardDestination' | 'taskQuickActions' | 'workspacePage' | 'views' | 'mentions' | 'composerImage' | 'viewChoices' | 'table' | 'sidebarResize' | 'calendar' | 'assign' | 'subtasks' | 'sidebarFilters' | 'filterEditor' | 'favourites' | 'tags' | 'tagColours' | 'bulkTags' | 'sharing' | 'access' | 'assigneeFilter' | 'workspaces' | 'forecast' | 'skipRepeat' | 'search' | 'searchSections' | 'parser' | 'rejectParser' | 'duration' | 'estimates' | 'bulkEstimate' | 'estimateStorage' | 'estimateConversion' | 'metadata' | 'datePicker' | 'projectView' | 'board' | 'boardSection' | 'layouts' | 'sidebar' | 'projectNesting' | 'mobileBrowse' | 'today' | 'appearance' | 'dark' | 'accent' | 'setup' | 'notifications' | 'projectPicker' | 'projectMenu' | 'sectionMenu' | 'taskNavigation' | 'time' | 'quick' | 'dust' | 'dashboard' | 'period' | 'dashboardLayout' | 'review' | 'subtaskTotal' | 'nesting' | 'checklist' | 'conflicts' | 'paste' | 'upcomingGroups' | 'logbook' | 'bulk' | 'keyboard' | 'projectEmail' | 'signIn' | 'mac' | 'undo' | 'sync' | 'offline' | 'projectIcons' | 'completed' | 'matrix' | 'swipe' | 'load' | 'week' | 'density';
+  'dayNav' | 'pomodoro' | 'tableLayout' | 'projectProgress' | 'focusedIcons' | 'darkAmoled' | 'threadOrder' | 'nlpShorthands' | 'taskComments' | 'boardDestination' | 'taskQuickActions' | 'workspacePage' | 'views' | 'mentions' | 'composerImage' | 'viewChoices' | 'table' | 'sidebarResize' | 'calendar' | 'assign' | 'subtasks' | 'sidebarFilters' | 'filterEditor' | 'favourites' | 'tags' | 'tagColours' | 'bulkTags' | 'sharing' | 'access' | 'assigneeFilter' | 'workspaces' | 'forecast' | 'skipRepeat' | 'search' | 'searchSections' | 'parser' | 'rejectParser' | 'duration' | 'estimates' | 'bulkEstimate' | 'estimateStorage' | 'estimateConversion' | 'metadata' | 'datePicker' | 'projectView' | 'board' | 'boardSection' | 'layouts' | 'sidebar' | 'projectNesting' | 'mobileBrowse' | 'today' | 'appearance' | 'dark' | 'accent' | 'setup' | 'notifications' | 'projectPicker' | 'projectMenu' | 'sectionMenu' | 'taskNavigation' | 'time' | 'quick' | 'dust' | 'dashboard' | 'period' | 'dashboardLayout' | 'review' | 'subtaskTotal' | 'nesting' | 'checklist' | 'conflicts' | 'paste' | 'upcomingGroups' | 'logbook' | 'bulk' | 'keyboard' | 'projectEmail' | 'signIn' | 'mac' | 'undo' | 'sync' | 'offline' | 'projectIcons' | 'completed' | 'matrix' | 'swipe' | 'load' | 'week' | 'density' | 'subtaskDetails' | 'projectMatrix';
 
 /** Editorial illustrations for features that benefit from a concrete UI example.
  * Keys refer to the release and its impact-sorted entry, shared by both languages.
  * Add a preview deliberately, including an occasional design entry with a concrete UI change.
  */
 export const CHANGELOG_VISUALS = {
+  '2.31.0:0': 'dayNav', // Today moves to the days around it.
+  '2.30.0:0': 'projectMatrix', // A project, a tag or a filter seen as a Matrix.
+  '2.28.0:1': 'subtaskDetails', // Each subtask shows its details under its name.
+  '2.27.0:0': 'pomodoro', // The 25 min pill, ready, running and paused.
   '2.25.0:0': 'tableLayout', // A table with its columns moved, resized and wrapped.
   '2.22.0:0': 'projectProgress',
   '2.22.0:2': 'focusedIcons',

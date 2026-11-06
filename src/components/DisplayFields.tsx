@@ -6,6 +6,7 @@ import { ColumnsMenu } from './ColumnsMenu';
 import { AssigneeSelect } from './AssigneeFilter';
 import { GROUP_ICON, GROUP_ORDER, SORT_ICON } from './DisplayMenu';
 import { MODE_ICON } from './viewModes';
+import { MatrixLayoutToggle, MatrixRules, usePageMatrix } from './MatrixRules';
 import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
 import { markerStyle } from '@/domain/colors';
@@ -45,6 +46,7 @@ export function DisplayFields({
   const isCalendar = value.mode === 'calendar';
   const calendar = calendarPrefs(value, viewKey);
   const setCalendar = (patch: Partial<CalendarPrefs>) => onChange({ calendar: { ...calendar, ...patch } });
+  const matrix = usePageMatrix(value.matrix, (next) => onChange({ matrix: next }));
   const filters = value.filters;
   const setFilters = (patch: Partial<ViewPrefs['filters']>) => onChange({ filters: { ...filters, ...patch } });
   const shownGroup = groups.includes(value.group) ? value.group : groups[0];
@@ -59,7 +61,6 @@ export function DisplayFields({
 
   return (
     <div className="dfields">
-      <h5>{t('display.kind')}</h5>
       <div className="segmented display-modes" role="group" aria-label={t('display.kind')}>
         {modes.map((mode) => (
           <button key={mode} type="button" aria-pressed={value.mode === mode} title={t(`toolbar.${mode}` as TranslationKey)} onClick={() => onChange({ mode })}>
@@ -71,7 +72,7 @@ export function DisplayFields({
 
       {value.mode === 'list' && (
         <div className="panelrow display-fullwidth">
-          <span>{t('toolbar.fullWidth')}</span>
+          <span><Icon name="full-width" size="sm" /> {t('toolbar.fullWidth')}</span>
           <button type="button" className="switch" role="switch" aria-checked={value.fullWidth === true} aria-label={t('toolbar.fullWidth')}
             onClick={() => onChange({ fullWidth: value.fullWidth !== true })} />
         </div>
@@ -79,14 +80,19 @@ export function DisplayFields({
       {value.mode === 'table' && (
         <div className="dfield-stack">
           <ColumnsMenu value={value} onChange={(patch) => onChange(patch)} />
-          <Select label={t('table.coloration')} value={value.tableColoration ?? 'none'}
-            options={(['none', 'priority', 'date', 'project'] as const).map((option) => ({ value: option, label: t(`table.color.${option}`) }))}
+          <Select ariaLabel={t('table.coloration')} value={value.tableColoration ?? 'none'}
+            options={(['none', 'priority', 'date', 'project'] as const).map((option) => ({ value: option, label: t(option === 'none' ? 'table.noColoration' : option === 'priority' ? 'table.priorityColors' : option === 'date' ? 'table.dateColors' : 'table.projectColors'), icon: ({ none: 'palette', priority: 'flag', date: 'calendar', project: 'project' } as const)[option] }))}
             onChange={(option) => onChange({ tableColoration: option as NonNullable<ViewPrefs['tableColoration']> })} />
           <div className="panelrow display-fullwidth">
-            <span>{t('table.wrap')}</span>
+            <span><Icon name="wrap-text" size="sm" /> {t('table.wrap')}</span>
             <button type="button" className="switch" role="switch" aria-checked={value.tableWrap === true} aria-label={t('table.wrap')}
               onClick={() => onChange({ tableWrap: value.tableWrap !== true })} />
           </div>
+        </div>
+      )}
+      {value.mode === 'matrix' && (
+        <div className="dfield-stack matrix-display-settings">
+          <MatrixLayoutToggle scope={matrix} />
         </div>
       )}
       {isCalendar && (
@@ -98,27 +104,26 @@ export function DisplayFields({
               </button>
             ))}
           </div>
+          <Select ariaLabel={t('calendar.coloration')} value={calendar.coloration}
+            options={(['priority', 'project', 'tag'] as const).map((option) => ({ value: option, label: t(`calendar.colorBy.${option}`), icon: ({ priority: 'flag', project: 'project', tag: 'tag' } as const)[option] }))}
+            onChange={(option) => setCalendar({ coloration: option as CalendarPrefs['coloration'] })} />
           <div className="display-toggles">
             {(['futureOccurrences', 'completed'] as const).map((key) => (
               <div className="panelrow" key={key}>
-                <span>{t(key === 'completed' ? 'calendar.completed' : 'calendar.future')}</span>
+                <span><Icon name={key === 'completed' ? 'check' : 'repeat'} size="sm" /> {t(key === 'completed' ? 'calendar.completed' : 'calendar.future')}</span>
                 <button type="button" className="switch" role="switch" aria-checked={calendar[key]}
                   aria-label={t(key === 'completed' ? 'calendar.completed' : 'calendar.future')}
                   onClick={() => setCalendar({ [key]: !calendar[key] })} />
               </div>
             ))}
           </div>
-          <Select label={t('calendar.coloration')} value={calendar.coloration}
-            options={(['priority', 'project', 'tag'] as const).map((option) => ({ value: option, label: t(`calendar.${option}`), icon: ({ priority: 'flag', project: 'project', tag: 'tag' } as const)[option] }))}
-            onChange={(option) => setCalendar({ coloration: option as CalendarPrefs['coloration'] })} />
           {estimateStorage !== 'duration' && <p className="calendar-pref-hint">{t('calendar.tagHint')}</p>}
         </div>
       )}
 
       <hr />
-      <h5>{t('display.order')}</h5>
       <div className="panelgrid">
-        {!isCalendar && (
+        {!isCalendar && value.mode !== 'matrix' && (
           <Select label={t('toolbar.group')} value={shownGroup} onChange={(option) => onChange({ group: option as GroupKey })}
             options={[...groups].sort((a, b) => GROUP_ORDER.indexOf(a) - GROUP_ORDER.indexOf(b)).map((group) => ({
               value: group, label: t(`group.${group}` as TranslationKey), icon: GROUP_ICON[group],
@@ -138,17 +143,17 @@ export function DisplayFields({
         {extraFilters}
         <AssigneeSelect value={filters.assignees ?? null} onChange={(assignees) => setFilters({ assignees })} />
         <MultiSelect
-          icon="flag" label={t('filter.priorities')} allLabel={t('filter.anyPriority')} value={filters.priorities.length > 0 ? filters.priorities.map(String) : null}
+          icon="flag" maxSummaryLabels={4} label={t('filter.priorities')} allLabel={t('filter.anyPriority')} value={filters.priorities.length > 0 ? filters.priorities.map(String) : null}
           options={priorityOptions} onChange={(next) => setFilters({ priorities: next ? next.map(Number) as DisplayPriority[] : [] })}
         />
         <MultiSelect
-          icon="clock" label={t('filter.estimated')} allLabel={t('filter.any')} value={filters.estimated === null ? null : [filters.estimated ? 'yes' : 'no']}
+          icon="clock" label={t('filter.estimated')} allLabel={t('filter.allEstimates')} value={filters.estimated === null ? null : [filters.estimated ? 'yes' : 'no']}
           options={[{ value: 'yes', label: t('filter.isEstimated') }, { value: 'no', label: t('filter.isUnestimated') }]}
           onChange={(next) => setFilters({ estimated: next && next.length === 1 ? next[0] === 'yes' : null })}
         />
         {tagOptions.length > 0 && (
           <MultiSelect
-            icon="tag" label={t('filter.labels')} allLabel={t('filter.anyTag')} value={filters.labels.length > 0 ? filters.labels : null}
+            icon="tag" include label={t('filter.labels')} allLabel={t('filter.anyTag')} value={filters.labels.length > 0 ? filters.labels : null}
             options={tagOptions} onChange={(next) => setFilters({ labels: next ?? [] })}
           />
         )}
@@ -156,24 +161,30 @@ export function DisplayFields({
       <div className="display-toggles">
         {scheduledLabel && (
           <div className="panelrow">
-            <span>{t(scheduledLabel)}</span>
+            <span><Icon name="calendar" size="sm" /> {t(scheduledLabel)}</span>
             <button type="button" className="switch" role="switch" aria-checked={filters.includeScheduled} aria-label={t(scheduledLabel)}
               onClick={() => setFilters({ includeScheduled: !filters.includeScheduled })} />
           </div>
         )}
         <div className="panelrow">
-          <span>{t('filter.showSubtasks')}</span>
+          <span><Icon name="list" size="sm" /> {t('filter.showSubtasks')}</span>
           <button type="button" className="switch" role="switch" aria-checked={filters.showSubtasks} aria-label={t('filter.showSubtasks')}
             onClick={() => setFilters({ showSubtasks: !filters.showSubtasks })} />
         </div>
         {completedToggle && !isCalendar && (
           <div className="panelrow">
-            <span>{t('filter.showCompleted')}</span>
+            <span><Icon name="check" size="sm" /> {t('filter.showCompleted')}</span>
             <button type="button" className="switch" role="switch" aria-checked={filters.showCompleted} aria-label={t('filter.showCompleted')}
               onClick={() => setFilters({ showCompleted: !filters.showCompleted })} />
           </div>
         )}
       </div>
+      {value.mode === 'matrix' && (
+        <>
+          <hr />
+          <MatrixRules scope={matrix} />
+        </>
+      )}
     </div>
   );
 }

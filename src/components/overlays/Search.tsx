@@ -9,6 +9,8 @@ import { markerStyle } from '@/domain/colors';
 import { toDisplayPriority } from '@/domain/types';
 import { foldSearch as fold, searchRank } from '@/domain/search';
 import { useStore } from '@/store/store';
+import { readProjectIcon } from '@/domain/projectIcons';
+import { ProjectIcon } from '../ProjectIcon';
 
 interface SearchProps {
   open: boolean;
@@ -74,6 +76,7 @@ export function Search({ open, onClose, onOpen, seed = '' }: SearchProps) {
       { key: 'go-inbox', icon: 'inbox', title: t('nav.inbox'), run: go(() => navigate('inbox')) },
       { key: 'go-today', icon: 'calendar', title: t('nav.today'), run: go(() => navigate('today')) },
       { key: 'go-week', icon: 'week', title: t('nav.week'), run: go(() => navigate('week')) },
+      { key: 'go-later', icon: 'calendar', title: t('nav.month'), run: go(() => navigate('month')) },
       { key: 'go-upcoming', icon: 'upcoming', title: t('nav.upcoming'),
         run: go(() => navigate('upcoming')) },
       { key: 'go-someday', icon: 'someday', title: t('nav.someday'),
@@ -173,10 +176,13 @@ export function Search({ open, onClose, onOpen, seed = '' }: SearchProps) {
       const score = rank(project.name);
       if (score < 0) continue;
       found.push({
-        score,
+        /* A project beats a task that matches just as well: reaching one is
+           what the palette is most often used for (#358). */
+        score: score - 0.5,
         hit: {
           key: `project-${project.id}`,
-          marker: <span className="hash" style={markerStyle(project.color)}>#</span>,
+          /* The project's own picture, as in the sidebar and the results page. */
+          marker: <span className="hash" style={markerStyle(project.color)}>{project.inbox_project ? <Icon name="inbox" size="sm" /> : readProjectIcon(project.description) ? <ProjectIcon iconId={readProjectIcon(project.description)!} size="sm" /> : '#'}</span>,
           title: project.name,
           run: go(() => navigate('project', project.id)),
         },
@@ -188,7 +194,7 @@ export function Search({ open, onClose, onOpen, seed = '' }: SearchProps) {
       const score = rank(label.name);
       if (score < 0) continue;
       found.push({
-        score,
+        score: score - 0.5,
         hit: {
           key: `label-${label.id}`,
           icon: 'tag',

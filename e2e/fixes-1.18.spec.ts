@@ -128,8 +128,8 @@ test('#153 the date menu: shortcuts first, Next occurrence with its date, the ca
   const menu = page.locator('.rowmenu.schedulemenu');
   const labels = menu.locator('.datepicker-options .opt > span');
   await expect(labels).toHaveText([
-    /Today/, /Tomorrow/, /Next week/, /This week/, /Someday/,
-    /Skip to next occurrence/, /Remove the date/, /Pick a date/,
+    /Today/, /Tomorrow/, /Next week/, /Anytime this week/, /Anytime this month/, /Someday/,
+    /Next occurrence/, /Remove the date/, /Pick a date/,
   ]);
   await expect(menu.locator('.datepanel-grid')).toHaveCount(0);
 

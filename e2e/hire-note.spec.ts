@@ -29,7 +29,7 @@ async function openAs(page: Page, email: string, hireNoteSeen = false) {
     localStorage.setItem('onboarded', JSON.stringify(['account-test']));
     const db = await new Promise<IDBDatabase>((resolve, reject) => { const request = indexedDB.open('todoist-enhancements', 1); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
     const tx = db.transaction('prefs', 'readwrite');
-    tx.objectStore('prefs').put({ locale: 'en', onboarded: true, setupDone: true, seenVersion: version, estimateStorage: 'tag', eisenhowerEnabled: true, hireNoteSeen: seen }, 'preferences');
+    tx.objectStore('prefs').put({ locale: 'en', onboarded: true, setupDone: true, pomodoroAsked: true, seenVersion: version, estimateStorage: 'tag', eisenhowerEnabled: true, hireNoteSeen: seen }, 'preferences');
     await new Promise<void>((resolve, reject) => { tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error); });
     db.close();
   }, { version: VERSION, seen: hireNoteSeen });
@@ -79,7 +79,7 @@ test('an account that has already seen it does not see it again', async ({ page 
   await expect(page.locator('.hirenote')).toHaveCount(0);
 });
 
-test('wherever it opens, the note is on the page, and on My week it sits in the Today group', async ({ page }) => {
+test('wherever it opens, the note is on the page, and on This week it sits in the Today group', async ({ page }) => {
   await openAs(page, 'someone@todoist.com');
   await page.goto('/#/week');
   const note = page.locator('.screen.active .hirenote');

@@ -12,7 +12,21 @@ export function calendarPrefs(view: ViewPrefs, viewKey: string): CalendarPrefs {
     completed: saved?.completed === true,
     coloration: saved && ['priority', 'project', 'tag'].includes(saved.coloration) ? saved.coloration
       : viewKey.startsWith('project:') || viewKey === 'inbox' ? 'priority' : 'project',
+    /* Upcoming lists dated tasks only, so its No date panel starts from everywhere. */
+    undatedSource: typeof saved?.undatedSource === 'string' && saved.undatedSource ? saved.undatedSource : viewKey === 'upcoming' ? 'all' : 'view',
   };
+}
+
+export type UndatedSource =
+  | { kind: 'view' }
+  | { kind: 'all' }
+  | { kind: 'project' | 'label' | 'filter'; id: string };
+
+/** Reads what `CalendarPrefs.undatedSource` holds; anything unreadable is the page itself. */
+export function readUndatedSource(value: string): UndatedSource {
+  if (value === 'all') return { kind: 'all' };
+  const match = value.match(/^(project|label|filter):(.+)$/);
+  return match ? { kind: match[1] as 'project' | 'label' | 'filter', id: match[2] } : { kind: 'view' };
 }
 
 export function calendarRange(anchor: Date, presentation: CalendarPrefs['presentation'], startDay?: number) {

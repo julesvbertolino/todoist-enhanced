@@ -12,14 +12,18 @@
  * - only plain rules are read: every day, every N days or weeks, every week,
  *   every weekday, and every <weekday>[, <weekday>...], with an optional time
  *   of day on the end, which does not change the date;
- * - a task that is already late gets no date: where Todoist puts a late
- *   occurrence is not something to assume;
+ * - a task that is already late: if the next occurrence counted from its due
+ *   date is still ahead, that is where it lands; if it is already past, the
+ *   task is moved to tomorrow, never to a day that is itself late;
+ * - every month, every N months and every year, when the day of the month is
+ *   the 28th or earlier: a later one is clamped in a way that is not assumed;
  * - `every!` counts from today, which is only a plain step for the simple
  *   day and week rules; its weekday forms are left out;
  * - anything else, a bound, a month, a position ("last friday"), gives null.
  */
-import { addDays, addWeeks, getDay, startOfDay } from 'date-fns';
-import { dueDate, isOverdue } from './dates';
+import { addDays, addMonths, addWeeks, addYears, differenceInCalendarDays, getDay, startOfDay } from 'date-fns';
+import { intlDate } from '@/lib/intl';
+import { dueDate } from './dates';
 import { WEEKDAY_WORDS } from './dateVocabulary';
 import type { Item } from './types';
 
@@ -42,6 +46,8 @@ const DAILY = new RegExp(`^(?:daily|quotidien(?:ne)?|${OPENER}\\s+${UNIT_DAY})${
 const EVERY_N_DAYS = new RegExp(`^${OPENER}\\s+(\\d{1,3})\\s+${UNIT_DAY}${TIME}$`);
 const WEEKLY = new RegExp(`^(?:weekly|hebdomadaire|${OPENER}\\s+${UNIT_WEEK})${TIME}$`);
 const EVERY_N_WEEKS = new RegExp(`^${OPENER}\\s+(\\d{1,2})\\s+${UNIT_WEEK}${TIME}$`);
+const EVERY_N_MONTHS = new RegExp(`^(?:monthly|mensuel(?:le)?|${OPENER}\\s+(?:(\\d{1,2})\\s+)?(?:months?|mois))${TIME}$`);
+const YEARLY = new RegExp(`^(?:yearly|annually|annuel(?:le)?|${OPENER}\\s+(?:year|an|annee))${TIME}$`);
 const WORKDAYS = new RegExp(`^${OPENER}\\s+${WORKDAY}${TIME}$`);
 
 /** The days of the week a list names, Sunday = 0, or null if a word is not one. */
@@ -65,11 +71,31 @@ function nextOf(from: Date, days: number[]): Date {
   return addDays(from, 7);
 }
 
+/**
+ * How the menus name that date: the weekday while it is less than a week away,
+ * the short date after that (#352).
+ */
+export function nextOccurrenceLabel(day: Date, locale: 'en' | 'fr', now = new Date()): string {
+  const ahead = differenceInCalendarDays(day, now);
+  const style: Intl.DateTimeFormatOptions = ahead >= 0 && ahead < 7
+    ? { weekday: 'short' }
+    : { day: 'numeric', month: 'short' };
+  return intlDate(locale === 'fr' ? 'fr-FR' : 'en-GB', style).format(day);
+}
+
 export function nextOccurrence(item: Pick<Item, 'due'>, now = new Date()): Date | null {
+  const next = rawNext(item, now);
+  if (!next) return null;
+  /* A next occurrence that is already past becomes tomorrow, not a late day. */
+  const tomorrow = addDays(startOfDay(now), 1);
+  return next < tomorrow ? tomorrow : next;
+}
+
+function rawNext(item: Pick<Item, 'due'>, now: Date): Date | null {
   const due = item.due;
   if (!due?.is_recurring) return null;
   const current = dueDate(item as Item);
-  if (!current || isOverdue(item as Item, now)) return null;
+  if (!current) return null;
 
   const rule = fold(due.string);
   const fromCompletion = /^(?:every|each|tous les|toutes les|tous le|chaque)!|!/.test(rule);
@@ -83,6 +109,10 @@ export function nextOccurrence(item: Pick<Item, 'due'>, now = new Date()): Date 
   if (days) return addDays(base, Number(days[1]));
   const weeks = EVERY_N_WEEKS.exec(text);
   if (weeks) return addWeeks(base, Number(weeks[1]));
+
+  const months = EVERY_N_MONTHS.exec(text);
+  if (months) return base.getDate() <= 28 ? addMonths(base, Number(months[1] ?? 1)) : null;
+  if (YEARLY.test(text)) return base.getMonth() === 1 && base.getDate() === 29 ? null : addYears(base, 1);
 
   if (fromCompletion) return null;
   if (WORKDAYS.test(text)) return nextOf(base, [1, 2, 3, 4, 5]);

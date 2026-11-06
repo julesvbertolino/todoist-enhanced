@@ -21,8 +21,40 @@
 .table-column-options button[aria-pressed=true]{background:var(--accent-soft);color:var(--accent)}
 .table-footer{padding:var(--s4) 12px;color:var(--muted);border-top:1px solid var(--border)}
 .task-table .trow-end{width:28px}.task-table .taskacts{right:0}
+/* With more columns than fit, everything up to the title stays on the left while the
+   rest slides under it (#298). The frozen pieces stand where they already do (the offsets
+   come from TableSurface), and the title carries an opaque band that reaches back to the
+   edge, so nothing shows through between the checkbox and the title. */
+.task-table .task>:is(.check,.tmain,.cell-frozen),.table-head>:is(.head-title,.head-frozen){position:sticky}
+.task-table .task>:is(.check,.cell-frozen),.table-head>.head-frozen{z-index:3;background:var(--frozen-bg,var(--surface))}
+.task-table .task>.check{left:var(--fz-check)}
+.task-table .task>.tmain{left:var(--fz-title);z-index:2}
+.table-head>.head-title{left:var(--fz-check);z-index:2}
+.task-table .task .drag{z-index:4}
+/* The frozen pieces fill the row from top to bottom, padding included, so the band has no gaps above or below. */
+.task-table .task>:is(.tmain,.cell-frozen){align-self:stretch;margin-block:-4px;padding-block:4px}
+.task-table .task>.cell-frozen{display:flex;align-items:center;max-height:none}
+.table-head>:is(.head-title,.head-frozen){align-self:stretch;margin-block:calc(-1 * var(--s3));padding-block:var(--s3)}
+.task-table .task>.tmain::before,.table-head>.head-title::before{content:"";position:absolute;z-index:-1;top:0;bottom:0;left:calc(-1 * var(--fz-title,60px));right:-6px;
+  background:var(--frozen-bg,var(--surface));pointer-events:none}
+.table-head>.head-title::before{left:calc(-1 * var(--fz-check,30px));background:var(--surface)}
+.table-head>.head-frozen{background:var(--surface)}
+/* What the row's own state paints, repeated on the frozen part (the row itself is see-through). */
+.task-table .task{--frozen-bg:var(--surface)}
+.task-table .task.picked{--frozen-bg:var(--row-marked)}
+.task-table .task[data-table-colored]:not(.picked){--frozen-bg:color-mix(in srgb,var(--table-row-color) 9%,var(--surface))}
+.task-table .task[data-table-colored]:not(.picked):hover{--frozen-bg:color-mix(in srgb,var(--table-row-color) 15%,var(--surface))}
+/* A subtask's checkbox moves in with its title; it stays above the title's band. */
+.task-table .task[data-depth]>.check{z-index:3}
+/* Once something has slid under the frozen edge, a thin grey line marks it. */
+.task-table .task>.tmain::after,.table-head>.head-title::after{content:"";position:absolute;top:0;bottom:0;right:-6px;width:1px;pointer-events:none;
+  background:var(--border-strong);opacity:0;transition:opacity .15s ease}
+.table-scroll[data-scrolled="true"] :is(.task>.tmain,.table-head>.head-title)::after{opacity:1}
+/* Section titles, "Add task" and the total stay in sight instead of sliding away with the columns. */
+.task-table :is(.gheadblock .ghead,.addline){position:sticky;left:0;box-sizing:border-box;width:var(--table-view,100%)}
+.task-table .table-footer{position:relative}
+.task-table .table-footer>span{position:sticky;left:30px;display:inline-block}
 @media(max-width:720px){
- .task-table .tmain,.table-head>div.head-title{position:sticky;left:0;background:var(--surface);z-index:2}
  .task-table .task{grid-template-columns:var(--table-columns)}
 }
 

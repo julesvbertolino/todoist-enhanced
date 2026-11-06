@@ -1,5 +1,6 @@
 import { canStoreDurations } from '@/domain/estimates';
 import { useEffect, useRef, useState } from 'react';
+import { PomodoroDisplayChoice } from '../PomodoroDisplayChoice';
 import { Overlay } from './Overlay';
 import { Icon, type IconName } from '../Icon';
 import {
@@ -7,6 +8,7 @@ import {
 } from '../Choosers';
 import { DetailsEditor } from '../DetailsEditor';
 import { SidebarNavEditor } from '../SidebarNavEditor';
+import { isUntouchedSidebarNav, startingSidebarNav } from '@/domain/sidebar';
 import { WorkspacePreview, type PreviewStage } from '../WorkspacePreview';
 import { useT } from '@/hooks/useT';
 import { usePhoneBehaviour } from '@/hooks/useTouchLayout';
@@ -59,6 +61,11 @@ export function Walkthrough({
   const [motion, setMotion] = useState<'enter' | 'forward' | 'back'>('enter');
   const previous = useRef(0);
   const current = STEPS[step];
+  /* Someone who went through the content step has been offered the Pomodoro choice. */
+  useEffect(() => {
+    if (open && current.id === 'content' && !prefs.pomodoroAsked) setPrefs({ pomodoroAsked: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, current.id]);
   /* Each step opens at its top: on a phone the picture and the choices are one scroll. */
   const track = useRef<HTMLDivElement>(null);
   useEffect(() => { track.current?.scrollTo({ top: 0 }); }, [current.id]);
@@ -71,6 +78,13 @@ export function Walkthrough({
 
   // Replaying it starts from the first screen, with what is chosen now.
   useEffect(() => { if (open) { setStep(0); previous.current = 0; setMotion('enter'); } }, [open]);
+
+  /* Only Inbox, Anytime this week and month, Upcoming and Someday start switched on (#413). Someone who already
+     arranged the navigation keeps their choices when replaying the setup. */
+  useEffect(() => {
+    if (open && isUntouchedSidebarNav(prefs.sidebarNav)) setPrefs({ sidebarNav: startingSidebarNav() });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const [leaving, setLeaving] = useState(false);
   /* A scene leaves quickly and the next one rises; two that share a picture
@@ -281,6 +295,11 @@ export function Walkthrough({
                           </button>
                         ))}
                       </div>
+                    </div>
+                    <div>
+                      <h3>{t('pomodoro.setupTitle')}</h3>
+                      <p className="setup-hint">{t('pomodoro.intro')}</p>
+                      <PomodoroDisplayChoice value={prefs.pomodoroDisplay} onChange={(pomodoroDisplay) => setPrefs({ pomodoroDisplay, pomodoroAsked: true })} />
                     </div>
                     <div>
                       <h3>{t('setup.estimates.title')}</h3>

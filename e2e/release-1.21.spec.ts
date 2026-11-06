@@ -168,7 +168,7 @@ test.describe('#165 subtasks reorder by drag where they are listed', () => {
       .filter((r) => (r as HTMLElement).dataset.depth)
       .map((r) => (r as HTMLElement).dataset.taskId ?? ''));
 
-  for (const [name, hash] of [['a project', '#/project/site'], ['My week', '#/week']] as const) {
+  for (const [name, hash] of [['a project', '#/project/site'], ['This week', '#/week']] as const) {
     test(`in ${name}`, async ({ demo: page }) => {
       await go(page, hash);
       const subs = await subtaskIds(page);

@@ -20,11 +20,16 @@ describe('syncedPreferences', () => {
     expect(synced).not.toHaveProperty('sidebarCollapsed');
   });
 
-  it("shares a project's display, and not other pages'", () => {
+  it("shares a project's display and the other pages' too, so a sort survives signing out", () => {
+    const tag = { ...defaultViewPrefs('label:work'), sort: 'alphabetical' as const };
     const synced = syncedPreferences(prefs({
-      views: { 'project:site': boardProject, week: defaultViewPrefs('week') },
+      views: { 'project:site': boardProject, 'label:work': tag },
     }));
-    expect(Object.keys(synced.views)).toEqual(['project:site']);
+    expect(Object.keys(synced.views).sort()).toEqual(['label:work', 'project:site']);
+    expect(synced.views['label:work']).toMatchObject({ sort: 'alphabetical' });
+    expect(synced.views['label:work']).not.toHaveProperty('filters');
+    const back = mergeSynced(prefs(), JSON.parse(JSON.stringify(synced)), 'en');
+    expect(back.views['label:work'].sort).toBe('alphabetical');
     expect(synced.views['project:site']).toMatchObject({ mode: 'board' });
     expect(synced.views['project:site']).not.toHaveProperty('filters');
   });
@@ -194,7 +199,7 @@ describe('the sidebar settings', () => {
     const hydrated = hydratePreferences({ homepage: 'week' }, 'en');
     expect(hydrated.sidebarSearch).toBe(true);
     expect(hydrated.sidebarCounts).toBe(true);
-    expect(hydrated.sidebarNav.main.map((e) => e.id)).toEqual(['inbox', 'today', 'week', 'upcoming', 'someday']);
+    expect(hydrated.sidebarNav.main.map((e) => e.id)).toEqual(['inbox', 'today', 'week', 'month', 'upcoming', 'someday']);
     expect(hydrated.sidebarNav.other.map((e) => e.id)).toContain('logbook');
   });
 
@@ -314,5 +319,13 @@ describe('the Full width switch (#403)', () => {
     expect(hydratePreferences(stored, 'en').listFullWidth).toBe(true);
     expect(hydratePreferences({}, 'en').listFullWidth).toBe(false);
     expect(hydratePreferences({ listFullWidth: false, ...stored }, 'en').listFullWidth).toBe(false);
+  });
+});
+
+describe('the launch invitation memory', () => {
+  it('starts empty and keeps the id of the invitation the account was shown', () => {
+    expect(hydratePreferences({}, 'en').launchSeen).toBe('');
+    expect(hydratePreferences({ launchSeen: 'producthunt-2026-11' }, 'en').launchSeen).toBe('producthunt-2026-11');
+    expect(hydratePreferences({ launchSeen: 42 }, 'en').launchSeen).toBe('');
   });
 });

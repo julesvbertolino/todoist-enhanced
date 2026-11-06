@@ -1,5 +1,5 @@
 import { withStep, stepLabel, STEPS, type Step } from './steps';
-import { SYSTEM_LABELS, weekLabel, type Item } from './types';
+import { SYSTEM_LABELS, weekLabel, withoutHorizons, type Item } from './types';
 import { toApiDate } from './dates';
 import { dueForDate } from './recurrence';
 import { byChildOrder } from './orderKey';
@@ -18,6 +18,8 @@ export type DropTarget =
   /** Today, and tagged quick: the Quick group is defined by that tag. */
   | { kind: 'quick' }
   | { kind: 'anytime' }
+  /** A horizon past this week, carried by the `later` tag. */
+  | { kind: 'month' }
   | { kind: 'someday' }
   /**
    * A calendar day, and optionally a time of day (`HH:mm:ss`) typed with it in
@@ -53,11 +55,14 @@ export function moveArgs(
   return move.section_id ? { section_id: move.section_id } : { project_id: move.project_id };
 }
 
-const withoutWeek = (labels: string[]): string[] =>
-  labels.filter((l) => l.toLowerCase() !== weekLabel().toLowerCase());
+/** Horizons exclude each other: a task is in the week, later, or in neither. */
+const withoutHorizon = withoutHorizons;
 
 const withWeek = (labels: string[]): string[] =>
-  withoutWeek(labels).concat(weekLabel());
+  withoutHorizon(labels).concat(weekLabel());
+
+const withMonth = (labels: string[]): string[] =>
+  withoutHorizon(labels).concat(SYSTEM_LABELS.month);
 
 /**
  * A due value for a calendar date.
@@ -102,6 +107,8 @@ export function placementFor(target: DropTarget, now = new Date()): TaskPlacemen
       return { date: toApiDate(target.date) };
     case 'anytime':
       return { labels: [weekLabel()] };
+    case 'month':
+      return { labels: [SYSTEM_LABELS.month] };
     // Nothing to carry: Someday is what a task with no date and no week label
     // already is.
     case 'someday':
@@ -140,6 +147,8 @@ export function placementForPage(
     /* My week's own "Add task" line puts a task in the week with its label. */
     case 'week':
       return placementFor({ kind: 'anytime' }, now);
+    case 'month':
+      return placementFor({ kind: 'month' }, now);
     case 'label':
       return page.id ? { labels: [page.id] } : {};
     default:
@@ -152,10 +161,10 @@ export function dropMutation(item: Item, target: DropTarget): DropMutation | nul
     case 'step': return { update: { labels: withStep(item.labels, target.step) } };
     case 'today':
       // Today's date, the week label dropped, the time of day and reminders kept.
-      return { update: { due: dueOn(item, new Date()), labels: withoutWeek(item.labels) } };
+      return { update: { due: dueOn(item, new Date()), labels: withoutHorizon(item.labels) } };
 
     case 'quick': {
-      const labels = withoutWeek(item.labels);
+      const labels = withoutHorizon(item.labels);
       const tagged = labels.some((l) => l.toLowerCase() === SYSTEM_LABELS.quick);
       return {
         update: {
@@ -169,14 +178,17 @@ export function dropMutation(item: Item, target: DropTarget): DropMutation | nul
       /* A real date and the week tag on the same task is the contradiction the
          app reports rather than resolves, so giving a task a day takes the tag
          off — exactly as dropping it on Today does. */
-      return { update: { due: dueOn(item, target.date, target.time), labels: withoutWeek(item.labels) } };
+      return { update: { due: dueOn(item, target.date, target.time), labels: withoutHorizon(item.labels) } };
 
     case 'anytime':
       // Committed to this week, but to no particular day.
       return { update: { due: null, labels: withWeek(item.labels) } };
 
+    case 'month':
+      return { update: { due: null, labels: withMonth(item.labels) } };
+
     case 'someday':
-      return { update: { due: null, labels: withoutWeek(item.labels) } };
+      return { update: { due: null, labels: withoutHorizon(item.labels) } };
 
     /* A subtask dropped on the place it already lives in is lifted out of its
        parent, so the same list it came from is still a real destination. */
@@ -459,7 +471,7 @@ function encodeKind(target: DropTarget): string {
 
 export function decodeTarget(encoded: string): DropTarget | null {
   const id = encoded.includes('|') ? encoded.slice(encoded.indexOf('|') + 1) : encoded;
-  if (id === 'today' || id === 'quick' || id === 'anytime' || id === 'someday'
+  if (id === 'today' || id === 'quick' || id === 'anytime' || id === 'month' || id === 'someday'
     || id === 'favourites') return { kind: id };
 
   const [kind, ...rest] = id.split(':');

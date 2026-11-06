@@ -1,7 +1,7 @@
 import { test, expect, go, rows } from './demo';
 import { resolve } from 'node:path';
 test.skip(process.env.PLAYWRIGHT_DEV !== '1', 'Controlled development fixtures');
-test('date views remove the scheduled switch; My week filters Today only', async ({ demo: page }) => {
+test('date views remove the scheduled switch; This week filters Today only', async ({ demo: page }) => {
   await go(page, 'week');
   await page.locator('.pactions').getByRole('button', { name: 'Display' }).click();
   const showToday = page.getByRole('switch', { name: 'Show Today tasks' });

@@ -27,8 +27,7 @@ test('#103 a Logbook row opens its completed task, by click and by Enter', async
 test('#103 follow-up: arrow keys walk the Logbook rows, and unticking a one-off task drops the banner', async ({ demo: page }) => {
   await go(page, '#/insights/logbook');
   const rows = page.locator('.logrow.opens');
-  const count = await rows.count();
-  expect(count).toBeGreaterThan(1);
+  await expect.poll(() => rows.count()).toBeGreaterThan(1);
   await rows.first().focus();
   await page.keyboard.press('ArrowDown');
   await expect(rows.nth(1)).toBeFocused();

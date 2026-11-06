@@ -264,7 +264,7 @@ test('#130 in the demo, ticking a daily 14:00 task brings it back tomorrow at 14
    `demo` fixture opens the demo itself and fails on anything logged. */
 bare('#128 with site storage blocked, the connect screen appears and the demo still opens', async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem('skipSetup', '1');
+    { localStorage.setItem('skipSetup', '1'); localStorage.setItem('e2eLegacyDemo', '1'); };
     Object.defineProperty(window, 'sessionStorage', {
       get() { throw new DOMException('The operation is insecure.', 'SecurityError'); },
     });
@@ -287,7 +287,7 @@ bare('#128 with site storage blocked, the connect screen appears and the demo st
 
 bare('#128 a crash while drawing shows a message and a Reload button, not a white page', async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem('skipSetup', '1');
+    { localStorage.setItem('skipSetup', '1'); localStorage.setItem('e2eLegacyDemo', '1'); };
   });
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore with demo data' }).click();
@@ -361,7 +361,7 @@ test('#130 follow-up: a task typed with "every day at 3pm" shows Today 15:00', a
 test('#135 follow-up: @@link0@@ typed in the composer stays text, with no tag', async ({ demo: page }) => {
   await page.keyboard.press('q');
   await page.locator('.composer-name').fill('Fill @@link0@@ in');
-  // My week's own label is there (Q takes the page's context); no tag is read from the name.
+  // This week's own label is there (Q takes the page's context); no tag is read from the name.
   await expect(page.locator('.composer-chips .tagchip', { hasText: 'link0' })).toHaveCount(0);
   await expect(page.locator('.namefield .nmark.label')).toHaveCount(0);
   await page.keyboard.press('ControlOrMeta+Enter');

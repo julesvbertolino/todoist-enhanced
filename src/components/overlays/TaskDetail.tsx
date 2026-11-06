@@ -8,15 +8,16 @@ import { useProjectPeople } from '@/hooks/useProjectPeople';
 import { AssigneeBadge } from '../AssigneeBadge';
 import { AssigneeField } from '../AssigneeField';
 import { useCreateTag } from '@/hooks/useCreateTag';
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { copyText, isTemporaryId, todoistTaskUrl } from '@/api/links';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { Overlay } from './Overlay';
 import { isTopOverlay } from './overlayStack';
 import { Icon } from '../Icon';
 import { ProgressRing } from '../ProgressRing';
+import { PomodoroButton } from '../PomodoroButton';
 import { ChecklistProgress, DescriptionEditor, DescriptionView } from '../Checklist';
-import { toggleItemAt } from '@/domain/checklist';
+import { checklistPreview, toggleItemAt } from '@/domain/checklist';
 import { useT } from '@/hooks/useT';
 import { useMenuKeys } from '@/hooks/useMenuKeys';
 import { useData } from '@/hooks/useData';
@@ -28,9 +29,10 @@ import {
   effectiveEstimate, formatDuration,
 } from '@/domain/estimates';
 import {
-  deadlineDate, dueDate, formatRelativeDay, hasTime, toApiDate, toApiDateTime,
+  deadlineDate, dueDate, formatRelativeDay, formatTime, hasTime, isOverdue, toApiDate, toApiDateTime,
 } from '@/domain/dates';
-import { plainTitle, renderTitle, titleLinks } from '@/domain/markdown';
+import { nextOccurrence, nextOccurrenceLabel } from '@/domain/nextOccurrence';
+import { plainTitle, renderInlineMarkdown, renderTitle, titleLinks } from '@/domain/markdown';
 import { parseShorthand, savedRefusals, type TextRange } from '@/domain/shorthand';
 import { dueForDate } from '@/domain/recurrence';
 import { DurationField } from '../DurationField';
@@ -40,7 +42,9 @@ import { CommentThread } from '../CommentThread';
 import { DateField } from '../DateField';
 import { markerStyle } from '@/domain/colors';
 import { assignees } from '@/domain/sharing';
-import { displayTaskContent, isUncompletable, toDisplayPriority, toTodoistPriority, type Item } from '@/domain/types';
+import { ESTIMATE_PREFIX, SYSTEM_LABELS, displayTaskContent, isUncompletable, toDisplayPriority, toTodoistPriority, weekLabel, type Item } from '@/domain/types';
+import { dropMutation, type DropTarget } from '@/domain/dnd';
+import { taskShortcuts } from '../DatePicker';
 import { matchesSearch } from '@/domain/search';
 import { byLabelOrder } from '@/domain/orderKey';
 import { intlDate } from '@/lib/intl';
@@ -82,7 +86,7 @@ function SubtaskRow({ id, done, children }: { id: string; done: boolean; childre
 }
 
 function EditableSubtask({ child, onOpen }: { child: Item; onOpen: (id: string) => void }) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const updateTask = useStore((s) => s.updateTask);
   const toggleTask = useStore((s) => s.toggleTask);
   const removeTask = useStore((s) => s.removeTask);
@@ -97,6 +101,43 @@ function EditableSubtask({ child, onOpen }: { child: Item; onOpen: (id: string) 
   const [refusals, setRefusals] = useState<TextRange[]>([]);
   const editRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  const hour12 = useStore((s) => s.prefs.hour12);
+  const fields = useStore((s) => s.prefs.taskFields);
+  const due = dueDate(child);
+  const deadline = deadlineDate(child);
+  /* A subtask committed to the week or the month with no day is shown by that, as a row does, not by the tag that carries it. */
+  const horizon = child.due ? null : child.labels.some((l) => l.toLowerCase() === weekLabel().toLowerCase())
+    ? 'review.to.anytime' as const
+    : child.labels.some((l) => l.toLowerCase() === SYSTEM_LABELS.month) ? 'review.to.month' as const : null;
+  const labels = child.labels.filter((label) => !label.toLowerCase().startsWith(ESTIMATE_PREFIX)
+    && !(horizon && [weekLabel().toLowerCase(), SYSTEM_LABELS.month].includes(label.toLowerCase())));
+  const preview = fields.description ? checklistPreview(child.description) : '';
+  const { childrenOf } = useData();
+  const { minutes, computed } = effectiveEstimate(child, childrenOf);
+  /* The chips a task row draws, in the order the person chose in Display (a subtask lives in its parent's project, so the project is left out). */
+  const detailOrder = useStore((s) => s.prefs.detailOrder);
+  const labelColours = Object.values(snapshot.labels);
+  const pieces: Partial<Record<string, ReactNode>> = {
+    estimate: fields.estimate && minutes !== null && (
+      <span className="est" title={computed ? t('task.computedEstimate') : undefined}>
+        <Icon name="clock" />{formatDuration(minutes, locale)}{computed && '*'}
+      </span>),
+    date: fields.date && (due ? (
+      <span className={isOverdue(child) ? 'late' : 'at'}>
+        <Icon name="calendar" />
+        {formatRelativeDay(due, locale)}{hasTime(child.due) && ` ${formatTime(due, locale, hour12)}`}
+      </span>) : horizon && (
+      <span className="at tone-later"><Icon name="calendar" />{t(horizon)}</span>)),
+    deadline: fields.deadline && deadline && <span className="deadline"><Icon name="deadline" />{formatRelativeDay(deadline, locale)}</span>,
+    labels: fields.labels && labels.map((label) => (
+      <span className="tag" key={label} style={markerStyle(labelColours.find((l) => l.name === label)?.color)}>
+        <Icon name="tag" size="sm" />{label}
+      </span>)),
+  };
+  const chips = detailOrder.map((chip) => {
+    const piece = pieces[chip];
+    return Array.isArray(piece) ? (piece.length > 0 ? <Fragment key={chip}>{piece}</Fragment> : null) : piece ? <Fragment key={chip}>{piece}</Fragment> : null;
+  });
 
   useEffect(() => {
     if (!editing) {
@@ -183,10 +224,15 @@ function EditableSubtask({ child, onOpen }: { child: Item; onOpen: (id: string) 
           onRefusals={setRefusals}
         />
       ) : (
-        <button className="subtasktitle" onClick={() => onOpen(child.id)}>
-          <AssigneeBadge id={child.responsible_uid} />
-          <span>{plainTitle(displayTaskContent(child))}</span>
-        </button>
+        <span className="subtaskbody">
+          <button className="subtasktitle" onClick={() => onOpen(child.id)}>
+            <AssigneeBadge id={child.responsible_uid} />
+            <span>{plainTitle(displayTaskContent(child))}</span>
+          </button>
+          {/* What the parent's list shows under a subtask, so it need not be opened to be read (#281). */}
+          {preview && <span className="tdesc" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(preview) }} />}
+          {chips.some(Boolean) && <span className="meta">{chips}</span>}
+        </span>
       )}
       <span className="subtaskactions">
         {editing ? (
@@ -277,6 +323,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
   const overlayId = useId();
 
   const item = taskId ? snapshot.items[taskId] : null;
+  const skipDate = item ? nextOccurrence(item) : null;
   useEffect(() => {
     if (!item || !takeCommentsRequest(item.id)) return;
     const frame = requestAnimationFrame(() => {
@@ -472,6 +519,13 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
   const links = titleLinks(item.content);
   const priority = toDisplayPriority(item.priority);
   const due = dueDate(item);
+  /* No day, but committed to the week or the month: the start date says so, in words. */
+  const hasTag = (name: string) => item.labels.some((l) => l.toLowerCase() === name.toLowerCase());
+  const horizonText = item.due ? null : hasTag(weekLabel()) ? t('review.to.anytime') : hasTag(SYSTEM_LABELS.month) ? t('review.to.month') : null;
+  const moveTo = (target: DropTarget) => {
+    const mutation = dropMutation(item, target);
+    if (mutation?.update) return updateTask(item.id, mutation.update);
+  };
   const deadline = deadlineDate(item);
   const subtasks = childrenOf(item.id);
   const doneSubtasks = subtasks.filter((c) => c.checked).length;
@@ -727,6 +781,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
         </nav>
 
         <div className="detail-tools">
+          <PomodoroButton taskId={item.id} />
           {walk.current && (
             <span className="detail-walk">
               <button
@@ -1026,7 +1081,14 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
               withTime
               value={due ? (hasTime(item.due) ? toApiDateTime(due) : toApiDate(due)) : ''}
               label={t('detail.startDate')}
-              placeholder={t('date.pick')}
+              placeholder={horizonText ?? t('date.pick')}
+              shortcuts={taskShortcuts(t, locale, {
+                day: (date) => void moveTo({ kind: 'day', date }),
+                today: () => void moveTo({ kind: 'today' }),
+                anytime: () => void moveTo({ kind: 'anytime' }),
+                month: () => void moveTo({ kind: 'month' }),
+                someday: () => void moveTo({ kind: 'someday' }),
+              })}
               onChange={(value, how) => {
                 /* Keeps the rule. Writing the date into `due.string` is what
                    ends a series, and picking a day in a calendar is never a
@@ -1043,25 +1105,19 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
                 minutes: computed ? null : minutes,
                 onChange: (value) => void updateTask(item.id, { estimateMinutes: value }),
               }}
+              /* Skipping one occurrence belongs to the date, in its picker, as
+                 in the row's schedule menu (#352). */
+              skip={item.due?.is_recurring ? {
+                label: t('task.nextOccurrence'),
+                title: t('task.nextOccurrenceHint'),
+                hint: skipDate ? nextOccurrenceLabel(skipDate, locale) : undefined,
+                onSkip: () => void skipOccurrence(item.id),
+              } : undefined}
               onClearRecurrence={() => {
                 if (!item.due?.is_recurring) return;
                 void updateTask(item.id, { due: { ...item.due, string: item.due.date, is_recurring: false } });
               }}
             />
-            {/* The row's own schedule menu has offered this for a while
-                (TaskActions.tsx) — closing the panel to reach it, just to skip
-                one occurrence of the task already open, was the gap. */}
-            {item.due?.is_recurring && (
-              <button
-                type="button"
-                className="proplink"
-                title={t('task.nextOccurrenceHint')}
-                onClick={() => void skipOccurrence(item.id)}
-              >
-                <Icon name="repeat" size="sm" />
-                {t('task.nextOccurrence')}
-              </button>
-            )}
           </div>
 
           {/* On a phone the properties other than the date are one row of chips, as in
@@ -1118,14 +1174,23 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
                 options={([1, 2, 3, 4] as const).map((p) => ({ value: String(p), label: `P${p}` }))}
               />
             ) : (
-            <div className="priopills" role="radiogroup" aria-label={t('detail.priority')}>
+            <div className="priopills" data-priority={priority} role="radiogroup" aria-label={t('detail.priority')}>
               {([1, 2, 3, 4] as const).map((p) => (
                 <button
                   key={p}
                   type="button"
                   role="radio"
                   aria-checked={priority === p}
+                  tabIndex={priority === p ? 0 : -1}
                   className={`priopill p${p}`}
+                  onKeyDown={(event) => {
+                    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) return;
+                    event.preventDefault();
+                    const direction = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1;
+                    const next = ((p - 1 + direction + 4) % 4 + 1) as 1 | 2 | 3 | 4;
+                    void updateTask(item.id, { priority: toTodoistPriority(next) });
+                    event.currentTarget.parentElement?.querySelector<HTMLButtonElement>(`.priopill.p${next}`)?.focus();
+                  }}
                   onClick={() => void updateTask(item.id, { priority: toTodoistPriority(p) })}
                 >
                   <Icon name="flag" size="sm" />
@@ -1165,7 +1230,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
             </span>
 
             <div className="pills">
-              {visibleLabels.length === 0 && <span className="psub">{t('common.none')}</span>}
+              {visibleLabels.length === 0 && <span className="psub">{t('detail.noTags')}</span>}
               {visibleLabels.map((label) => {
                 const known = Object.values(snapshot.labels).find((l) => l.name === label);
                 return (

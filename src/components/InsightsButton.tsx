@@ -5,7 +5,7 @@ import { useStore } from '@/store/store';
 export function InsightsButton({ onClick }: { onClick: () => void }) {
   const { t } = useT();
   const open = useStore((s) => s.sidePanel === 'insights');
-  return <button className="btn insights-control" onClick={onClick} aria-expanded={open} aria-label={t('toolbar.insights')}>
-    <Icon name="trend" /><span className="tb-label">{t('toolbar.insights')}</span>
+  return <button className="btn insights-control" onClick={onClick} aria-expanded={open} aria-label={t('toolbar.insights')} title={t('toolbar.insights')}>
+    <Icon name="bars" />
   </button>;
 }

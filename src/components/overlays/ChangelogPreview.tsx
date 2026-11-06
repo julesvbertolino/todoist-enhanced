@@ -93,6 +93,10 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
           <div><span className="cv-event orange">Time for yourself<small>10:00 · 45 min</small></span></div>
         </div>
       </div>; break;
+    case 'pomodoro':
+      content = <><div className="cv-toolbar"><b>{say('This week', 'Cette semaine')}</b>
+        <span className="cv-pill on"><svg viewBox="0 0 20 20" width="11" height="11" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" strokeOpacity=".25" strokeWidth="2.4" /><circle cx="10" cy="10" r="8" fill="none" stroke="var(--accent)" strokeWidth="2.4" strokeLinecap="round" strokeDasharray="50.3" strokeDashoffset="17" transform="rotate(-90 10 10)" /></svg>18:42 <svg viewBox="0 0 10 10" width="8" height="8" aria-hidden="true"><rect x="1.5" y="1" width="2.4" height="8" rx=".8" fill="currentColor" /><rect x="6.1" y="1" width="2.4" height="8" rx=".8" fill="currentColor" /></svg></span><span className="cv-pill">{say('Display', 'Affichage')}</span></div>
+        {row(review, 'checkbox', 'P1')}{row(task, 'checkbox', 'P2')}</>; break;
     case 'assign':
       content = <><div className="cv-sentence">Prepare the presentation {chip('+Anne', 'accent')}</div>{row('Anne', 'user', '↵', true)}</>; break;
     case 'views':
@@ -104,6 +108,21 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
       content = <>{title(say('Comments', 'Commentaires'))}<div className="cv-chips">{chip(say('Notify: Anne', 'Notifier : Anne'))}</div><div className="cv-field">{say('Can you check the copy, ', 'Tu peux relire les textes, ')}<span className="cv-chip accent">@Anne</span> ?</div>{row('Anne', 'user', undefined, true)}{row('Sam', 'user')}</>; break;
     case 'subtasks':
       content = <>{row('Prepare the brief tomorrow at 9am', 'checkbox', '9:00')}{row('Review the copy p1', 'checkbox', 'P1')}{row('Choose photos for 30 min', 'checkbox', '30 min')}</>; break;
+    case 'subtaskDetails': {
+      /* Before and after: the same subtasks, first by name only, then with what each one says about itself. */
+      const sub = (name: string, chips: ReactNode) => <div className="cv-sub" key={name}><Icon name="checkbox" size="sm" /><div><b>{name}</b>{chips && <div className="cv-subchips">{chips}</div>}</div></div>;
+      const at = (text: string, icon: IconName, tone = '') => <span className={`cv-subchip ${tone}`}><Icon name={icon} size="sm" />{text}</span>;
+      const names = [say('Write the copy', 'Écrire les textes'), say('Choose the photos', 'Choisir les photos'), say('Build the page', 'Monter la page')];
+      content = <div className="cv-before-after">
+        <div className="cv-before">{names.map((name) => sub(name, null))}</div>
+        <span className="cv-arrow">→</span>
+        <div>
+          {sub(names[0], <>{at('30 min', 'clock')}{at(say('Tomorrow', 'Demain'), 'calendar', 'blue')}</>)}
+          {sub(names[1], <>{at('1 h', 'clock')}{chip('design', 'purple')}</>)}
+          {sub(names[2], <>{at('2 h', 'clock')}{at(say('Friday', 'Vendredi'), 'calendar', 'blue')}</>)}
+        </div>
+      </div>; break;
+    }
     case 'composerImage':
       content = <>{title(say('Add task', 'Ajouter une tâche'))}<div className="cv-field">{say('Review the mockup', 'Relire la maquette')}</div>
         <div className="cv-image-attachment"><span className="cv-image-thumbnail"><Icon name="image" /></span><span>{say('Screenshot.png', 'Capture.png')}<small>{say('Image attached', 'Image jointe')}</small></span><Icon name="close" size="sm" /></div>
@@ -153,7 +172,7 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
     case 'workspaces':
       content = <>{title(say('Workspaces', 'Espaces de travail'))}{row(say('My projects', 'Mes projets'), 'project', '✓', true)}{row('Studio', 'group', '✓', true)}<div className="cv-indent">{row(design, 'project', '8')}{row(say('Brand identity', 'Identité visuelle'), 'project', '5')}</div></>; break;
     case 'forecast': case 'skipRepeat':
-      content = <>{title(say('Upcoming', 'Prochainement'))}{row(say('Daily check', 'Point quotidien'), 'repeat', chip(say('Today', 'Aujourd’hui'), 'accent'))}<div className="cv-forecast">{row(say('Daily check', 'Point quotidien'), 'repeat', say('Tomorrow', 'Demain'))}{row(say('Daily check', 'Point quotidien'), 'repeat', say('Friday', 'Vendredi'))}</div>{kind === 'skipRepeat' && <div className="cv-footnote">↪ {say('Skip to next occurrence', 'Passer à l’occurrence suivante')}</div>}</>; break;
+      content = <>{title(say('Upcoming', 'Prochainement'))}{row(say('Daily check', 'Point quotidien'), 'repeat', chip(say('Today', 'Aujourd’hui'), 'accent'))}<div className="cv-forecast">{row(say('Daily check', 'Point quotidien'), 'repeat', say('Tomorrow', 'Demain'))}{row(say('Daily check', 'Point quotidien'), 'repeat', say('Friday', 'Vendredi'))}</div>{kind === 'skipRepeat' && <div className="cv-footnote">↪ {say('Next occurrence', 'Prochaine occurrence')}</div>}</>; break;
     case 'search': case 'searchSections':
       content = <><div className="cv-field cv-search"><Icon name="search" size="sm" />{say('design', 'maquette')}<kbd>⌘K</kbd></div>{row(say('Review the design', 'Relire la maquette'), 'checkbox', '↵', true)}{row(design, 'project')}{row(say('In review', 'À relire'), 'section')}<div className="cv-footnote">{say('See all results', 'Voir tous les résultats')} →</div></>; break;
     case 'parser': case 'rejectParser': content = parsed; break;
@@ -215,6 +234,19 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
       content = <>{title(say('Project icon', 'Icône du projet'))}<div className="cv-icon-grid">{(['project', 'star', 'globe', 'coffee', 'calendar', 'tasks', 'someday', 'file'] satisfies IconName[]).map((name) => <span key={name}><Icon name={name} /></span>)}</div></>; break;
     case 'completed':
       content = <>{title(design)}{row(say('Show completed tasks', 'Afficher les tâches terminées'), 'eye', '✓', true)}<div className="cv-completed">{row(review, 'check', '30 min')}{row(say('Send the proposal', 'Envoyer le devis'), 'check', '15 min')}</div></>; break;
+    case 'projectMatrix':
+      content = <>
+        <div className="cv-mx-head"><Icon name="project" size="sm" /><b>Website</b><span className="cv-mx-tab">Matrix</span></div>
+        <div className="cv-matrix cv-project-matrix">
+          <div><b>{say('Urgent and important', 'Urgent et important')}</b>{row(say('Publish the site', 'Publier le site'), 'checkbox', 'P1')}{row(say('Fix the contact form', 'Corriger le formulaire'), 'checkbox', 'P1')}</div>
+          <div><b>{say('Not urgent but important', 'Pas urgent mais important')}</b>{row(say('Plan the launch', 'Préparer le lancement'), 'checkbox', 'P2')}</div>
+          <div><b>{say('Urgent but not important', 'Urgent mais pas important')}</b>{row(review, 'checkbox', 'P3')}</div>
+          <div><b>{say('Not urgent, not important', 'Ni urgent ni important')}</b>{row(say('Tidy the files', 'Ranger les fichiers'), 'checkbox')}</div>
+        </div></>; break;
+    case 'dayNav':
+      content = <>
+        <div className="cv-mx-head"><b style={{ fontSize: 15 }}>{say('Tomorrow', 'Demain')}</b><span className="cv-daynav"><svg width="9" height="9" viewBox="0 0 10 10" aria-hidden="true"><path d="M1 3h8L5 8z" fill="currentColor" /></svg></span></div>
+        {row(say('Send the invoice', 'Envoyer la facture'), 'checkbox', '9:30')}{row(say('Plan the launch', 'Préparer le lancement'), 'checkbox', 'P2')}{row(review, 'checkbox')}</>; break;
     case 'matrix':
       content = <>{title(say('Eisenhower Matrix', 'Matrice d’Eisenhower'))}<div className="cv-matrix">{[say('Do', 'Faire'), say('Plan', 'Planifier'), say('Delegate', 'Déléguer'), say('Eliminate', 'Éliminer')].map((label, i) => <div key={label}><b>{label}</b><span>{[3, 5, 2, 1][i]}</span></div>)}</div></>; break;
     case 'swipe':

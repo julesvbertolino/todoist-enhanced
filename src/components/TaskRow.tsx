@@ -1,3 +1,4 @@
+import { differenceInCalendarDays } from 'date-fns';
 import { TaskCommentBadge } from './TaskCommentBadge';
 import { tableRowColor } from '@/domain/table';
 import { TableContext } from './TableContext';
@@ -22,7 +23,7 @@ import { usePhoneBehaviour } from '@/hooks/useTouchLayout';
 import { useRowGesture } from '@/hooks/useRowGesture';
 import { useStore } from '@/store/store';
 import { completionTick } from '@/store/tick';
-import { displayTaskContent, isUncompletable, toDisplayPriority, type Item } from '@/domain/types';
+import { SYSTEM_LABELS, displayTaskContent, isUncompletable, toDisplayPriority, weekLabel, type Item } from '@/domain/types';
 import { effectiveEstimate, formatDuration } from '@/domain/estimates';
 import { dateTone, deadlineDate, dueDate, formatRelativeDay, formatTime, hasTime, isOverdue, isToday, overdueBy } from '@/domain/dates';
 import { markerStyle } from '@/domain/colors';
@@ -59,6 +60,17 @@ const FOLD_SETTLE_MS = 400;
 const ShowSubtasks = createContext(true);
 
 export const SubtasksProvider = ShowSubtasks.Provider;
+
+/** A subtask listed on its own, away from its parent, says whose it is (#448). */
+/** The Matrix folds every task's subtasks until asked, on this page only: Todoist's own fold flag is left alone (#448). */
+const LocalFold = createContext(false);
+export const LocalFoldProvider = LocalFold.Provider;
+const ParentChip = createContext(false);
+
+export const ParentChipProvider = ParentChip.Provider;
+/** The cards the Matrix put in an urgent quadrant because of their deadline (#329). */
+const DeadlineUrgent = createContext<ReadonlySet<string> | null>(null);
+export const DeadlineUrgentProvider = DeadlineUrgent.Provider;
 
 interface TaskRowProps {
   item: Item;
@@ -171,6 +183,8 @@ function TaskRowView({
   const setSelectionAnchor = useStore((s) => s.setSelectionAnchor);
   const selectRange = useStore((s) => s.selectRange);
   const showSubtasks = useContext(ShowSubtasks) && !item.projection;
+  const showParentChip = useContext(ParentChip) && depth === 0;
+  const deadlineDrivesUrgency = Boolean(useContext(DeadlineUrgent)?.has(item.id));
   const fields = useStore((s) => s.prefs.taskFields);
   const detailOrder = useStore((s) => s.prefs.detailOrder);
 
@@ -192,8 +206,11 @@ function TaskRowView({
   const foldTimer = useRef<{ timer: ReturnType<typeof setTimeout>; send: () => void } | null>(null);
   const storedFoldRef = useRef(storedFold);
   storedFoldRef.current = storedFold;
-  const expanded = !(wantedFold ?? storedFold);
+  const localFold = useContext(LocalFold);
+  const [localFolded, setLocalFolded] = useState(true);
+  const expanded = localFold ? !localFolded : !(wantedFold ?? storedFold);
   const toggleFold = () => {
+    if (localFold) { setLocalFolded((folded) => !folded); return; }
     const next = expanded;
     setWantedFold(next);
     if (foldTimer.current) clearTimeout(foldTimer.current.timer);
@@ -275,7 +292,13 @@ function TaskRowView({
   };
 
   // Estimate labels are shown as a duration, never as an ordinary tag.
-  const visibleLabels = item.labels.filter((l) => !l.toLowerCase().startsWith('est-'));
+  /* A task committed to the week or the month with no day is shown by that, as a
+     date would be, not by the tag that carries it. */
+  const horizon = item.due ? null : item.labels.some((l) => l.toLowerCase() === weekLabel().toLowerCase())
+    ? 'review.to.anytime' as const
+    : item.labels.some((l) => l.toLowerCase() === SYSTEM_LABELS.month) ? 'review.to.month' as const : null;
+  const visibleLabels = item.labels.filter((l) => !l.toLowerCase().startsWith('est-')
+    && !(horizon && [weekLabel().toLowerCase(), SYSTEM_LABELS.month].includes(l.toLowerCase())));
 
   /* A tag carries a colour in Todoist, so it carries it here too. The task
      stores names, and the colour lives on the label, which is the lookup. */
@@ -287,6 +310,7 @@ function TaskRowView({
 
   const lateDays = late ? overdueBy(item) : 0;
   const lateness = lateDays >= 2 ? lateLabel(lateDays, t) : null;
+  const deadlineLate = deadline ? Math.max(0, differenceInCalendarDays(new Date(), deadline)) : 0;
 
   /* Each chip under the title, keyed so the row can draw them in any order. */
   const chips: Record<DetailChip, React.ReactNode> = {
@@ -304,6 +328,12 @@ function TaskRowView({
               {formatRelativeDay(due, locale)}
               {hasTime(item.due) && ` ${formatTime(due, locale, hour12)}`}
             </>}
+          </span>
+        )}
+        {horizon && (
+          <span className="at tone-later">
+            <Icon name="calendar" />
+            {t(horizon)}
           </span>
         )}
         {item.due?.is_recurring && (
@@ -324,9 +354,16 @@ function TaskRowView({
       </span>
     ),
     deadline: deadline && (
-      <span className="deadline" key="deadline">
+      <span
+        className={`deadline${deadlineDrivesUrgency ? ' drives-urgency' : ''}`}
+        key="deadline"
+        title={deadlineDrivesUrgency ? t('matrix.urgentByDeadline') : undefined}
+      >
         <Icon name="deadline" />
-        {formatRelativeDay(deadline, locale)}
+        {/* Past, a deadline reads like a late date: "Yesterday", then "3d late" (#451). */}
+        {deadlineLate >= 2
+          ? <span title={formatRelativeDay(deadline, locale)}>{lateLabel(deadlineLate, t)}</span>
+          : formatRelativeDay(deadline, locale)}
       </span>
     ),
     project: projectVisible && project && (
@@ -512,7 +549,7 @@ function TaskRowView({
             />
           )}
 
-          {table && parent && (
+          {(table || showParentChip) && parent && (
             /* Todoist marks a subtask in its table; here the mark also says whose it is, and opens it. */
             <button type="button" className="parentchip" title={t('detail.subtaskOf') + ' ' + parent.content}
               onClick={(e) => { e.stopPropagation(); onOpen(parent.id); }}

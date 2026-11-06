@@ -88,7 +88,7 @@ test('#154 the Inbox, a tag and Someday lead with their quick tasks, saying wher
     .toHaveCount(0);
 });
 
-test('#154 a board leads with a blue read-only Quick column, and My week looks as it did', async ({ demo: page }) => {
+test('#154 a board leads with a blue read-only Quick column, and This week looks as it did', async ({ demo: page }) => {
   await go(page, '#/week');
   const before = await page.locator('.screen.active .group').evaluateAll(
     (groups) => groups.map((g) => g.querySelector('.gname')?.textContent ?? ''),
@@ -137,6 +137,27 @@ test('⌘A then ⌘⌫ deletes the selection with no task under the cursor', asy
   await page.keyboard.press('ControlOrMeta+a');
   await page.keyboard.press('ControlOrMeta+Backspace');
   await expect(page.getByRole('dialog')).toContainText(/Delete/);
+});
+
+test('⌘-clicking the cursor row off a selection deletes the tasks still selected, not that row', async ({ demo: page }) => {
+  await go(page, '#/inbox');
+  const list = rows(page);
+  const names = await list.locator('.ttitle').allInnerTexts();
+  expect(names.length).toBeGreaterThanOrEqual(4);
+
+  await list.nth(0).click({ modifiers: ['ControlOrMeta'] });
+  await list.nth(1).click({ modifiers: ['ControlOrMeta'] });
+  await list.nth(2).click({ modifiers: ['ControlOrMeta'] });
+  // The first is unticked: the cursor stays on it, but only the other two are picked.
+  await list.nth(0).click({ modifiers: ['ControlOrMeta'] });
+
+  await page.keyboard.press('ControlOrMeta+Backspace');
+  await expect(page.getByRole('dialog')).toContainText('Delete 2 tasks?');
+  await page.getByRole('dialog').getByRole('button', { name: 'Delete' }).click();
+
+  await expect(row(page, names[1])).toHaveCount(0);
+  await expect(row(page, names[2])).toHaveCount(0);
+  await expect(row(page, names[0])).toHaveCount(1);
 });
 
 test('#154 the Quick group stays on top whatever the page is grouped by', async ({ demo: page }) => {
@@ -218,7 +239,7 @@ test('#161 This week commits the task to the week, with a toast and an undo', as
   await task.hover();
   await task.getByRole('button', { name: 'This week' }).click();
 
-  await expect(page.locator('.toast').filter({ hasText: /Moved to My week/ })).toBeVisible();
+  await expect(page.locator('.toast').filter({ hasText: /Moved to This week/ })).toBeVisible();
   await expect(rows(page).filter({ hasText: 'Repaint the hallway' })).toHaveCount(0);
 
   await go(page, '#/week');
@@ -563,7 +584,7 @@ test('#159 Show me, after an update, runs the tour over what the update brought'
   await expect(dialog.getByRole('button', { name: 'Show me' })).toBeVisible();
   await dialog.getByRole('button', { name: 'Show me' }).click();
 
-  // On My week, with the stop for what 1.19 brought and nothing else.
+  // On This week, with the stop for what 1.19 brought and nothing else.
   await expect(page).toHaveURL(/#\/week/);
   const card = page.locator('.tour-card');
   await expect(card.locator('h3')).toHaveText('I have time');

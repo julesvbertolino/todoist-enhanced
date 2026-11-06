@@ -1,3 +1,4 @@
+import { WorkspaceAvatar } from './WorkspaceFilter';
 import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { restrictToParentElement, restrictToVerticalAxis } from '@dnd-kit/modifiers';
@@ -15,7 +16,8 @@ import {
 export const ENTRY: Record<SidebarItemId, { icon: IconName; label: TranslationKey }> = {
   inbox: { icon: 'inbox', label: 'nav.inbox' },
   today: { icon: 'calendar', label: 'nav.today' },
-  week: { icon: 'week', label: 'nav.week' },
+  week: { icon: 'week', label: 'nav.sideWeek' },
+  month: { icon: 'calendar', label: 'nav.sideMonth' },
   upcoming: { icon: 'upcoming', label: 'nav.upcoming' },
   someday: { icon: 'someday', label: 'nav.someday' },
   review: { icon: 'check', label: 'nav.review' },
@@ -131,9 +133,13 @@ function EntryRow({
   entry, shown, showToday, onToggle,
 }: { entry: SidebarEntry; shown: boolean; showToday: boolean; onToggle: () => void }) {
   const { t } = useT();
+  const weekTag = useStore((s) => s.prefs.weekLabel);
   /* The hint follows My Week's display filter independently of sidebar visibility. */
   const hint = entry.id === 'week'
-    ? t(showToday ? 'nav.weekHintUnified' : 'nav.weekHintSplit')
+    ? t(showToday ? 'nav.weekHintUnified' : 'nav.weekHintSplit', { tag: weekTag })
+    : entry.id === 'month' ? t('nav.monthHint')
+    : entry.id === 'upcoming' ? t('nav.upcomingHint')
+    : entry.id === 'someday' ? t('nav.somedayHint')
     : null;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: entry.id });
   const { icon, label } = ENTRY[entry.id];
@@ -172,7 +178,7 @@ function EntryRow({
 export function GroupOrderEditor({
   groups, onChange,
 }: {
-  groups: Array<{ id: string; name: string }>;
+  groups: Array<{ id: string; name: string; logo?: string | null; avatar?: boolean }>;
   onChange: (ids: string[]) => void;
 }) {
   const { t } = useT();
@@ -198,14 +204,14 @@ export function GroupOrderEditor({
     >
       <SortableContext items={groups.map((g) => g.id)} strategy={verticalListSortingStrategy}>
         <ul className="navedit-list">
-          {groups.map((group) => <GroupRow key={group.id} id={group.id} name={group.name} label={t('settings.sidebarMove', { name: group.name })} />)}
+          {groups.map((group) => <GroupRow key={group.id} id={group.id} name={group.name} logo={group.logo} avatar={group.avatar} label={t('settings.sidebarMove', { name: group.name })} />)}
         </ul>
       </SortableContext>
     </DndContext>
   );
 }
 
-function GroupRow({ id, name, label }: { id: string; name: string; label: string }) {
+function GroupRow({ id, name, label, logo, avatar }: { id: string; name: string; label: string; logo?: string | null; avatar?: boolean }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   return (
     <li
@@ -216,7 +222,10 @@ function GroupRow({ id, name, label }: { id: string; name: string; label: string
       <button type="button" className="navedit-grip" aria-label={label} {...attributes} {...listeners}>
         <Icon name="drag" size="sm" />
       </button>
-      <span className="navedit-label"><span>{name}</span></span>
+      <span className="navedit-label">
+        {avatar && <WorkspaceAvatar small id={id} name={name} logo={logo} />}
+        <span>{name}</span>
+      </span>
     </li>
   );
 }

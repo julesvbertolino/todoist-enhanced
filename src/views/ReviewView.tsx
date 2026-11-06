@@ -16,6 +16,7 @@ import { completionTick } from '@/store/tick';
 import { navigate } from '@/hooks/useRoute';
 import { rootItems } from '@/store/selectors';
 import { markerStyle } from '@/domain/colors';
+import { nextOccurrence, nextOccurrenceLabel } from '@/domain/nextOccurrence';
 import { formatDuration, effectiveEstimate } from '@/domain/estimates';
 import { dueDate, formatRelativeDay } from '@/domain/dates';
 import { summariseInsights } from '@/domain/insights';
@@ -160,11 +161,12 @@ export function ReviewView({ onOpen }: ReviewViewProps) {
       completed,
       inboxProjectId: snapshot.user?.inbox_project_id ?? null,
       now: new Date(),
+      weekStartsOn: (startDay % 7) as 0 | 1 | 2 | 3 | 4 | 5 | 6,
       quietAfterDays: prefs.quietAfterDays,
       weeklyCapacityMinutes: capacity,
       childrenOf,
     }),
-    [cadence, roots, snapshot.projects, snapshot.user?.inbox_project_id, completed,
+    [cadence, roots, snapshot.projects, snapshot.user?.inbox_project_id, completed, startDay,
       prefs.quietAfterDays, capacity, childrenOf],
   );
 
@@ -537,6 +539,7 @@ export function ReviewView({ onOpen }: ReviewViewProps) {
                 }}
               >
                 {t('review.nextOccurrence')}
+                {nextOccurrence(item) && <small> · {nextOccurrenceLabel(nextOccurrence(item)!, locale)}</small>}
               </button>
             )}
             {s.actions.map((action) => (

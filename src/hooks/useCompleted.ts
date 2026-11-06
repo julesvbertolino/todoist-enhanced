@@ -76,7 +76,7 @@ export function useCompleted(range: Range, enabled: boolean, viewKey?: string) {
     }
 
     setFailed(null);
-    fetchCompleted(earlier.since, current.until, controller.signal)
+    fetchCompleted(earlier.since, current.until, controller.signal, {}, { recurring: true })
       .then((items) => { if (!controller.signal.aborted) split(items); })
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;

@@ -1,7 +1,7 @@
-import { addMonths, differenceInMonths, parseISO, startOfDay } from 'date-fns';
+import { addMonths, differenceInMonths, isSameDay, parseISO, startOfDay } from 'date-fns';
 import { SYSTEM_LABELS, weekLabel, type Bucket, type Item } from './types';
 import { estimateOf } from './estimates';
-import { dueDate, hasTime, isFuture, isOverdue, isToday, toApiDate } from './dates';
+import { deadlineDate, dueDate, hasTime, isFuture, isOverdue, isToday, toApiDate } from './dates';
 
 /** Case-insensitive label test, so `Week` and `week` behave the same. */
 export const hasLabel = (item: Item, label: string): boolean =>
@@ -29,11 +29,15 @@ export function isQuick(item: Item): boolean {
  *
  * A real date always wins over the `week` label; nothing is ever corrected
  * silently, so a task carrying both is placed by its date and separately
- * surfaces as a conflict.
+ * surfaces as a conflict. A deadline already past makes the task overdue, as
+ * a deadline of today makes it due today, whatever its start date.
  */
 export function bucketOf(item: Item, now = new Date()): Bucket {
+  if (item.due && isOverdue(item, now)) return 'overdue';
+  const deadline = deadlineDate(item);
+  if (deadline && deadline < startOfDay(now)) return 'overdue';
+  if (deadline && isSameDay(deadline, now)) return 'today';
   if (item.due) {
-    if (isOverdue(item, now)) return 'overdue';
     if (isToday(item, now)) return 'today';
     if (isFuture(item, now)) return 'upcoming';
   }
@@ -69,7 +73,7 @@ export function groupWeek(items: Item[], now = new Date(), showQuickGroup = true
       groups.overdue.push(item);
     } else if (bucket === 'today') {
       if (showQuickGroup && isQuick(item)) groups.quick.push(item);
-      else if (hasTime(item.due)) groups.timed.push(item);
+      else if (hasTime(item.due) && isToday(item, now)) groups.timed.push(item);
       else groups.untimed.push(item);
     } else if (bucket === 'anytime') {
       groups.anytime.push(item);
@@ -221,9 +225,14 @@ export function upcomingItems(items: Item[], now = new Date()): Item[] {
   return items.filter((i) => bucketOf(i, now) === 'upcoming');
 }
 
-/** Someday / backlog: no date and no `week` commitment. */
+/** Later: no date, no `week` commitment, carrying the `later` tag. */
+export function monthItems(items: Item[], now = new Date()): Item[] {
+  return items.filter((i) => bucketOf(i, now) === 'someday' && hasLabel(i, SYSTEM_LABELS.month));
+}
+
+/** Someday / backlog: no date, no `week` commitment and no `later` tag. */
 export function somedayItems(items: Item[], now = new Date()): Item[] {
-  return items.filter((i) => bucketOf(i, now) === 'someday');
+  return items.filter((i) => bucketOf(i, now) === 'someday' && !hasLabel(i, SYSTEM_LABELS.month));
 }
 
 /** Anytime this week: no date, carrying `week`. */

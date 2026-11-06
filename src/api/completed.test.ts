@@ -69,3 +69,59 @@ describe('a completion on the boundary of two windows', () => {
     expect(items).toHaveLength(1);
   });
 });
+
+describe('completions of recurring tasks (#331)', () => {
+  const since = new Date(2026, 8, 1);
+  const until = new Date(2026, 8, 7, 23, 59, 59, 999);
+  const entry = (task: string, at: string, recurring: boolean) => ({
+    id: `c-${task}-${at}`, task_id: task, user_id: 'u', project_id: 'p', section_id: null, content: task, completed_at: at,
+    item_object: { priority: 4, labels: ['quick'], due: { is_recurring: recurring } },
+  });
+
+  it('are not asked for unless the page wants them', async () => {
+    sent.mockResolvedValue({ items: [] } as never);
+    await fetchCompleted(since, until);
+    expect(sent.mock.calls.map((call) => call[0])).toEqual(['/tasks/completed/by_completion_date']);
+  });
+
+  it('are added, each occurrence once, next to the plain completions', async () => {
+    sent.mockImplementation((async (path: string, init: { query: { offset?: number } }) => {
+      if (path === '/tasks/completed/by_completion_date') return { items: [done('plain', '2026-09-03T10:00:00.000Z')] };
+      if (init.query.offset) return { items: [] };
+      return { items: [
+        entry('plain', '2026-09-03T10:00:00.000Z', false),
+        entry('habit', '2026-09-02T08:00:00.000Z', true),
+        entry('habit', '2026-09-03T08:00:00.000Z', true),
+        entry('habit', '2026-09-04T08:00:00.000Z', true),
+      ] };
+    }) as never);
+
+    const items = await fetchCompleted(since, until, undefined, {}, { recurring: true });
+
+    expect(items.map((item) => item.task_id)).toEqual(['plain', 'habit', 'habit', 'habit']);
+    expect(items.find((item) => item.task_id === 'habit')).toMatchObject({ priority: 4, labels: ['quick'] });
+  });
+
+  it('keep going past a short page and stop on an empty one', async () => {
+    sent.mockImplementation((async (path: string, init: { query: { offset?: number } }) => {
+      if (path === '/tasks/completed/by_completion_date') return { items: [] };
+      const offset = init.query.offset ?? 0;
+      return { items: offset === 0 ? [entry('habit', '2026-09-02T08:00:00.000Z', true)] : offset === 200 ? [entry('habit', '2026-09-03T08:00:00.000Z', true)] : [] };
+    }) as never);
+
+    const items = await fetchCompleted(since, until, undefined, {}, { recurring: true });
+
+    expect(items).toHaveLength(2);
+  });
+
+  it('do not break the history when the older endpoint is gone', async () => {
+    sent.mockImplementation((async (path: string) => {
+      if (path === '/tasks/completed') throw new Error('gone');
+      return { items: [done('plain', '2026-09-03T10:00:00.000Z')] };
+    }) as never);
+
+    const items = await fetchCompleted(since, until, undefined, {}, { recurring: true });
+
+    expect(items).toHaveLength(1);
+  });
+});

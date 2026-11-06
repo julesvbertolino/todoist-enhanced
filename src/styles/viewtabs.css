@@ -108,3 +108,26 @@ span.colgrip{cursor:default}
 }
 /* Pills: the same room on both sides, and nothing added when one is in front */
 .vtab-main{padding:0 12px}
+
+/* The columns list opens to the side of Display. */
+.columns-caret{transform:rotate(-90deg)}
+.columnsrow .fselect-face[aria-expanded="true"] .columns-caret{transform:rotate(0)}
+
+
+/* Shared Display fields: labels and switches sit on the same rhythm. */
+.dfields h5,.displaypanel > h5 { text-transform:none; letter-spacing:0; font-size:var(--fs-12); }
+.dfields .display-toggles { padding-top:0; margin-top:var(--s2); }
+.dfields .panelrow > span { gap:10px; }
+.dfields .panelrow > span > .ic { width:16px; height:16px; flex:none; color:var(--muted); }
+.dfields .fselect-face { border-radius:12px; }
+.dfields .dfield-stack > .display-fullwidth { padding-block:0; }
+.calendar-display-settings { display:flex; flex-direction:column; gap:var(--s2); }
+.calendar-display-settings .display-toggles { margin-top:0; }
+
+.dfields .display-toggles .panelrow > span, .dfields .dfield-stack > .panelrow > span { padding-left:10px; }
+
+/* Keep the mode selector aligned with the fields and use one rhythm for table controls. */
+.dfields .display-modes { margin-left:0; margin-right:0; width:100%; box-sizing:border-box; }
+.dfields .dfield-stack > .columnsrow + .fselect { margin-top:0; }
+.dfields .dfield-stack > .panelrow { margin-top:0; }
+.dfields > .display-fullwidth > span { padding-left:10px; }

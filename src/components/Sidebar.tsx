@@ -1,5 +1,6 @@
 import { ProjectProgress } from './ProjectProgress';
-import { matrixVisibleItems } from '@/domain/eisenhower';
+import { readFolderState, writeFolderState } from '@/domain/folderState';
+import { matrixRoots, matrixSettings } from '@/domain/eisenhower';
 import { SidebarResize } from './SidebarResize';
 import { isToday } from '@/domain/dates';
 import { viewPrefs } from '@/store/prefs';
@@ -16,7 +17,7 @@ import { useData } from '@/hooks/useData';
 import { useStore } from '@/store/store';
 import { navigate, type Route } from '@/hooks/useRoute';
 import { projectCounts, projectTree, rootItems, type ProjectNode } from '@/store/selectors';
-import { bucketOf, somedayItems, weekItems } from '@/domain/views';
+import { bucketOf, monthItems, somedayItems, weekItems } from '@/domain/views';
 import { markerStyle, avatarUrl } from '@/domain/colors';
 import { firstName, karmaStanding } from '@/domain/karma';
 import { readProjectIcon } from '@/domain/projectIcons';
@@ -110,8 +111,30 @@ export function Sidebar({
   const draggingProjectId = useStore((s) => s.draggingProjectId);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  const folderOwner = demo ? null : snapshot.user?.id;
+  const [folderState, setFolderState] = useState<{ owner: string | null; values: Record<string, boolean> }>({ owner: null, values: {} });
+  const openFolders = folderState.owner === folderOwner ? folderState.values : {};
+  useEffect(() => {
+    if (!folderOwner) { setFolderState({ owner: null, values: {} }); return; }
+    const read = () => {
+      try {
+        const values = readFolderState(localStorage, folderOwner);
+        setFolderState({ owner: folderOwner, values });
+      } catch { setFolderState({ owner: folderOwner, values: {} }); }
+    };
+    read();
+    window.addEventListener('enhanced:folders-changed', read);
+    window.addEventListener('storage', read);
+    return () => { window.removeEventListener('enhanced:folders-changed', read); window.removeEventListener('storage', read); };
+  }, [folderOwner]);
+  const toggleFolder = (id: string) => {
+    const values = { ...openFolders, [id]: !(openFolders[id] ?? true) };
+    setFolderState({ owner: folderOwner ?? null, values });
+    if (!folderOwner) return;
+    try {
+      if (writeFolderState(localStorage, folderOwner, values)) window.dispatchEvent(new Event('enhanced:folders-changed'));
+    } catch { /* Keep the choice for this session if storage is unavailable. */ }
+  };
   /** The project row whose action menu is open, and the button it hangs from. */
   const [rowMenu, setRowMenu] = useState<{ key: string; anchor: HTMLElement } | null>(null);
 
@@ -174,9 +197,9 @@ export function Sidebar({
         const filters = viewPrefs(prefs, 'matrix').filters;
         const scoped = assigneeItems(snapshot, filters.assignees);
         const workspaceItems = filters.workspaces.length ? Object.fromEntries(Object.entries(scoped).filter(([, item]) => filters.workspaces.includes(snapshot.projects[item.project_id]?.workspace_id ?? 'personal'))) : scoped;
-        const roots = rootItems(openItems({ ...snapshot, items: workspaceItems }));
-        return matrixVisibleItems(roots, snapshot.projects, prefs.eisenhowerHorizon, prefs.eisenhowerIncludeSomeday, filters.workspaces.length ? null : prefs.eisenhowerWorkspace, snapshot.user?.start_day ?? 1).length;
+        return matrixRoots(openItems({ ...snapshot, items: workspaceItems }), snapshot.projects, matrixSettings(prefs, snapshot.user?.start_day)).cards.length;
       })(),
+      month: monthItems(scope('month')).length,
       someday: somedayItems(scope('someday')).length,
       byProject: projectCounts(items),
     };
@@ -215,8 +238,10 @@ export function Sidebar({
     };
   }, [menuOpen]);
 
-  const toggleGroup = (key: string) =>
-    setOpenGroups((prev) => ({ ...prev, [key]: !(prev[key] ?? true) }));
+  /* The groups (favourites, my projects, a workspace) are remembered with the
+     folders, under a prefix no project id can have. */
+  const isGroupOpen = (key: string) => openFolders[`group:${key}`] ?? true;
+  const toggleGroup = (key: string) => toggleFolder(`group:${key}`);
 
   const workspaceOrder = useStore((s) => s.prefs.workspaceOrder);
   const workspaces = useMemo(() => projectTree(snapshot, workspaceOrder), [snapshot, workspaceOrder]);
@@ -295,7 +320,8 @@ export function Sidebar({
         return navItem('inbox', 'inbox', 'nav.inbox', counts.inbox,
           inboxId ? { kind: 'project', projectId: inboxId } : undefined);
       case 'today': return navItem('today', 'calendar', 'nav.today', counts.today, { kind: 'today' });
-      case 'week': return navItem('week', 'week', 'nav.week', counts.week, { kind: 'anytime' });
+      case 'week': return navItem('week', 'week', 'nav.sideWeek', counts.week, { kind: 'anytime' });
+      case 'month': return navItem('month', 'calendar', 'nav.sideMonth', counts.month, { kind: 'month' });
       case 'upcoming': return navItem('upcoming', 'upcoming', 'nav.upcoming', 0);
       case 'someday': return navItem('someday', 'someday', 'nav.someday', counts.someday, { kind: 'someday' });
       case 'review': return navItem('review', 'check', 'nav.review', 0);
@@ -327,7 +353,7 @@ export function Sidebar({
               drag a project into. */}
           {node.nativeFolder ? <div className="navrow">
             <button className="navitem folderitem" aria-expanded={isOpen}
-              onClick={() => setOpenFolders((prev) => ({ ...prev, [project.id]: !isOpen }))}>
+              onClick={() => toggleFolder(project.id)}>
               <Icon name="project" /><span className="label">{project.name}</span>
               <Icon name={isOpen ? 'caret-up' : 'caret'} size="sm" className="disclose" />
             </button>
@@ -336,7 +362,7 @@ export function Sidebar({
               className="navitem folderitem"
               data-tour="folder"
               aria-expanded={isOpen}
-              onClick={() => setOpenFolders((prev) => ({ ...prev, [project.id]: !isOpen }))}
+              onClick={() => toggleFolder(project.id)}
             >
               <Icon name="project" />
               <span className="label">{project.name}</span>
@@ -427,7 +453,7 @@ export function Sidebar({
                 className={`navtwist${folderLike ? ' foldertoggle' : ''}`}
                 aria-expanded={childrenOpen}
                 aria-label={project.name}
-                onClick={() => setOpenFolders((prev) => ({ ...prev, [project.id]: !childrenOpen }))}
+                onClick={() => toggleFolder(project.id)}
               >
                 <Icon name={childrenOpen ? 'caret-up' : 'caret'} size="sm" />
               </button>
@@ -581,7 +607,7 @@ export function Sidebar({
         {(favourites.labels.length > 0 || favourites.projects.length > 0 || favourites.filters.length > 0) && (
           <SideGroup
             title={t('nav.favourites')}
-            open={openGroups.favourites ?? true}
+            open={isGroupOpen('favourites')}
             onToggle={() => toggleGroup('favourites')}
             /* The whole section, not its heading: "put this in there" is
                aimed at the box, and asking for the one line of text at the
@@ -615,9 +641,9 @@ export function Sidebar({
             <SideGroup
               key={key}
               title={workspace.name ?? t('nav.myProjects')}
-              logo={workspace.workspaceId ? snapshot.workspaces[workspace.workspaceId]?.logo_big ?? null : null}
-              workspaceId={workspace.workspaceId}
-              open={openGroups[key] ?? true}
+              logo={workspace.workspaceId ? snapshot.workspaces[workspace.workspaceId]?.logo_big ?? null : snapshot.user?.avatar_big ?? null}
+              workspaceId={workspace.workspaceId ?? 'personal'}
+              open={isGroupOpen(key)}
               onOpen={() => navigate('workspace', key)}
               onToggle={() => toggleGroup(key)}
               onAdd={() => onProjectSheet({

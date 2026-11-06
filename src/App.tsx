@@ -12,6 +12,7 @@ import { BulkBar } from './components/BulkBar';
 import { DragProvider } from './components/dnd/DragProvider';
 import { Composer } from './components/overlays/Composer';
 import { TaskDetail } from './components/overlays/TaskDetail';
+import { useTodoistLinks } from './hooks/useTodoistLinks';
 import { Issues } from './components/overlays/Issues';
 import { Search } from './components/overlays/Search';
 import { Shortcuts } from './components/overlays/Shortcuts';
@@ -39,6 +40,10 @@ const EisenhowerView = lazy(() => import('./views/EisenhowerView').then((module)
 import { ConnectView } from './views/ConnectView';
 import { EstimateStorageDialog } from './components/overlays/EstimateStorageDialog';
 import { Walkthrough } from './components/overlays/Walkthrough';
+import { LaunchPopup } from './components/launch/LaunchPopup';
+import { PomodoroFocus } from './components/overlays/PomodoroFocus';
+import { PomodoroAsk } from './components/overlays/PomodoroAsk';
+import { usePomodoro } from './store/pomodoro';
 import { Tour } from './components/overlays/Tour';
 import { InstallPrompt } from './components/overlays/InstallPrompt';
 import { WhatsNew, type WhatsNewScope } from './components/overlays/WhatsNew';
@@ -46,7 +51,7 @@ import { compareVersions, hasChanges, parseChangelog, unseenReleases } from './d
 import { VERSION } from './app-info';
 import { hasOnboarded, shouldAskEstimateStorage } from './domain/onboarding';
 import { useStore } from './store/store';
-import type { Accent, DarkStyle, Theme } from './store/prefs';
+import { FALLBACK_HOME, type Accent, type DarkStyle, type Theme } from './store/prefs';
 import { ACCENT_TOKENS, accentFamily, backdropGradient, hexToHsl } from './domain/accent';
 import { useT } from './hooks/useT';
 import { useSelectionBlocks } from './hooks/useSelectionBlocks';
@@ -57,13 +62,14 @@ import { labelRoots, rootItems } from './store/selectors';
 import { detectConflicts } from './domain/conflicts';
 import { placementForPage } from './domain/dnd';
 import { useParentEstimates } from './hooks/useParentEstimates';
-import { bucketOf, somedayItems, upcomingItems, weekItems } from './domain/views';
+import { bucketOf, monthItems, somedayItems, upcomingItems, weekItems } from './domain/views';
 import { effectiveEstimate } from './domain/estimates';
 import type { Item } from './domain/types';
 import type { TranslationKey } from './i18n';
 import { useUpdateReady } from './lib/appUpdate';
 import { usePhone } from './hooks/usePhone';
 import { UpdateCard } from './components/UpdateCard';
+import { MacUpdateCard } from './components/MacUpdateCard';
 
 export function App() {
   useLabelRenames();
@@ -73,7 +79,8 @@ export function App() {
   const init = useStore((s) => s.init);
   const startPolling = useStore((s) => s.startPolling);
   const locale = useStore((s) => s.prefs.locale);
-  const homepage = useStore((s) => s.prefs.homepage);
+  /* The matrix is optional: switched off while it is the homepage, the app opens on the week instead of an empty page (#449). */
+  const homepage = useStore((s) => s.prefs.homepage === 'matrix' && !s.prefs.eisenhowerEnabled ? FALLBACK_HOME : s.prefs.homepage);
   const theme = useStore((s) => s.prefs.theme);
   const darkStyle = useStore((s) => s.prefs.darkStyle);
   const accent = useStore((s) => s.prefs.accent);
@@ -304,6 +311,27 @@ export function App() {
   }, [ready, connected, demo, settled, userId, tourOpen, walkthroughOpen, whatsNew,
     seenVersion, whatsNewOn, setPrefs, setupDone]);
 
+  /* The task the full screen carries is edited there: the window behind it would be a second editor of the same task. */
+  const pomodoroFullscreen = usePomodoro((s) => s.fullscreen);
+  useEffect(() => { if (pomodoroFullscreen) setOpenTaskId(null); }, [pomodoroFullscreen]);
+  useEffect(() => {
+    const open = (event: Event) => { const id = (event as CustomEvent<string>).detail; if (id) setOpenTaskId(id); };
+    window.addEventListener('pomodoro:open-task', open);
+    return () => window.removeEventListener('pomodoro:open-task', open);
+  }, []);
+  /* A timer left by another account is not this one's. */
+  useEffect(() => { if (ready && userId) usePomodoro.getState().claim(String(userId)); }, [ready, userId]);
+
+  /* The Pomodoro arrived after the setup: whoever already went through it is
+     asked how it should open, once, after What's new. */
+  const pomodoroAsked = useStore((s) => s.prefs.pomodoroAsked);
+  const [askPomodoro, setAskPomodoro] = useState(false);
+  useEffect(() => {
+    if (QUICK_ADD || demo || !ready || !connected || !settled || !hasOnboarded(userId)) return;
+    if (tourOpen || walkthroughOpen || whatsNew || !setupDone || seenVersion !== VERSION) return;
+    if (!pomodoroAsked) setAskPomodoro(true);
+  }, [ready, connected, demo, settled, userId, tourOpen, walkthroughOpen, whatsNew, setupDone, seenVersion, pomodoroAsked]);
+
   /* A note for Todoist's own people, once. Put up only when nothing else has
      the page — no tour, no first run, no What's new — so it is not lost behind
      them, and recorded on the account the moment it is shown. */
@@ -349,7 +377,16 @@ export function App() {
     return () => window.removeEventListener('enhanced:changelog', show);
   }, []);
 
+  /* theme-boot.js marks the Quick Add window transparent before its first
+     paint; the sign-in page it shows before there is an account needs its
+     background back. */
+  useEffect(() => {
+    if (QUICK_ADD) document.documentElement.classList.toggle('quickadd', !ready || connected);
+  }, [ready, connected]);
+
   if (!ready) {
+    // The Quick Add window stays clear until the composer can be drawn.
+    if (QUICK_ADD) return null;
     return <div className="connect"><p className="empty">{t('common.loading')}</p></div>;
   }
 
@@ -412,6 +449,11 @@ export function App() {
       <EstimateStorageDialog onConvert={(target) => setConversionRequest((previous) => ({ target, request: previous.request + 1 }))} open={storageOpen && !demo && !tourOpen && !walkthroughOpen && !whatsNew} onClose={() => { setStorageDismissed(userId ?? null); }} />
       <EstimateConversion target={conversionRequest.target} openRequest={conversionRequest.request} hideTrigger />
       <ShareSheet projectId={shareProject} onClose={() => setShareProject(null)} />
+      <PomodoroFocus />
+      {/* Product Hunt launch day only: delete with src/components/launch and src/domain/launch.ts. */}
+      <LaunchPopup ready={!QUICK_ADD && ready && (connected || demo) && !tourOpen && !walkthroughOpen && !whatsNew} />
+      <MacUpdateCard enabled={!QUICK_ADD && ready && (connected || demo) && !tourOpen && !walkthroughOpen && !whatsNew} />
+      <PomodoroAsk open={askPomodoro && !pomodoroAsked} onClose={() => setAskPomodoro(false)} />
       <Walkthrough
         open={walkthroughOpen}
         onDone={() => setWalkthrough(false)}
@@ -644,7 +686,7 @@ function paintBrowserChrome(): void {
 }
 
 /** The pages that list tasks to work through, which is where "I have time" is offered (#159). */
-const TIME_PAGES = new Set<Route['view']>(['week', 'today', 'project', 'label', 'inbox', 'someday']);
+const TIME_PAGES = new Set<Route['view']>(['week', 'today', 'project', 'label', 'inbox', 'month', 'someday']);
 
 function AppShell({
   route, openTaskId, setOpenTaskId, composerOpen, setComposerOpen,
@@ -715,6 +757,8 @@ function AppShell({
         return { contextItems: upcomingItems(roots), contextLabel: t('nav.upcoming') };
       case 'review':
         return { contextItems: weekItems(roots), contextLabel: t('nav.review') };
+      case 'month':
+        return { contextItems: monthItems(roots), contextLabel: t('nav.month') };
       case 'someday':
         return { contextItems: somedayItems(roots), contextLabel: t('nav.someday') };
       case 'inbox': {
@@ -814,6 +858,8 @@ function AppShell({
   }, [route.view, route.id]);
 
   const openTask = useCallback((id: string) => setOpenTaskId(id), [setOpenTaskId]);
+  // A link to a Todoist item the app has opens here instead of in Todoist (#419).
+  useTodoistLinks(openTask, useCallback(() => setOpenTaskId(null), [setOpenTaskId]));
   const addTask = () => {
     setPlacement(placementForPage(route, snapshot.user?.inbox_project_id));
     setComposerOpen(true);
@@ -857,6 +903,7 @@ function AppShell({
           {route.view === 'today' && <WeekView {...viewProps} scope="today" />}
           {route.view === 'search' && <SearchView query={route.query ?? ''} onOpen={openTask} />}
           {route.view === 'upcoming' && <UpcomingView {...viewProps} />}
+          {route.view === 'month' && <SimpleListView kind="month" {...viewProps} />}
           {route.view === 'someday' && <SimpleListView kind="someday" {...viewProps} />}
           {/* The Inbox is a project like the others, with sections of its own
              : it is drawn by the project page, which is what shows them. */}

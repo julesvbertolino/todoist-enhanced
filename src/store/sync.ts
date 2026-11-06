@@ -1,4 +1,5 @@
 import { clearProjectPeopleCache } from './collab';
+import { usePomodoro } from './pomodoro';
 /** Talking to Todoist: signing in and out, reading, writing, the offline queue, the demo. */
 import { verifyEstimateWrites } from './estimate-safety';
 import { auth } from '@/api/auth';
@@ -6,6 +7,7 @@ import { completeSignIn } from '@/api/oauth';
 import { ApiError, NotConnectedError } from '@/api/client';
 import { applySync, applyWrite, sync } from '@/api/sync';
 import { sendCommands, type Command } from '@/api/commands';
+import { settleOrphans } from '@/api/repair';
 import * as idb from '@/db/idb';
 import { emptySnapshot, setWeekLabel } from '@/domain/types';
 import { readKept } from '@/domain/views';
@@ -23,6 +25,7 @@ import {
 import { DUST_KEY } from './dust';
 import type { AppState } from './types';
 import type { Slice, SyncSlice } from './types';
+import { accountOnDevice, mayWriteAs } from '@/lib/accountWatch';
 
 /** How often the app asks Todoist what changed while the tab is in the foreground. */
 export const POLL_INTERVAL_MS = 45_000;
@@ -41,12 +44,22 @@ export async function readAccountSettings(snapshot: ReturnType<typeof emptySnaps
   return { ...snapshot, notes };
 }
 
+/** Who a language repair is done for, and which language the account reads in. */
+const repairAccount = (get: () => AppState) => {
+  const user = get().snapshot.user;
+  return { ...(user?.id ? { userId: user.id } : {}), ...(user?.lang ? { userLang: user.lang } : {}) };
+};
+
 /** Sends everything waiting in the outbox, oldest first. */
 export async function flushQueue(
   get: () => AppState,
   set: (patch: Partial<AppState>) => void,
 ): Promise<boolean> {
   const queue = await idb.readQueue();
+  await settleOrphans(
+    { syncToken: get().snapshot.syncToken, ...repairAccount(get) },
+    new Set(queue.map((cmd) => cmd.uuid)),
+  ).catch(() => undefined);
   if (queue.length === 0) return false;
 
   /* A deletion written to the queue because the page was hidden is still
@@ -61,6 +74,9 @@ export async function flushQueue(
      the same door, for any other way of getting here (#129). It is left queued,
      not dropped: which account it belongs to is that function's call. */
   const account = get().snapshot.user?.id;
+  /* A window that still believes in another account than the device's sends
+     nothing: its token is the new account's, its changes the old one's. */
+  if (!mayWriteAs(account, accountOnDevice())) return false;
   const commands: Command[] = queue
     .filter((cmd) => !held.has(cmd.uuid))
     .filter((cmd) => !cmd.userId || !account || cmd.userId === account)
@@ -69,7 +85,7 @@ export async function flushQueue(
   if (commands.length === 0) return false;
   try {
     const optimistic = get().snapshot;
-    const result = await sendCommands(get().snapshot.syncToken, commands);
+    const result = await sendCommands(get().snapshot.syncToken, commands, repairAccount(get));
     let merged = applyWrite(get().snapshot, result.responses, result.mapping);
 
     /* A refused creation takes its placeholder with it. A refused edit is
@@ -167,7 +183,7 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
       /* A page load that is Todoist sending the person back from its consent
          page finishes the sign-in first, so what follows finds a connection. */
       const signIn = await completeSignIn();
-      if (signIn === 'signed-in') sessionRemove('demo');
+      if (signIn === 'signed-in') { sessionRemove('demo'); auth.forgetPastedToken(); }
       if (signIn === 'denied' || signIn === 'failed') set({ signInError: signIn });
 
       const [storedPrefs, snapshot, queue, storedKept] = await Promise.all([
@@ -267,6 +283,7 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
   async disconnect() {
     clearProjectPeopleCache();
     sessionRemove('demo');
+    usePomodoro.getState().end();
     await auth.disconnect();
     await idb.clearAll();
     set({
@@ -397,6 +414,16 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
       return {};
     }
 
+    /* A window still on another account than the device's (the Quick Add
+       window after the main one changed account) sends nothing: the token is
+       the device's, the projects and ids it names are the other account's. It
+       starts over on the device's account instead. */
+    if (!mayWriteAs(before.user?.id, accountOnDevice())) {
+      get().toast(translate(get().prefs.locale, 'sync.otherAccount'), undefined, { tone: 'error' });
+      window.setTimeout(() => window.location.reload(), 2500);
+      return {};
+    }
+
     set({ snapshot: after });
     schedulePersist(after);
 
@@ -409,7 +436,7 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
     }
 
     try {
-      const result = await sendCommands(after.syncToken, commands);
+      const result = await sendCommands(after.syncToken, commands, repairAccount(get));
       let merged = applyWrite(get().snapshot, result.responses, result.mapping);
       /* Todoist refused some of it, and the screen must not keep what it
          refused: each refused command gives back only the objects it touched,

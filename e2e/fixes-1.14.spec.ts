@@ -220,7 +220,7 @@ test('⌘↓ at the end of a section carries the task into the next one, ⌘↑ 
   expect(new Map(await sectionTitles(page)).get(toName)).toEqual(toTasks);
 });
 
-test('in My week, ⌘↓ passes over the timed tasks into Anytime, and ⌘↑ never makes a task late', async ({ demo: page }) => {
+test('in This week, ⌘↓ passes over the timed tasks into Anytime, and ⌘↑ never makes a task late', async ({ demo: page }) => {
   const today = new Map(await groupTitles(page)).get('Today') ?? [];
   expect(today.length).toBeGreaterThan(0);
   const moving = today[today.length - 1];

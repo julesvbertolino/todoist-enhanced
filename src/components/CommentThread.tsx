@@ -93,7 +93,7 @@ function mirrorParts(text: string, picked: Array<{ name: string }>): Array<{ tex
   return parts;
 }
 
-/** "Alex Martin" → "AM", "anne" → "A": what stands in for a missing picture. */
+/** "Jules Bertolino" → "JB", "anne" → "A": what stands in for a missing picture. */
 function initials(name: string | undefined): string {
   const words = (name ?? '').trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return '?';

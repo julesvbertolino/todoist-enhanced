@@ -43,7 +43,7 @@ test('Table mode choices stack their icons, priorities have flags and row colour
   const display = active(page).getByRole('button', { name: /^Display(?: \d+)?$/ });
   await display.click();
   const menu = page.getByRole('dialog', { name: 'Display', exact: true });
-  await expect(menu.locator('.display-modes button')).toHaveCount(4);
+  await expect(menu.locator('.display-modes button')).toHaveCount(5);
   expect(await menu.locator('.display-modes button').first().evaluate((node) => getComputedStyle(node).flexDirection)).toBe('column');
   await menu.getByRole('button', { name: 'Table', exact: true }).click();
   await expect(menu.getByRole('button', { name: 'Reverse sort' })).toHaveCount(0);
@@ -53,7 +53,7 @@ test('Table mode choices stack their icons, priorities have flags and row colour
   await expect(table.locator('[data-table-colored]')).toHaveCount(0);
   await display.click();
   await menu.getByRole('button', { name: 'Colour each row', exact: true }).click();
-  await page.getByRole('option', { name: 'By priority', exact: true }).click();
+  await page.getByRole('option', { name: 'Priority colours', exact: true }).click();
   await display.click();
   await expect(table.locator('[data-table-colored]').first()).toBeVisible();
   const rootX = await table.locator('.task:not([data-depth]) > .check').first().evaluate((node) => node.getBoundingClientRect().left);

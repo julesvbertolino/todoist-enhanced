@@ -46,11 +46,11 @@ export function DashboardDisplayMenu() {
       </div>
       <WorkspaceFilter viewKey="dashboard" />
       <AssigneeFilter viewKey="dashboard" />
-      <MultiSelect icon="flag" label={t('filter.priorities')} allLabel={t('filter.anyPriority')}
+      <MultiSelect icon="flag" maxSummaryLabels={4} label={t('filter.priorities')} allLabel={t('filter.anyPriority')}
         value={filters.priorities.length ? filters.priorities.map(String) : null}
         options={[1, 2, 3, 4].map(p => ({ value: String(p), label: `P${p}`, visual: <Icon name="flag" size="sm" style={{ color: `var(--p${p})` }} /> }))}
         onChange={next => useStore.getState().setViewPrefs('dashboard', { filters: { ...filters, priorities: next ? next.map(Number) as DisplayPriority[] : [] } })} />
-      <MultiSelect icon="tag" label={t('filter.labels')} allLabel={t('filter.anyTag')}
+      <MultiSelect icon="tag" include label={t('filter.labels')} allLabel={t('filter.anyTag')}
         value={filters.labels.length ? filters.labels : null}
         options={Object.values(snapshot.labels).filter(label => !label.name.startsWith('est-')).map(label => ({ value: label.name, label: label.name }))}
         onChange={next => useStore.getState().setViewPrefs('dashboard', { filters: { ...filters, labels: next ?? [] } })} />

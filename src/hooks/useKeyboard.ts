@@ -426,13 +426,25 @@ export function useKeyboard(bridge: KeyboardBridge) {
         if (!item) return;
         lastIndex = Math.max(0, rows().indexOf(current));
 
+        /* The tasks a key means when it is pressed on this row: the selection
+           when the cursor is inside it, and also when the cursor row is the
+           one just unticked. ⌘-clicking a task off leaves the cursor on it,
+           and it was the anchor of that very click; arrowing away from a
+           selection leaves the anchor behind, so that stays the row you
+           arrowed to. */
+        const selectionFor = (): string[] | null => {
+          const sel = store.selection;
+          if (sel.includes(id)) return sel.length > 1 ? sel : null;
+          return sel.length > 0 && store.selectionAnchor === id ? sel : null;
+        };
+
         /* Inside a selection, the keys below are for all of it — the same
            rule as E and delete. A change that can take the tasks off the page
            (a date, a project) ends the selection, as the bar's does; one that
            leaves them in place (a priority, a nudge of a day) keeps it, so the
            next key can follow. */
-        const selected = store.selection;
-        const onSelection = selected.length > 1 && selected.includes(id);
+        const selected = selectionFor() ?? [];
+        const onSelection = selected.length > 1;
         const openBulk = (menu: BulkMenuName) => {
           window.dispatchEvent(new CustomEvent(BULK_MENU_EVENT, { detail: menu }));
         };
@@ -497,8 +509,9 @@ export function useKeyboard(bridge: KeyboardBridge) {
              Only when the cursor is inside the selection, though: arrowing
              away from a selection and pressing this means the row you have
              arrowed to. */
-          const picked = store.selection;
-          const many = picked.length > 1 && picked.includes(id);
+          const picked = selectionFor() ?? [id];
+          const many = picked.length > 1;
+          const name = store.snapshot.items[picked[0]]?.content ?? item.content;
 
           /* The confirmation stays. Deleting is the one thing that should
              never be one keystroke away from done, and a keystroke is a
@@ -507,7 +520,7 @@ export function useKeyboard(bridge: KeyboardBridge) {
             title: say(many ? 'task.deleteTitleMany' : 'task.deleteTitle'),
             body: many
               ? say('bulk.deleteConfirm', { count: picked.length })
-              : say('task.deleteConfirm', { name: item.content }),
+              : say('task.deleteConfirm', { name }),
             confirmLabel: say('task.delete'),
             destructive: true,
           }).then((ok) => {
@@ -515,7 +528,7 @@ export function useKeyboard(bridge: KeyboardBridge) {
             const at = lastIndex;
             const gone = many
               ? (store.clearSelection(), store.removeTasks(picked))
-              : store.removeTask(id);
+              : store.removeTask(picked[0]);
             void gone.then(() => {
               // The place stays even though the row in it has gone.
               window.setTimeout(() => land(rows()[Math.min(at, rows().length - 1)]), 0);
@@ -533,8 +546,8 @@ export function useKeyboard(bridge: KeyboardBridge) {
              that skipped that would be a second way of completing a task that
              looks nothing like the first. */
           const at = lastIndex;
-          const picked = store.selection;
-          const many = picked.length > 1 && picked.includes(id);
+          const picked = selectionFor() ?? [];
+          const many = picked.length > 1;
           if (many) {
             /* A selection is one act: one request, and one Cmd+Z that brings
                every task back, rather than a click on each row and an undo

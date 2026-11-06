@@ -13,7 +13,7 @@
  */
 
 export const SIDEBAR_ITEMS = [
-  'inbox', 'today', 'week', 'upcoming', 'someday',
+  'inbox', 'today', 'week', 'month', 'upcoming', 'someday',
   'review', 'dashboard', 'logbook', 'matrix', 'labels', 'filters',
 ] as const;
 export type SidebarItemId = (typeof SIDEBAR_ITEMS)[number];
@@ -28,13 +28,31 @@ export interface SidebarNav {
   other: SidebarEntry[];
 }
 
-const MAIN: SidebarItemId[] = ['inbox', 'today', 'week', 'upcoming', 'someday'];
+const MAIN: SidebarItemId[] = ['inbox', 'today', 'week', 'month', 'upcoming', 'someday'];
 const OTHER: SidebarItemId[] = ['review', 'dashboard', 'logbook', 'matrix', 'labels', 'filters'];
 
 export const defaultSidebarNav = (): SidebarNav => ({
   main: MAIN.map((id) => ({ id, on: true })),
   other: OTHER.map((id) => ({ id, on: true })),
 });
+
+/** What the setup starts from (#413): Inbox, Anytime this week, Anytime this month, Upcoming and Someday on, the rest off until chosen. */
+export const STARTING_SIDEBAR_ON: readonly SidebarItemId[] = ['inbox', 'week', 'month', 'upcoming', 'someday'];
+
+export const startingSidebarNav = (): SidebarNav => {
+  const nav = defaultSidebarNav();
+  return {
+    main: nav.main.map((entry) => ({ ...entry, on: STARTING_SIDEBAR_ON.includes(entry.id) })),
+    other: nav.other.map((entry) => ({ ...entry, on: STARTING_SIDEBAR_ON.includes(entry.id) })),
+  };
+};
+
+/** True while nobody has touched the navigation: every entry is still on, in its default place. */
+export const isUntouchedSidebarNav = (nav: SidebarNav): boolean => {
+  const base = defaultSidebarNav();
+  const same = (a: SidebarEntry[], b: SidebarEntry[]) => a.length === b.length && a.every((entry, i) => entry.id === b[i].id && entry.on === b[i].on);
+  return same(nav.main, base.main) && same(nav.other, base.other);
+};
 
 const isItem = (value: unknown): value is SidebarItemId =>
   typeof value === 'string' && (SIDEBAR_ITEMS as readonly string[]).includes(value);
@@ -58,6 +76,7 @@ export function readSidebarNav(stored: unknown): SidebarNav {
     }
     return out;
   };
+  const arranged = Array.isArray(value.main);
   const main = take(value.main);
   const other = take(value.other);
 
@@ -67,7 +86,9 @@ export function readSidebarNav(stored: unknown): SidebarNav {
       seen.add(id);
       const before = defaults.slice(0, i).reverse().find((d) => block.some((e) => e.id === d));
       const at = before ? block.findIndex((e) => e.id === before) + 1 : 0;
-      block.splice(at, 0, { id, on: true });
+      /* The Later page is new to anyone who already arranged the sidebar: it
+         starts off for them, and Settings or the setup turns it on. */
+      block.splice(at, 0, { id, on: !(id === 'month' && arranged) });
     });
   };
   restore(main, MAIN);

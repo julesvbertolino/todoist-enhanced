@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Composer } from './components/overlays/Composer';
 import { ConfirmProvider } from './components/overlays/Confirm';
+import { auth } from './api/auth';
+import { accountOnDevice, outOfStep } from './lib/accountWatch';
+import { useStore } from './store/store';
 
 /**
  * The page the desktop app shows in its quick-add window (`/?quickadd`): the
@@ -9,11 +12,15 @@ import { ConfirmProvider } from './components/overlays/Confirm';
  */
 export const QUICK_ADD = new URLSearchParams(window.location.search).has('quickadd');
 
-/* Opened before signing in, the window shows the sign-in page. Once there is
-   an account, the next press of the shortcut starts it over. */
+/* The window lives for as long as the app, hidden between two presses of
+   the shortcut. Each press checks it still matches what the device is signed
+   in to (the sign-in page or the demo once there is an account, another
+   account, no account any more) and starts it over if not, so a task always
+   goes to the account the main window shows. */
 if (QUICK_ADD) {
   window.addEventListener('enhanced:quickadd', () => {
-    if (document.querySelector('.connect')) window.location.reload();
+    const device = { signedIn: auth.isConnected(), account: accountOnDevice() };
+    if (outOfStep(useStore.getState(), device)) window.location.reload();
   });
 }
 

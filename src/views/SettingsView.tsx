@@ -18,12 +18,13 @@ import { avatarUrl } from '@/domain/colors';
 import { formatDuration, parseDurationInput } from '@/domain/estimates';
 import { defaultCapacity, weeklyCapacity, type DailyCapacity } from '@/domain/load';
 import { DATE_FORMATS, formatDay, type DateFormat } from '@/domain/dates';
-import { HOME_VIEWS, type HomeView } from '@/store/prefs';
+import { FALLBACK_HOME, HOME_VIEWS, type HomeView } from '@/store/prefs';
 import { DEFAULT_WEEK_LABEL } from '@/domain/types';
 import { DUST_MONTHS, isDustMonths } from '@/domain/views';
 import type { Locale, TranslationKey } from '@/i18n';
 import { APP_NAME, AUTHOR, AUTHOR_AVATAR_URL, AUTHOR_GITHUB_URL, COFFEE_URL, GITHUB_URL, LINKEDIN_URL, VERSION, X_URL } from '@/app-info';
 import { karmaStanding } from '@/domain/karma';
+import { PomodoroDisplayChoice } from '@/components/PomodoroDisplayChoice';
 import { projectTree } from '@/store/selectors';
 import { intlDate } from '@/lib/intl';
 
@@ -57,6 +58,7 @@ export function SettingsView() {
   const setLocale = useStore((s) => s.setLocale);
   const disconnect = useStore((s) => s.disconnect);
   const user = useStore((s) => s.snapshot.user);
+  const workspaceList = useStore((s) => s.snapshot.workspaces);
   const karma = karmaStanding(user?.karma);
 
   const current = useCurrentSection();
@@ -234,10 +236,10 @@ export function SettingsView() {
 
             <Row title={t('settings.homepage')} hint={t('settings.homepageHint')}>
               <Select
-                value={prefs.homepage}
+                value={prefs.homepage === 'matrix' && !prefs.eisenhowerEnabled ? FALLBACK_HOME : prefs.homepage}
                 onChange={(value) => setPrefs({ homepage: value as HomeView })}
                 ariaLabel={t('settings.homepage')}
-                options={HOME_VIEWS.map((view) => ({ value: view, label: t(`nav.${view}` as TranslationKey) }))}
+                options={HOME_VIEWS.filter((view) => view !== 'matrix' || prefs.eisenhowerEnabled).map((view) => ({ value: view, label: t(`nav.${view}` as TranslationKey) }))}
               />
             </Row>
             <Row title={t('settings.naturalDates')} hint={t('settings.naturalDatesHint')}>
@@ -310,7 +312,8 @@ export function SettingsView() {
             {groupsInSidebar.length > 1 && (
               <Row title={t('settings.workspaceOrder')} hint={t('settings.workspaceOrderHint')} wide>
                 <div className="wsgroups"><GroupOrderEditor
-                  groups={groupsInSidebar.map((g) => ({ id: g.workspaceId ?? 'personal', name: g.name ?? t('nav.myProjects') }))}
+                  groups={groupsInSidebar.map((g) => ({ id: g.workspaceId ?? 'personal', name: g.name ?? t('nav.myProjects'), avatar: true,
+                    logo: g.workspaceId ? workspaceList[g.workspaceId]?.logo_big ?? null : user?.avatar_big ?? null }))}
                   onChange={(workspaceOrder) => setPrefs({ workspaceOrder })}
                 /></div>
               </Row>
@@ -338,6 +341,9 @@ export function SettingsView() {
           {/* Settings that shape the product rather than its formatting. */}
           <section className="setsection" id="features">
             <h2>{t('settings.features')}</h2>
+            <Row title={t('pomodoro.title')} hint={t('pomodoro.settingsIntro')} wide>
+              <PomodoroDisplayChoice value={prefs.pomodoroDisplay} onChange={(pomodoroDisplay) => setPrefs({ pomodoroDisplay, pomodoroAsked: true })} />
+            </Row>
             {/* How the pages are laid out, in one place, with a picture of it. */}
             <h3 className="setsubhead">{t('settings.groupOrganisation')}</h3>
             <p className="setgroup-hint">{t('settings.groupOrganisationHint')}</p>

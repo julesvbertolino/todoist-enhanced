@@ -32,25 +32,25 @@ test('a label with an emoji or an accent in its name opens its own page (#196)',
   expect(new URL(page.url()).hash).toBe(`#/label/${encodeURIComponent('🏠Café')}`);
 });
 
-test('the sidebar editor says whether My week holds today\u2019s tasks (#195)', async ({ demo: page }) => {
+test('the sidebar editor says whether This week holds today\u2019s tasks (#195)', async ({ demo: page }) => {
   await go(page, '#/settings');
   await page.getByRole('button', { name: 'Sidebar' }).click();
-  const week = page.locator('.navedit-row').filter({ has: page.getByText('My week', { exact: true }) });
+  const week = page.locator('.navedit-row').filter({ has: page.getByText('Anytime this week', { exact: true }) });
   const today = page.locator('.navedit-row').filter({ has: page.getByText('Today', { exact: true }) });
-  await expect(week).toContainText('Includes today\u2019s tasks');
+  await expect(week).toContainText('Today and anytime this week');
   const height = (await week.boundingBox())!.height;
 
   // Wait for the opening dialog to settle before clicking the real control.
   const todayCheckbox = today.getByRole('checkbox');
   await todayCheckbox.check();
   await expect(todayCheckbox).toBeChecked();
-  await expect(week).toContainText('Includes today\u2019s tasks');
+  await expect(week).toContainText('Today and anytime this week');
   // The list does not move when the tick is turned.
   expect((await week.boundingBox())!.height).toBe(height);
 
   await todayCheckbox.uncheck();
   await expect(todayCheckbox).not.toBeChecked();
-  await expect(week).toContainText('Includes today\u2019s tasks');
+  await expect(week).toContainText('Today and anytime this week');
 });
 
 test('the Inbox is drawn as a project, so its sections can be added and shown', async ({ demo: page }) => {
@@ -73,7 +73,8 @@ test('the Display menu offers only the tags of the page in front', async ({ demo
     const names = await page.locator('.multiselect-options label .multiselect-label').allInnerTexts();
     await page.keyboard.press('Escape');
     await page.keyboard.press('Escape');
-    return names.map((n) => n.trim());
+    // "Any tag" is the first line of the list (#394); the rest are the page's tags.
+    return names.map((n) => n.trim()).filter((n) => n !== 'Any tag');
   };
   await go(page, '#/inbox');
   const inbox = await tagsOf();

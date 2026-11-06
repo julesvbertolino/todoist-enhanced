@@ -170,9 +170,11 @@ test('#324 overdue button aligns right in List and follows duration in Table', a
         return button && stats ? button.x - (stats.x + stats.width) : Infinity;
       }).toBeLessThan(25);
       } else {
-        const button = (await header.locator('.reschedule-overdue').boundingBox())!;
-        const bounds = (await header.boundingBox())!;
-        expect(Math.abs(bounds.x + bounds.width - button.x - button.width)).toBeLessThan(3);
+        await expect.poll(async () => {
+          const button = await header.locator('.reschedule-overdue').boundingBox();
+          const bounds = await header.boundingBox();
+          return button && bounds ? Math.abs(bounds.x + bounds.width - button.x - button.width) : Infinity;
+        }).toBeLessThan(3);
       }
       await page.screenshot({ path: `../../outputs/retards-${mode}-${width}.png`, fullPage: true });
     }

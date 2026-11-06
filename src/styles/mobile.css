@@ -279,7 +279,6 @@
   .task-table{--table-title-min:150px;--table-title-max:150px;min-width:0!important;width:max-content}
   .task-table .task{min-height:58px}
   .task-table .task .ttitle{-webkit-line-clamp:2;line-height:1.25}
-  .task-table .tmain{box-shadow:6px 0 10px -6px rgba(0,0,0,.28)}
 
   /* ---- Calendar: the page is the one thing that scrolls (#295) ---- */
   .calendar-body{min-height:0;max-height:none}
@@ -368,3 +367,5 @@
   .phead:has(.dash-layout-edit) .ptitle,[data-density="compact"] .phead:has(.dash-layout-edit) .ptitle{font-size:21px}
   .whatsnew-refresh .whatsnew-release h3{font-size:19px}
 }
+/* Keep the contextual Insights button aligned with the other mobile actions. */
+@media(max-width:720px){.pactions .btn.insights-control{width:40px;height:40px;min-height:40px}}

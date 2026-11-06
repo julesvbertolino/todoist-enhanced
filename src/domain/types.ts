@@ -180,6 +180,7 @@ export interface Collaborator {
   email: string;
   full_name: string;
   image_id: string | null;
+  avatar_big?: string | null;
 }
 
 /**
@@ -334,6 +335,8 @@ export const SYSTEM_LABELS = {
   quick: 'quick',
   automation: 'automation',
   waiting: 'waiting',
+  /** The month's horizon: tasks for this month with no set day. */
+  month: 'thismonth',
 } as const;
 
 export const DEFAULT_WEEK_LABEL = 'week';
@@ -362,6 +365,13 @@ export const setWeekLabel = (name: string): void => {
   weekLabelName = name.trim() || DEFAULT_WEEK_LABEL;
 };
 
+/** The horizon tags a date replaces: the week's (whatever it is called) and `later`. */
+export const withoutHorizons = (labels: string[]): string[] =>
+  labels.filter((l) => {
+    const name = l.toLowerCase();
+    return name !== weekLabelName.toLowerCase() && name !== SYSTEM_LABELS.month;
+  });
+
 export const ESTIMATE_PREFIX = 'est-';
 
 /** The bucket a task falls into, decided by the display-priority rules in the spec. */
@@ -373,6 +383,7 @@ export type ViewId =
   /** Today on its own, when the sidebar is set to separate it from the week. */
   | 'today'
   | 'upcoming'
+  | 'month'
   | 'someday'
   | 'review'
   | 'dashboard'
@@ -389,13 +400,18 @@ export type ViewId =
   | 'insights'
   | 'search';
 
-export type DisplayMode = 'list' | 'board' | 'focus' | 'calendar' | 'table';
+export type DisplayMode = 'list' | 'board' | 'focus' | 'calendar' | 'table' | 'matrix';
 
 export interface CalendarPrefs {
   presentation: '3-days' | 'week' | 'month';
   futureOccurrences: boolean;
   completed: boolean;
   coloration: 'priority' | 'project' | 'tag';
+  /**
+   * Where the No date panel takes its tasks from (#429): the page the
+   * calendar belongs to (`view`) or `all`. Kept per view, like the rest.
+   */
+  undatedSource?: 'view' | 'all';
 }
 
 export type GroupKey =
@@ -462,7 +478,20 @@ export const defaultFilters = (viewKey?: string): ViewFilters => ({
 
 export type TableColumn = 'title' | 'date' | 'deadline' | 'priority' | 'estimate' | 'labels' | 'description' | 'project' | 'assignee';
 
+/**
+ * A page's own matrix settings (#450). What it leaves out follows the Matrix
+ * page, so a page only ever holds what the user changed on it.
+ */
+export interface MatrixOverrides {
+  urgent?: ('overdue' | 'today' | 'tomorrow' | 'after-tomorrow' | 'next-seven' | 'week'
+    )[];
+  important?: (1 | 2 | 3 | 4)[];
+  layout?: 'list' | 'matrix';
+}
+
 export interface ViewPrefs {
+  /** Set only when the user changed the matrix rules or layout on this page. */
+  matrix?: MatrixOverrides;
   tableColumns?: TableColumn[];
   /** Every column, the title included, shown or not, in the order Display lists them: a column switched on again returns to its place. */
   tableOrder?: TableColumn[];
@@ -512,7 +541,8 @@ export const defaultViewPrefs = (viewKey?: string): ViewPrefs => ({
   mode: 'list',
   group: defaultGroup(viewKey),
   /* Upcoming is read in time order: by date (then Todoist's own order within
-     a day) inside each day, week or month (#98). */
-  sort: viewKey === 'upcoming' ? 'due' : 'priority',
+     a day) inside each day, week or month (#98). The matrix keeps the order it
+     always had, date then priority, and lets it be changed (#447). */
+  sort: viewKey === 'upcoming' ? 'due' : viewKey === 'matrix' ? 'smart' : 'priority',
   filters: defaultFilters(viewKey),
 });

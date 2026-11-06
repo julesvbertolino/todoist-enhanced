@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  defaultSidebarNav, moveSidebarEntry, readSidebarNav, toggleSidebarEntry, visibleSidebarNav,
+  defaultSidebarNav, isUntouchedSidebarNav, moveSidebarEntry, startingSidebarNav, readSidebarNav, toggleSidebarEntry, visibleSidebarNav,
 } from './sidebar';
 
 const ids = (entries: { id: string }[]) => entries.map((e) => e.id);
@@ -18,9 +18,15 @@ describe('readSidebarNav', () => {
       other: [{ id: 'labels', on: true }, { id: 'review', on: true }, { id: 'dashboard', on: true },
         { id: 'logbook', on: true }, { id: 'matrix', on: true }],
     });
-    expect(ids(nav.main)).toEqual(['week', 'inbox', 'today', 'upcoming', 'someday']);
+    expect(ids(nav.main)).toEqual(['week', 'month', 'inbox', 'today', 'upcoming', 'someday']);
     expect(nav.main.find((e) => e.id === 'inbox')?.on).toBe(false);
+    // Someone who arranged the sidebar before Later existed does not get it unasked.
+    expect(nav.main.find((e) => e.id === 'month')?.on).toBe(false);
     expect(ids(nav.other)[0]).toBe('labels');
+  });
+
+  it('shows Later from the start for an account that never arranged the sidebar', () => {
+    expect(defaultSidebarNav().main.find((e) => e.id === 'month')?.on).toBe(true);
   });
 
   it('drops ids it does not know and entries listed twice', () => {
@@ -44,7 +50,7 @@ describe('readSidebarNav', () => {
     const nav = readSidebarNav({ main: [{ id: 'review' }], other: [{ id: 'inbox' }] });
     const all = ids([...nav.main, ...nav.other]);
     expect(new Set(all).size).toBe(all.length);
-    expect(all).toHaveLength(11);
+    expect(all).toHaveLength(12);
     // Moved across blocks: it stays where the user put it.
     expect(ids(nav.main)).toContain('review');
     expect(ids(nav.other)).toContain('inbox');
@@ -79,5 +85,16 @@ describe('moveSidebarEntry', () => {
   it('does nothing for an entry that is not in the block', () => {
     const nav = defaultSidebarNav();
     expect(moveSidebarEntry(nav, 'main', 'labels', 0)).toBe(nav);
+  });
+});
+
+describe('the setup starting point (#413)', () => {
+  it('switches on Inbox, this week, this month, Upcoming and Someday', () => {
+    const on = [...startingSidebarNav().main, ...startingSidebarNav().other].filter((entry) => entry.on).map((entry) => entry.id);
+    expect(on).toEqual(['inbox', 'week', 'month', 'upcoming', 'someday']);
+  });
+  it('is recognised as untouched only before anyone arranged the navigation', () => {
+    expect(isUntouchedSidebarNav(defaultSidebarNav())).toBe(true);
+    expect(isUntouchedSidebarNav(startingSidebarNav())).toBe(false);
   });
 });

@@ -6,9 +6,11 @@ import { useMemo, useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { SubtasksProvider } from '@/components/TaskRow';
 import { DisplayMenu } from '@/components/DisplayMenu';
+import { PomodoroButton } from '@/components/PomodoroButton';
 import { PageMenu } from '@/components/PageMenu';
 import { TaskGroup } from '@/components/TaskGroup';
 import { ModeSurface } from '@/components/ModeSurface';
+import { TableSurface } from '@/components/TableSurface';
 import { Icon } from '@/components/Icon';
 import { useT } from '@/hooks/useT';
 import { useToday } from '@/hooks/useToday';
@@ -21,7 +23,7 @@ import { upcomingItems } from '@/domain/views';
 import { projectOccurrences } from '@/domain/projectOccurrences';
 import type { GroupKey } from '@/domain/types';
 import { summariseLoad } from '@/domain/load';
-import { dueDate, daysBetween, formatDayHeading, toApiDate } from '@/domain/dates';
+import { deadlineDate, dueDate, daysBetween, formatDayHeading, toApiDate } from '@/domain/dates';
 import { addDays, startOfDay } from 'date-fns';
 import { intlDate } from '@/lib/intl';
 
@@ -58,7 +60,15 @@ function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: Upcomi
   const today = useToday();
 
   const forecasts = useMemo(() => projectOccurrences(datedRoots(items, snapshot, 'none', { subtasks: current.filters.showSubtasks }), addDays(today, 1), startOfDay(addDays(today, horizon))), [items, today, horizon, snapshot, current.filters.showSubtasks]);
-  const pool = forecasts.items;
+  const pool = useMemo(() => {
+    const candidates = datedRoots(items, snapshot, 'none', { subtasks: current.filters.showSubtasks });
+    const from = startOfDay(addDays(today, 1)), until = startOfDay(addDays(today, horizon));
+    const futureDeadlines = candidates.filter((item) => {
+      const day = deadlineDate(item);
+      return day && day >= from && day <= until;
+    });
+    return [...new Map([...forecasts.items, ...futureDeadlines].map((item) => [item.id, item])).values()];
+  }, [forecasts.items, items, snapshot, current.filters.showSubtasks, today, horizon]);
   const sources = useMemo(() => new Map(pool.filter((item) => item.projection).map((item) => [item.id, item.projection!.sourceId])), [pool]);
   const childrenOf = useMemo(() => (id: string) => sourceChildrenOf(sources.get(id) ?? id), [sources, sourceChildrenOf]);
   const scoped = useMemo(
@@ -69,7 +79,8 @@ function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: Upcomi
   const hasMoreFuture = useMemo(() => {
     const beyond = applyFilters(upcomingItems(datedRoots(items, snapshot, 'none', { subtasks: current.filters.showSubtasks })), { ...current.filters, includeScheduled: true }, snapshot, childrenOf);
     const limit = startOfDay(addDays(today, horizon));
-    return beyond.some((item) => { const day = dueDate(item); return day !== null && startOfDay(day) > limit; });
+    return beyond.some((item) => { const day = dueDate(item); return day !== null && startOfDay(day) > limit; })
+      || items.some((item) => { const deadline = deadlineDate(item); return deadline !== null && deadline > limit; });
   }, [items, snapshot, current.filters, childrenOf, today, horizon]);
 
   // Upcoming spans many days, so a single capacity percentage would be
@@ -82,12 +93,12 @@ function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: Upcomi
   const byDay = useMemo(() => {
     const map = new Map<string, typeof scoped>();
     for (const item of scoped) {
-      const d = dueDate(item);
-      if (!d) continue;
-      const key = toApiDate(d);
-      const bucket = map.get(key);
-      if (bucket) bucket.push(item);
-      else map.set(key, [item]);
+      const dates = [dueDate(item), item.projection ? null : deadlineDate(item)];
+      for (const key of new Set(dates.filter((d): d is Date => d !== null).map(toApiDate))) {
+        const bucket = map.get(key);
+        if (bucket) bucket.push(item);
+        else map.set(key, [item]);
+      }
     }
     return map;
   }, [scoped]);
@@ -117,6 +128,7 @@ function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: Upcomi
         title={t('nav.upcoming')}
         actions={
           <>
+            <PomodoroButton />
             <DisplayMenu
               pageItems={current.mode === 'calendar' ? items : pool}
               viewKey="upcoming"
@@ -145,6 +157,9 @@ function UpcomingBody({ onOpen, onInsights, onUnestimated, onAddTaskTo }: Upcomi
 
       {current.mode === 'calendar' ? (
         <CalendarSurface viewKey="upcoming" items={items} onOpen={onOpen} onAddTaskTo={onAddTaskTo} />
+      ) : current.mode === 'table' && group === 'day' ? (
+        <TableSurface viewKey="upcoming" childrenOf={childrenOf} onOpen={onOpen}
+          groups={columns.map((column) => ({ title: column.title, items: column.items, childrenOf, onOpen }))} />
       ) : current.mode === 'table' ? (
         <ModeSurface items={scoped} childrenOf={childrenOf} mode="table" viewKey="upcoming"
           group={group} sort={current.sort} order="day" onOpen={onOpen}
