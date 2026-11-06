@@ -1,7 +1,6 @@
 /* The Product Hunt launch invitation (src/components/launch). Removed with it. */
-.launch{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:30px 28px 20px}
-.launch h2{margin:10px 0 0;font-size:22px;line-height:1.2;letter-spacing:-.01em}
-.launch p{margin:0;max-width:36ch;color:var(--muted);font-size:14.5px;line-height:1.5}
+.launch{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:32px 28px 18px}
+.launch h2{margin:12px 0 4px;max-width:20ch;font-size:23px;line-height:1.2;letter-spacing:-.01em}
 .launch-badge{position:relative;display:inline-flex;align-items:center;gap:12px;padding:10px 16px 10px 10px;border-radius:14px;
   border:1px solid #ff615440;background:linear-gradient(180deg,#fff7f5,#fff);color:#2b1411;box-shadow:0 8px 24px #ff61542e;text-align:left;overflow:hidden}
 .launch-badge::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,#ffffffb0 50%,transparent 65%);transform:translateX(-120%);animation:launch-shine 3.6s ease-in-out 1s infinite}
@@ -13,10 +12,8 @@
 .launch-actions{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:8px;width:100%}
 .launch-actions .btn.primary{width:100%;justify-content:center;text-decoration:none;background:#ff6154;border-color:#ff6154;color:#fff;font-weight:700}
 .launch-actions .btn.primary:hover{background:#f04c3f;border-color:#f04c3f}
-.launch-free{color:var(--muted);font-size:12.5px}
 .launch-later{margin-top:2px;border:0;background:transparent;color:var(--muted);font:inherit;font-size:13.5px;padding:6px 10px;border-radius:8px;cursor:pointer}
 .launch-later:hover{color:var(--text);background:var(--hover)}
-.launch-once{color:var(--faint);font-size:11.5px}
 @keyframes launch-shine{0%,55%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
 @media (prefers-reduced-motion:reduce){.launch-badge::after{animation:none}}
 :root[data-theme="dark"] .launch-badge{background:linear-gradient(180deg,#3a2420,#2a1c19);color:#fff;border-color:#ff615466}

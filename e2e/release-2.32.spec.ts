@@ -135,7 +135,7 @@ test('the Product Hunt invitation appears once, then never again', async ({ page
   });
   await page.goto('/');
   await page.getByRole('button', { name: 'Explore with demo data' }).click();
-  const popup = page.getByRole('dialog', { name: 'Help us launch on Product Hunt' });
+  const popup = page.getByRole('dialog', { name: 'Give Enhanced a free upvote on Product Hunt' });
   await expect(popup).toBeVisible({ timeout: 12_000 });
   await expect(popup.getByRole('link', { name: 'Upvote for free' })).toHaveAttribute('href', /producthunt\.com/);
   await popup.getByRole('button', { name: 'Not now' }).click();
@@ -144,5 +144,5 @@ test('the Product Hunt invitation appears once, then never again', async ({ page
   await page.reload();
   await expect(page.locator('.screen.active')).toBeVisible();
   await page.waitForTimeout(6500);
-  await expect(page.getByRole('dialog', { name: 'Help us launch on Product Hunt' })).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: 'Give Enhanced a free upvote on Product Hunt' })).toHaveCount(0);
 });
