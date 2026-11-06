@@ -12,6 +12,8 @@ Chaque ligne est marquée :
 
 🆕 **Ouvrez les liens Todoist depuis une tâche.** Quand le titre, la description ou un commentaire d’une tâche contient un lien vers une autre tâche, un projet, un tag ou un filtre à vous, un clic l’ouvre dans Enhanced au lieu de Todoist. Dans l’éditeur de description, ⌘-clic (Ctrl-clic sous Windows) le suit. Les autres liens s’ouvrent comme avant.
 
+🆕 **Sachez quand une nouvelle app Mac est sortie.** Dans l’app Mac, une carte vous prévient maintenant qu’une version plus récente peut être téléchargée, avec un bouton pour la récupérer. Remplacez l’ancienne app dans Applications. Elle ne s’affiche qu’une fois par version.
+
 🎨 **Planifiez n’importe quelle tâche depuis Cette semaine.** Dans le Calendrier de Cette semaine et de Ce mois-ci, le panneau Sans date peut lister les tâches sans date de la page ou de tous vos projets, pour donner un jour à n’importe laquelle. Sur Cette semaine, la liste de la page se limite désormais à ce que vous avez marqué pour la semaine.
 
 🎨 **Choisissez les tags que vous voulez voir.** Dans Affichage, cochez les tags à montrer au lieu de décocher ceux dont vous ne voulez pas. « Tous les tags » reste coché tant que vous n’en choisissez pas, et le recocher efface votre choix.

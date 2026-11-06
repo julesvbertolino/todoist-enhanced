@@ -146,3 +146,47 @@ test('the Product Hunt invitation appears once, then never again', async ({ page
   await page.waitForTimeout(6500);
   await expect(page.getByRole('dialog', { name: 'Give Enhanced a free upvote on Product Hunt' })).toHaveCount(0);
 });
+
+test.describe('the Mac app update card', () => {
+  const inApp = (version: string | null) => async ({ page }: { page: import('@playwright/test').Page }) => {
+    await page.addInitScript((installed) => {
+      localStorage.setItem('skipSetup', '1');
+      localStorage.setItem('e2eLegacyDemo', '1');
+      localStorage.setItem('tde.macapp.latest', '1.1.1');
+      (window as unknown as { enhancedDesktop: unknown }).enhancedDesktop = {
+        hideQuickAdd: () => undefined,
+        ...(installed === null ? {} : { getVersion: () => Promise.resolve(installed) }),
+      };
+    }, version);
+  };
+  test('is offered to an older app, once, and not again after Later', async ({ page }) => {
+    await inApp('1.1.0')({ page });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Explore with demo data' }).click();
+    const card = page.getByRole('status').filter({ hasText: 'A new Mac app is available' });
+    await expect(card).toBeVisible();
+    await expect(card.getByRole('link', { name: 'Download' })).toHaveAttribute('href', /todoist-enhanced-desktop\/releases\/latest/);
+    await card.getByRole('button', { name: 'Later' }).click();
+    await expect(card).toHaveCount(0);
+    await page.reload();
+    await expect(page.locator('.screen.active')).toBeVisible();
+    await page.waitForTimeout(1500);
+    await expect(card).toHaveCount(0);
+  });
+
+  test('is not shown to an app that is up to date, nor to one that does not say its version when it is current', async ({ page }) => {
+    await inApp('1.1.1')({ page });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Explore with demo data' }).click();
+    await expect(page.locator('.screen.active')).toBeVisible();
+    await page.waitForTimeout(1500);
+    await expect(page.getByRole('status').filter({ hasText: 'A new Mac app is available' })).toHaveCount(0);
+  });
+
+  test('is offered to an app from before 1.1.1, which does not say its version', async ({ page }) => {
+    await inApp(null)({ page });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Explore with demo data' }).click();
+    await expect(page.getByRole('status').filter({ hasText: 'A new Mac app is available' })).toBeVisible();
+  });
+});

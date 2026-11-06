@@ -1,3 +1,4 @@
+import { compareVersions } from './changelog';
 /**
  * Whether to offer the Mac app, and which file.
  *
@@ -27,4 +28,13 @@ export function archFromHint(architecture: string | undefined): MacArch | null {
   if (architecture === 'arm') return 'arm64';
   if (architecture === 'x86') return 'x64';
   return null;
+}
+
+/**
+ * Whether the Mac app that is running is older than the newest one published.
+ * An app that does not say its version (before 1.1.1) counts as 1.1.0.
+ */
+export function macAppNeedsUpdate(installed: string | null | undefined, latest: string): boolean {
+  const have = installed && /^\d+(\.\d+){0,2}$/.test(installed.trim()) ? installed.trim() : '1.1.0';
+  return compareVersions(have, latest) < 0;
 }

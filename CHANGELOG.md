@@ -46,6 +46,8 @@ translation lives in CHANGELOG.fr.md.
 
 🆕 **Open Todoist links from inside a task.** When a task's title, description or comment holds a link to another task, project, tag or filter of yours, a click opens it in Enhanced instead of Todoist. In the description editor, ⌘-click (Ctrl-click on Windows) follows it. Other links open as before.
 
+🆕 **Know when a new Mac app is out.** In the Mac app, a card now tells you when a newer version can be downloaded, with a button to get it. Put the new app over the old one in Applications. It shows once per version.
+
 🎨 **Plan any task from Anytime this week.** In the Calendar of Anytime this week and Anytime this month, the No date panel can list the undated tasks of the page or of all your projects, so you can give a day to any of them. On Anytime this week, the page's own list is now just what you tagged for the week.
 
 🎨 **Choose the tags you want to see.** In Display, pick the tags to show instead of unticking the ones you do not want. Any tag is ticked until you pick one, and ticking it again clears your choice.

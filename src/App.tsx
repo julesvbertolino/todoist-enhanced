@@ -69,6 +69,7 @@ import type { TranslationKey } from './i18n';
 import { useUpdateReady } from './lib/appUpdate';
 import { usePhone } from './hooks/usePhone';
 import { UpdateCard } from './components/UpdateCard';
+import { MacUpdateCard } from './components/MacUpdateCard';
 
 export function App() {
   useLabelRenames();
@@ -442,6 +443,7 @@ export function App() {
       <PomodoroFocus />
       {/* Product Hunt launch day only: delete with src/components/launch and src/domain/launch.ts. */}
       <LaunchPopup ready={!QUICK_ADD && ready && (connected || demo) && !tourOpen && !walkthroughOpen && !whatsNew} />
+      <MacUpdateCard enabled={!QUICK_ADD && ready && (connected || demo) && !tourOpen && !walkthroughOpen && !whatsNew} />
       <PomodoroAsk open={askPomodoro && !pomodoroAsked} onClose={() => setAskPomodoro(false)} />
       <Walkthrough
         open={walkthroughOpen}
