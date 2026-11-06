@@ -30,7 +30,9 @@ jobs:
   e2e:
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # The suite has grown past fifteen minutes: the run of release 2.32.0 was
+    # cancelled by this limit, not by a failing test.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
