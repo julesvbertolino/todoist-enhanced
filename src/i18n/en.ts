@@ -1020,6 +1020,7 @@ export const en = {
   'sync.syncing': 'Syncing…',
   'sync.syncedJustNow': 'Synced just now',
   'sync.syncedAt': 'Synced at {time}',
+  'sync.otherAccount': 'This window was still on another Todoist account, so nothing was sent. It is reloading on the current one.',
   'sync.foreignQueue': '{count} changes made offline with another Todoist account were not sent.',
   'sync.foreignQueue_one': 'A change made offline with another Todoist account was not sent.',
   'sync.foreignQueue_other': '{count} changes made offline with another Todoist account were not sent.',

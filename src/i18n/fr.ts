@@ -1022,6 +1022,7 @@ export const fr: Record<TranslationKey, string> = {
   'sync.syncing': 'Synchronisation…',
   'sync.syncedJustNow': 'Synchronisé à l’instant',
   'sync.syncedAt': 'Synchronisé à {time}',
+  'sync.otherAccount': "Cette fenêtre était encore sur un autre compte Todoist : rien n'a été envoyé. Elle se recharge sur le compte actuel.",
   'sync.foreignQueue': "{count} modifications faites hors ligne avec un autre compte Todoist n'ont pas été envoyées.",
   'sync.foreignQueue_one': "Une modification faite hors ligne avec un autre compte Todoist n'a pas été envoyée.",
   'sync.foreignQueue_other': "{count} modifications faites hors ligne avec un autre compte Todoist n'ont pas été envoyées.",

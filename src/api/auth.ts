@@ -20,10 +20,21 @@ export interface AuthProvider {
 }
 
 class Auth implements AuthProvider {
-  private token: string | null;
+  /* Only for a browser that blocks storage. Everywhere else the token is read
+     from storage on every call: the desktop app runs the site in two windows
+     at once, and a copy kept in memory at load let the Quick Add window go on
+     sending with the account it opened on after the main window had signed in
+     to another one. The device holds one credential, and every window uses it. */
+  private memory: string | null;
 
   constructor() {
-    this.token = readStoredToken();
+    const stored = readStoredToken();
+    this.memory = stored === undefined ? null : stored;
+  }
+
+  private get token(): string | null {
+    const stored = readStoredToken();
+    return stored === undefined ? this.memory : stored;
   }
 
   /** True when the connection came from signing in, not from a pasted token. */
@@ -49,12 +60,26 @@ class Auth implements AuthProvider {
   }
 
   async set(token: string): Promise<void> {
-    this.token = token.trim();
+    this.memory = token.trim();
     forgetCredentials();
     try {
-      localStorage.setItem(TOKEN_KEY, this.token);
+      localStorage.setItem(TOKEN_KEY, this.memory);
     } catch {
       // A browser with storage blocked still works for the session in memory.
+    }
+  }
+
+  /**
+   * After signing in with Todoist: a token pasted earlier is forgotten. It
+   * would otherwise go on being sent instead of the new sign-in, since a
+   * pasted token is read first, and the app would stay on its account.
+   */
+  forgetPastedToken(): void {
+    this.memory = null;
+    try {
+      localStorage.removeItem(TOKEN_KEY);
+    } catch {
+      /* nothing to clear */
     }
   }
 
@@ -64,7 +89,7 @@ class Auth implements AuthProvider {
    * it from here would need a client secret, which a page cannot keep.
    */
   async disconnect(): Promise<void> {
-    this.token = null;
+    this.memory = null;
     forgetCredentials();
     try {
       localStorage.removeItem(TOKEN_KEY);
@@ -74,11 +99,12 @@ class Auth implements AuthProvider {
   }
 }
 
-function readStoredToken(): string | null {
+/** The stored token, null when there is none, undefined when storage is blocked. */
+function readStoredToken(): string | null | undefined {
   try {
     return localStorage.getItem(TOKEN_KEY);
   } catch {
-    return null;
+    return undefined;
   }
 }
 
