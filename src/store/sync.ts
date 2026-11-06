@@ -25,6 +25,7 @@ import {
 import { DUST_KEY } from './dust';
 import type { AppState } from './types';
 import type { Slice, SyncSlice } from './types';
+import { accountOnDevice, mayWriteAs } from '@/lib/accountWatch';
 
 /** How often the app asks Todoist what changed while the tab is in the foreground. */
 export const POLL_INTERVAL_MS = 45_000;
@@ -73,6 +74,9 @@ export async function flushQueue(
      the same door, for any other way of getting here (#129). It is left queued,
      not dropped: which account it belongs to is that function's call. */
   const account = get().snapshot.user?.id;
+  /* A window that still believes in another account than the device's sends
+     nothing: its token is the new account's, its changes the old one's. */
+  if (!mayWriteAs(account, accountOnDevice())) return false;
   const commands: Command[] = queue
     .filter((cmd) => !held.has(cmd.uuid))
     .filter((cmd) => !cmd.userId || !account || cmd.userId === account)

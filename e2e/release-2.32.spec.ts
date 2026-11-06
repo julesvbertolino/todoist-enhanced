@@ -126,3 +126,23 @@ test('#413 the setup starts with Inbox, this week, this month, Upcoming and Some
     .toEqual(['Inbox', 'Anytime this week', 'Anytime this month', 'Upcoming', 'Someday']);
   expect(on).toHaveLength(5);
 });
+
+test('the Product Hunt invitation appears once, then never again', async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem('skipSetup', '1');
+    localStorage.setItem('e2eLegacyDemo', '1');
+    localStorage.setItem('tde.launch.force', '1');
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Explore with demo data' }).click();
+  const popup = page.getByRole('dialog', { name: 'We are live on Product Hunt today' });
+  await expect(popup).toBeVisible({ timeout: 12_000 });
+  await expect(popup.getByRole('link', { name: 'Upvote on Product Hunt' })).toHaveAttribute('href', /producthunt\.com/);
+  await popup.getByRole('button', { name: 'Not now' }).click();
+  await expect(popup).toHaveCount(0);
+  // Seen once is seen for good on this device, whatever was clicked.
+  await page.reload();
+  await expect(page.locator('.screen.active')).toBeVisible();
+  await page.waitForTimeout(6500);
+  await expect(page.getByRole('dialog', { name: 'We are live on Product Hunt today' })).toHaveCount(0);
+});

@@ -46,15 +46,15 @@ translation lives in CHANGELOG.fr.md.
 
 🆕 **Open Todoist links from inside a task.** When a task's title, description or comment holds a link to another task, project, tag or filter of yours, a click opens it in Enhanced instead of Todoist. In the description editor, ⌘-click (Ctrl-click on Windows) follows it. Other links open as before.
 
-🎨 **Plan any task from My week.** In the Calendar of My week and Anytime this month, the No date panel can list the undated tasks of the page or of all your projects, so you can give a day to any of them. On My week, the page's own list is now just what you tagged for the week.
+🎨 **Plan any task from Anytime this week.** In the Calendar of Anytime this week and Anytime this month, the No date panel can list the undated tasks of the page or of all your projects, so you can give a day to any of them. On Anytime this week, the page's own list is now just what you tagged for the week.
 
-🎨 **Tag filters start from Any tag.** In Display, Any tag is ticked and no tag is, until you choose one. Picking a single tag no longer means unticking all the others, and ticking Any tag again clears your choice.
+🎨 **Choose the tags you want to see.** In Display, pick the tags to show instead of unticking the ones you do not want. Any tag is ticked until you pick one, and ticking it again clears your choice.
 
 🎨 **Search finds projects and tags first.** Type a few letters and the project or tag you are after, with its own icon, now comes before a task that matches just as well. Sections are searched by default too.
 
-🎨 **A lighter sidebar to start with.** The first setup begins with Inbox, Anytime this week, Anytime this month, Upcoming and Someday. Switch on the rest when you need them.
+🎨 **Setup improvements.** The first setup now begins with Inbox, Anytime this week, Anytime this month, Upcoming and Someday in your sidebar. Switch on the rest when you need them.
 
-🎨 **Your workspaces and photo in the sidebar.** Settings shows each workspace's picture beside its name when you order them, and My projects shows your own photo, in the sidebar and in that list.
+🎨 **Sidebar improvements.** Settings shows each workspace's picture beside its name when you order them, and My projects shows your own photo, in the sidebar and in that list.
 
 🐛 **Tags in a table follow your Todoist order.** The tag menu of a task in a table lists your tags in the order of your Todoist tag list, in a smaller menu that fits the table.
 

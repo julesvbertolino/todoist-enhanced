@@ -1,0 +1,17 @@
+/* The Product Hunt launch invitation (src/components/launch). Removed with it. */
+.launch{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:34px 30px 24px}
+.launch h2{margin:6px 0 0;font-size:22px;line-height:1.2;letter-spacing:-.01em}
+.launch p{margin:0;max-width:34ch;color:var(--muted);font-size:14.5px;line-height:1.5}
+.launch-mark{position:relative;width:76px;height:76px;display:grid;place-items:center;border-radius:50%;
+  background:linear-gradient(145deg,#ff7a5c,#ff4f3f);color:#fff;box-shadow:0 10px 28px #ff4f3f55}
+.launch-halo{position:absolute;inset:-9px;border-radius:50%;border:2px solid #ff4f3f44;animation:launch-halo 2.4s ease-out infinite}
+.launch-arrow{position:relative;animation:launch-hop 2.4s ease-in-out infinite}
+.launch-actions{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:10px;width:100%}
+.launch-actions .btn.primary{width:100%;justify-content:center;text-decoration:none;background:#ff4f3f;border-color:#ff4f3f;color:#fff}
+.launch-actions .btn.primary:hover{background:#ee4333;border-color:#ee4333}
+.launch-later{border:0;background:transparent;color:var(--muted);font:inherit;font-size:13.5px;padding:6px 10px;border-radius:8px;cursor:pointer}
+.launch-later:hover{color:var(--text);background:var(--hover)}
+.launch small{color:var(--faint);font-size:12px}
+@keyframes launch-halo{0%{transform:scale(.9);opacity:.9}70%,100%{transform:scale(1.25);opacity:0}}
+@keyframes launch-hop{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-4px)}}
+@media (prefers-reduced-motion:reduce){.launch-halo,.launch-arrow{animation:none}}

@@ -14,13 +14,13 @@ Chaque ligne est marquée :
 
 🎨 **Planifiez n’importe quelle tâche depuis Cette semaine.** Dans le Calendrier de Cette semaine et de Ce mois-ci, le panneau Sans date peut lister les tâches sans date de la page ou de tous vos projets, pour donner un jour à n’importe laquelle. Sur Cette semaine, la liste de la page se limite désormais à ce que vous avez marqué pour la semaine.
 
-🎨 **Les filtres de tags partent de « Tous les tags ».** Dans Affichage, « Tous les tags » est coché et aucun tag ne l’est, tant que vous n’en choisissez pas. Pour n’en garder qu’un, plus besoin de décocher tous les autres, et recocher « Tous les tags » efface votre choix.
+🎨 **Choisissez les tags que vous voulez voir.** Dans Affichage, cochez les tags à montrer au lieu de décocher ceux dont vous ne voulez pas. « Tous les tags » reste coché tant que vous n’en choisissez pas, et le recocher efface votre choix.
 
 🎨 **La recherche trouve d’abord projets et tags.** Tapez quelques lettres : le projet ou le tag que vous cherchez, avec son icône, passe avant une tâche qui correspond aussi bien. Les sections sont aussi cherchées par défaut.
 
-🎨 **Une barre latérale plus légère au départ.** La première configuration commence avec Boîte de réception, Cette semaine, Ce mois-ci, Prochainement et Un jour. Activez le reste quand vous en avez besoin.
+🎨 **Améliorations de la configuration.** La première configuration commence avec Boîte de réception, Cette semaine, Ce mois-ci, Prochainement et Un jour dans votre barre latérale. Activez le reste quand vous en avez besoin.
 
-🎨 **Vos espaces et votre photo dans la barre latérale.** Les réglages montrent l’image de chaque espace à côté de son nom quand vous les classez, et Mes projets affiche votre photo, dans la barre latérale et dans cette liste.
+🎨 **Améliorations de la barre latérale.** Les réglages montrent l’image de chaque espace à côté de son nom quand vous les classez, et Mes projets affiche votre photo, dans la barre latérale et dans cette liste.
 
 🐛 **Les tags d’un tableau suivent l’ordre de Todoist.** Le menu des tags d’une tâche dans un tableau les liste dans l’ordre de votre liste de tags Todoist, dans un menu plus petit qui s’accorde au tableau.
 

@@ -17,6 +17,7 @@ import { startSegSlider } from './lib/segSlider';
 import { startTabStops } from './lib/tabStops';
 import { watchInstall } from './lib/install';
 import { watchAppUpdate } from './lib/appUpdate';
+import { watchAccount } from './lib/accountWatch';
 
 // Exposed only while developing, so views can be exercised against sample data
 // without a real account. Vite strips this branch from production builds.
@@ -29,6 +30,7 @@ startSegSlider();
 startTabStops();
 watchInstall();
 watchAppUpdate();
+watchAccount(useStore);
 
 const params = new URLSearchParams(window.location.search);
 const desktopReturn = !window.enhancedDesktop && /^desktop_[A-Za-z0-9_-]+$/.test(params.get('state') ?? '')
