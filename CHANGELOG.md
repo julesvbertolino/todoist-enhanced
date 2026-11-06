@@ -42,6 +42,10 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.32.1
+
+🐛 **See where Next occurrence lands on a late task.** On a repeating task that is behind schedule, Next occurrence now says on which day it will land, in the date menu and in the row menu. A day that has already passed becomes tomorrow.
+
 ## 2.32.0
 
 🆕 **Open Todoist links from inside a task.** When a task's title, description or comment holds a link to another task, project, tag or filter of yours, a click opens it in Enhanced instead of Todoist. In the description editor, ⌘-click (Ctrl-click on Windows) follows it. Other links open as before.

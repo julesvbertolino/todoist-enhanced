@@ -12,8 +12,9 @@
  * - only plain rules are read: every day, every N days or weeks, every week,
  *   every weekday, and every <weekday>[, <weekday>...], with an optional time
  *   of day on the end, which does not change the date;
- * - a task that is already late gets no date: where Todoist puts a late
- *   occurrence is not something to assume;
+ * - a task that is already late: if the next occurrence counted from its due
+ *   date is still ahead, that is where it lands; if it is already past, the
+ *   task is moved to tomorrow, never to a day that is itself late;
  * - every month, every N months and every year, when the day of the month is
  *   the 28th or earlier: a later one is clamped in a way that is not assumed;
  * - `every!` counts from today, which is only a plain step for the simple
@@ -22,7 +23,7 @@
  */
 import { addDays, addMonths, addWeeks, addYears, differenceInCalendarDays, getDay, startOfDay } from 'date-fns';
 import { intlDate } from '@/lib/intl';
-import { dueDate, isOverdue } from './dates';
+import { dueDate } from './dates';
 import { WEEKDAY_WORDS } from './dateVocabulary';
 import type { Item } from './types';
 
@@ -83,10 +84,18 @@ export function nextOccurrenceLabel(day: Date, locale: 'en' | 'fr', now = new Da
 }
 
 export function nextOccurrence(item: Pick<Item, 'due'>, now = new Date()): Date | null {
+  const next = rawNext(item, now);
+  if (!next) return null;
+  /* A next occurrence that is already past becomes tomorrow, not a late day. */
+  const tomorrow = addDays(startOfDay(now), 1);
+  return next < tomorrow ? tomorrow : next;
+}
+
+function rawNext(item: Pick<Item, 'due'>, now: Date): Date | null {
   const due = item.due;
   if (!due?.is_recurring) return null;
   const current = dueDate(item as Item);
-  if (!current || isOverdue(item as Item, now)) return null;
+  if (!current) return null;
 
   const rule = fold(due.string);
   const fromCompletion = /^(?:every|each|tous les|toutes les|tous le|chaque)!|!/.test(rule);
