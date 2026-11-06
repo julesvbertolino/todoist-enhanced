@@ -12,16 +12,16 @@
  * - only plain rules are read: every day, every N days or weeks, every week,
  *   every weekday, and every <weekday>[, <weekday>...], with an optional time
  *   of day on the end, which does not change the date;
- * - a task that is already late lands on the first occurrence after today:
- *   closing it does not make a task that is one day late, it moves it on to
- *   the next day the rule names that is still ahead;
+ * - a task that is already late: if the next occurrence counted from its due
+ *   date is still ahead, that is where it lands; if it is already past, the
+ *   task is moved to tomorrow, never to a day that is itself late;
  * - every month, every N months and every year, when the day of the month is
  *   the 28th or earlier: a later one is clamped in a way that is not assumed;
  * - `every!` counts from today, which is only a plain step for the simple
  *   day and week rules; its weekday forms are left out;
  * - anything else, a bound, a month, a position ("last friday"), gives null.
  */
-import { addDays, addMonths, addWeeks, addYears, differenceInCalendarDays, getDay, isAfter, startOfDay } from 'date-fns';
+import { addDays, addMonths, addWeeks, addYears, differenceInCalendarDays, getDay, startOfDay } from 'date-fns';
 import { intlDate } from '@/lib/intl';
 import { dueDate } from './dates';
 import { WEEKDAY_WORDS } from './dateVocabulary';
@@ -83,20 +83,15 @@ export function nextOccurrenceLabel(day: Date, locale: 'en' | 'fr', now = new Da
   return intlDate(locale === 'fr' ? 'fr-FR' : 'en-GB', style).format(day);
 }
 
-/**
- * The first step of a series, counted from `base`, that falls after `today`.
- * A task that is not late has its first step ahead already; a late one steps
- * on until it is. Bounded, so a very old task gives nothing rather than looping.
- */
-function firstAfter(today: Date, step: (count: number) => Date): Date | null {
-  for (let count = 1; count <= 1000; count += 1) {
-    const day = step(count);
-    if (isAfter(day, today)) return day;
-  }
-  return null;
+export function nextOccurrence(item: Pick<Item, 'due'>, now = new Date()): Date | null {
+  const next = rawNext(item, now);
+  if (!next) return null;
+  /* A next occurrence that is already past becomes tomorrow, not a late day. */
+  const tomorrow = addDays(startOfDay(now), 1);
+  return next < tomorrow ? tomorrow : next;
 }
 
-export function nextOccurrence(item: Pick<Item, 'due'>, now = new Date()): Date | null {
+function rawNext(item: Pick<Item, 'due'>, now: Date): Date | null {
   const due = item.due;
   if (!due?.is_recurring) return null;
   const current = dueDate(item as Item);
@@ -105,28 +100,25 @@ export function nextOccurrence(item: Pick<Item, 'due'>, now = new Date()): Date 
   const rule = fold(due.string);
   const fromCompletion = /^(?:every|each|tous les|toutes les|tous le|chaque)!|!/.test(rule);
   const text = rule.replace('!', '');
-  const today = startOfDay(now);
   /* Counted from the due date, or from today for `every!`. */
-  const base = fromCompletion ? today : startOfDay(current);
-  /* A late task counts on from today: nothing before it can be the next one. */
-  const from = isAfter(today, base) ? today : base;
+  const base = fromCompletion ? startOfDay(now) : startOfDay(current);
 
-  if (DAILY.test(text)) return firstAfter(today, (n) => addDays(base, n));
-  if (WEEKLY.test(text)) return firstAfter(today, (n) => addWeeks(base, n));
+  if (DAILY.test(text)) return addDays(base, 1);
+  if (WEEKLY.test(text)) return addWeeks(base, 1);
   const days = EVERY_N_DAYS.exec(text);
-  if (days) return firstAfter(today, (n) => addDays(base, n * Number(days[1])));
+  if (days) return addDays(base, Number(days[1]));
   const weeks = EVERY_N_WEEKS.exec(text);
-  if (weeks) return firstAfter(today, (n) => addWeeks(base, n * Number(weeks[1])));
+  if (weeks) return addWeeks(base, Number(weeks[1]));
 
   const months = EVERY_N_MONTHS.exec(text);
-  if (months) return base.getDate() <= 28 ? firstAfter(today, (n) => addMonths(base, n * Number(months[1] ?? 1))) : null;
-  if (YEARLY.test(text)) return base.getMonth() === 1 && base.getDate() === 29 ? null : firstAfter(today, (n) => addYears(base, n));
+  if (months) return base.getDate() <= 28 ? addMonths(base, Number(months[1] ?? 1)) : null;
+  if (YEARLY.test(text)) return base.getMonth() === 1 && base.getDate() === 29 ? null : addYears(base, 1);
 
   if (fromCompletion) return null;
-  if (WORKDAYS.test(text)) return nextOf(from, [1, 2, 3, 4, 5]);
+  if (WORKDAYS.test(text)) return nextOf(base, [1, 2, 3, 4, 5]);
   const list = WEEKDAY_LIST.exec(text);
   const named = list ? namedDays(list[1]) : null;
-  return named ? nextOf(from, named) : null;
+  return named ? nextOf(base, named) : null;
 }
 
 /**

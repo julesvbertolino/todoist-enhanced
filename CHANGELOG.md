@@ -44,7 +44,7 @@ translation lives in CHANGELOG.fr.md.
 
 ## 2.32.1
 
-🐛 **See where Next occurrence lands on a late task.** On a repeating task that is behind schedule, Next occurrence now says on which day it will land, in the date menu and in the row menu. It is the first day after today that the repeat names.
+🐛 **See where Next occurrence lands on a late task.** On a repeating task that is behind schedule, Next occurrence now says on which day it will land, in the date menu and in the row menu. A day that has already passed becomes tomorrow.
 
 ## 2.32.0
 

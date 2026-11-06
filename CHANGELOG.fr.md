@@ -10,7 +10,7 @@ Chaque ligne est marquée :
 
 ## 2.32.1
 
-🐛 **Voyez où tombe la prochaine occurrence d’une tâche en retard.** Sur une tâche récurrente en retard, Prochaine occurrence indique maintenant le jour où elle va tomber, dans le menu de date et dans le menu de la ligne. C’est le premier jour après aujourd’hui que la récurrence désigne.
+🐛 **Voyez où tombe la prochaine occurrence d’une tâche en retard.** Sur une tâche récurrente en retard, Prochaine occurrence indique maintenant le jour où elle va tomber, dans le menu de date et dans le menu de la ligne. Un jour déjà passé devient demain.
 
 ## 2.32.0
 
