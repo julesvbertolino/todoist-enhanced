@@ -8,6 +8,14 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.32.2
+
+🐛 **L’ajout rapide utilise toujours votre compte.** Dans l’app Mac, une tâche ajoutée avec le raccourci global arrive désormais toujours sur le compte connecté dans la fenêtre principale. Si la fenêtre d’ajout rapide est un jour sur un autre compte, elle le dit, se recharge sur le bon et n’envoie rien.
+
+🐛 **L’ajout rapide s’ouvre sans flash.** Dans l’app Mac, le raccourci ouvre maintenant tout de suite la fenêtre d’ajout rapide, sans que l’app apparaisse un instant avant.
+
+🐛 **Se connecter remplace un ancien jeton collé.** Se connecter avec Todoist efface maintenant un jeton collé auparavant, pour que le compte que vous venez de choisir soit bien celui utilisé.
+
 ## 2.32.1
 
 🐛 **Voyez où tombe la prochaine occurrence d’une tâche en retard.** Sur une tâche récurrente en retard, Prochaine occurrence indique maintenant le jour où elle va tomber, dans le menu de date et dans le menu de la ligne. Un jour déjà passé devient demain.
