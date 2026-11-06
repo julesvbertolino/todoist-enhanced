@@ -59,6 +59,8 @@ test('#429 only the planning pages choose where the No date panel looks', async 
 });
 
 test('#419 a link to a Todoist item Enhanced has opens it here, not in a new tab', async ({ demo: page }) => {
+  // Reads the store through `window.__store`, which only the development build exposes (CI's development step runs it).
+  test.skip(process.env.PLAYWRIGHT_DEV !== '1', 'Run npm run e2e:release for the controlled development fixtures');
   await go(page, '#/project/site');
   const target = await page.evaluate(() => {
     const store = (window as unknown as { __store: { getState: () => { snapshot: { items: Record<string, Record<string, unknown>> } }; setState: (s: unknown) => void } }).__store;
