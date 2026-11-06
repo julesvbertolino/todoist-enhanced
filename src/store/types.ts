@@ -142,6 +142,8 @@ export interface AppState {
    */
   apply: (
     commands: Command[], optimistic: (snapshot: Snapshot) => Snapshot,
+    /** `inTurn`: called from inside another write's answer, which already holds the turn (#468). */
+    options?: { inTurn?: boolean },
   ) => Promise<Record<string, string>>;
   /**
    * Whether the first-run dialog is up.

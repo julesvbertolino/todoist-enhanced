@@ -3,7 +3,7 @@ import { canStoreDurations } from '@/domain/estimates';
 import { setEstimateStorage } from '@/domain/types';
 import type { AppState } from './types';
 import { createSyncSlice } from './sync';
-import { createPreferencesSlice } from './preferences';
+import { createPreferencesSlice, flushPreferencesWrite } from './preferences';
 import { createTasksSlice } from './tasks';
 import { createTasksMoveSlice } from './tasks-move';
 import { createStructureSlice } from './structure';
@@ -56,6 +56,9 @@ if (typeof document !== 'undefined') {
     /* The copy kept on the device is written now, not after its 400 ms: this
        is the last moment the page is sure to be running (#132). */
     flushPersist();
+    /* A setting changed in the last 300 ms is written now, not when the
+       page may no longer be running. */
+    flushPreferencesWrite(useStore.getState);
     for (const pending of pendingDeletes.values()) {
       if (pending.queued) continue;
       pending.queued = true;

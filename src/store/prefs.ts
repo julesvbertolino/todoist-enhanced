@@ -461,12 +461,6 @@ export interface Preferences {
   seenVersion: string | null;
   /** The one-time note for Todoist's own people has been shown to this account. */
   hireNoteSeen: boolean;
-  /**
-   * The launch invitation (src/domain/launch.ts) this account has been shown,
-   * by its id, so a second browser or the Mac app does not ask again. Empty
-   * until one was shown.
-   */
-  launchSeen: string;
 }
 
 export const defaultPreferences = (locale: Locale): Preferences => ({
@@ -524,7 +518,6 @@ export const defaultPreferences = (locale: Locale): Preferences => ({
   whatsNew: true,
   seenVersion: null,
   hireNoteSeen: false,
-  launchSeen: '',
 });
 
 /**
@@ -633,7 +626,6 @@ export function hydratePreferences(stored: unknown, locale: Locale): Preferences
       ? s.seenVersion
       : null,
     hireNoteSeen: s.hireNoteSeen === true,
-    launchSeen: typeof s.launchSeen === 'string' ? s.launchSeen : '',
     views: s.views ?? {},
     projectViews: readProjectViews(s.projectViews),
     activeViews: readStringMap(s.activeViews),

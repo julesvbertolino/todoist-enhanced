@@ -1,12 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { resetIdbMemory } from '@/test/idbMemory';
 
-vi.mock('@/db/idb', () => ({
-  saveSnapshot: vi.fn(async () => {}),
-  enqueue: vi.fn(async () => {}),
-  dequeue: vi.fn(async () => {}),
-  updateQueued: vi.fn(async () => {}),
-  readQueue: vi.fn(async () => []),
-}));
+vi.mock('@/db/idb', async () => (await import('@/test/idbMemory')).idbMemory());
 vi.mock('@/api/commands', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/commands')>()),
   sendCommands: vi.fn(),
@@ -28,6 +23,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.stubGlobal('navigator', { onLine: true });
   vi.clearAllMocks();
+  resetIdbMemory();
   const snapshot = emptySnapshot();
   const add = (task: ReturnType<typeof item>) => { snapshot.items[task.id] = task; };
   add(item({ id: 'A', content: 'A', child_order: 1, project_id: 'p1', labels: ['home'], priority: 4,

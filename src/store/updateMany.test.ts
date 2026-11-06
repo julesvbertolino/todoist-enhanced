@@ -1,12 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { resetIdbMemory } from '@/test/idbMemory';
 
-vi.mock('@/db/idb', () => ({
-  saveSnapshot: vi.fn(async () => {}),
-  enqueue: vi.fn(async () => {}),
-  dequeue: vi.fn(async () => {}),
-  updateQueued: vi.fn(async () => {}),
-  readQueue: vi.fn(async () => []),
-}));
+vi.mock('@/db/idb', async () => (await import('@/test/idbMemory')).idbMemory());
 vi.mock('@/api/commands', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/commands')>()),
   sendCommands: vi.fn(),
@@ -38,6 +33,7 @@ const ids = Array.from({ length: 12 }, (_, i) => `t${i}`);
 beforeEach(() => {
   vi.stubGlobal('navigator', { onLine: true });
   vi.clearAllMocks();
+  resetIdbMemory();
   sent.mockImplementation(async (_token, commands) => ok(commands));
   const snapshot = emptySnapshot();
   for (const id of ids) {
@@ -66,7 +62,8 @@ describe('a change across a selection (#162)', () => {
   it('goes out as one request and is on screen, with its toast, before Todoist answers', async () => {
     const release = slowRequest();
     const pending = moveAll();
-    await Promise.resolve();
+    // The request goes out once the change has its turn with Todoist (#468).
+    await vi.waitFor(() => expect(sent).toHaveBeenCalledTimes(1));
 
     const state = useStore.getState();
     expect(ids.every((id) => state.snapshot.items[id].due?.date === '2026-10-05')).toBe(true);
@@ -82,7 +79,8 @@ describe('a change across a selection (#162)', () => {
   it('sends its undo only once the change it undoes has been sent', async () => {
     const release = slowRequest();
     const pending = moveAll();
-    await Promise.resolve();
+    // The request goes out once the change has its turn with Todoist (#468).
+    await vi.waitFor(() => expect(sent).toHaveBeenCalledTimes(1));
 
     const undo = useStore.getState().toasts[0].undo!;
     undo();

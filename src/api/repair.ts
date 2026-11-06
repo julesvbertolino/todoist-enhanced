@@ -1,5 +1,5 @@
 import { ApiError, request } from './client';
-import type { SyncResponse } from './sync';
+import { SYNC_RESOURCE_TYPES, type SyncResponse } from './sync';
 import type { Command } from './commands';
 import * as idb from '@/db/idb';
 
@@ -200,7 +200,9 @@ export async function repairClose(
       response = await post([
         setDue(entry.itemId, entry.original, lang, updateUuid),
         { type: 'item_close', uuid: closeUuid, args: { id: entry.itemId } },
-      ], ctx.syncToken, ['items']);
+      /* Its answer's token becomes the snapshot's: it must carry every
+         resource a read does, or what changed meanwhile is skipped (#467). */
+      ], ctx.syncToken, [...SYNC_RESOURCE_TYPES]);
     } catch (error) {
       if (isNetwork(error)) return { kind: 'interrupted' };
       entry.phase = 'restoring';

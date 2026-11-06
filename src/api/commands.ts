@@ -1,5 +1,5 @@
 import { ApiError, request } from './client';
-import type { SyncResponse } from './sync';
+import { SYNC_RESOURCE_TYPES, type SyncResponse } from './sync';
 import { loadJournal, repairClose, type RepairContext } from './repair';
 
 /**
@@ -137,7 +137,10 @@ export async function sendCommands(
         method: 'POST',
         form: {
           sync_token: token,
-          resource_types: JSON.stringify(['items', 'projects', 'sections', 'labels', 'notes', 'project_notes', 'filters']),
+          /* Everything a read asks for: the token this answer returns is kept
+             for the next read, and a token moved past a change the answer did
+             not carry means that change is never read (#467). */
+          resource_types: JSON.stringify(SYNC_RESOURCE_TYPES),
           commands: JSON.stringify(batch.map(({ estimateMinutes: _estimate, ...cmd }) => cmd)),
         },
       });
