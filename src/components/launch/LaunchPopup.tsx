@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Overlay } from '../overlays/Overlay';
 import { useT } from '@/hooks/useT';
+import { useStore } from '@/store/store';
 import { LAUNCH, launchIsOn, launchWasSeen, rememberLaunch } from '@/domain/launch';
 import './launch.css';
 
@@ -8,24 +9,39 @@ import './launch.css';
  * A one-off invitation to upvote the app on Product Hunt, for launch day.
  *
  * Temporary by design: delete this folder, `src/domain/launch.ts` and the one
- * line in App.tsx that renders it. Until then it puts itself away on its own
- * after `LAUNCH.until`. Whoever has seen it is remembered on this device the
- * moment it appears, whatever they do next, so it never comes back.
+ * line in App.tsx that renders it (and `launchSeen` in store/prefs.ts). Until then
+ * it puts itself away on its own after `LAUNCH.until`. Whoever has seen it is
+ * remembered the moment it appears, whatever they do next: on this device, and
+ * on their Todoist account so another browser or the Mac app does not ask again.
  */
 export function LaunchPopup({ ready }: { ready: boolean }) {
   const { t } = useT();
   const [open, setOpen] = useState(false);
+  const demo = useStore((s) => s.demo);
+  const settingsChecked = useStore((s) => s.settingsChecked);
+  const seenOnAccount = useStore((s) => s.prefs.launchSeen === LAUNCH.id);
+  const setPrefs = useStore((s) => s.setPrefs);
+  /* An account remembers it for every browser and for the Mac app, so its
+     settings have to be read before deciding. The demo has no account: this
+     device alone remembers. */
+  const known = demo || settingsChecked;
 
   useEffect(() => {
-    if (!ready || !launchIsOn() || launchWasSeen()) return;
+    if (!ready || !known || !launchIsOn() || seenOnAccount) return;
+    if (launchWasSeen()) {
+      // Seen on this device before the account knew: tell the account, quietly.
+      if (!demo) setPrefs({ launchSeen: LAUNCH.id });
+      return;
+    }
     // A moment after the page is calm, not on top of it.
     const timer = window.setTimeout(() => {
       if (launchWasSeen()) return;
       rememberLaunch();
+      if (!demo) setPrefs({ launchSeen: LAUNCH.id });
       setOpen(true);
     }, 5000);
     return () => window.clearTimeout(timer);
-  }, [ready]);
+  }, [ready, known, demo, seenOnAccount, setPrefs]);
 
   if (!open) return null;
   return (
