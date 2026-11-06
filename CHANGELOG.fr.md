@@ -8,6 +8,10 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.32.1
+
+🐛 **Voyez où tombe la prochaine occurrence d’une tâche en retard.** Sur une tâche récurrente en retard, Prochaine occurrence indique maintenant le jour où elle va tomber, dans le menu de date et dans le menu de la ligne. C’est le premier jour après aujourd’hui que la récurrence désigne.
+
 ## 2.32.0
 
 🆕 **Ouvrez les liens Todoist depuis une tâche.** Quand le titre, la description ou un commentaire d’une tâche contient un lien vers une autre tâche, un projet, un tag ou un filtre à vous, un clic l’ouvre dans Enhanced au lieu de Todoist. Dans l’éditeur de description, ⌘-clic (Ctrl-clic sous Windows) le suit. Les autres liens s’ouvrent comme avant.
