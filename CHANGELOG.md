@@ -42,6 +42,14 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.32.2
+
+🐛 **Quick Add always uses your own account.** In the Mac app, a task added with the global shortcut now always lands on the account you are signed in with in the main window. If the Quick Add window is ever on another account, it says so, reloads on the right one and sends nothing.
+
+🐛 **Quick Add opens without a flash.** In the Mac app, the shortcut now opens the Quick Add window straight away, without the app appearing for a moment first.
+
+🐛 **Signing in replaces an old pasted token.** Signing in with Todoist now clears a token you pasted earlier, so the account you just chose is the one that is used.
+
 ## 2.32.1
 
 🐛 **See where Next occurrence lands on a late task.** On a repeating task that is behind schedule, Next occurrence now says on which day it will land, in the date menu and in the row menu. A day that has already passed becomes tomorrow.
