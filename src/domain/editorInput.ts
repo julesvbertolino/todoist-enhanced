@@ -1,15 +1,29 @@
 import { inlineSpans } from './inlineMarks';
+import { isLinkUrl } from './markdown';
 import type { EnterResult } from './descriptionLines';
 
-/** A pasted/entered web address, with an implicit secure scheme for domains. */
+/** A pasted/entered web address or app deep link, with an implicit secure scheme for domains. */
 export function normalizeLink(input: string): string | null {
   const text = input.trim();
   if (!text || /\s/.test(text)) return null;
+  if (!/^https?:\/\//i.test(text) && isLinkUrl(text)) return text;
   if (!/^https?:\/\//i.test(text) && !/^(?:[\p{L}\d](?:[\p{L}\d-]*[\p{L}\d])?\.)+[\p{L}]{2,}(?::\d+)?(?:[/?#].*)?$/u.test(text)) return null;
   try {
     const url = new URL(/^https?:\/\//i.test(text) ? text : `https://${text}`);
     return url.hostname && !url.username && !url.password ? (/^https?:\/\//i.test(text) ? text : `https://${text}`) : null;
   } catch { return null; }
+}
+
+/**
+ * A link pasted over selected text keeps the text and becomes its address:
+ * `[text](link)`, as Todoist does. Null when nothing is selected or what is
+ * pasted is not a link.
+ */
+export function linkSelection(value: string, from: number, to: number, pasted: string): { value: string; caret: number } | null {
+  const url = from < to ? normalizeLink(pasted) : null;
+  if (!url) return null;
+  const link = `[${value.slice(from, to)}](${url.replace(/\)/g, '%29')})`;
+  return { value: value.slice(0, from) + link + value.slice(to), caret: from + link.length };
 }
 
 /** Balance inline formatting on both sides of a new paragraph. Links end here. */

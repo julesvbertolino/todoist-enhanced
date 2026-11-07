@@ -8,6 +8,14 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.32.4
+
+🎨 **Estimez plus vite dans les notifications.** Une tâche sans estimation propose maintenant un menu des durées habituelles (15 min, 30 min, 1 h…) à la place d’un champ vide. Vous pouvez toujours saisir une autre durée.
+
+🎨 **Les liens vers d’autres applications sont reconnus.** Un lien qui ouvre une application, comme une note UpNote, Evernote, OneNote ou Notion, se clique maintenant dans un titre, une description ou un commentaire, et ouvre cette application. Un lien très long passe à la ligne au lieu de dépasser.
+
+🐛 **Coller un lien sur du texte sélectionné garde le texte.** Sélectionnez des mots dans un titre, une description ou un commentaire, puis collez un lien : les mots restent et deviennent le lien au lieu d’être remplacés. Dans un titre, les crochets et l’adresse restent visibles en grisé autour des mots soulignés.
+
 ## 2.32.3
 
 🐛 **Améliorations de fiabilité.** La synchronisation tient mieux : plus de blocage sur « Échec de la synchronisation », aucune modification envoyée deux fois ni annulée un instant à l’écran, et un réglage changé juste avant de fermer l’app est gardé. En cas d’échec, cliquez sur le statut pour voir la raison et copier le détail.

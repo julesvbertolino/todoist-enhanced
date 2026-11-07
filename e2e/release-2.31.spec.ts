@@ -30,8 +30,12 @@ test('#323 ⌘-click picks calendar events, dragging one moves them all, Esc cle
   await expect(page.getByRole('dialog', { name: /./ })).toHaveCount(0);
 
   const box = (await first.boundingBox())!;
-  /* Two days on: far enough to see, near enough that the others stay in the week. */
-  const targetDay = new Date(Date.parse(before[0]!) + 2 * 86400000).toISOString().slice(0, 10);
+  /* Far enough to see, near enough that the others stay in the week: the first shift, by day, that keeps all three
+     inside the days on screen (a fixed two days pushed one off the week on a Saturday). */
+  const visibleDays = await calendar.locator('.calendar-all-day [data-calendar-day]').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-calendar-day')!));
+  const shiftBy = (day: string, days: number) => new Date(Date.parse(day) + days * 86400000).toISOString().slice(0, 10);
+  const days = [2, -2, 1, -1, 3, -3].find((n) => before.every((day) => visibleDays.includes(shiftBy(day!, n))))!;
+  const targetDay = shiftBy(before[0]!, days);
   const target = calendar.locator(`.calendar-all-day [data-calendar-day="${targetDay}"]`);
   const targetBox = (await target.boundingBox())!;
   await page.mouse.move(box.x + 30, box.y + box.height / 2);

@@ -80,3 +80,36 @@ describe('text that looks like an internal placeholder (#135)', () => {
       .toContain('<a href="https://example.com" target="_blank" rel="noopener noreferrer"><code>x</code></a>');
   });
 });
+
+describe('links to other apps (deep links)', () => {
+  it('renders a Markdown deep link as an anchor that hands over to the app', () => {
+    const html = renderTitle('[My note](upnote://x-callback-url/openNote?noteId=1&notebookId=2)');
+    expect(html).toContain('<a href="upnote://x-callback-url/openNote?noteId=1&amp;notebookId=2" rel="noopener noreferrer">My note</a>');
+    expect(html).not.toContain('target=');
+  });
+
+  it('reads Evernote, OneNote, Obsidian and Notion links, bare or labelled', () => {
+    for (const href of ['evernote:///view/1/s1/abc/abc/', 'onenote:https://d.docs.live.net/x', 'obsidian://open?vault=a', 'notion://www.notion.so/x']) {
+      expect(renderTitle(`[n](${href})`)).toContain('<a href=');
+    }
+    expect(titleLinks('See evernote:///view/1/s1/abc/ now')).toEqual([{ label: 'evernote:///view/1/s1/abc/', href: 'evernote:///view/1/s1/abc/' }]);
+  });
+
+  it('keeps web links in a new tab and code-running schemes as text', () => {
+    expect(renderTitle('[a](https://a.com)')).toContain('target="_blank"');
+    for (const bad of ['javascript:alert(1)', 'data:text/html,x', 'vbscript:x', 'file:///etc/passwd', 'JavaScript://%0aalert(1)']) {
+      expect(renderTitle(`[x](${bad})`)).not.toContain('<a');
+      expect(renderTitle(`go ${bad}`)).not.toContain('<a');
+    }
+  });
+
+  it('reads an app\'s bare scheme as the link that opens the app, but not an empty web address', () => {
+    expect(titleLinks('open applenotes:// now')).toEqual([{ label: 'applenotes://', href: 'applenotes://' }]);
+    expect(titleLinks('see https:// here')).toEqual([]);
+  });
+
+  it('keeps a long Spark link whole, with its encoded line breaks', () => {
+    const href = 'readdle-spark://bl=QTpqdWxlc3ZhbGVudGluYmVydG9saW5v%0D%0AMDk1Ny4zLmY2MzA4MjlhNTk0NmZiZjYu%3D';
+    expect(titleLinks(`Mail ${href}`)).toEqual([{ label: href, href }]);
+  });
+});

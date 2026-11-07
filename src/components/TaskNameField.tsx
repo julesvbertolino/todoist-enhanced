@@ -15,6 +15,7 @@ import type { Snapshot } from '@/domain/types';
 import { PersonAvatar } from './PersonAvatar';
 import { bySectionOrder } from '@/domain/orderKey';
 import { splitPastedList } from '@/domain/pastedList';
+import { linkSelection } from '@/domain/editorInput';
 
 /** A name with its spaces, case and accents set aside, as the parser reads it. */
 const squash = (text: string): string =>
@@ -438,6 +439,11 @@ export function TaskNameField({
     right: isMark(at) && isGap(at + 1) && isMark(at + 2),
   }));
 
+  /* With a link in the name, the mirror draws the letters (the field's own are
+     made see-through, same metrics) so the Markdown around the label can be
+     drawn faint: `[Daily review](https://…)` reads as an underlined label. */
+  const hasLink = pieces.some((piece) => piece.kind === 'link' && !piece.refused);
+
   const track = (el: HTMLInputElement) => setCaret(el.selectionStart ?? el.value.length);
 
   /**
@@ -458,7 +464,7 @@ export function TaskNameField({
   };
 
   return (
-    <div className={`namefield${multiline ? ' multiline' : ''}`}>
+    <div className={`namefield${multiline ? ' multiline' : ''}${hasLink ? ' has-link' : ''}`}>
       <div className="namemirror" ref={mirrorRef} aria-hidden="true">
         {pieces.map((piece, index) =>
           piece.kind && !piece.refused
@@ -471,7 +477,7 @@ export function TaskNameField({
                    falls through to the accent the stylesheet gives it. */
                 style={piece.tone ? ({ '--mark': piece.tone } as React.CSSProperties) : undefined}
               >
-                {piece.text}
+                {piece.kind === 'link' ? linkParts(piece.text) : piece.text}
               </mark>
             )
             : <span key={index}>{piece.text}</span>,
@@ -493,12 +499,20 @@ export function TaskNameField({
         rows: multiline ? 1 : undefined,
         onBlur,
         value,
-        onPaste: onPasteList && ((e: ClipboardEvent<HTMLInputElement>) => {
+        onPaste: (e: ClipboardEvent<HTMLInputElement>) => {
+          const field = e.currentTarget;
           const text = e.clipboardData.getData('text/plain');
+          const link = linkSelection(value, field.selectionStart ?? 0, field.selectionEnd ?? 0, text);
+          if (link) {
+            e.preventDefault();
+            onChange(link.value);
+            requestAnimationFrame(() => field.setSelectionRange(link.caret, link.caret));
+            return;
+          }
+          if (!onPasteList) return;
           const lines = splitPastedList(text);
           if (!lines) return;
           e.preventDefault();
-          const field = e.currentTarget;
           const from = field.selectionStart ?? value.length;
           const to = field.selectionEnd ?? from;
           onPasteList(lines, () => {
@@ -506,7 +520,7 @@ export function TaskNameField({
             const flat = text.split(/\r\n|\r|\n/).map((line) => line.trim()).filter(Boolean).join(' ');
             onChange(value.slice(0, from) + flat + value.slice(to));
           });
-        }),
+        },
         onChange: (e: ChangeEvent<HTMLInputElement>) => {
           /* The refusals are positions in the text being edited, so they move
              with it before anything is read from it again. */
@@ -629,5 +643,18 @@ export function TaskNameField({
         document.body,
       )}
     </div>
+  );
+}
+
+/** `[label](address)` as the label with the brackets and the address set apart, so CSS can quieten them. */
+function linkParts(text: string) {
+  const bracketed = /^\[([^\]]*)\](\([^)]*\))$/.exec(text);
+  if (!bracketed) return text;
+  return (
+    <>
+      <span className="nsyntax">[</span>
+      <span className="nlabel">{bracketed[1]}</span>
+      <span className="nsyntax">]{bracketed[2]}</span>
+    </>
   );
 }

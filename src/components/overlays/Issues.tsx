@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Overlay } from './Overlay';
 import { Icon } from '../Icon';
-import { EstimateField } from '../EstimateField';
+import { DurationField } from '../DurationField';
 import { useT } from '@/hooks/useT';
 import { useData } from '@/hooks/useData';
 import { useStore } from '@/store/store';
@@ -294,8 +294,9 @@ export function Issues({ open, onClose, onOpen }: IssuesProps) {
                     {/* The answer goes in the card, where the buttons of the
                         other conflicts are: one entry, saved as it is given. */}
                     <div className="opts conflict-estimate">
-                      <EstimateField
+                      <DurationField
                         minutes={null}
+                        placeholder={t('task.estimateChoose')}
                         onCommit={(minutes) => { if (minutes !== null) void updateTask(item.id, { estimateMinutes: minutes }); }}
                       />
                     </div>

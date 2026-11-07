@@ -14,11 +14,30 @@ const escapeHtml = (text: string): string =>
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
-/** Only http and https links become anchors; anything else stays plain text. */
+/**
+ * Schemes that run code or read the local disk when followed. Every other
+ * scheme is an app's deep link (upnote://, evernote://, obsidian://, notion://)
+ * and opens that app, so it is a link like any other.
+ */
+const UNSAFE_SCHEME = /^(?:javascript|data|vbscript|file|blob|about):/i;
+
+/** `scheme://…` (a web address or an app's deep link), or the few app links written without the slashes. */
+const LINK_START = /^(?:[a-z][a-z0-9+.-]+:\/\/|mailto:|tel:|onenote:)/i;
+
+/** Whether `url` is a web address or an app's deep link, and safe to follow. */
+export function isLinkUrl(url: string): boolean {
+  const trimmed = url.trim();
+  return LINK_START.test(trimmed) && !UNSAFE_SCHEME.test(trimmed);
+}
+
+/** Web addresses and deep links become anchors; anything else stays plain text. */
 function safeUrl(url: string): string | null {
   const trimmed = url.trim();
-  return /^https?:\/\//i.test(trimmed) ? trimmed : null;
+  return isLinkUrl(trimmed) ? trimmed : null;
 }
+
+/** A link that leaves the browser for an app: no new tab to leave behind. */
+export const isWebUrl = (url: string): boolean => /^https?:\/\//i.test(url);
 
 /**
  * The endings common enough that a bare word before one reads as an address
@@ -62,7 +81,7 @@ export interface LinkSpan {
 
 /**
  * Every link `text` carries, in reading order: `[label](url)`, a bare
- * `http(s)://` address, or a bare domain such as `free.fr`. Shared by the
+ * `http(s)://` address or app deep link, or a bare domain such as `free.fr`. Shared by the
  * renderer below, `titleLinks`, and the composer's live mark while typing —
  * one reading of what counts as a link, used everywhere one is drawn.
  */
@@ -81,7 +100,9 @@ export function findLinks(text: string): LinkSpan[] {
     const href = safeUrl(m[2]);
     if (href) take(m.index!, m.index! + m[0].length, href, m[1]);
   }
-  for (const m of text.matchAll(/(^|[\s(])(https?:\/\/[^\s<>"')]+)/g)) {
+  for (const m of text.matchAll(/(^|[\s(])([a-z][a-z0-9+.-]+:\/\/[^\s<>"')]*)/gi)) {
+    // A web address needs a host; an app's `scheme://` alone is how its own app is opened.
+    if (!isLinkUrl(m[2]) || /^https?:\/\/$/i.test(m[2])) continue;
     const start = m.index! + m[1].length;
     take(start, start + m[2].length, m[2], m[2]);
   }
@@ -147,7 +168,7 @@ function inline(text: string, { anchors = true }: InlineOptions = {}): string {
   };
   const link = (href: string, label: string): string =>
     anchors
-      ? `<a href="${href}" target="_blank" rel="noopener noreferrer">${label}</a>`
+      ? `<a href="${href}"${isWebUrl(href) ? ' target="_blank"' : ''} rel="noopener noreferrer">${label}</a>`
       : `<span class="mdlink">${label}</span>`;
 
   /* `out` at this point is already HTML-escaped, and `findLinks` reads plain

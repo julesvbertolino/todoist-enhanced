@@ -521,6 +521,8 @@
 .descedit.composer .cm-scroller{max-height:calc(10 * 1.5em);overflow-y:auto;overscroll-behavior:contain}
 .mdedit .cm-content{padding:0;font:inherit;caret-color:var(--text)}
 .mdedit .cm-line{padding:0;overflow-wrap:anywhere}
+.mdedit .cm-content,.mdedit .cm-editor{min-width:0;max-width:100%}
+.mdedit .cm-content{flex-shrink:1}
 .mdedit .cm-placeholder{color:var(--faint)}
 .mdedit .cm-cursor{border-left:1.5px solid var(--text)}
 .mdedit .cm-editor .cm-selectionBackground,

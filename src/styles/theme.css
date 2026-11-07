@@ -447,7 +447,8 @@
 .md h4,.md h5,.md h6{font-size:var(--fs-14)}
 .md ul,.md ol{margin:0 0 .6em;padding-left:1.35em}
 .md li{margin:.15em 0}
-.md a{color:var(--info);text-decoration:underline}
+.md a{color:var(--info);text-decoration:underline;overflow-wrap:anywhere}
+.md{overflow-wrap:anywhere}
 .md code{
   padding:1px 5px;border-radius:var(--r-xs);background:var(--subtle);
   font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em;
@@ -1702,6 +1703,14 @@ button.subprog[aria-expanded="false"]{background:var(--subtle)}
    handed to a field, it stays exactly as typed. An underline is all Todoist
    draws for one while it is being written, so that is all this draws too. */
 .nmark.link{background:transparent;box-shadow:none;text-decoration:underline;text-decoration-color:var(--text);text-underline-offset:3px}
+/* A link in a name: the mirror draws the letters and the Markdown around the
+   label fades, at exactly the same size so the caret stays where it belongs. */
+.namefield.has-link .namemirror.namemirror{color:var(--text)}
+.namefield.has-link .composer-name,
+.namefield.has-link .titlefield{color:transparent;caret-color:var(--text)}
+.namefield.has-link .nmark.link{text-decoration:none;color:var(--text)}
+.namefield.has-link .nmark.link .nlabel{text-decoration:underline;text-decoration-color:var(--text);text-underline-offset:3px}
+.namefield.has-link .nmark.link .nsyntax{color:var(--faint)}
 
 /* The list that opens on @ or #. */
 .namepicker{

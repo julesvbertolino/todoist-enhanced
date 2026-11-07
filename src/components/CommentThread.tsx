@@ -11,6 +11,7 @@ import { uploadAttachment } from '@/api/uploads';
 import { avatarUrl } from '@/domain/colors';
 import { formatRelativeDay } from '@/domain/dates';
 import { renderMarkdown } from '@/domain/markdown';
+import { linkSelection } from '@/domain/editorInput';
 import type { Note, NoteAttachment } from '@/domain/types';
 import { assignees } from '@/domain/sharing';
 import { encodeMentions, mentionQuery, mentionedUids, renderWithMentions } from '@/domain/mentions';
@@ -206,6 +207,7 @@ function CommentRow({ note, itemId }: { note: Note; itemId: string }) {
               rows={2}
               value={draft}
               aria-label={t('comment.edit')}
+              onPaste={(event) => pasteLink(event, setDraft)}
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={(event) => {
                 event.stopPropagation();
@@ -332,6 +334,16 @@ function CommentRow({ note, itemId }: { note: Note; itemId: string }) {
  * paperclip inside it; once there is something to send, a round grey cross
  * takes it back and a round accent arrow sends it.
  */
+/** A link pasted over selected words keeps them as its label, in a comment box. */
+function pasteLink(event: React.ClipboardEvent<HTMLTextAreaElement>, set: (value: string) => void): void {
+  const field = event.currentTarget;
+  const link = linkSelection(field.value, field.selectionStart, field.selectionEnd, event.clipboardData.getData('text/plain'));
+  if (!link) return;
+  event.preventDefault();
+  set(link.value);
+  requestAnimationFrame(() => field.setSelectionRange(link.caret, link.caret));
+}
+
 export function CommentThread({ itemId }: { itemId: string }) {
   const { t } = useT();
   const notes = useStore((s) => s.snapshot.notes);
@@ -554,6 +566,7 @@ export function CommentThread({ itemId }: { itemId: string }) {
               className="comment-field"
               rows={1}
               value={draft}
+              onPaste={(event) => pasteLink(event, setDraft)}
               placeholder={t('detail.commentPlaceholder')}
               aria-label={t('detail.commentPlaceholder')}
               onChange={(event) => {
