@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeLink, richEnter } from './editorInput';
+import { linkSelection, normalizeLink, richEnter } from './editorInput';
 import { pressEnter } from './descriptionLines';
 import { inlineSpans } from './inlineMarks';
 
@@ -29,5 +29,17 @@ describe('web addresses in the link dialog and clipboard', () => {
   });
   it('leaves ordinary text and unsafe schemes as text', () => {
     for(const text of ['word word','javascript:alert(1)','data:text/html,test','not-an-address','https://']) expect(normalizeLink(text)).toBeNull();
+  });
+});
+
+describe('a link pasted over selected text', () => {
+  it('keeps the text as the label of the link', () => {
+    expect(linkSelection('Read the brief now', 5, 14, 'https://a.com/x')).toEqual({ value: 'Read [the brief](https://a.com/x) now', caret: 33 });
+    expect(linkSelection('My note', 0, 7, 'upnote://x-callback-url/openNote?noteId=1')?.value).toBe('[My note](upnote://x-callback-url/openNote?noteId=1)');
+  });
+
+  it('does nothing without a selection or when what is pasted is not a link', () => {
+    expect(linkSelection('Read', 2, 2, 'https://a.com')).toBeNull();
+    expect(linkSelection('Read', 0, 4, 'some words')).toBeNull();
   });
 });

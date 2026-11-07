@@ -15,6 +15,7 @@ import { useT } from '@/hooks/useT';
 import { openTodoistLink } from '@/hooks/useTodoistLinks';
 import { inlineSpans, type InlineSpan } from '@/domain/inlineMarks';
 import { richEnter, normalizeLink } from '@/domain/editorInput';
+import { isWebUrl } from '@/domain/markdown';
 import { pressEnter, readLine, type NoteLine } from '@/domain/descriptionLines';
 import { itemText, pasteIntoItem, parseLines } from '@/domain/checklist';
 
@@ -536,7 +537,8 @@ export function MarkdownEditor({
               event.preventDefault();
               /* ⌘-click on a link to a Todoist item the app has opens it here (#419). */
               if (openTodoistLink(link.dataset.href)) return true;
-              window.open(link.dataset.href, '_blank', 'noopener,noreferrer');
+              if (isWebUrl(link.dataset.href)) window.open(link.dataset.href, '_blank', 'noopener,noreferrer');
+              else window.location.assign(link.dataset.href);
               return true;
             }
             return false;

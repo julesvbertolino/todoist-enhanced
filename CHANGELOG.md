@@ -42,6 +42,14 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.32.4
+
+🎨 **Set an estimate faster in Notifications.** A task without an estimate now offers a menu of the usual durations (15 min, 30 min, 1 h…) instead of an empty box. You can still type any other duration.
+
+🎨 **Links to other apps are recognized.** A link that opens an app, such as an UpNote, Evernote, OneNote or Notion note, is now clickable in a title, a description or a comment, and opens that app. A very long link wraps instead of running past the edge.
+
+🐛 **Pasting a link over selected text keeps the text.** Select words in a title, a description or a comment, then paste a link: the words stay and become the link instead of being replaced. In a title, the brackets and the address show faintly around the underlined words.
+
 ## 2.32.3
 
 🐛 **Reliability improvements.** Syncing with Todoist holds up better: it no longer stays on “Sync failed” over one workspace or an old session, a change is never sent twice or undone on screen for a moment, and a setting changed just before closing the app is kept. When a sync does fail, click the status to see why and copy the details.
