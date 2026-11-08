@@ -12,9 +12,10 @@ import { translate } from '@/i18n';
 import { byChildOrder, keyBetween, keysInOrder } from '@/domain/orderKey';
 import {
   UNDO_TOAST_MS, advanceDemoRecurrence, branchOf, deletionRoots, hidePending, patchItem, pendingDeletes,
-  restoreOrder, schedulePersist, settleFromServer,
+  restoreOrder, schedulePersist, settleFromServer, subtasksToReset,
 } from './helpers';
-import type { Slice, TasksSlice } from './types';
+import { readResetSubtasks } from '@/api/userSettings';
+import type { AppState, Slice, TasksSlice } from './types';
 
 /** A subtask created with its parent: a title, and the labels it starts with. */
 interface NewSubtask {
@@ -403,8 +404,9 @@ export const createTasksSlice: Slice<TasksSlice> = (set, get) => ({
        between dates and occasionally remain checked. */
     if (!item.checked && item.due?.is_recurring) {
       const demo = get().demo;
-      await get().apply([command('item_close', { id })], (snapshot) =>
-        demo ? advanceDemoRecurrence(snapshot, id) : patchItem(snapshot, id, { checked: true }));
+      const reset = await resetAfterClose(get, [id]);
+      await get().apply([command('item_close', { id }), ...reset.map(uncompleteItem)], (snapshot) =>
+        untick(demo ? advanceDemoRecurrence(snapshot, id) : patchItem(snapshot, id, { checked: true }), reset));
       /* Todoist's answer to the close is the task on its next date, unticked.
          A task still ticked here is one that answer did not carry. */
       await settleFromServer(get, id, (current) => current.checked);
@@ -436,15 +438,17 @@ export const createTasksSlice: Slice<TasksSlice> = (set, get) => ({
     const recurring = items.filter((item) => item.due?.is_recurring);
     const plain = items.filter((item) => !item.due?.is_recurring);
     const demo = get().demo;
+    const reset = await resetAfterClose(get, recurring.map((item) => item.id));
 
     const done = get().apply(
       [
         ...recurring.map((item) => command('item_close', { id: item.id })),
+        ...reset.map(uncompleteItem),
         ...plain.map((item) => completeItem(item.id)),
       ],
-      (current) => items.reduce((acc, item) => (item.due?.is_recurring && demo
+      (current) => untick(items.reduce((acc, item) => (item.due?.is_recurring && demo
         ? advanceDemoRecurrence(acc, item.id)
-        : patchItem(acc, item.id, { checked: true })), current),
+        : patchItem(acc, item.id, { checked: true })), current), reset),
     );
 
     /* One step back for the whole selection. A recurring task has already
@@ -717,4 +721,21 @@ function predictableFirstDay(rule: string): string | null {
   const read = ruleFromString(rule);
   if (!read || read.unit === 'month' || read.unit === 'year') return null;
   return firstDayOfRule(rule);
+}
+
+/**
+ * The subtasks to untick along with closing these recurring tasks, when the
+ * account has "Reset sub-tasks" on. Todoist's apps send that reset themselves
+ * after the close; `item_close` alone leaves the subtasks ticked, so the next
+ * occurrence started with its checklist already done.
+ */
+async function resetAfterClose(get: () => AppState, ids: string[]): Promise<string[]> {
+  if (ids.length === 0) return [];
+  const found = subtasksToReset(ids, get().snapshot.items);
+  if (found.length === 0 || get().demo) return [];
+  return (await readResetSubtasks()) ? found : [];
+}
+
+function untick(snapshot: Snapshot, ids: string[]): Snapshot {
+  return ids.reduce((acc, id) => patchItem(acc, id, { checked: false }), snapshot);
 }

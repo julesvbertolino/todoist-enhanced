@@ -461,3 +461,31 @@ export function patchItem(snapshot: Snapshot, id: string, args: Record<string, u
   if (!item) return snapshot;
   return { ...snapshot, items: { ...snapshot.items, [id]: { ...item, ...args } as Item } };
 }
+
+/**
+ * The ticked subtasks, at any depth, of these recurring tasks: what Todoist
+ * unticks when the series moves on and "Reset sub-tasks" is on. A subtask
+ * that is itself one of the closed tasks is left to its own close.
+ */
+export function subtasksToReset(ids: string[], items: Record<string, Item>): string[] {
+  const roots = new Set(ids);
+  const children = new Map<string, Item[]>();
+  for (const entry of Object.values(items)) {
+    if (!entry.parent_id || entry.is_deleted) continue;
+    const list = children.get(entry.parent_id) ?? [];
+    list.push(entry);
+    children.set(entry.parent_id, list);
+  }
+  const found: string[] = [];
+  const seen = new Set<string>();
+  const walk = (id: string) => {
+    for (const child of children.get(id) ?? []) {
+      if (seen.has(child.id) || roots.has(child.id)) continue;
+      seen.add(child.id);
+      if (child.checked) found.push(child.id);
+      walk(child.id);
+    }
+  };
+  ids.forEach(walk);
+  return found;
+}
