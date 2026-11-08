@@ -462,30 +462,24 @@ export function patchItem(snapshot: Snapshot, id: string, args: Record<string, u
   return { ...snapshot, items: { ...snapshot.items, [id]: { ...item, ...args } as Item } };
 }
 
+/** Todoist resets at most this many subtasks of a recurring task. */
+export const RESET_SUBTASKS_LIMIT = 30;
+
 /**
- * The ticked subtasks, at any depth, of these recurring tasks: what Todoist
- * unticks when the series moves on and "Reset sub-tasks" is on. A subtask
- * that is itself one of the closed tasks is left to its own close.
+ * The ticked subtasks of these recurring tasks that Todoist unticks when the
+ * series moves on and "Reset sub-tasks" is on. As Todoist's help describes it:
+ * direct subtasks only (deeper levels are left as they are), at most 30 per
+ * task, taken in the task's own order.
  */
 export function subtasksToReset(ids: string[], items: Record<string, Item>): string[] {
   const roots = new Set(ids);
-  const children = new Map<string, Item[]>();
-  for (const entry of Object.values(items)) {
-    if (!entry.parent_id || entry.is_deleted) continue;
-    const list = children.get(entry.parent_id) ?? [];
-    list.push(entry);
-    children.set(entry.parent_id, list);
-  }
   const found: string[] = [];
-  const seen = new Set<string>();
-  const walk = (id: string) => {
-    for (const child of children.get(id) ?? []) {
-      if (seen.has(child.id) || roots.has(child.id)) continue;
-      seen.add(child.id);
-      if (child.checked) found.push(child.id);
-      walk(child.id);
-    }
-  };
-  ids.forEach(walk);
+  for (const id of roots) {
+    const ticked = Object.values(items)
+      .filter((entry) => entry.parent_id === id && entry.checked && !entry.is_deleted && !roots.has(entry.id))
+      .sort((a, b) => a.child_order - b.child_order)
+      .slice(0, RESET_SUBTASKS_LIMIT);
+    found.push(...ticked.map((entry) => entry.id));
+  }
   return found;
 }

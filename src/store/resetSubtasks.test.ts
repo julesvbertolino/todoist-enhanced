@@ -38,8 +38,17 @@ afterEach(() => vi.unstubAllGlobals());
 const types = () => sent.mock.calls.flatMap(([, commands]) => commands.map((c) => `${c.type}:${String(c.args.id)}`));
 
 describe('subtasksToReset', () => {
-  it('finds ticked subtasks at any depth, and nothing outside the tree', () => {
-    expect(subtasksToReset(['review'], useStore.getState().snapshot.items).sort()).toEqual(['deep', 'inbox']);
+  it('finds the ticked direct subtasks only, as Todoist does', () => {
+    expect(subtasksToReset(['review'], useStore.getState().snapshot.items)).toEqual(['inbox']);
+  });
+
+  it('resets at most 30, in the task\'s own order', () => {
+    const items = Object.fromEntries(Array.from({ length: 35 }, (_, n) => [`s${n}`,
+      item({ id: `s${n}`, parent_id: 'p', checked: true, child_order: 35 - n })]));
+    const found = subtasksToReset(['p'], items);
+    expect(found).toHaveLength(30);
+    expect(found[0]).toBe('s34');
+    expect(found).not.toContain('s0');
   });
 });
 
@@ -47,10 +56,10 @@ describe('completing a recurring task with subtasks', () => {
   it('unticks its subtasks when "Reset sub-tasks" is on, as Todoist does', async () => {
     setting.mockResolvedValue(true);
     await useStore.getState().toggleTask('review');
-    expect(types()).toEqual(['item_close:review', 'item_uncomplete:inbox', 'item_uncomplete:deep']);
+    expect(types()).toEqual(['item_close:review', 'item_uncomplete:inbox']);
     const items = useStore.getState().snapshot.items;
     expect(items.inbox.checked).toBe(false);
-    expect(items.deep.checked).toBe(false);
+    expect(items.deep.checked).toBe(true);
     expect(items.other.checked).toBe(true);
   });
 
@@ -64,7 +73,7 @@ describe('completing a recurring task with subtasks', () => {
   it('resets them too when completed from a selection', async () => {
     setting.mockResolvedValue(true);
     await useStore.getState().completeTasks(['review']);
-    expect(types()).toEqual(['item_close:review', 'item_uncomplete:inbox', 'item_uncomplete:deep']);
+    expect(types()).toEqual(['item_close:review', 'item_uncomplete:inbox']);
   });
 
   it('keeps the checklist when Todoist refuses the close', async () => {
@@ -84,7 +93,7 @@ describe('completing a recurring task with subtasks', () => {
     setting.mockResolvedValue(true);
     await useStore.getState().toggleTask('review');
     const queued = vi.mocked(idb.enqueue).mock.calls.flatMap(([commands]) => commands.map((c) => `${c.type}:${String(c.args.id)}`));
-    expect(queued).toEqual(['item_close:review', 'item_uncomplete:inbox', 'item_uncomplete:deep']);
+    expect(queued).toEqual(['item_close:review', 'item_uncomplete:inbox']);
     expect(useStore.getState().snapshot.items.inbox.checked).toBe(false);
   });
 
