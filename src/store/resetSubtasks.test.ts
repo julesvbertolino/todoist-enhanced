@@ -8,6 +8,7 @@ vi.mock('@/api/commands', async (importOriginal) => ({
 }));
 vi.mock('@/api/userSettings', () => ({ readResetSubtasks: vi.fn() }));
 
+import * as idb from '@/db/idb';
 import { sendCommands } from '@/api/commands';
 import { readResetSubtasks } from '@/api/userSettings';
 import { emptySnapshot } from '@/domain/types';
@@ -64,6 +65,27 @@ describe('completing a recurring task with subtasks', () => {
     setting.mockResolvedValue(true);
     await useStore.getState().completeTasks(['review']);
     expect(types()).toEqual(['item_close:review', 'item_uncomplete:inbox', 'item_uncomplete:deep']);
+  });
+
+  it('keeps the checklist when Todoist refuses the close', async () => {
+    setting.mockResolvedValue(true);
+    sent.mockImplementationOnce(async (_token, commands) => ({
+      responses: [], mapping: {}, delivered: commands.map((c) => c.uuid), undelivered: [],
+      failures: [{ uuid: commands[0].uuid, error: 'Date is invalid', errorTag: 'INVALID_DATE', commandType: 'item_close' }],
+    }));
+    await useStore.getState().toggleTask('review');
+    expect(types()).toEqual(['item_close:review']);
+    expect(useStore.getState().snapshot.items.review.checked).toBe(false);
+    expect(useStore.getState().snapshot.items.inbox.checked).toBe(true);
+  });
+
+  it('queues the reset right behind the close when offline', async () => {
+    vi.stubGlobal('navigator', { onLine: false });
+    setting.mockResolvedValue(true);
+    await useStore.getState().toggleTask('review');
+    const queued = vi.mocked(idb.enqueue).mock.calls.flatMap(([commands]) => commands.map((c) => `${c.type}:${String(c.args.id)}`));
+    expect(queued).toEqual(['item_close:review', 'item_uncomplete:inbox', 'item_uncomplete:deep']);
+    expect(useStore.getState().snapshot.items.inbox.checked).toBe(false);
   });
 
   it('does not ask for the setting when there is nothing to reset', async () => {

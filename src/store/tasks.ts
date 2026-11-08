@@ -404,12 +404,13 @@ export const createTasksSlice: Slice<TasksSlice> = (set, get) => ({
        between dates and occasionally remain checked. */
     if (!item.checked && item.due?.is_recurring) {
       const demo = get().demo;
-      const reset = await resetAfterClose(get, [id]);
-      await get().apply([command('item_close', { id }), ...reset.map(uncompleteItem)], (snapshot) =>
-        untick(demo ? advanceDemoRecurrence(snapshot, id) : patchItem(snapshot, id, { checked: true }), reset));
+      const reset = await planReset(get, [item]);
+      await get().apply([command('item_close', { id }), ...reset.now.map(uncompleteItem)], (snapshot) =>
+        untick(demo ? advanceDemoRecurrence(snapshot, id) : patchItem(snapshot, id, { checked: true }), reset.now));
       /* Todoist's answer to the close is the task on its next date, unticked.
          A task still ticked here is one that answer did not carry. */
       await settleFromServer(get, id, (current) => current.checked);
+      await finishReset(get, reset);
       return;
     }
     const checked = !item.checked;
@@ -438,17 +439,17 @@ export const createTasksSlice: Slice<TasksSlice> = (set, get) => ({
     const recurring = items.filter((item) => item.due?.is_recurring);
     const plain = items.filter((item) => !item.due?.is_recurring);
     const demo = get().demo;
-    const reset = await resetAfterClose(get, recurring.map((item) => item.id));
+    const reset = await planReset(get, recurring);
 
     const done = get().apply(
       [
         ...recurring.map((item) => command('item_close', { id: item.id })),
-        ...reset.map(uncompleteItem),
+        ...reset.now.map(uncompleteItem),
         ...plain.map((item) => completeItem(item.id)),
       ],
       (current) => untick(items.reduce((acc, item) => (item.due?.is_recurring && demo
         ? advanceDemoRecurrence(acc, item.id)
-        : patchItem(acc, item.id, { checked: true })), current), reset),
+        : patchItem(acc, item.id, { checked: true })), current), reset.now),
     );
 
     /* One step back for the whole selection. A recurring task has already
@@ -469,6 +470,7 @@ export const createTasksSlice: Slice<TasksSlice> = (set, get) => ({
     await done;
     const stillTicked = recurring.find((item) => get().snapshot.items[item.id]?.checked);
     if (stillTicked) await settleFromServer(get, stillTicked.id, (current) => current.checked);
+    await finishReset(get, reset);
   },
   async removeTask(id) {
     await get().removeTasks([id]);
@@ -724,16 +726,47 @@ function predictableFirstDay(rule: string): string | null {
 }
 
 /**
- * The subtasks to untick along with closing these recurring tasks, when the
- * account has "Reset sub-tasks" on. Todoist's apps send that reset themselves
- * after the close; `item_close` alone leaves the subtasks ticked, so the next
- * occurrence started with its checklist already done.
+ * Subtasks to untick when recurring tasks are closed, when the account has
+ * "Reset sub-tasks" on. Todoist's apps send that reset themselves after the
+ * close; `item_close` alone leaves the subtasks ticked, so the next occurrence
+ * started with its checklist already done.
+ *
+ * Online, the reset waits for Todoist to accept the close (`later`): a close
+ * refused for its repeat rule is taken back on screen, and its checklist must
+ * stay as it was. Offline there is no answer to wait for, so the reset is
+ * queued right behind the close (`now`), in the same order Todoist's apps use.
  */
-async function resetAfterClose(get: () => AppState, ids: string[]): Promise<string[]> {
-  if (ids.length === 0) return [];
-  const found = subtasksToReset(ids, get().snapshot.items);
-  if (found.length === 0 || get().demo) return [];
-  return (await readResetSubtasks()) ? found : [];
+interface ResetPlan {
+  now: string[];
+  later: Array<{ parent: string; date: string | undefined; subtasks: string[] }>;
+}
+
+async function planReset(get: () => AppState, closed: Item[]): Promise<ResetPlan> {
+  const plan: ResetPlan = { now: [], later: [] };
+  if (closed.length === 0 || get().demo) return plan;
+  const items = get().snapshot.items;
+  const groups = closed
+    .map((parent) => ({ parent: parent.id, date: parent.due?.date, subtasks: subtasksToReset([parent.id], items) }))
+    .filter((group) => group.subtasks.length > 0);
+  if (groups.length === 0 || !(await readResetSubtasks())) return plan;
+  if (!navigator.onLine) plan.now = [...new Set(groups.flatMap((group) => group.subtasks))];
+  else plan.later = groups;
+  return plan;
+}
+
+async function finishReset(get: () => AppState, plan: ResetPlan): Promise<void> {
+  const items = get().snapshot.items;
+  const ids = [...new Set(plan.later
+    .filter(({ parent, date }) => {
+      /* Refused: put back unticked on its old date. Anything else (moved on,
+         still ticked while the answer is awaited, gone) is a close that holds. */
+      const current = items[parent];
+      return !current || current.checked || current.due?.date !== date;
+    })
+    .flatMap((group) => group.subtasks))]
+    .filter((id) => items[id]?.checked);
+  if (ids.length === 0) return;
+  await get().apply(ids.map(uncompleteItem), (snapshot) => untick(snapshot, ids));
 }
 
 function untick(snapshot: Snapshot, ids: string[]): Snapshot {
