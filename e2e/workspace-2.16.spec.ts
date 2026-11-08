@@ -62,6 +62,9 @@ test('workspace counts use server totals, members and archive paginate, and cach
     return (await loadPrefs(`workspace:${useStore.getState().snapshot.user.id}:ws-pro`))?.counts?.site;
   })).toBe(13);
   await go(page, '#/week');
+  /* The browser goes offline too: otherwise a focus or poll tick reads from Todoist,
+     puts the sync state back to idle and the offline notice goes away before it is checked. */
+  await page.context().setOffline(true);
   await page.evaluate(async () => {
     const useStore = (window as unknown as { __store: WorkspaceTestStore }).__store; useStore.setState({ syncState: 'offline' });
   });
