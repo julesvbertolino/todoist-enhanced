@@ -70,7 +70,12 @@ test('#323 several picked events change day only: all-day stays all-day, timed k
   await expect(calendar.locator('.calendar-card.is-picked')).toHaveCount(2);
 
   const box = (await chip.boundingBox())!;
-  const targetDay = new Date(Date.parse((await dayOf(page, chipId!))!) + 86400000).toISOString().slice(0, 10);
+  /* One day on, or back when that would leave the week on screen (on a Sunday the next day is next week's). */
+  const visibleDays = await calendar.locator('.calendar-all-day [data-calendar-day]').evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-calendar-day')!));
+  const shiftBy = (day: string, days: number) => new Date(Date.parse(day) + days * 86400000).toISOString().slice(0, 10);
+  const chipDay = (await dayOf(page, chipId!))!;
+  const days = [1, -1, 2, -2].find((n) => [chipDay, dayBefore].every((day) => visibleDays.includes(shiftBy(day, n))))!;
+  const targetDay = shiftBy(chipDay, days);
   const targetBox = (await calendar.locator(`.calendar-all-day [data-calendar-day="${targetDay}"]`).boundingBox())!;
   await page.mouse.move(box.x + 30, box.y + box.height / 2);
   await page.mouse.down();

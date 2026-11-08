@@ -461,3 +461,25 @@ export function patchItem(snapshot: Snapshot, id: string, args: Record<string, u
   if (!item) return snapshot;
   return { ...snapshot, items: { ...snapshot.items, [id]: { ...item, ...args } as Item } };
 }
+
+/** Todoist resets at most this many subtasks of a recurring task. */
+export const RESET_SUBTASKS_LIMIT = 30;
+
+/**
+ * The ticked subtasks of these recurring tasks that Todoist unticks when the
+ * series moves on and "Reset sub-tasks" is on. As Todoist's help describes it:
+ * direct subtasks only (deeper levels are left as they are), at most 30 per
+ * task, taken in the task's own order.
+ */
+export function subtasksToReset(ids: string[], items: Record<string, Item>): string[] {
+  const roots = new Set(ids);
+  const found: string[] = [];
+  for (const id of roots) {
+    const ticked = Object.values(items)
+      .filter((entry) => entry.parent_id === id && entry.checked && !entry.is_deleted && !roots.has(entry.id))
+      .sort((a, b) => a.child_order - b.child_order)
+      .slice(0, RESET_SUBTASKS_LIMIT);
+    found.push(...ticked.map((entry) => entry.id));
+  }
+  return found;
+}
