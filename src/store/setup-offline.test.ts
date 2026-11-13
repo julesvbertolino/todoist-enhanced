@@ -2,7 +2,9 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 
 vi.mock('@/db/idb', () => ({
   readQueue: vi.fn(async () => []), enqueue: vi.fn(async () => {}), saveSnapshot: vi.fn(async () => {}),
+  reserveSnapshot: vi.fn(async () => ({ epoch: 'test', revision: 1 })),
   savePrefs: vi.fn(async () => {}), loadPrefs: vi.fn(async () => null),
+  readPreferenceChanges: vi.fn(async () => []), appendPreferenceChange: vi.fn(async () => {}), removePreferenceChanges: vi.fn(async () => {}),
 }));
 
 import * as idb from '@/db/idb';

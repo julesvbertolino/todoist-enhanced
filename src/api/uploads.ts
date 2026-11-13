@@ -1,5 +1,4 @@
-import { auth } from './auth';
-import { API_BASE, ApiError, NotConnectedError } from './client';
+import { request } from './client';
 import type { NoteAttachment } from '@/domain/types';
 
 /**
@@ -21,19 +20,10 @@ export async function uploadAttachment(file: File, demo: boolean): Promise<NoteA
       upload_state: 'completed',
     };
   }
-  const token = await auth.getToken();
-  if (!token) throw new NotConnectedError();
   const body = new FormData();
   body.append('file_name', file.name);
   body.append('file', file);
-  const response = await fetch(`${API_BASE}/uploads`, {
-    method: 'POST', headers: { Authorization: `Bearer ${token}` }, body,
-  });
-  const text = await response.text();
-  let parsed: unknown = null;
-  try { parsed = text ? JSON.parse(text) : null; } catch { /* a refusal can be plain text */ }
-  if (!response.ok || !parsed || typeof parsed !== 'object') {
-    throw new ApiError(`Upload failed (${response.status})`, response.status, parsed ?? text);
-  }
-  return parsed as NoteAttachment;
+  const result = await request<NoteAttachment>('/uploads', { method: 'POST', upload: body, timeoutMs: 120_000, retries: 0 });
+  if (!result || typeof result !== 'object' || !result.file_url) throw new Error('Todoist sent an invalid upload response');
+  return result;
 }

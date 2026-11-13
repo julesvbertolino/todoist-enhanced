@@ -1,3 +1,4 @@
+import { useSafeDisconnect } from '@/hooks/useSafeDisconnect';
 import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { PrivacyInformation } from '@/components/PrivacyInformation';
 import { HireNote } from '@/components/HireNote';
@@ -56,7 +57,7 @@ export function SettingsView() {
   const prefs = useStore((s) => s.prefs);
   const setPrefs = useStore((s) => s.setPrefs);
   const setLocale = useStore((s) => s.setLocale);
-  const disconnect = useStore((s) => s.disconnect);
+  const disconnect = useSafeDisconnect();
   const user = useStore((s) => s.snapshot.user);
   const workspaceList = useStore((s) => s.snapshot.workspaces);
   const karma = karmaStanding(user?.karma);

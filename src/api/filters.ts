@@ -1,3 +1,4 @@
+import { CursorGuard } from './pagination';
 import { request } from './client';
 
 /**
@@ -47,11 +48,13 @@ export async function fetchFilterIds(
 ): Promise<string[]> {
   const ids: string[] = [];
   let cursor: string | undefined;
+  const guard = new CursorGuard();
   do {
     const page = await request<{ results?: Array<{ id: string }>; next_cursor?: string | null }>(
       '/tasks/filter', { query: { query, lang, cursor, limit: PAGE_SIZE }, signal },
     );
     for (const task of page.results ?? []) ids.push(task.id);
+    guard.next(page.next_cursor);
     cursor = page.next_cursor ?? undefined;
   } while (cursor);
   return ids;

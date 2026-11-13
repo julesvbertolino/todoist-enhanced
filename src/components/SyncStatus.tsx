@@ -12,6 +12,7 @@ import type { TranslationKey } from '@/i18n';
 const REASON: Record<SyncFailure['kind'], TranslationKey> = {
   offline: 'sync.reason.offline',
   timeout: 'sync.reason.timeout',
+  throttled: 'sync.reason.throttled',
   server: 'sync.reason.server',
   refused: 'sync.reason.refused',
   auth: 'sync.reason.auth',
@@ -91,7 +92,7 @@ export function SyncStatus() {
       userAgent: navigator.userAgent,
       state: `${syncState}${pending ? `, ${pending} waiting` : ''}`,
       syncedAt,
-      queue: queue.map((cmd) => ({ type: cmd.type, attempts: cmd.attempts })),
+      queue: queue.map((cmd) => ({ type: cmd.type, attempts: cmd.attempts, queuedAt: cmd.queuedAt })),
     });
     try {
       await navigator.clipboard.writeText(text);

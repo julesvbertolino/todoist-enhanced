@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/db/idb', () => ({
   saveSnapshot: vi.fn(async () => {}),
+  reserveSnapshot: vi.fn(async () => ({ epoch: 'test', revision: 1 })),
   enqueue: vi.fn(async () => {}),
   dequeue: vi.fn(async () => {}),
 }));

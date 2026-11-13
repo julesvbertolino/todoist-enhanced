@@ -8,12 +8,20 @@
  * next poll. Every request that sends or reads now waits its turn here.
  */
 import type { Snapshot } from '@/domain/types';
+import { leaseTurn } from '@/db/lease';
 
 let chain: Promise<unknown> = Promise.resolve();
 
 /** Runs `task` once every earlier one has finished, whatever became of them. */
 export function exclusive<T>(task: () => Promise<T>): Promise<T> {
-  const run = chain.then(task, task);
+  const guarded = async (): Promise<T> => {
+    if (typeof navigator !== 'undefined' && navigator.locks) {
+      return await navigator.locks.request<Promise<T>>('todoist-enhanced-sync', task);
+    }
+    if (typeof indexedDB !== 'undefined') return await leaseTurn('todoist-enhanced-sync', task);
+    return await task();
+  };
+  const run = chain.then(guarded, guarded);
   chain = run.catch(() => undefined);
   return run;
 }

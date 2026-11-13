@@ -8,8 +8,10 @@ vi.mock('@/db/idb', () => ({
     db.queue = db.queue.filter((cmd) => !uuids.includes(cmd.uuid as string));
   }),
   updateQueued: vi.fn(async () => {}),
+  claimLegacyQueue: vi.fn(async (userId: string) => { db.queue = db.queue.map((cmd) => cmd.userId ? cmd : { ...cmd, userId }); }),
+  settleQueue: vi.fn(async (uuids: string[]) => { db.queue = db.queue.filter((cmd) => !uuids.includes(cmd.uuid as string)); }),
   enqueue: vi.fn(async () => {}),
-  saveSnapshot: vi.fn(async () => {}),
+  saveSnapshot: vi.fn(async () => {}), reserveSnapshot: vi.fn(async () => ({ epoch: 'test', revision: 1 })),
   savePrefs: vi.fn(async () => {}),
   loadPrefs: vi.fn(async () => null),
 }));
@@ -31,6 +33,7 @@ import { sendCommands } from '@/api/commands';
 import { emptySnapshot, type TodoistUser, type Note } from '@/domain/types';
 import { useStore } from './store';
 import { defaultPreferences, SETTINGS_COMMENT_MARKER } from './prefs';
+import { pendingDeletes } from './helpers';
 
 const asUser = (id: string) => ({ id } as TodoistUser);
 const queued = (uuid: string, userId?: string) => ({
@@ -60,6 +63,7 @@ beforeEach(() => {
   useStore.setState({ demo: false, snapshot: cached, toasts: [], pendingCount: 0, syncState: 'idle' });
 });
 afterEach(() => {
+  pendingDeletes.clear();
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
@@ -82,14 +86,14 @@ describe('changes waiting for one account, and another one signs in (#129)', () 
     expect(published.length).toBeGreaterThan(0);
     expect(published.every((state) => state.done && state.checked)).toBe(true);
   });
-  it('are not sent, are taken off the queue, and are reported once', async () => {
+  it('are not sent, are kept for their owner, and are reported once', async () => {
     db.queue = [queued('a', 'u1'), queued('b', 'u1')];
     todoistAnswersAs('u2');
 
     await useStore.getState().refresh(true, { legacyOwner: 'u1' });
 
     expect(sendCommands).not.toHaveBeenCalled();
-    expect(db.queue).toEqual([]);
+    expect(db.queue).toHaveLength(2);
     const { toasts, pendingCount } = useStore.getState();
     expect(toasts).toHaveLength(1);
     expect(toasts[0].message).toBe('2 changes made offline with another Todoist account were not sent.');
@@ -135,7 +139,7 @@ describe('changes waiting for one account, and another one signs in (#129)', () 
     todoistAnswersAs('u2');
     await useStore.getState().refresh(true, { legacyOwner: 'u1' });
     expect(sendCommands).not.toHaveBeenCalled();
-    expect(db.queue).toEqual([]);
+    expect(db.queue).toEqual([queued('old', 'u1')]);
 
     db.queue = [queued('old')];
     vi.mocked(sync).mockReset();
@@ -146,6 +150,23 @@ describe('changes waiting for one account, and another one signs in (#129)', () 
 });
 
 describe('connecting with an API token (#129)', () => {
+  it('saves a deletion awaiting undo for the old account before changing credentials', async () => {
+    const deletion = { type: 'item_delete', uuid: 'delete-old', args: { id: 'task-old' } };
+    pendingDeletes.set('undo', { timer: setTimeout(() => {}, 5000), commands: [deletion], items: [], queued: false });
+    vi.mocked(sync).mockResolvedValue({ sync_token: 'full', full_sync: true, user: asUser('u2') });
+    expect(await useStore.getState().connect('a'.repeat(40))).toBe(true);
+    expect(idb.enqueue).toHaveBeenCalledWith([deletion], 'u1');
+    expect(pendingDeletes.size).toBe(0);
+  });
+
+  it('does not change credentials when the pending deletion cannot be saved', async () => {
+    const deletion = { type: 'item_delete', uuid: 'delete-old', args: { id: 'task-old' } };
+    pendingDeletes.set('undo', { timer: setTimeout(() => {}, 5000), commands: [deletion], items: [], queued: false });
+    vi.mocked(idb.enqueue).mockRejectedValueOnce(new Error('storage blocked'));
+    expect(await useStore.getState().connect('a'.repeat(40))).toBe(false);
+    expect(pendingDeletes.has('undo')).toBe(true);
+    expect(sync).not.toHaveBeenCalled();
+  });
   it('sets another account\'s changes aside, and sends nothing of them', async () => {
     db.queue = [queued('a', 'u1')];
     vi.mocked(sync).mockResolvedValue({ sync_token: 'full', full_sync: true, user: asUser('u2') });
@@ -154,7 +175,7 @@ describe('connecting with an API token (#129)', () => {
 
     expect(ok).toBe(true);
     expect(sendCommands).not.toHaveBeenCalled();
-    expect(db.queue).toEqual([]);
+    expect(db.queue).toHaveLength(1);
     expect(useStore.getState().toasts).toHaveLength(1);
   });
 });
@@ -169,6 +190,6 @@ describe('an ordinary sync', () => {
     expect(vi.mocked(sendCommands).mock.calls[0][1].map((cmd) => cmd.uuid)).toEqual(['here']);
     // Not dropped: deciding whose it is belongs to the sign-in.
     expect(db.queue.map((cmd) => cmd.uuid)).toEqual(['elsewhere']);
-    expect(idb.dequeue).toHaveBeenCalledWith(['here']);
+    expect(idb.settleQueue).toHaveBeenCalledWith(['here'], expect.any(Array), expect.any(Object), expect.any(Object), 'u1');
   });
 });

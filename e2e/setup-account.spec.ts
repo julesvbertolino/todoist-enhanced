@@ -41,11 +41,18 @@ test('closing setup and choosing estimate storage completes setup, including off
   await storage.getByRole('button', { name: 'Save this choice' }).click();
   await expect(storage).not.toBeVisible();
   await expect.poll(() => content).toContain('"setupDone":true');
+  /* An offline reload is served by the service worker, which installs after the first load and
+     controls the page only from the next one: wait for it, and load once online, so the test does
+     not race the worker's installation. */
+  await page.evaluate(async () => { await navigator.serviceWorker.ready; });
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'This week', exact: true })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
   const beforeOffline = syncRequests;
   await context.setOffline(true);
   try {
     await page.reload();
-    await expect(page.getByRole('heading', { name: 'This week' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'This week', exact: true })).toBeVisible();
     await expect(setup).not.toBeVisible();
   } finally { await context.setOffline(false); }
   await expect.poll(() => syncRequests).toBeGreaterThan(beforeOffline);

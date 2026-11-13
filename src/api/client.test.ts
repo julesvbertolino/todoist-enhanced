@@ -8,7 +8,8 @@ vi.mock('./auth', () => ({
 }));
 
 import { auth } from './auth';
-import { ApiError, REQUEST_TIMEOUT_MS, TimeoutError, request } from './client';
+import { ApiError, REQUEST_TIMEOUT_MS, TimeoutError, request, resetRetryPauses, retryDelay } from './client';
+import { invalidateSession } from './session';
 
 const fetchMock = vi.fn();
 
@@ -28,6 +29,7 @@ const answer = (status: number, body = '', headers: Record<string, string> = {})
   new Response(status === 204 ? null : body, { status, headers });
 
 beforeEach(() => {
+  resetRetryPauses();
   vi.useFakeTimers();
   fetchMock.mockReset();
   vi.stubGlobal('fetch', fetchMock);
@@ -48,6 +50,19 @@ describe('a call that starts answering and then stalls (#127)', () => {
 
     await vi.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MS + 1);
     expect(await settled).toBeInstanceOf(TimeoutError);
+  });
+});
+
+describe('session changes (#476)', () => {
+  it('aborts an in-flight request and does not retry it after sign-out', async () => {
+    fetchMock.mockImplementation(async (_url, init) => stalledBody((init as RequestInit).signal!));
+    const pending = request('/sync').catch((error: unknown) => error);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    invalidateSession();
+    expect((await pending as Error).name).toBe('AbortError');
+    await vi.advanceTimersByTimeAsync(REQUEST_TIMEOUT_MS * 2);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -188,5 +203,19 @@ describe('waiting to try again (#133)', () => {
     const error = await request('/x', { signal: controller.signal }).catch((e: unknown) => e) as DOMException;
     expect(error.name).toBe('AbortError');
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('shared throttling', () => {
+  it('chooses the longest valid server delay', () => {
+    const now = Date.parse('2026-01-01T00:00:00Z');
+    expect(retryDelay('60', '{"error_extra":{"retry_after":120}}', now)).toBe(120000);
+    expect(retryDelay('Thu, 01 Jan 2026 00:01:30 GMT', '', now)).toBe(90000);
+  });
+  it('prevents a second caller bypassing a long pause', async () => {
+    fetchMock.mockResolvedValue(answer(429, '{"error_extra":{"retry_after":120}}'));
+    await expect(request('/first')).rejects.toBeInstanceOf(ApiError);
+    await expect(request('/second')).rejects.toBeInstanceOf(ApiError);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

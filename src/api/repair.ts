@@ -62,17 +62,17 @@ export type RepairOutcome =
   | { kind: 'interrupted' };
 
 export async function loadJournal(): Promise<RepairEntry[]> {
-  return (await idb.loadPrefs<RepairEntry[]>(JOURNAL_KEY)) ?? [];
+  return (await idb.loadPrefs<RepairEntry[]>(JOURNAL_KEY, true)) ?? [];
 }
 
 async function saveEntry(entry: RepairEntry): Promise<void> {
   const rest = (await loadJournal()).filter((other) => other.closeUuid !== entry.closeUuid);
-  await idb.savePrefs(JOURNAL_KEY, [...rest, entry]);
+  await idb.savePrefs(JOURNAL_KEY, [...rest, entry], true);
 }
 
 async function dropEntry(closeUuid: string): Promise<void> {
   const rest = (await loadJournal()).filter((other) => other.closeUuid !== closeUuid);
-  await idb.savePrefs(JOURNAL_KEY, rest);
+  await idb.savePrefs(JOURNAL_KEY, rest, true);
 }
 
 /** The same text always gives the same uuid, so a replayed step is recognised by Todoist. */
@@ -137,19 +137,23 @@ async function restore(entry: RepairEntry): Promise<boolean> {
       && current.date === entry.original.date
       && current.lang !== entry.original.lang;
     if (untouched) {
-      await post([setDue(entry.itemId, entry.original, entry.original.lang,
-        stepUuid(entry.closeUuid, 'restore'))]);
+      const uuid = stepUuid(entry.closeUuid, 'restore');
+      const response = await post([setDue(entry.itemId, entry.original, entry.original.lang, uuid)]);
+      // HTTP 200 can still contain a command refusal or omit its status.
+      // Keep the journal until restoration is explicitly acknowledged.
+      if (response?.sync_status?.[uuid] !== 'ok') return false;
     }
-  } catch (error) {
-    if (isNetwork(error)) return false;
-    // The task is gone or Todoist refuses to read it: there is nothing left to put back.
+  } catch {
+    // A refusal or an unavailable read does not prove that the task is gone.
+    // Retain the journal until the original due can be checked or restored.
+    return false;
   }
   await dropEntry(entry.closeUuid);
   return true;
 }
 
 const sameAccount = (entry: RepairEntry, ctx: RepairContext) =>
-  !entry.userId || !ctx.userId || entry.userId === ctx.userId;
+  Boolean(entry.userId && ctx.userId && entry.userId === ctx.userId);
 
 /**
  * Repairs a refused close, or carries on a repair a previous run did not finish.
@@ -173,6 +177,7 @@ export async function repairClose(
       return isNetwork(error) ? { kind: 'interrupted' } : { kind: 'refused', ...refusal };
     }
     if (!due?.is_recurring) return { kind: 'refused', ...refusal };
+    if (!ctx.userId) return { kind: 'interrupted' };
     const order = [ctx.userLang, due.lang, ...TODOIST_LANGS]
       .filter((lang): lang is string => !!lang && lang !== due.lang);
     entry = {
@@ -211,6 +216,9 @@ export async function repairClose(
 
     const status = response.sync_status ?? {};
     const closed = status[closeUuid];
+    // An omitted status or cursor is ambiguous even on HTTP 200. Retain the
+    // same attempt and UUIDs so replay cannot advance a recurring task twice.
+    if (!response.sync_token || !status[updateUuid] || !closed) return { kind: 'interrupted' };
     if (closed === 'ok') {
       await dropEntry(entry.closeUuid);
       return { kind: 'repaired', response };

@@ -1,4 +1,6 @@
-import { ApiError, request } from './client';
+import { resolveCommandIds } from './commandIds';
+export { resolveCommandIds } from './commandIds';
+import { ApiError, pauseForServer, request } from './client';
 import { SYNC_RESOURCE_TYPES, type SyncResponse } from './sync';
 import { loadJournal, repairClose, type RepairContext } from './repair';
 
@@ -61,35 +63,34 @@ export interface CommandResult {
   error?: unknown;
 }
 
-/** Replaces every temporary id that Todoist has resolved, wherever it sits in a command's arguments. */
-function resolveIds(value: unknown, mapping: Record<string, string>): unknown {
-  if (typeof value === 'string') return mapping[value] ?? value;
-  if (Array.isArray(value)) return value.map((entry) => resolveIds(entry, mapping));
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, entry]) => [mapping[key] ?? key, resolveIds(entry, mapping)]),
-    );
-  }
-  return value;
+/** Whether a command names, in an identifier field, one of these temporary ids. */
+function dependsOn(cmd: Command, tempIds: Set<string>): boolean {
+  const probe = Object.fromEntries([...tempIds].map((id) => [id, `\u0000${id}`]));
+  return JSON.stringify(resolveCommandIds([cmd], probe)[0].args) !== JSON.stringify(cmd.args);
 }
 
-/** Cuts a list of commands into requests Todoist will accept, keeping their order. */
-function chunk(commands: Command[]): Command[][] {
+/** The form is percent-encoded on the wire; UTF-8 JSON size alone is smaller. */
+function encodedSize(commands: Command[], token: string): number {
+  const form = new URLSearchParams({
+    sync_token: token,
+    resource_types: JSON.stringify(SYNC_RESOURCE_TYPES),
+    commands: JSON.stringify(commands.map(({ estimateMinutes: _estimate, ...cmd }) => cmd)),
+  });
+  return new TextEncoder().encode(form.toString()).length;
+}
+
+/** Cuts a list into ordered requests, including percent-encoding and metadata. */
+function chunk(commands: Command[], token: string): Command[][] {
   const chunks: Command[][] = [];
   let current: Command[] = [];
-  let bytes = 0;
   for (const cmd of commands) {
-    const size = new TextEncoder().encode(JSON.stringify(cmd)).length;
-    if (current.length > 0
-      && (current.length >= MAX_COMMANDS_PER_CALL || bytes + size > MAX_BODY_BYTES)) {
+    const next = [...current, cmd];
+    if (current.length && (next.length > MAX_COMMANDS_PER_CALL || encodedSize(next, token) > MAX_BODY_BYTES)) {
       chunks.push(current);
-      current = [];
-      bytes = 0;
-    }
-    current.push(cmd);
-    bytes += size;
+      current = [cmd];
+    } else current = next;
   }
-  if (current.length > 0) chunks.push(current);
+  if (current.length) chunks.push(current);
   return chunks;
 }
 
@@ -126,12 +127,24 @@ export async function sendCommands(
     responses: [], failures: [], mapping: {}, delivered: [], undelivered: [],
   };
   let token = syncToken;
-  const chunks = chunk(commands.filter((cmd) => !resuming.has(cmd.uuid)));
+  const chunks = chunk(commands.filter((cmd) => !resuming.has(cmd.uuid)), token);
 
   for (let at = 0; at < chunks.length; at += 1) {
     const batch = chunks[at].map((cmd) =>
-      at === 0 ? cmd : { ...cmd, args: resolveIds(cmd.args, result.mapping) as Command['args'] });
+      at === 0 ? cmd : { ...cmd, args: resolveCommandIds([cmd], result.mapping)[0].args });
 
+    if (encodedSize(batch, token) > MAX_BODY_BYTES) {
+      // A single oversized command is rejected locally with a visible reason;
+      // unrelated commands in following chunks still have their turn.
+      if (batch.length === 1) {
+        result.failures.push({ uuid: batch[0].uuid, error: 'This change is too large to send to Todoist.' });
+        result.delivered.push(batch[0].uuid);
+        continue;
+      }
+      result.undelivered = chunks.slice(at).flat();
+      result.error = new Error('Encoded request is too large');
+      return result;
+    }
     try {
       const response = await request<SyncResponse>('/sync', {
         method: 'POST',
@@ -144,24 +157,88 @@ export async function sendCommands(
           commands: JSON.stringify(batch.map(({ estimateMinutes: _estimate, ...cmd }) => cmd)),
         },
       });
+      // A 200 response is not an acknowledgement of commands it does not name.
+      // Keep the entire ambiguous batch with the original UUIDs: Todoist can
+      // deduplicate a retry if it processed a command before the answer was lost.
+      const status = response?.sync_status;
+      const missingMapping = batch.some((cmd) => cmd.temp_id && status?.[cmd.uuid] === 'ok'
+        && typeof response?.temp_id_mapping?.[cmd.temp_id] !== 'string');
+      const valid = typeof response?.sync_token === 'string' && response.sync_token.length > 0
+        && status && typeof status === 'object'
+        && batch.every((cmd) => {
+          const entry = status[cmd.uuid];
+          if (entry === 'ok') {
+            // A successful creation is not safely settled until its real id
+            // is known. Replaying the same UUID must never strand dependents.
+            return !cmd.temp_id || typeof response.temp_id_mapping?.[cmd.temp_id] === 'string';
+          }
+          return entry && typeof entry === 'object' && typeof entry.error === 'string';
+        });
+      if (!valid) {
+        result.undelivered = chunks.slice(at).flat()
+          .map((cmd) => ({ ...cmd, args: resolveCommandIds([cmd], result.mapping)[0].args }));
+        result.error = new Error(missingMapping
+          ? 'Todoist did not return an identifier for a confirmed creation'
+          : 'Todoist did not acknowledge every command');
+        return result;
+      }
       result.responses.push(response);
       Object.assign(result.mapping, response.temp_id_mapping ?? {});
-      for (const [uuid, status] of Object.entries(response.sync_status ?? {})) {
-        if (status !== 'ok') {
-          const cmd = batch.find((candidate) => candidate.uuid === uuid);
-          result.failures.push({ uuid, error: status.error,
-            ...(status.error_tag ? { errorTag: status.error_tag } : {}),
-            ...(status.error_tag === 'INVALID_DATE' && cmd?.type === 'item_close' ? { commandType: cmd.type } : {}) });
+      const transient = new Set<string>();
+      /* A command that names something a deferred command was to create fails
+         for that reason alone: it is deferred with it, not refused for good. */
+      const deferredTempIds = new Set<string>();
+      let transientStatus = 503;
+      for (const cmd of batch) {
+        const status = response.sync_status?.[cmd.uuid];
+        if (!status || status === 'ok') continue;
+        const throttled = status.error_code === 429 || /RATE_LIMIT|TOO_MANY_REQUESTS/i.test(status.error_tag ?? '');
+        const serverFailure = status.error_code >= 500 && status.error_code <= 599;
+        if (throttled || serverFailure || (deferredTempIds.size > 0 && dependsOn(cmd, deferredTempIds))) {
+          transient.add(cmd.uuid);
+          if (cmd.temp_id) deferredTempIds.add(cmd.temp_id);
+          if (throttled) {
+            transientStatus = 429;
+            const extra = status as typeof status & { error_extra?: { retry_after?: number } };
+            pauseForServer((extra.error_extra?.retry_after ?? 1) * 1000);
+          }
+          continue;
         }
+        result.failures.push({ uuid: cmd.uuid, error: status.error,
+          ...(status.error_tag ? { errorTag: status.error_tag } : {}),
+          ...(status.error_tag === 'INVALID_DATE' && cmd.type === 'item_close' ? { commandType: cmd.type } : {}) });
       }
       token = response.sync_token ?? token;
+      if (transient.size) {
+        result.delivered.push(...batch.filter((cmd) => !transient.has(cmd.uuid)).map((cmd) => cmd.uuid));
+        result.undelivered = [...batch.filter((cmd) => transient.has(cmd.uuid)), ...chunks.slice(at + 1).flat()]
+          .map((cmd) => ({ ...cmd, args: resolveCommandIds([cmd], result.mapping)[0].args }));
+        result.error = new ApiError('Todoist temporarily deferred a command', transientStatus);
+        await repairRefusedCloses(result, commands, held, { ...account, syncToken: token });
+        return result;
+      }
     } catch (error) {
-      if (error instanceof ApiError && error.isRefusal) {
+      /* The cursor this device kept is unknown to Todoist. That says nothing
+         about the change: send it again with a full cursor, once. */
+      if (error instanceof ApiError && error.isInvalidSyncToken && token !== '*') {
+        token = '*';
+        at -= 1;
+        continue;
+      }
+      if (error instanceof ApiError && error.status === 413 && batch.length > 1) {
+        // A proxy can enforce a lower limit than Todoist. Split and retry
+        // the same UUIDs in order instead of treating every edit as refused.
+        const middle = Math.ceil(batch.length / 2);
+        chunks.splice(at, 1, batch.slice(0, middle), batch.slice(middle));
+        at -= 1;
+        continue;
+      }
+      if (error instanceof ApiError && error.isRefusal && !error.isInvalidSyncToken) {
         for (const cmd of batch) result.failures.push({ uuid: cmd.uuid, error: error.detail });
       } else {
         if (at === 0) throw error;
         result.undelivered = chunks.slice(at).flat()
-          .map((cmd) => ({ ...cmd, args: resolveIds(cmd.args, result.mapping) as Command['args'] }));
+          .map((cmd) => ({ ...cmd, args: resolveCommandIds([cmd], result.mapping)[0].args }));
         result.error = error;
         return result;
       }

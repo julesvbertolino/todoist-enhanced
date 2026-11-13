@@ -21,7 +21,7 @@ async function openAccount(page: Page, projects: Array<Record<string, unknown>>,
   await page.evaluate(async (version) => {
     localStorage.setItem('tde.token', 'fictitious-test-token-only');
     localStorage.setItem('onboarded', JSON.stringify(['account-test']));
-    const db = await new Promise<IDBDatabase>((resolve, reject) => { const request = indexedDB.open('todoist-enhancements', 1); request.onupgradeneeded = () => { const d = request.result; for (const [name, options] of [['snapshot', undefined], ['prefs', undefined], ['queue', { keyPath: 'uuid' }]] as const) if (!d.objectStoreNames.contains(name)) d.createObjectStore(name, options); }; request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
+    const db = await new Promise<IDBDatabase>((resolve, reject) => { const request = indexedDB.open('todoist-enhancements'); request.onupgradeneeded = () => { const d = request.result; for (const [name, options] of [['snapshot', undefined], ['prefs', undefined], ['queue', { keyPath: 'uuid' }]] as const) if (!d.objectStoreNames.contains(name)) d.createObjectStore(name, options); }; request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
     const tx = db.transaction('prefs', 'readwrite');
     tx.objectStore('prefs').put({ locale: 'en', onboarded: true, setupDone: true, pomodoroAsked: true, seenVersion: version, estimateStorage: 'tag', hireNoteSeen: true }, 'preferences');
     await new Promise<void>((resolve, reject) => { tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error); });
@@ -202,7 +202,7 @@ async function openWorkspaceAccount(page: Page, options: { refuse?: string } = {
   await page.evaluate(async (version) => {
     localStorage.setItem('tde.token', 'fictitious-test-token-only');
     localStorage.setItem('onboarded', JSON.stringify(['account-test']));
-    const db = await new Promise<IDBDatabase>((resolve, reject) => { const request = indexedDB.open('todoist-enhancements', 1); request.onupgradeneeded = () => { const d = request.result; for (const [name, options] of [['snapshot', undefined], ['prefs', undefined], ['queue', { keyPath: 'uuid' }]] as const) if (!d.objectStoreNames.contains(name)) d.createObjectStore(name, options); }; request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
+    const db = await new Promise<IDBDatabase>((resolve, reject) => { const request = indexedDB.open('todoist-enhancements'); request.onupgradeneeded = () => { const d = request.result; for (const [name, options] of [['snapshot', undefined], ['prefs', undefined], ['queue', { keyPath: 'uuid' }]] as const) if (!d.objectStoreNames.contains(name)) d.createObjectStore(name, options); }; request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
     const tx = db.transaction('prefs', 'readwrite');
     tx.objectStore('prefs').put({ locale: 'en', onboarded: true, setupDone: true, pomodoroAsked: true, seenVersion: version, estimateStorage: 'tag', hireNoteSeen: true }, 'preferences');
     await new Promise<void>((resolve, reject) => { tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error); });
