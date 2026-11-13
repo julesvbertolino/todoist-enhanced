@@ -1,4 +1,9 @@
+import { pauseKey, pauseUntil, rememberPause, retryDelay } from './throttle';
+export { resetRetryPauses, retryDeadline, pauseForServer, retryDelay } from './throttle';
+import { sessionSignal } from './session';
+import { networkTurn, recordNetworkAttempt } from './networkPolicy';
 import { auth } from './auth';
+import { accountOnDevice } from '@/lib/accountWatch';
 
 export const API_BASE = 'https://api.todoist.com/api/v1';
 
@@ -46,6 +51,10 @@ export class ApiError extends Error {
    * change must be rolled back and the command dropped rather than queued to
    * be retried for ever.
    */
+  get isInvalidSyncToken(): boolean {
+    return this.parsedBody.error_tag === 'INVALID_SYNC_TOKEN';
+  }
+
   get isRefusal(): boolean {
     return this.status >= 400 && this.status < 500 && this.status !== 429 && !this.isAuthError;
   }
@@ -112,6 +121,7 @@ interface RequestOptions {
   /** Sent as a form body, which is what the sync endpoint expects. */
   form?: Record<string, string>;
   json?: unknown;
+  upload?: FormData;
   query?: Record<string, string | number | undefined>;
   signal?: AbortSignal;
   /** How many times to retry on 429 or a 5xx. */
@@ -130,6 +140,10 @@ interface RequestOptions {
  * the next poll, or the next reconnect, tries again (#133).
  */
 export const MAX_RETRY_WAIT_MS = 30_000;
+
+/** The longest a call waits for its turn behind others before it is treated as unreachable. */
+const QUEUE_WAIT_MS = 90_000;
+
 
 const aborted = () => new DOMException('Aborted', 'AbortError');
 
@@ -152,12 +166,22 @@ const sleep = (ms: number, signal?: AbortSignal) => new Promise<void>((resolve, 
  * wrong and trying again cannot fix it.
  */
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const session = sessionSignal();
+  const controller = new AbortController();
+  const forward = () => controller.abort();
+  session.addEventListener('abort', forward, { once: true });
+  options.signal?.addEventListener('abort', forward, { once: true });
+  if (session.aborted || options.signal?.aborted) controller.abort();
+  const signal = controller.signal;
+  try {
+  const owner = accountOnDevice();
   let token = await auth.getToken();
+  if (signal.aborted) throw aborted();
   if (!token) throw new NotConnectedError();
   let renewed = false;
 
   const {
-    method = 'GET', form, json, query, signal, retries = 3, timeoutMs = REQUEST_TIMEOUT_MS,
+    method = 'GET', form, json, upload, query, retries = 3, timeoutMs = REQUEST_TIMEOUT_MS,
   } = options;
 
   const url = new URL(`${API_BASE}${path}`);
@@ -168,11 +192,13 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   }
 
   const headers: Record<string, string> = {};
-  let body: string | undefined;
+  let body: string | FormData | undefined;
 
   if (form) {
     headers['Content-Type'] = 'application/x-www-form-urlencoded';
     body = new URLSearchParams(form).toString();
+  } else if (upload) {
+    body = upload;
   } else if (json !== undefined) {
     headers['Content-Type'] = 'application/json';
     body = JSON.stringify(json);
@@ -182,25 +208,54 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   for (;;) {
     // A caller that has left has nothing to wait for and nothing to send.
     if (signal?.aborted) throw aborted();
-    /* The deadline covers the whole answer, body included: a response that
-       starts and then stalls is as stuck as one that never starts. */
-    const deadline = withDeadline(signal, timeoutMs);
+    const key = pauseKey();
+    const remaining = pauseUntil(key) - Date.now();
+    if (remaining > MAX_RETRY_WAIT_MS) throw new ApiError('Todoist asked us to wait before retrying', 429);
+    if (remaining > 0) await sleep(remaining, signal);
+    // Never send a queued request after another window switches accounts.
+    if (owner !== accountOnDevice()) throw new Error('Account changed while the request was waiting');
+    /* Two separate clocks. Waiting for the shared network turn (other calls,
+       other windows) is bounded by QUEUE_WAIT_MS and never looks like a lost
+       network on its own; the request deadline starts only once this call is
+       sent, and covers the whole answer, body included: a response that starts
+       and then stalls is as stuck as one that never starts. */
+    const queued = withDeadline(signal, QUEUE_WAIT_MS);
     let response: Response;
     let text: string;
     try {
-      response = await fetch(url, {
-        method, headers: { ...headers, Authorization: `Bearer ${token}` }, body,
-        signal: deadline.signal,
-      });
-      /* Read inside the same guard, with no catch of its own: an abort during
-         the body is the deadline firing, and swallowing it here made a stalled
-         download look like an empty success (#127). */
-      text = await response.text();
+      const priority = path.startsWith('/sync') ? (form?.commands ? 2 : 1) : 0;
+      ({ response, text } = await networkTurn(async () => {
+        queued.done();
+        if (owner !== accountOnDevice()) throw new Error('Account changed while the request was waiting');
+        const blocked = pauseUntil(key) - Date.now();
+        if (blocked > 0) throw new ApiError('Todoist asked us to wait before retrying', 429);
+        const deadline = withDeadline(signal, timeoutMs);
+        try {
+          recordNetworkAttempt(priority);
+          const response = await fetch(url, {
+            method, headers: { ...headers, Authorization: `Bearer ${token}` }, body,
+            signal: deadline.signal,
+          });
+          const text = await response.text();
+          // Publish the pause before releasing the shared network turn.
+          if (response.status === 429) {
+            const asked = retryDelay(response.headers.get('retry-after'), text);
+            const wait = asked ?? Math.min(MAX_RETRY_WAIT_MS, 2 ** attempt * 1000) * (0.8 + Math.random() * 0.4);
+            rememberPause(key, Date.now() + wait);
+          }
+          return { response, text };
+        } catch (error) {
+          if (deadline.timedOut()) throw new TimeoutError();
+          throw error;
+        } finally {
+          deadline.done();
+        }
+      }, priority, queued.signal));
     } catch (error) {
-      if (deadline.timedOut()) throw new TimeoutError();
+      if (queued.timedOut()) throw new TimeoutError();
       throw error;
     } finally {
-      deadline.done();
+      queued.done();
     }
 
     /* A signed-in access token lasts an hour; one that ran out between the
@@ -240,12 +295,13 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     };
 
     const retriable = response.status === 429 || response.status >= 500;
+    const asked = retryDelay(response.headers.get('retry-after'), text);
+    if (response.status === 429) {
+      // Even the last attempt must leave its deadline for the next caller.
+      const delay = asked ?? Math.min(MAX_RETRY_WAIT_MS, 2 ** attempt * 1000) * (0.8 + Math.random() * 0.4);
+      rememberPause(key, Date.now() + delay);
+    }
     if (!retriable || attempt >= retries) throw refusal();
-
-    /* The API tells us how long to wait, and is obeyed exactly, up to a
-       limit: past it there is no waiting at all (see MAX_RETRY_WAIT_MS). */
-    const retryAfter = Number(response.headers.get('retry-after'));
-    const asked = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : null;
     if (asked !== null && asked > MAX_RETRY_WAIT_MS) throw refusal();
 
     /* Without an instruction, exponential backoff, spread a little: several
@@ -255,5 +311,9 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
 
     await sleep(waitMs, signal);
     attempt += 1;
+  }
+  } finally {
+    session.removeEventListener('abort', forward);
+    options.signal?.removeEventListener('abort', forward);
   }
 }

@@ -1,6 +1,4 @@
 import { useDataSnapshot } from '@/hooks/useDataSnapshot';
-import { useProjectCompletionCounts } from '@/hooks/useProjectCompletionCounts';
-import { isUncompletable } from '@/domain/types';
 import { openItems } from './store/selectors';
 import { useLabelRenames } from './hooks/useLabelRenames';
 import { seesHireNote } from '@/domain/hireNote';
@@ -695,14 +693,6 @@ function AppShell({
 }: ShellProps) {
   const { t } = useT();
   const { snapshot, items, childrenOf } = useData(route.view === 'project' ? `project:${route.id}` : route.view === 'label' ? `label:${route.id}` : route.view === 'filter' ? `filter:${route.id}` : route.view);
-  const completedProjectCounts = useProjectCompletionCounts(snapshot);
-  const projectProgressCounts = useMemo(() => {
-    const open: Record<string, number> = {};
-    for (const item of openItems(snapshot)) {
-      if (!isUncompletable(item)) open[item.project_id] = (open[item.project_id] ?? 0) + 1;
-    }
-    return { open, completed: completedProjectCounts };
-  }, [snapshot, completedProjectCounts]);
   const conflictSettings = useStore((s) => s.prefs.conflicts);
   const demo = useStore((s) => s.demo);
   const updateReady = useUpdateReady();
@@ -888,8 +878,7 @@ function AppShell({
     onUnestimated: openUnestimated,
     onAddTaskTo: addTaskTo,
     onProjectSheet: setProjectSheet,
-    projectProgressCounts,
-  }), [openTask, openInsights, openUnestimated, addTaskTo, setProjectSheet, projectProgressCounts]);
+  }), [openTask, openInsights, openUnestimated, addTaskTo, setProjectSheet]);
 
   // Overlay state belongs to the shell; keep the unchanged page subtree intact.
   const pageContent = useMemo(() => (<Suspense fallback={<p role="status">{t('common.loading')}</p>}>
@@ -935,7 +924,6 @@ function AppShell({
     >
       <Sidebar
         route={route}
-        projectProgressCounts={projectProgressCounts}
         onAddTask={addTask}
         onSearch={() => setSearchOpen(true)}
         onIssues={() => setIssuesOpen(true)}
@@ -1066,8 +1054,7 @@ function AppShell({
           </div>
           <Sidebar
             route={route}
-            projectProgressCounts={projectProgressCounts}
-            variant="sheet"
+                variant="sheet"
             onAddTask={() => { setBrowseOpen(false); addTask(); }}
             onSearch={() => { setBrowseOpen(false); setSearchOpen(true); }}
             onIssues={() => { setBrowseOpen(false); setIssuesOpen(true); }}

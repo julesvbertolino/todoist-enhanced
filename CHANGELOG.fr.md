@@ -8,6 +8,20 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.33.0
+
+🐛 **Les tâches récurrentes réinitialisent leurs sous-tâches.** Si l’option est activée dans Todoist, terminer une tâche récurrente prépare ses sous-tâches directes pour la prochaine occurrence.
+
+🎨 **Les vues vides sont plus visuelles.** Une illustration et un message vous aident à démarrer quand un projet ou une vue ne contient aucune tâche.
+
+🎨 **Choisissez une icône et une couleur.** Cliquez sur l’icône dans le titre d’un projet pour choisir son icône et sa couleur au même endroit.
+
+🎨 **Des icônes de projet plus simples.** Le cercle de progression des projets disparaît : il causait des bugs de synchronisation, car Enhanced devait lire toutes vos tâches terminées en arrière-plan pour le dessiner. Un projet sans icône personnalisée affiche de nouveau un simple #.
+
+🐛 **Sachez quand une deadline nécessite Pro.** Les comptes gratuits voient pourquoi une deadline demande un abonnement Todoist Pro ou Business avant de l’ajouter.
+
+🐛 **Améliorations et corrections de synchronisation.** Enhanced gère mieux certaines interruptions et limites de requêtes de Todoist.
+
 ## 2.32.4
 
 🎨 **Estimez plus vite dans les notifications.** Une tâche sans estimation propose maintenant un menu des durées habituelles (15 min, 30 min, 1 h…) à la place d’un champ vide. Vous pouvez toujours saisir une autre durée.

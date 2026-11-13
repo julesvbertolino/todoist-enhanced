@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-vi.mock('@/db/idb', () => ({ savePrefs: vi.fn(async () => {}), saveSnapshot: vi.fn(async () => {}), enqueue: vi.fn(async () => {}), dequeue: vi.fn(async () => {}), updateQueued: vi.fn(async () => {}), readQueue: vi.fn(async () => []) }));
+vi.mock('@/db/idb', () => ({ savePrefs: vi.fn(async () => {}), saveSnapshot: vi.fn(async () => {}), reserveSnapshot: vi.fn(async () => ({ epoch: 'test', revision: 1 })), enqueue: vi.fn(async () => {}), dequeue: vi.fn(async () => {}), updateQueued: vi.fn(async () => {}), readQueue: vi.fn(async () => []) }));
 vi.mock('@/api/commands', async (original) => ({ ...(await original<typeof import('@/api/commands')>()), sendCommands: vi.fn() }));
 import { sendCommands, type Command } from '@/api/commands';
 import { emptySnapshot } from '@/domain/types';

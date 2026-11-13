@@ -40,7 +40,7 @@ export function TableCells({ item, columns, childrenOf, hideProject = false }: {
     let content;
     if (column === 'date' || column === 'deadline') {
       const due = column === 'date';
-      content = <DateField value={(due ? item.due?.date : item.deadline?.date) ?? ''}
+      content = <DateField premiumDeadline={!due} value={(due ? item.due?.date : item.deadline?.date) ?? ''}
         label={t(tableColumnLabel[column])} withTime={due}
         recurrence={due && item.due?.is_recurring ? { string: item.due.string, lang: item.due.lang } : null}
         onRecurrence={due ? (rule) => void setRecurrence(item.id, rule) : undefined}

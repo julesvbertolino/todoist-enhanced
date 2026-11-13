@@ -174,3 +174,13 @@
 
 .cv-mx-head{display:flex;align-items:center;gap:7px;margin-bottom:8px;font-size:11px}.cv-mx-tab{margin-left:auto;padding:2px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent-dark);font-size:9px;font-weight:650}
 .cv-daynav{display:inline-flex;gap:2px;color:var(--muted);opacity:.7}
+
+.cv-empty-project { display:flex; flex-direction:column; align-items:center; gap:5px; text-align:center; }
+.cv-empty-project strong { color:var(--text); }
+.cv-empty-project span { color:var(--muted); }
+.cv-empty-project b { padding:6px 12px; border-radius:999px; color:white; background:var(--accent); margin-top:4px; }
+
+.cv-picker.ptitle-icons{position:static;width:340px!important}
+.cv-picker .iconpickergrid{height:38px!important;overflow:hidden}
+.cv-picker .project-picker-color-label{margin:8px 0 4px}
+.cv-picker{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--sh-md);padding:12px}

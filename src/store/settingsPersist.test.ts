@@ -9,6 +9,10 @@ vi.mock('@/api/sync', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/sync')>()),
   sync: vi.fn(),
 }));
+vi.mock('@/api/client', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/client')>()),
+  request: vi.fn(),
+}));
 vi.mock('@/api/commands', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/commands')>()),
   sendCommands: vi.fn(),
@@ -16,6 +20,7 @@ vi.mock('@/api/commands', async (importOriginal) => ({
 
 import * as idb from '@/db/idb';
 import { sync } from '@/api/sync';
+import { request } from '@/api/client';
 import { sendCommands, type Command, type CommandResult } from '@/api/commands';
 import { emptySnapshot, type Note, type TodoistUser } from '@/domain/types';
 import { useStore } from './store';
@@ -65,6 +70,7 @@ beforeEach(() => {
   resetPrefsDirty();
   sent.mockImplementation(async (_token, commands) => ok(commands));
   read.mockResolvedValue({ sync_token: 'next', full_sync: false });
+  vi.mocked(request).mockResolvedValue({ results: [], next_cursor: null });
 });
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -116,6 +122,18 @@ describe('a setting changed just before the app closed', () => {
 });
 
 describe('a setting changed while the settings are being written', () => {
+  it('merges a local change with a different setting written by another window', async () => {
+    start(false, accountSays(false, 1_000));
+    const remote = accountSays(false, 2_000);
+    remote.content = settingsCommentContent({ ...defaultPreferences('en'), theme: 'dark' }, 2_000);
+    vi.mocked(request).mockResolvedValue({ results: [remote], next_cursor: null });
+    useStore.getState().setPrefs({ hour12: true });
+    await useStore.getState().ensurePreferencesTask(true);
+    const write = sent.mock.calls.flatMap((call) => call[1]).find((cmd) => cmd.type === 'note_update');
+    const saved = readSettingsComment(String(write?.args.content));
+    expect(saved?.hour12).toBe(true);
+    expect(saved?.theme).toBe('dark');
+  });
   it('is written too, once the write under way is done', async () => {
     start(false, accountSays(false, 1_000));
     let release: () => void = () => {};

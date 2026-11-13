@@ -1,3 +1,4 @@
+import { CursorGuard } from './pagination';
 import { ApiError, request } from './client';
 import type { CompletedItem, Item, Note } from '@/domain/types';
 
@@ -22,6 +23,7 @@ export async function fetchTask(id: string): Promise<Item | null> {
 export async function fetchComments(taskId: string): Promise<Note[]> {
   const notes: Note[] = [];
   let cursor: string | undefined;
+  const guard = new CursorGuard();
   do {
     const page = await request<{ results?: Array<Partial<Note> & { task_id?: string }>; next_cursor?: string | null }>(
       '/comments', { query: { task_id: taskId, cursor } },
@@ -34,6 +36,7 @@ export async function fetchComments(taskId: string): Promise<Note[]> {
         is_deleted: note.is_deleted ?? false,
       } as Note);
     }
+    guard.next(page.next_cursor);
     cursor = page.next_cursor ?? undefined;
   } while (cursor);
   return notes;

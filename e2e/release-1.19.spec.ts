@@ -128,7 +128,7 @@ test('#154 an empty tag page has its add line', async ({ demo: page }) => {
   // Complete its one task so the page is empty.
   await rows(page).first().getByRole('checkbox').click();
   await expect(rows(page)).toHaveCount(0);
-  await expect(page.locator('.screen.active .sectionadd')).toBeVisible();
+  await expect(page.locator('.screen.active .project-empty-cta')).toBeVisible();
 });
 
 test('⌘A then ⌘⌫ deletes the selection with no task under the cursor', async ({ demo: page }) => {
