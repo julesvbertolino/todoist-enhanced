@@ -37,13 +37,14 @@ const SettingsView = lazy(() => import('./views/SettingsView').then((module) => 
 const EisenhowerView = lazy(() => import('./views/EisenhowerView').then((module) => ({ default: module.EisenhowerView })));
 import { ConnectView } from './views/ConnectView';
 import { EstimateStorageDialog } from './components/overlays/EstimateStorageDialog';
-import { Walkthrough } from './components/overlays/Walkthrough';
+const Walkthrough = lazy(() => import('./components/overlays/Walkthrough').then((module) => ({ default: module.Walkthrough })));
 import { PomodoroFocus } from './components/overlays/PomodoroFocus';
 import { PomodoroAsk } from './components/overlays/PomodoroAsk';
 import { usePomodoro } from './store/pomodoro';
 import { Tour } from './components/overlays/Tour';
 import { InstallPrompt } from './components/overlays/InstallPrompt';
-import { WhatsNew, type WhatsNewScope } from './components/overlays/WhatsNew';
+import type { WhatsNewScope } from './components/overlays/WhatsNew';
+const WhatsNew = lazy(() => import('./components/overlays/WhatsNew').then((module) => ({ default: module.WhatsNew })));
 import { compareVersions, hasChanges, parseChangelog, unseenReleases } from './domain/changelog';
 import { VERSION } from './app-info';
 import { hasOnboarded, shouldAskEstimateStorage } from './domain/onboarding';
@@ -449,7 +450,8 @@ export function App() {
       <PomodoroFocus />
       <MacUpdateCard enabled={!QUICK_ADD && ready && (connected || demo) && !tourOpen && !walkthroughOpen && !whatsNew} />
       <PomodoroAsk open={askPomodoro && !pomodoroAsked} onClose={() => setAskPomodoro(false)} />
-      <Walkthrough
+      {walkthroughOpen && <Suspense fallback={null}>
+        <Walkthrough
         open={walkthroughOpen}
         onDone={() => setWalkthrough(false)}
         onTour={() => {
@@ -460,6 +462,7 @@ export function App() {
           setTourOpen(true);
         }}
       />
+      </Suspense>}
       <Tour
         open={tourOpen}
         versions={tourVersions}
@@ -468,7 +471,8 @@ export function App() {
           setTourVersions(null);
         }}
       />
-      <WhatsNew
+      {whatsNew !== null && <Suspense fallback={null}>
+        <WhatsNew
         scope={whatsNew}
         onSeeChangelog={() => {
           setPrefs({ seenVersion: VERSION });
@@ -487,6 +491,7 @@ export function App() {
           window.setTimeout(() => setTourOpen(true), 100);
         }}
       />
+      </Suspense>}
 
       {/* Both lanes are always in the page, empty when there is nothing to
           say: a live region has to exist before its text is put in, or most

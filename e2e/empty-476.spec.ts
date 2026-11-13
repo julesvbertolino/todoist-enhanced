@@ -1,6 +1,9 @@
 import { test, expect, go } from './demo';
 
+/* The first and last journeys set the store directly, which only a development build exposes. */
+
 test('empty lists explain the view and preserve the correct add action', async ({ demo: page }) => {
+  test.skip(process.env.PLAYWRIGHT_DEV !== '1', 'Uses the development store fixture');
   await page.evaluate(() => {
     const store = (window as unknown as { __store: { getState: () => any; setState: (v: any) => void } }).__store; // eslint-disable-line @typescript-eslint/no-explicit-any
     const state = store.getState();
@@ -29,6 +32,7 @@ test('the project picker keeps all colours visible', async ({ demo: page }) => {
 });
 
 test('a free account sees the deadline explanation from the usual composer button', async ({ demo: page }) => {
+  test.skip(process.env.PLAYWRIGHT_DEV !== '1', 'Uses the development store fixture');
   await page.route('https://api.todoist.com/**', (route) => route.fulfill({ json: route.request().url().includes('/sync') ? { sync_token: 'test', full_sync: false } : { results: [], items: [], next_cursor: null } }));
   await page.evaluate(() => {
     const store = (window as unknown as { __store: { getState: () => any; setState: (v: any) => void } }).__store; // eslint-disable-line @typescript-eslint/no-explicit-any
