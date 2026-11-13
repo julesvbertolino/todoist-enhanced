@@ -130,7 +130,7 @@ export function WhatsNew({ scope, onClose, onShowMe, onSeeChangelog }: WhatsNewP
             {description && <span className="whatsnew-para" dangerouslySetInnerHTML={{ __html: renderTitle(description) }} />}
           </span>
         </div>
-        <Suspense fallback={<div className="changelog-preview" aria-hidden="true" />}><ChangelogPreview kind={visual} /></Suspense>
+        {visual && <Suspense fallback={<div className="changelog-preview" aria-hidden="true" />}><ChangelogPreview kind={visual} /></Suspense>}
       </>
     );
   };
