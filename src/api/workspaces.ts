@@ -1,3 +1,4 @@
+import { CursorGuard } from './pagination';
 import { request } from './client';
 import type { Project } from '@/domain/types';
 export interface WorkspaceMember {
@@ -6,6 +7,7 @@ export interface WorkspaceMember {
 export async function fetchWorkspaceCollection<T>(path: string, field: 'results' | 'workspace_projects' | 'workspace_users', signal?: AbortSignal): Promise<T[]> {
   const all: T[] = [];
   let cursor: string | undefined;
+  const guard = new CursorGuard();
   do {
     const query = new URLSearchParams(path.split('?')[1]);
     query.set('limit', '100');
@@ -15,6 +17,7 @@ export async function fetchWorkspaceCollection<T>(path: string, field: 'results'
     all.push(...page[field]!);
     if (page.has_more && !page.next_cursor) throw new Error('Missing workspace cursor');
     if (cursor && page.next_cursor === cursor) throw new Error('Repeated workspace cursor');
+    if (page.has_more !== false) guard.next(page.next_cursor);
     cursor = page.has_more === false ? undefined : page.next_cursor;
   } while (cursor);
   return all;

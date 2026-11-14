@@ -1,12 +1,15 @@
+import { CursorGuard } from '@/api/pagination';
 /** The preferences, and the settings comment that carries them across devices. */
 import { latestSeenRelease, markReleaseSeen } from '@/domain/seenRelease';
 import { canStoreDurations } from '@/domain/estimates';
 import { request } from '@/api/client';
 import { command, type Command, deleteItem, newUuid } from '@/api/commands';
 import * as idb from '@/db/idb';
+import { leaseTurn } from '@/db/lease';
+import { mergePreferenceChanges } from '@/lib/mergeChanges';
 import { setWeekLabel, type Note, type Snapshot } from '@/domain/types';
 import { defaultSidebarNav } from '@/domain/sidebar';
-import { detectLocale } from '@/i18n';
+import { detectLocale, translate } from '@/i18n';
 import { buildDemoSnapshot } from '@/demo/demoData';
 import { defaultPreferences, hydratePreferences, viewPrefs as readViewPrefs, PREFERENCES_TASK_CONTENT, SETTINGS_COMMENT_MARKER, mergeSynced, readSettingsComment, settingsCommentContent, settingsCommentMatches, syncedPreferences, type Preferences } from './prefs';
 import { schedulePersist } from './helpers';
@@ -56,25 +59,38 @@ const tourPreferences = (prefs: Preferences): Preferences => ({
  * the account's.
  */
 export const PREFS_DIRTY_KEY = 'preferences-dirty';
+const PREFS_BASE_KEY = 'preferences-dirty-base';
 let dirtySince: number | null = null;
+let dirtyBase: Preferences | null = null;
 /** Changes to the settings since launch: a write only clears the mark it saw. */
 let dirtyGeneration = 0;
 /** A change made here arrived while the settings were being written: write again after. */
 let writeAgain = false;
+let journalWrites: Promise<void> = Promise.resolve();
+
+function journalPreferenceChange(get: () => AppState, before: Preferences, after: Preferences): void {
+  const owner = get().snapshot.user?.id;
+  if (!get().connected || get().demo || !owner) return;
+  journalWrites = journalWrites.catch(() => undefined).then(() => idb.appendPreferenceChange(owner, before, after));
+  void journalWrites.catch(() => get().toast(translate(get().prefs.locale, 'sync.storageFailed'), undefined, { tone: 'error' }));
+}
 
 export async function loadPrefsDirty(): Promise<void> {
   const stored = await idb.loadPrefs<number>(PREFS_DIRTY_KEY);
   dirtySince = typeof stored === 'number' && Number.isFinite(stored) ? stored : null;
+  dirtyBase = dirtySince === null ? null : await idb.loadPrefs<Preferences>(PREFS_BASE_KEY);
 }
 
 export function prefsDirtySince(): number | null {
   return dirtySince;
 }
 
-function markPrefsDirty() {
+function markPrefsDirty(base?: Preferences) {
   dirtyGeneration += 1;
   if (dirtySince !== null) return;
   dirtySince = Date.now();
+  dirtyBase = base ?? null;
+  if (dirtyBase) void idb.savePrefs(PREFS_BASE_KEY, dirtyBase);
   void idb.savePrefs(PREFS_DIRTY_KEY, dirtySince);
 }
 
@@ -82,13 +98,20 @@ export function clearPrefsDirty(generation?: number) {
   if (generation !== undefined && generation !== dirtyGeneration) return;
   if (dirtySince === null) return;
   dirtySince = null;
+  dirtyBase = null;
+  void idb.savePrefs(PREFS_BASE_KEY, null);
   void idb.savePrefs(PREFS_DIRTY_KEY, null);
 }
 
 /** For tests. */
 export function resetPrefsDirty() {
-  dirtySince = null; dirtyGeneration = 0; writeAgain = false;
+  dirtySince = null; dirtyBase = null; dirtyGeneration = 0; writeAgain = false;
   if (preferencesWriteTimer) { clearTimeout(preferencesWriteTimer); preferencesWriteTimer = null; }
+}
+
+export function cancelPreferencesWrite() {
+  if (preferencesWriteTimer) window.clearTimeout(preferencesWriteTimer);
+  preferencesWriteTimer = null;
 }
 
 export function schedulePreferencesWrite(get: () => AppState) {
@@ -143,6 +166,13 @@ export function remotePreferences(snapshot: Snapshot, local: Preferences): Prefe
      Settings written to the account after that change, from another device,
      are newer still and win. */
   if (remote && dirtySince !== null) {
+    if (dirtyBase) {
+      const fresh = mergeSynced(local, remote, local.locale);
+      const combined = mergePreferenceChanges(dirtyBase, local, fresh);
+      dirtyBase = fresh;
+      void idb.savePrefs(PREFS_BASE_KEY, fresh);
+      return combined;
+    }
     if ((remote.savedAt ?? 0) < dirtySince) {
       const seen = latestSeenRelease(snapshot.user?.id, local.seenVersion);
       return seen !== local.seenVersion ? { ...local, seenVersion: seen } : null;
@@ -200,11 +230,13 @@ export async function fetchSettingsComments(inbox: string): Promise<Note[] | nul
   try {
     const found: Note[] = [];
     let cursor: string | undefined;
+    const guard = new CursorGuard();
     do {
       const page = await request<{ results: Note[]; next_cursor?: string | null }>(
         '/comments', { query: { project_id: inbox, limit: 100, cursor } },
       );
       found.push(...page.results.filter((note) => note.content.startsWith(SETTINGS_COMMENT_MARKER)));
+      guard.next(page.next_cursor);
       cursor = page.next_cursor ?? undefined;
     } while (cursor);
     return found;
@@ -221,16 +253,20 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
     /* During the tour a change is the account's, not the tour's: it goes to
        the preferences kept aside, and is written when the tour ends. */
     if (tourPrefsBackup) {
+      const before = tourPrefsBackup;
       tourPrefsBackup = { ...tourPrefsBackup, ...patch };
+      journalPreferenceChange(get, before, tourPrefsBackup);
       tourPrefsChanged = true;
       if (get().connected && !get().demo) markPrefsDirty();
       void idb.savePrefs(PREFS_KEY, tourPrefsBackup);
       set({ prefs: tourPreferences({ ...get().prefs, ...patch }) });
       return;
     }
+    if (get().connected && !get().demo) markPrefsDirty(get().prefs);
     const prefs = { ...get().prefs, ...patch };
     if (prefs.estimateStorage === 'duration' && !canStoreDurations(get().snapshot.user)) prefs.estimateStorage = 'tag';
     if (patch.weekLabel !== undefined) setWeekLabel(prefs.weekLabel);
+    journalPreferenceChange(get, get().prefs, prefs);
     set({ prefs });
     void idb.savePrefs(PREFS_KEY, prefs);
     schedulePreferencesWrite(get);
@@ -243,6 +279,7 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
       set({ prefs: { ...get().prefs, ...(fullWidth === undefined ? {} : { listFullWidth: fullWidth }), views: { ...get().prefs.views, [viewKey]: { ...current, ...own } } } });
       return;
     }
+    if (get().connected && !get().demo) markPrefsDirty(get().prefs);
     const current = readViewPrefs(get().prefs, viewKey);
     /* Full width belongs to no page: it is the lists' as a whole (#403). */
     const { fullWidth, ...own } = patch;
@@ -251,6 +288,7 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
       ...(fullWidth === undefined ? {} : { listFullWidth: fullWidth }),
       views: { ...get().prefs.views, [viewKey]: { ...current, ...own } },
     };
+    journalPreferenceChange(get, get().prefs, prefs);
     set({ prefs });
     void idb.savePrefs(PREFS_KEY, prefs);
     schedulePreferencesWrite(get);
@@ -288,12 +326,20 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
    */
   async ensurePreferencesTask(localChange = false) {
     if (!get().connected || get().demo || tourSnapshotBackup) return;
+    localChange ||= dirtySince !== null;
     /* Already writing: a change made here since would be lost if this call
        simply stopped, and the next sync would read the old settings back. */
     if (creatingPreferencesTask) { if (localChange) writeAgain = true; return; }
     creatingPreferencesTask = true;
     const generation = dirtyGeneration;
+    const owner = get().snapshot.user?.id;
+    const stillOwner = () => Boolean(owner && get().connected && get().snapshot.user?.id === owner);
+    const write = async () => {
     try {
+      if (!stillOwner()) return;
+      try { await journalWrites; } catch { return; }
+      const changes = await idb.readPreferenceChanges<Preferences>(owner!);
+      localChange ||= changes.length > 0;
       let snapshot = get().snapshot;
       const inbox = snapshot.user?.inbox_project_id;
       if (!inbox) return;
@@ -302,9 +348,36 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
       // Offline edits may update a known, readable comment; never create or
       // overwrite one while its account state is unknown or unreadable.
       if (!get().settingsChecked && (!localChange || comments.length === 0 || comments.some((note) => !readSettingsComment(note.content)))) return;
+      // A different window may have changed a different setting since our
+      // snapshot. Read under the cross-window lock and merge our actual edits.
+      if (localChange && (dirtyBase || changes.length > 0) && get().settingsChecked) {
+        const fetched = await fetchSettingsComments(inbox);
+        if (!stillOwner() || fetched === null) return;
+        if (fetched.length) {
+          const notes = { ...snapshot.notes };
+          for (const note of fetched) notes[note.id] = note;
+          snapshot = { ...snapshot, notes };
+          comments = settingsComments(snapshot);
+          const remote = readSettingsComment(comments[0].content);
+          if (!remote) return;
+          const local = get().prefs;
+          const fresh = mergeSynced(local, remote, local.locale);
+          const combined = changes.length
+            ? changes.reduce((value, change) => mergePreferenceChanges(change.before, change.after, value), fresh)
+            : mergePreferenceChanges(dirtyBase!, local, fresh);
+          dirtyBase = fresh;
+          void idb.savePrefs(PREFS_BASE_KEY, fresh);
+          set({ snapshot, prefs: combined });
+          void idb.savePrefs(PREFS_KEY, combined);
+        } else if (comments.length === 0 && changes.length) {
+          const combined = changes.reduce((value, change) => mergePreferenceChanges(change.before, change.after, value), get().prefs);
+          set({ prefs: combined });
+          void idb.savePrefs(PREFS_KEY, combined);
+        }
+      }
       if (comments.length === 0) {
         const fetched = await fetchSettingsComments(inbox);
-        if (fetched === null) return; // unreachable: try again on the next sync
+        if (!stillOwner() || fetched === null) return; // unreachable: try again on the next sync
         if (fetched.length > 0) {
           const notes = { ...get().snapshot.notes };
           for (const note of fetched) notes[note.id] = note;
@@ -324,6 +397,7 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
         }
       }
 
+      if (!stillOwner()) return;
       const [current, ...duplicates] = comments;
       const prefs = get().prefs;
       const content = settingsCommentContent(prefs);
@@ -346,7 +420,7 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
         // The account already says this, unless what says so is still waiting to go.
         const queued = (await idb.readQueue()).some((cmd) => (cmd.type === 'note_update' && cmd.args.id === current?.id)
           || (cmd.type === 'note_add' && String(cmd.args.content ?? '').startsWith(SETTINGS_COMMENT_MARKER)));
-        if (!queued) clearPrefsDirty(generation);
+        if (!queued) { await idb.removePreferenceChanges(changes.map((change) => change.id)); clearPrefsDirty(generation); }
         return;
       }
 
@@ -368,14 +442,39 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
       });
       /* Delivered: the account has this device's settings. Still in the
          outbox: the mark stays, and the next launch writes them again. */
+      if (!stillOwner()) return;
       const sent = new Set(commands.map((cmd) => cmd.uuid));
-      if (written && !(await idb.readQueue()).some((cmd) => sent.has(cmd.uuid))) clearPrefsDirty(generation);
+      if (written && !(await idb.readQueue()).some((cmd) => sent.has(cmd.uuid))
+        && settingsComments(get().snapshot).some((note) => settingsCommentMatches(note.content, prefs))) {
+        await idb.removePreferenceChanges(changes.map((change) => change.id));
+        clearPrefsDirty(generation);
+      }
     } finally {
       creatingPreferencesTask = false;
       if (writeAgain) {
         writeAgain = false;
-        window.setTimeout(() => void get().ensurePreferencesTask(true), 0);
+        if (stillOwner()) window.setTimeout(() => void get().ensurePreferencesTask(true), 0);
       }
+    }
+    };
+    /* Waiting for another window's turn can run out. Nothing is lost then —
+       the changes stay journaled and the mark stays set — so the next sync
+       tries again; it must not surface as an unhandled rejection. */
+    const waitedTooLong = (error: unknown) => (error instanceof DOMException && error.name === 'AbortError')
+      || (error instanceof Error && /Timed out waiting for another window|Lost ownership of the sync turn/.test(error.message));
+    try {
+      if (typeof navigator !== 'undefined' && navigator.locks) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20_000);
+        try { await navigator.locks.request<Promise<void>>(`tde-preferences:${owner}`, { signal: controller.signal }, write); }
+        finally { clearTimeout(timeout); }
+      } else if (typeof indexedDB !== 'undefined') {
+        await leaseTurn(`tde-preferences:${owner}`, write);
+      } else await write();
+    } catch (error) {
+      if (!waitedTooLong(error)) throw error;
+    } finally {
+      creatingPreferencesTask = false;
     }
   },
   /**

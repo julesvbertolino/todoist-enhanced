@@ -1,4 +1,4 @@
-import { ProjectProgress } from './ProjectProgress';
+import { useSafeDisconnect } from '@/hooks/useSafeDisconnect';
 import { readFolderState, writeFolderState } from '@/domain/folderState';
 import { matrixRoots, matrixSettings } from '@/domain/eisenhower';
 import { SidebarResize } from './SidebarResize';
@@ -40,7 +40,6 @@ import { visibleSidebarNav, type SidebarItemId } from '@/domain/sidebar';
 
 interface SidebarProps {
   route: Route;
-  projectProgressCounts: { open: Record<string, number>; completed: Record<string, number> };
   onAddTask: () => void;
   onSearch: () => void;
   onIssues: () => void;
@@ -76,7 +75,7 @@ const GO_KEYS: Partial<Record<ViewId, string>> = {
 const HINT_DELAY_MS = 550;
 
 export function Sidebar({
-  route, projectProgressCounts, onAddTask, onSearch, onIssues, onProjectSheet, issuesCount, variant = 'rail',
+  route, onAddTask, onSearch, onIssues, onProjectSheet, issuesCount, variant = 'rail',
 }: SidebarProps) {
   /* The list scrolls under the Add task area, which grows with its contents
      (the sync line, a second row of buttons). The scroller keeps as much room
@@ -106,7 +105,7 @@ export function Sidebar({
   const sidebarNav = useStore((s) => s.prefs.sidebarNav);
   const showSearch = useStore((s) => s.prefs.sidebarSearch);
   const showCounts = useStore((s) => s.prefs.sidebarCounts);
-  const disconnect = useStore((s) => s.disconnect);
+  const disconnect = useSafeDisconnect();
   const demo = useStore((s) => s.demo);
   const draggingProjectId = useStore((s) => s.draggingProjectId);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -420,8 +419,7 @@ export function Sidebar({
                   <span className="hash" style={markerStyle(project.color)}>
                     {customIcon
                       ? <ProjectIcon iconId={customIcon} size="sm" style={{ color: 'inherit' }} />
-                      : <ProjectProgress open={projectProgressCounts.open[project.id] ?? 0} completed={projectProgressCounts.completed[project.id]}
-                          label={projectProgressCounts.completed[project.id] === undefined ? t('project.progressUnknown') : (projectProgressCounts.open[project.id] ?? 0) + projectProgressCounts.completed[project.id] === 0 ? t('project.progressEmpty') : t('project.progressCompletedAll', { done: projectProgressCounts.completed[project.id], total: (projectProgressCounts.open[project.id] ?? 0) + projectProgressCounts.completed[project.id] })} />}
+                      : '#'}
 
                   </span>
               }

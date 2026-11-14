@@ -4,8 +4,10 @@ vi.mock('@/db/idb', () => ({
   loadPrefs: vi.fn(async () => null),
   loadSnapshot: vi.fn(async () => (await import('@/domain/types')).emptySnapshot()),
   readQueue: vi.fn(async () => []),
-  saveSnapshot: vi.fn(async () => {}),
+  saveSnapshot: vi.fn(async () => {}), reserveSnapshot: vi.fn(async () => ({ epoch: 'test', revision: 1 })),
   clearAll: vi.fn(async () => {}),
+  clearSession: vi.fn(async () => {}),
+  claimLegacyQueue: vi.fn(async () => {}),
 }));
 
 import * as idb from '@/db/idb';

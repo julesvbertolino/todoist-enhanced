@@ -1,3 +1,4 @@
+import { EmptyState } from '@/components/EmptyState';
 import { stepLabel, type Step } from '@/domain/steps';
 import { filterRoots } from '@/domain/filterSelection';
 import { pageClass } from '@/domain/pageLayout';
@@ -334,7 +335,9 @@ function SimpleListBody({
 
       {/* A query with commas is several lists, one under the other. Explicit
           grouping and board presentation still use their existing behaviour. */}
-      {current.mode === 'matrix' && !(kind === 'filter' && (filterResult.error || !filter)) ? (
+      {current.mode === 'list' && pool0.length === 0 && !hireNoteOpen && (kind !== 'filter' || (filter && !filterResult.error && !filterResult.loading && filterResult.parts !== null)) ? (
+        <EmptyState view={kind} onAdd={kind === 'filter' ? undefined : () => onAddTaskTo(addition)} />
+      ) : current.mode === 'matrix' && !(kind === 'filter' && (filterResult.error || !filter)) ? (
         <MatrixSurface items={scoped} childrenOf={childrenOf} sort={current.sort} showSubtasks={current.filters.showSubtasks} matrix={current.matrix} onOpen={onOpen} showProject />
       ) : current.mode === 'calendar' && !(kind === 'filter' && (filterResult.error || !filter)) ? (
         <CalendarSurface key={viewKey} viewKey={viewKey} items={pool0} childrenOf={childrenOf} onOpen={onOpen} onAddTaskTo={onAddTaskTo} />

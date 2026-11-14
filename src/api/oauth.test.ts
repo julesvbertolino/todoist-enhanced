@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { freshAccessToken, forgetCredentials, readCredentials } from './oauth';
+import { resetRetryPauses, retryDeadline } from './throttle';
 
 const values = new Map<string, string>();
 const fetchMock = vi.fn();
 const credentials = (overrides = {}) => ({ accessToken: 'old-access', refreshToken: 'old-refresh', expiresAt: 0, ...overrides });
 const save = (value = credentials()) => values.set('tde.oauth', JSON.stringify(value));
 beforeEach(() => {
+  resetRetryPauses();
   values.clear(); save(); fetchMock.mockReset();
   vi.stubGlobal('localStorage', { getItem: (key: string) => values.get(key) ?? null,
     setItem: (key: string, value: string) => values.set(key, value), removeItem: (key: string) => values.delete(key) });
@@ -14,6 +16,13 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 describe('refreshing a rotating session (#348)', () => {
+  it('shares a server pause with later requests', async () => {
+    fetchMock.mockResolvedValue(new Response(JSON.stringify({ error_extra: { retry_after: 120 } }), { status: 429 }));
+    await expect(freshAccessToken()).rejects.toThrow();
+    expect(retryDeadline()).toBeGreaterThan(Date.now() + 119_000);
+    await expect(freshAccessToken()).rejects.toThrow();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
   it('stores both rotated tokens', async () => {
     fetchMock.mockResolvedValue(new Response(JSON.stringify({ access_token: 'new', refresh_token: 'rotated', expires_in: 3600 })));
     expect(await freshAccessToken()).toBe('new');
@@ -54,7 +63,7 @@ describe('refreshing a rotating session (#348)', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
   it('reads credentials again after waiting for another tab’s lock', async () => {
-    vi.stubGlobal('navigator', { locks: { request: async (_name: string, run: () => Promise<unknown>) => {
+    vi.stubGlobal('navigator', { locks: { request: async (_name: string, _options: unknown, run: () => Promise<unknown>) => {
       save(credentials({ accessToken: 'other-tab', refreshToken: 'other-refresh', expiresAt: Date.now() + 3_600_000 }));
       return run();
     } } });

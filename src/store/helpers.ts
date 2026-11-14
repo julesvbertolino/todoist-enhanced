@@ -1,3 +1,5 @@
+import { collectionOf, idsTouchedBy } from '@/domain/commandTouches';
+export { collectionOf, idsTouchedBy } from '@/domain/commandTouches';
 /** What more than one slice of the store needs: pure helpers, and the module state they share. */
 import { addDays, addWeeks, nextDay, startOfDay, type Day } from 'date-fns';
 import type { Command } from '@/api/commands';
@@ -260,10 +262,23 @@ export function withPending(snapshot: Snapshot): Snapshot {
 export let persistTimer: ReturnType<typeof setTimeout> | null = null;
 
 /** The copy waiting for its write, so a page that is being left can write it now. */
-let waiting: Snapshot | null = null;
+let waiting: { snapshot: Snapshot; ticket: ReturnType<typeof idb.reserveSnapshot> } | null = null;
+
+/** Forget a delayed snapshot and deletion callbacks before changing account. */
+export function cancelPendingSessionWork() {
+  if (persistTimer) clearTimeout(persistTimer);
+  persistTimer = null;
+  waiting = null;
+  for (const pending of pendingDeletes.values()) clearTimeout(pending.timer);
+  pendingDeletes.clear();
+}
 
 export function schedulePersist(snapshot: Snapshot) {
-  waiting = snapshot;
+  const ticket = idb.reserveSnapshot();
+  // A later write will surface storage failures; avoid an unhandled rejection
+  // while a pending timer waits to run.
+  void ticket.catch(() => undefined);
+  waiting = { snapshot, ticket };
   if (persistTimer) clearTimeout(persistTimer);
   persistTimer = setTimeout(flushPersist, 400);
 }
@@ -280,9 +295,10 @@ export function schedulePersist(snapshot: Snapshot) {
 export function flushPersist() {
   if (persistTimer) { clearTimeout(persistTimer); persistTimer = null; }
   if (!waiting) return;
-  const snapshot = withPending(waiting);
+  const snapshot = withPending(waiting.snapshot);
+  const ticket = waiting.ticket;
   waiting = null;
-  void idb.saveSnapshot(snapshot);
+  void idb.saveSnapshot(snapshot, ticket);
 }
 
 /**
@@ -339,13 +355,25 @@ export function explainFailure(error: string, locale: Locale): string {
  * kept, so a bulk edit that half worked is not mistaken for one that did
  * nothing or one that did everything.
  */
+/** Name a premium refusal only when this command actually set a deadline. */
+export function identifyDeadlineRefusals<T extends { uuid: string; error: string; errorTag?: string }>(failures: T[], commands: Command[]): T[] {
+  return failures.map((failure) => {
+    const command = commands.find((entry) => entry.uuid === failure.uuid);
+    return command?.args.deadline && /premium|pro plan|business plan/i.test(failure.error)
+      ? { ...failure, errorTag: 'DEADLINE_REQUIRES_PRO' }
+      : failure;
+  });
+}
+
 export function explainFailures(
   failures: Array<{ error: string; errorTag?: string; commandType?: string }>,
   total: number,
   locale: Locale,
 ): string {
   const failure = failures[0];
-  const reason = failure.errorTag === 'INVALID_DATE' && failure.commandType === 'item_close'
+  const reason = failure.errorTag === 'DEADLINE_REQUIRES_PRO'
+    ? (locale === 'fr' ? 'Todoist réserve les deadlines aux abonnements Pro et Business. La modification n’a pas été enregistrée.' : 'Todoist deadlines require Pro or Business. The change was not saved.')
+    : failure.errorTag === 'INVALID_DATE' && failure.commandType === 'item_close'
     ? (locale === 'fr'
       ? 'Todoist ne peut pas interpréter la répétition de cette tâche. Ouvrez-la dans Todoist et vérifiez sa règle de répétition avant de réessayer. La tâche n’a pas été terminée.'
       : 'Todoist could not read this task’s repeat rule. Open the task in Todoist and check its repeat rule before trying again. The task was not completed.')
@@ -358,35 +386,6 @@ export function explainFailures(
 }
 
 /** The collection a command acts on, read from its type. */
-export function collectionOf(type: string): 'items' | 'projects' | 'sections' | 'labels' | 'notes' | null {
-  if (type.startsWith('item_')) return 'items';
-  if (type.startsWith('project_')) return 'projects';
-  if (type.startsWith('section_')) return 'sections';
-  if (type.startsWith('label_')) return 'labels';
-  if (type.startsWith('note_')) return 'notes';
-  return null;
-}
-
-/** Every id a command changes, whatever shape its arguments take. */
-export function idsTouchedBy(cmd: Command): string[] {
-  const args = cmd.args as Record<string, unknown>;
-  const ids: string[] = [];
-  if (typeof args.id === 'string') ids.push(args.id);
-  for (const key of ['items', 'projects', 'sections']) {
-    const list = args[key];
-    if (Array.isArray(list)) {
-      for (const entry of list) {
-        if (entry && typeof (entry as { id?: unknown }).id === 'string') ids.push((entry as { id: string }).id);
-      }
-    }
-  }
-  for (const key of ['ids_to_orders', 'id_order_mapping']) {
-    const map = args[key];
-    if (map && typeof map === 'object') ids.push(...Object.keys(map));
-  }
-  return ids;
-}
-
 /**
  * Takes back, on screen, exactly what Todoist refused.
  *

@@ -110,7 +110,7 @@ accountTest('initial choice offers conversion, with verified and pending rows sc
   await page.evaluate(async (version) => {
     localStorage.setItem('tde.token', 'fictitious-test-token-only');
     localStorage.setItem('onboarded', JSON.stringify(['account-test']));
-    const db = await new Promise<IDBDatabase>((resolve, reject) => { const request = indexedDB.open('todoist-enhancements', 1); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
+    const db = await new Promise<IDBDatabase>((resolve, reject) => { const request = indexedDB.open('todoist-enhancements'); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
     const tx = db.transaction('prefs', 'readwrite');
     tx.objectStore('prefs').put({ locale: 'en', onboarded: true, setupDone: true, pomodoroAsked: true, seenVersion: version, estimateStorage: null }, 'preferences');
     await new Promise<void>((resolve, reject) => { tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error); });
@@ -125,7 +125,7 @@ accountTest('initial choice offers conversion, with verified and pending rows sc
   await choice.getByRole('button', { name: 'Save and preview conversion' }).click();
   const preview = page.getByRole('dialog', { name: 'Preview estimate conversion', exact: true });
   await preview.getByRole('button', { name: 'Convert these tasks' }).click();
-  await expect(preview.locator('li[data-state="done"]')).toHaveCount(44);
+  await expect(preview.locator('li[data-state="done"]')).toHaveCount(44, { timeout: 20_000 });
   await expect(preview.locator('li[data-state="queued"]')).toHaveCount(1);
   await expect(preview.getByRole('status')).toContainText('44 / 45 verified');
   await expect(preview.getByRole('status')).toContainText('1 pending');

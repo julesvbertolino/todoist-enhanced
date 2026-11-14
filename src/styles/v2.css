@@ -2430,3 +2430,13 @@ html[data-navigation="pointer"] .task:focus-visible::after{content:none}
 .quadrant .parentchip:hover,.quadrant .parentchip:focus-visible{background:var(--btn-soft-hover);color:var(--text)}
 .quadrant .parentchip .ic{flex:none;width:12px;height:12px}
 .quadrant .parentchip-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.ptitle-icons .iconpickergrid { height: 124px; padding-bottom: 0; mask-image: none; -webkit-mask-image: none; }
+.project-picker-color-label { display: block; margin: 12px 0 8px; }
+
+.ptitle-icons .swatches { display:grid; grid-template-columns:repeat(10, 22px); justify-content:space-between; gap:9px 0; overflow:visible; padding:5px 3px; margin:0; }
+.ptitle-icons .swatch { width:22px; }
+.ptitle-icons .swatch .ic { width:11px; height:11px; }
+.deadline-pro-notice { padding:14px; max-width:260px; font-size:var(--fs-13); }
+.deadline-pro-notice p { margin:0; }
+.deadline-pro-notice a { color:var(--accent); text-decoration:underline; text-underline-offset:2px; }

@@ -1,6 +1,9 @@
 import { useLayoutEffect, useRef, type ReactNode } from 'react';
 import { Icon, type IconName } from '../Icon';
 import { ProjectProgress } from '../ProjectProgress';
+import { ProjectIconGrid } from '../ProjectIconPicker';
+import { COLOUR_CHOICES } from './ProjectSheet';
+import { colorValue } from '@/domain/colors';
 import type { ChangelogVisual } from '@/domain/changelogVisuals';
 import './changelog-preview.css';
 
@@ -60,6 +63,31 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
   let content: ReactNode;
   switch (kind) {
     case null: return null;
+    case 'projectColours':
+      /* The real picker, as it opens from a project's title: same grid, same swatches.
+         Not a `.popover`: a dialog treats one of those in the page as an open menu and would ignore Escape. */
+      content = <div className="ptitle-icons cv-picker">
+        <ProjectIconGrid value="target" onPick={() => undefined} />
+        <span className="fieldlabel project-picker-color-label">{say('Colour', 'Couleur')}</span>
+        <div className="swatches">{COLOUR_CHOICES.map((choice) => (
+          <span key={choice} className={`swatch${choice === 'green' ? ' selected' : ''}`} style={{ '--swatch': colorValue(choice) } as React.CSSProperties}>
+            {choice === 'green' && <Icon name="check" size="sm" />}
+          </span>))}</div>
+      </div>; break;
+    case 'emptyProject':
+      content = <div className="cv-empty-project">
+        <svg viewBox="0 0 136 96" fill="none" width="100" aria-hidden="true">
+          <rect x="14" y="14" width="96" height="68" rx="14" fill="var(--surface)" stroke="var(--border-strong)" strokeWidth="1.5" />
+          <rect x="28" y="32" width="14" height="14" rx="4.5" stroke="var(--border-strong)" strokeWidth="1.5" />
+          <rect x="50" y="35" width="44" height="8" rx="4" fill="var(--border)" />
+          <rect x="28" y="56" width="14" height="14" rx="4.5" stroke="var(--border-strong)" strokeWidth="1.5" />
+          <rect x="50" y="59" width="30" height="8" rx="4" fill="var(--border)" />
+          <circle cx="110" cy="20" r="14" fill="var(--accent)" />
+          <path d="M110 14v12M104 20h12" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" />
+        </svg>
+        <strong>No tasks in this project</strong><span>Add a task to get started.</span>
+        <b>+ Add task</b>
+      </div>; break;
     case 'projectProgress':
       content = <div className="cv-progress-example">
         <div className="cv-progress-sidebar">{([['Website', 1, 3, 'purple'], ['Travel', 2, 2, 'blue'], ['Reading', 4, 0, 'green']] as const).map(([name, open, completed, color], i) => <div className={`cv-progress-project${i === 0 ? ' selected' : ''}`} key={name}><span className={`cv-progress-${color}`}><ProjectProgress open={open} completed={completed} label={name} /></span><span>{name}</span></div>)}</div>

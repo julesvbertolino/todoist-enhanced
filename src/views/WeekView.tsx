@@ -1,3 +1,4 @@
+import { EmptyState } from '@/components/EmptyState';
 import { stepLabel, type Step } from '@/domain/steps';
 import { CalendarSurface } from '@/components/CalendarSurface';
 import { pageClass } from '@/domain/pageLayout';
@@ -248,7 +249,9 @@ function WeekBody({
         onUnestimated={onUnestimated}
       />}
 
-      {current.mode === 'calendar' ? (
+      {current.mode === 'list' && scoped.length === 0 && !hireNoteOpen ? (
+        <EmptyState view={scope === 'today' ? 'today' : 'week'} onAdd={() => onAddTaskTo(placementFor(scope === 'today' ? here : { kind: 'anytime' }))} />
+      ) : current.mode === 'calendar' ? (
         <CalendarSurface key={viewKey} viewKey={viewKey} items={items} onOpen={onOpen} onAddTaskTo={onAddTaskTo} />
       ) : current.mode === 'list' && current.group === 'none' ? (
         <div className="mode">
@@ -295,7 +298,7 @@ function WeekBody({
             titleExtra={scope === 'all' ? dayNav : undefined}
             items={sortedGroup(groups.untimed)}
             lead={hireNoteOpen ? <HireNote /> : undefined}
-            keepWhenEmpty={hireNoteOpen || scope === 'all'}
+            keepWhenEmpty={hireNoteOpen}
             childrenOf={childrenOf}
             onOpen={onOpen}
             reorderable={byHand}

@@ -15,6 +15,10 @@
  */
 
 import { sessionGet, sessionRemove, sessionSet } from '@/lib/sessionStore';
+import { networkTurn, recordNetworkAttempt } from './networkPolicy';
+import { pauseForServer, retryDeadline, retryDelay } from './throttle';
+import { sessionSignal } from './session';
+import { leaseTurn } from '@/db/lease';
 
 export const OAUTH_CLIENT_ID = `${__PUBLIC_URL__}oauth/client.json`;
 const AUTHORIZE_URL = 'https://app.todoist.com/oauth/authorize';
@@ -39,6 +43,20 @@ interface TokenResponse {
   refresh_token?: string;
   expires_in?: number;
   error?: string;
+}
+
+/** Token exchanges share the same budget and server pause as other API calls. */
+async function tokenRequest(body: URLSearchParams, signal: AbortSignal): Promise<{ response: Response; body: TokenResponse }> {
+  return networkTurn(async () => {
+    if (retryDeadline()) throw new Error('Todoist asked us to wait before retrying');
+    recordNetworkAttempt(3);
+    const response = await fetch(TOKEN_URL, {
+      method: 'POST', signal, headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body.toString(),
+    });
+    const text = await response.text();
+    if (response.status === 429) pauseForServer(retryDelay(response.headers.get('retry-after'), text) ?? 1000);
+    return { response, body: JSON.parse(text) as TokenResponse };
+  }, 3, signal);
 }
 
 /* ---------- Storage ---------- */
@@ -172,24 +190,27 @@ export async function completeSignIn(): Promise<SignInResult> {
   if (!pending || params.get('state') !== pending.state) return 'failed';
   if (error) return error === 'access_denied' ? 'denied' : 'failed';
 
+  const controller = new AbortController();
+  const session = sessionSignal();
+  const cancel = () => controller.abort();
+  session.addEventListener('abort', cancel, { once: true });
+  const timeout = setTimeout(() => controller.abort(), 20_000);
   try {
-    const response = await fetch(TOKEN_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
+    const { response, body } = await tokenRequest(new URLSearchParams({
         client_id: OAUTH_CLIENT_ID,
         grant_type: 'authorization_code',
         code: code!,
         code_verifier: pending.verifier,
         redirect_uri: pending.redirectUri,
-      }).toString(),
-    });
-    const body = (await response.json()) as TokenResponse;
+      }), controller.signal);
     if (!response.ok || !body.access_token) return 'failed';
     writeCredentials(fromResponse(body, null));
     return 'signed-in';
   } catch {
     return 'failed';
+  } finally {
+    clearTimeout(timeout);
+    session.removeEventListener('abort', cancel);
   }
 }
 
@@ -205,16 +226,13 @@ async function renewNow(rejectedToken?: string): Promise<OAuthCredentials | null
   if (!rejectedToken && current.expiresAt - Date.now() > RENEW_MARGIN_MS) return current;
 
   const controller = new AbortController();
+  const session = sessionSignal();
+  const cancel = () => controller.abort();
+  session.addEventListener('abort', cancel, { once: true });
   const timeout = setTimeout(() => controller.abort(), 20_000);
   let next: OAuthCredentials;
   try {
-    const response = await fetch(TOKEN_URL, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ client_id: OAUTH_CLIENT_ID, grant_type: 'refresh_token', refresh_token: current.refreshToken }).toString(),
-    });
-    const body = (await response.json()) as TokenResponse;
+    const { response, body } = await tokenRequest(new URLSearchParams({ client_id: OAUTH_CLIENT_ID, grant_type: 'refresh_token', refresh_token: current.refreshToken }), controller.signal);
     if (!response.ok) {
       // A different tab or a fresh sign-in may have replaced these credentials.
       const latest = readCredentials();
@@ -232,6 +250,7 @@ async function renewNow(rejectedToken?: string): Promise<OAuthCredentials | null
     next = fromResponse(body, current);
   } finally {
     clearTimeout(timeout);
+    session.removeEventListener('abort', cancel);
   }
   writeCredentials(next);
   return next;
@@ -255,11 +274,13 @@ export async function freshAccessToken(force = false, rejectedAccessToken?: stri
     const locks = (navigator as Navigator & { locks?: LockManager }).locks;
     /* Held across tabs: two tabs renewing at once would each spend the same
        rotating refresh token, and the second would be refused. */
+    const lockTimeout = new AbortController();
+    const timer = setTimeout(() => lockTimeout.abort(), 20_000);
+    const renew = () => renewNow(force ? (rejectedAccessToken ?? credentials.accessToken) : undefined);
     const run = locks
-      ? new Promise<OAuthCredentials | null>((resolve, reject) => {
-        void locks.request('tde-oauth-renew', () => renewNow(force ? (rejectedAccessToken ?? credentials.accessToken) : undefined).then(resolve, reject)).catch(reject);
-      })
-      : renewNow(force ? (rejectedAccessToken ?? credentials.accessToken) : undefined);
+      ? (async () => await locks.request<Promise<OAuthCredentials | null>>('tde-oauth-renew', { signal: lockTimeout.signal }, renew))()
+      : typeof indexedDB !== 'undefined' ? leaseTurn('tde-oauth-renew', renew, lockTimeout.signal) : renew();
+    void run.finally(() => clearTimeout(timer)).catch(() => undefined);
     renewing = run.finally(() => { renewing = null; });
   }
   const renewed = await renewing;

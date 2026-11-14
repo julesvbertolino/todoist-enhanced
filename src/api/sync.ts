@@ -1,3 +1,4 @@
+import { CursorGuard } from './pagination';
 import { ApiError, NotConnectedError, request } from './client';
 import type {
   Collaborator, CollaboratorState, Filter, Folder, Item, Label, LiveNotification, Note, Project, Reminder,
@@ -61,6 +62,9 @@ export async function sync(syncToken: string, signal?: AbortSignal, knownWorkspa
     signal,
     timeoutMs: syncToken === '*' ? FULL_SYNC_TIMEOUT_MS : undefined,
   });
+  if (!response || typeof response.sync_token !== 'string' || !response.sync_token || typeof response.full_sync !== 'boolean') {
+    throw new Error('Todoist sent an invalid sync response');
+  }
   // A new session/full sync and workspace changes always refresh immediately.
   // Folders are read again ten minutes after the last attempt, failed or not.
   if (!response.full_sync && syncToken !== '*' && !response.workspaces?.length && lastFolderRefresh && Date.now() - lastFolderRefresh < FOLDER_REFRESH_INTERVAL_MS) {
@@ -78,11 +82,13 @@ export async function sync(syncToken: string, signal?: AbortSignal, knownWorkspa
     try {
       const all: Folder[] = [];
       let cursor: string | null = null;
+      const guard = new CursorGuard();
       do {
         const query = new URLSearchParams({ workspace_id: workspace.id, limit: '200' });
         if (cursor) query.set('cursor', cursor);
         const page = await request<{ results: Folder[]; next_cursor: string | null }>(`/folders?${query}`, { signal });
         all.push(...page.results);
+        guard.next(page.next_cursor);
         cursor = page.next_cursor;
       } while (cursor);
       return { id: workspace.id, folders: all };

@@ -1793,3 +1793,12 @@ html.desktop-app .macapp,html.desktop-app .macapp-line{display:none}
 .syncpanel-facts dd{margin:0;color:var(--text);text-align:right;font-variant-numeric:tabular-nums}
 .syncpanel-actions{display:flex;justify-content:flex-end;gap:var(--s2);margin-top:var(--s1)}
 .syncpanel-note{margin:0;font-size:var(--fs-11);color:var(--faint);line-height:1.4}
+
+.project-empty { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 72px 24px 48px; }
+.project-empty-art { width: 136px; height: auto; margin-bottom: 20px; }
+.project-empty h2 { font-size: var(--fs-20); font-weight: 700; color: var(--text); margin: 0 0 6px; }
+.project-empty p { font-size: var(--fs-14); color: var(--muted); margin: 0 0 20px; max-width: 360px; line-height: 1.45; }
+.project-empty-cta { display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--accent); color: #fff; font: inherit; font-size: var(--fs-14); font-weight: 600; cursor: pointer; }
+
+.deadline-upgrade { opacity: .7; text-decoration: none; }
+.deadline-upgrade:hover { opacity: 1; }

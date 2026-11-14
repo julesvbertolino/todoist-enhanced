@@ -75,7 +75,7 @@ describe('a sync that keeps failing (#466)', () => {
     expect(syncLog().at(-1)).toMatchObject({ step: 'read', kind: 'refused', status: 400, tag: 'INVALID_SYNC_TOKEN' });
   });
 
-  it('starts from scratch once after a run of failures, not on every poll', async () => {
+  it('does not start from scratch during an outage', async () => {
     const outage = () => new ApiError('Todoist responded 503', 503);
     read.mockRejectedValue(outage());
     for (let i = 0; i < FULL_READ_AFTER_FAILURES; i += 1) await useStore.getState().refresh();
@@ -84,7 +84,7 @@ describe('a sync that keeps failing (#466)', () => {
     read.mockRejectedValueOnce(outage()).mockRejectedValueOnce(outage());
     await useStore.getState().refresh();
     await useStore.getState().refresh();
-    expect(read.mock.calls.map((call) => call[0])).toEqual(['*', 'kept']);
+    expect(read.mock.calls.map((call) => call[0])).toEqual(['kept', 'kept']);
   });
 
   it('does not reread everything because the network was lost a few times', async () => {
@@ -92,6 +92,15 @@ describe('a sync that keeps failing (#466)', () => {
     for (let i = 0; i < FULL_READ_AFTER_FAILURES + 1; i += 1) await useStore.getState().refresh();
     expect(read.mock.calls.every((call) => call[0] === 'kept')).toBe(true);
     expect(useStore.getState().syncState).toBe('offline');
+  });
+
+  it('does not start a read when sending the outbox is rate limited', async () => {
+    await idb.enqueue([updateItem('a', { content: 'Pending' })], 'me');
+    sent.mockRejectedValueOnce(new ApiError('Limited', 429));
+    await useStore.getState().refresh();
+    expect(read).not.toHaveBeenCalled();
+    expect(await idb.readQueue()).toHaveLength(1);
+    expect(useStore.getState().syncState).not.toBe('idle');
   });
 
   it('does not reread everything for a rate limit', async () => {
@@ -176,6 +185,18 @@ describe('a write and a read at the same time (#468)', () => {
     // Sent with the token the read left, not the one from before it.
     expect(sent.mock.calls[0][0]).toBe('read');
     expect(useStore.getState().snapshot.items.a.content).toBe('After');
+  });
+
+  it('does not restore an old snapshot when a read finishes after sign-out', async () => {
+    const answer = later<SyncResponse>();
+    read.mockImplementationOnce(() => answer.promise);
+    const polling = useStore.getState().refresh();
+    await vi.waitFor(() => expect(read).toHaveBeenCalledTimes(1));
+    const signingOut = useStore.getState().disconnect();
+    answer.settle({ sync_token: 'old', full_sync: false, items: [item({ id: 'old' })] });
+    await Promise.all([polling, signingOut]);
+    expect(useStore.getState().connected).toBe(false);
+    expect(useStore.getState().snapshot.items.old).toBeUndefined();
   });
 
   it('leaves a change made offline to the next flush, and counts it from the outbox', async () => {

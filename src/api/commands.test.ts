@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { command, MAX_COMMANDS_PER_CALL, sendCommands } from './commands';
+import { command, MAX_COMMANDS_PER_CALL, sendCommands, resolveCommandIds } from './commands';
 import { ApiError, request } from './client';
 import { SYNC_RESOURCE_TYPES } from './sync';
+
+vi.mock('@/db/idb', () => ({ loadPrefs: vi.fn(async () => null), savePrefs: vi.fn(async () => {}) }));
 
 vi.mock('./client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./client')>()),
@@ -59,6 +61,64 @@ describe('sendCommands', () => {
     await sendCommands('token', commands);
     const second = JSON.parse((sent.mock.calls[1][1] as { form: { commands: string } }).form.commands);
     expect(second[0].args.project_id).toBe('real-project');
+  });
+
+  it('keeps a batch pending with the same UUIDs when an acknowledgement is missing', async () => {
+    const commands = [command('item_update', { id: 'a' }), command('item_update', { id: 'b' })];
+    sent.mockResolvedValue({ sync_token: 'next', sync_status: { [commands[0].uuid]: 'ok' } } as never);
+    const result = await sendCommands('token', commands);
+    expect(result.delivered).toEqual([]);
+    expect(result.undelivered.map((cmd) => cmd.uuid)).toEqual(commands.map((cmd) => cmd.uuid));
+    expect(result.responses).toEqual([]);
+    expect(result.error).toBeInstanceOf(Error);
+  });
+
+  it('keeps an acknowledged creation and its dependents when the real id is missing', async () => {
+    const add = command('project_add', { name: 'Project' }, 'temp-project');
+    const task = command('item_update', { id: 'task', project_id: 'temp-project' });
+    sent.mockResolvedValue({ sync_token: 'next', sync_status: { [add.uuid]: 'ok', [task.uuid]: 'ok' } } as never);
+    const result = await sendCommands('token', [add, task]);
+    expect(result.delivered).toEqual([]);
+    expect(result.undelivered.map((entry) => entry.uuid)).toEqual([add.uuid, task.uuid]);
+    expect(result.error).toBeInstanceOf(Error);
+  });
+
+  it('splits long non-ASCII descriptions by encoded form size', async () => {
+    answerOk();
+    const commands = Array.from({ length: 25 }, (_, n) => command('item_update', { id: String(n), description: 'é'.repeat(10000) }));
+    const result = await sendCommands('token', commands);
+    expect(result.delivered).toHaveLength(25);
+    expect(sent.mock.calls.length).toBeGreaterThan(1);
+    for (const [, init] of sent.mock.calls) {
+      const form = (init as { form: Record<string, string> }).form;
+      expect(new TextEncoder().encode(new URLSearchParams(form).toString()).length).toBeLessThanOrEqual(900000);
+    }
+  });
+
+  it('splits a batch refused as too large and retries its original UUIDs in order', async () => {
+    const commands = Array.from({ length: 4 }, (_, n) => command('item_update', { id: String(n) }));
+    answerOk();
+    sent.mockRejectedValueOnce(new ApiError('Too large', 413));
+    const result = await sendCommands('token', commands);
+    const batches = sent.mock.calls.map(([, init]) => JSON.parse((init as { form: { commands: string } }).form.commands) as Array<{ uuid: string }>);
+    expect(batches.map((batch) => batch.length)).toEqual([4, 2, 2]);
+    expect(result.delivered).toEqual(commands.map((entry) => entry.uuid));
+    expect(result.failures).toEqual([]);
+  });
+
+  it('resolves identifier fields without changing task text', () => {
+    const [resolved] = resolveCommandIds([command('item_update', { id: 'tmp', content: 'tmp', parent_id: 'tmp' })], { tmp: 'real' });
+    expect(resolved.args).toEqual({ id: 'real', content: 'tmp', parent_id: 'real' });
+  });
+
+  it('retains a throttled command while acknowledging the accepted commands', async () => {
+    const [first, second] = [command('item_update', { id: 'a' }), command('item_update', { id: 'b' })];
+    sent.mockResolvedValue({ sync_token: 'next', sync_status: { [first.uuid]: 'ok', [second.uuid]: { error_code: 429, error: 'Rate limited', error_extra: { retry_after: 120 } } } } as never);
+    const result = await sendCommands('token', [first, second]);
+    expect(result.delivered).toEqual([first.uuid]);
+    expect(result.undelivered.map((entry) => entry.uuid)).toEqual([second.uuid]);
+    expect(result.failures).toEqual([]);
+    expect(result.error).toBeInstanceOf(ApiError);
   });
 
   it('refuses to send nothing', async () => {

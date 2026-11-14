@@ -52,7 +52,7 @@ describe('a change Todoist refuses (#134)', () => {
       ...snapshot, items: { ...snapshot.items, a: { ...snapshot.items.a, checked: true } },
     }));
     expect(useStore.getState().snapshot.items.a.checked).toBe(false);
-    expect(idb.dequeue).toHaveBeenCalledWith([close.uuid]);
+    expect(idb.settleQueue).toHaveBeenCalledWith([close.uuid], expect.any(Array), expect.any(Object), expect.any(Object), undefined);
     expect(useStore.getState().toasts[0].message).toMatch(/repeat rule|règle de répétition/);
   });
   it('is taken back on screen, taken off the queue and reported once', async () => {
@@ -71,7 +71,7 @@ describe('a change Todoist refuses (#134)', () => {
     const { items } = useStore.getState().snapshot;
     expect(items.a.content).toBe('Before');
     expect(items.b.content).toBe('Before too');
-    expect(idb.dequeue).toHaveBeenCalledWith(commands.map((cmd) => cmd.uuid));
+    expect(idb.settleQueue).toHaveBeenCalledWith(commands.map((cmd) => cmd.uuid), expect.any(Array), expect.any(Object), expect.any(Object), undefined);
     expect(useStore.getState().toasts).toHaveLength(1);
     // A refusal is an error: a screen reader reads it out at once (#136).
     expect(useStore.getState().toasts[0].tone).toBe('error');
@@ -103,7 +103,7 @@ describe('a change Todoist refuses (#134)', () => {
     await useStore.getState().apply(commands, show);
 
     expect(useStore.getState().snapshot.items.a.content).toBe('After');
-    expect(idb.dequeue).not.toHaveBeenCalled();
+    expect(idb.settleQueue).not.toHaveBeenCalled();
     expect(useStore.getState().syncState).toBe('offline');
     expect(useStore.getState().toasts).toHaveLength(0);
   });

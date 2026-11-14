@@ -1,3 +1,4 @@
+import { EmptyState } from '@/components/EmptyState';
 import { stepLabel, type Step } from '@/domain/steps';
 import { TableSurface } from '@/components/TableSurface';
 import { pageClass } from '@/domain/pageLayout';
@@ -21,9 +22,10 @@ import type { ProjectSheetTarget } from '@/components/overlays/ProjectSheet';
 import { AddSectionLine } from '@/components/AddSectionLine';
 import { useConfirm } from '@/components/overlays/Confirm';
 import { Icon } from '@/components/Icon';
-import { ProjectProgress } from '@/components/ProjectProgress';
 import { ProjectIcon, ProjectIconGrid } from '@/components/ProjectIcon';
-import { markerStyle } from '@/domain/colors';
+import { colorValue, markerStyle } from '@/domain/colors';
+import { COLOUR_CHOICES } from '@/components/overlays/ProjectSheet';
+import type { TranslationKey } from '@/i18n';
 import { TimePanel } from '@/components/TimePanel';
 import { useT } from '@/hooks/useT';
 import { useTimePill } from '@/hooks/useTimePill';
@@ -43,7 +45,6 @@ import { PROJECT_GROUPS } from '@/components/DisplayMenu';
 
 interface ProjectViewProps {
   projectId: string;
-  projectProgressCounts: { open: Record<string, number>; completed: Record<string, number> };
   revealSectionId?: string;
   onOpen: (id: string) => void;
   onInsights: () => void;
@@ -74,7 +75,7 @@ const priorityOf = (key: string): 1 | 2 | 3 | 4 | undefined => {
 };
 
 function ProjectBody({
-  projectId, projectProgressCounts, revealSectionId, onOpen, onInsights, onUnestimated, onAddTaskTo, onProjectSheet,
+  projectId, revealSectionId, onOpen, onInsights, onUnestimated, onAddTaskTo, onProjectSheet,
 }: ProjectViewProps) {
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const [iconOpen, setIconOpen] = useState(false);
@@ -345,8 +346,7 @@ function ProjectBody({
                 <span className="hash" style={markerStyle(project.color)}>
                   {readProjectIcon(project.description)
                     ? <ProjectIcon iconId={readProjectIcon(project.description)!} style={{ color: 'inherit' }} />
-                    : <ProjectProgress open={projectProgressCounts.open[projectId] ?? 0} completed={projectProgressCounts.completed[projectId]}
-                        label={projectProgressCounts.completed[projectId] === undefined ? t('project.progressUnknown') : (projectProgressCounts.open[projectId] ?? 0) + projectProgressCounts.completed[projectId] === 0 ? t('project.progressEmpty') : t('project.progressCompletedAll', { done: projectProgressCounts.completed[projectId], total: (projectProgressCounts.open[projectId] ?? 0) + projectProgressCounts.completed[projectId] })} />}
+                    : '#'}
                 </span>
               </button>
               {iconOpen && (
@@ -361,6 +361,17 @@ function ProjectBody({
                       setIconOpen(false);
                     }}
                   />
+                  <span className="fieldlabel project-picker-color-label">{t('project.colour')}</span>
+                  <div className="swatches" role="radiogroup" aria-label={t('project.colour')}>
+                    {COLOUR_CHOICES.map((choice) => (
+                      <button key={choice} type="button" role="radio" className={`swatch${project.color === choice ? ' selected' : ''}`}
+                        style={{ '--swatch': colorValue(choice) } as React.CSSProperties}
+                        aria-label={t(`colour.${choice}` as TranslationKey)} aria-checked={project.color === choice}
+                        onClick={() => void updateProjectFields(projectId, { color: choice })}>
+                        {project.color === choice && <Icon name="check" size="sm" />}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </span>
@@ -445,7 +456,12 @@ function ProjectBody({
       />}
 
 
-      {current.mode === 'table' && current.group === 'none' ? (
+      {current.mode === 'list' && sections.length > 0 && !current.filters.showCompleted && !items.some((item) => item.project_id === projectId && !item.checked && !item.is_deleted) && (
+        <EmptyState view={project.inbox_project ? 'inbox' : 'project'} onAdd={() => onAddTaskTo({ projectId })} />
+      )}
+      {current.mode === 'list' && sections.length === 0 && !current.filters.showCompleted && !items.some((item) => item.project_id === projectId && !item.checked && !item.is_deleted) ? (
+        <EmptyState view={project.inbox_project ? "inbox" : "project"} onAdd={() => onAddTaskTo({ projectId })} />
+      ) : current.mode === 'table' && current.group === 'none' ? (
         <TableSurface viewKey={viewKey} childrenOf={childrenOf} onOpen={onOpen}
           groups={[
             { title: t('group.noSection'), items: looseItems, childrenOf, onOpen,

@@ -119,7 +119,7 @@ describe('closing a recurring task whose rule and language disagree (#432)', () 
     } as never);
     const close = command('item_close', { id: 'a' });
     sent.mockResolvedValue({
-      sync_status: { [close.uuid]: { error_code: 15, error: 'Invalid argument', error_tag: 'INVALID_ARGUMENT' } },
+      sync_token: 'next', sync_status: { [close.uuid]: { error_code: 15, error: 'Invalid argument', error_tag: 'INVALID_ARGUMENT' } },
     } as never);
     const result = await sendCommands('token', [close]);
     expect(sent).toHaveBeenCalledTimes(1);
@@ -130,7 +130,7 @@ describe('closing a recurring task whose rule and language disagree (#432)', () 
   it('leaves a task that is not recurring alone', async () => {
     const close = command('item_close', { id: 'a' });
     sent.mockImplementation((async (_path: string, init?: { form?: unknown }) => init?.form
-      ? { sync_status: { [close.uuid]: { error_code: 480, error: 'Date is invalid', error_tag: 'INVALID_DATE' } } }
+      ? { sync_token: 'next', sync_status: { [close.uuid]: { error_code: 480, error: 'Date is invalid', error_tag: 'INVALID_DATE' } } }
       : { due: { string: 'x', date: '2026-11-01', lang: 'en', timezone: null, is_recurring: false } }) as never);
     const result = await sendCommands('token', [close]);
     expect(result.failures).toHaveLength(1);
@@ -164,6 +164,29 @@ describe('closing a recurring task whose rule and language disagree (#432)', () 
     expect(server.closes).toBe(1);
     // The original close was not sent again: only the replayed repair steps went.
     expect(server.log.slice(before).every((cmd) => cmd.uuid !== close.uuid)).toBe(true);
+    expect(await loadJournal()).toEqual([]);
+  });
+
+  it('retries the same repair steps when a 200 omits an acknowledgement', async () => {
+    const server = todoist();
+    const close = command('item_close', { id: 'a' });
+    const real = sent.getMockImplementation()!;
+    let hide = true;
+    sent.mockImplementation((async (path: string, init?: { form?: { commands: string } }) => {
+      const answer = await real(path, init as never) as { sync_token: string; sync_status: Record<string, unknown> };
+      if (hide && init?.form && JSON.parse(init.form.commands).length === 2) {
+        hide = false;
+        const commands = JSON.parse(init.form.commands) as Wire[];
+        delete answer.sync_status[commands[1].uuid];
+      }
+      return answer;
+    }) as never);
+    const first = await sendCommands('token', [close], { userId: 'u', userLang: 'nl' });
+    expect(first.undelivered.map((cmd) => cmd.uuid)).toEqual([close.uuid]);
+    expect(await loadJournal()).toHaveLength(1);
+    const second = await sendCommands('token', [close], { userId: 'u', userLang: 'nl' });
+    expect(second.delivered).toContain(close.uuid);
+    expect(server.closes).toBe(1);
     expect(await loadJournal()).toEqual([]);
   });
 

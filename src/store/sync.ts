@@ -1,3 +1,7 @@
+import { invalidateSession } from '@/api/session';
+import { overlayQueuedIntent } from './queuedIntent';
+import { invalidateHistory } from '@/api/sharedRead';
+import { assertLease } from '@/db/lease';
 import { clearProjectPeopleCache } from './collab';
 import { usePomodoro } from './pomodoro';
 /** Talking to Todoist: signing in and out, reading, writing, the offline queue, the demo. */
@@ -6,7 +10,7 @@ import { auth } from '@/api/auth';
 import { completeSignIn } from '@/api/oauth';
 import { ApiError, NotConnectedError } from '@/api/client';
 import { applySync, applyWrite, sync } from '@/api/sync';
-import { sendCommands, type Command } from '@/api/commands';
+import { resolveCommandIds, sendCommands, type Command } from '@/api/commands';
 import { settleOrphans } from '@/api/repair';
 import * as idb from '@/db/idb';
 import { emptySnapshot, setWeekLabel } from '@/domain/types';
@@ -17,7 +21,7 @@ import { sessionGet, sessionRemove, sessionSet } from '@/lib/sessionStore';
 import { forgetDemoOnboarding } from '@/domain/onboarding';
 import { defaultPreferences, hydratePreferences, readSettingsComment, type Preferences } from './prefs';
 import {
-  explainFailures, hidePending, partitionQueue, pendingDeletes, revertRefused, schedulePersist,
+  cancelPendingSessionWork, explainFailures, identifyDeadlineRefusals, hidePending, partitionQueue, pendingDeletes, revertRefused, schedulePersist, withPending,
 } from './helpers';
 import {
   PREFS_KEY, preferencesWriteTimer, remotePreferences, tourSnapshotBackup, withOnboarding, fetchSettingsComments, settingsComments, legacySettingsTask,
@@ -28,20 +32,26 @@ import type { Slice, SyncSlice } from './types';
 import { accountOnDevice, mayWriteAs } from '@/lib/accountWatch';
 import { claimed, exclusive, holdOptimistic, reapplyWaiting } from './syncGate';
 import { loadSyncLog, recordRefusal, recordSyncFailure } from './syncLog';
-import { clearPrefsDirty, loadPrefsDirty } from './preferences';
+import { cancelPreferencesWrite, clearPrefsDirty, loadPrefsDirty, resetPrefsDirty } from './preferences';
+
+let sessionGeneration = 0;
+class StaleSession extends Error {}
+function checkSession(generation: number) {
+  if (generation !== sessionGeneration) throw new StaleSession();
+}
+async function checkTurn(generation: number) {
+  checkSession(generation);
+  await assertLease('todoist-enhanced-sync');
+  checkSession(generation);
+}
 
 /** How often the app asks Todoist what changed while the tab is in the foreground. */
 export const POLL_INTERVAL_MS = 45_000;
 
-/**
- * Reads that failed in a row. At this many, the next read starts from scratch
- * once, in case what Todoist refuses is the token the device kept (#466). One
- * fresh read per streak: a large account is not downloaded on every poll.
- */
+/** Number used by regression tests for repeated failures. */
 export const FULL_READ_AFTER_FAILURES = 3;
-let failureStreak = 0;
-/** For tests. */
-export function resetFailureStreak() { failureStreak = 0; }
+/** Kept for test setup compatibility; failures do not force a full read. */
+export function resetFailureStreak() { /* no automatic escalation */ }
 
 /** A failed or unreadable settings lookup is not proof of a new account. */
 export async function readAccountSettings(snapshot: ReturnType<typeof emptySnapshot>) {
@@ -68,7 +78,9 @@ export async function flushQueue(
   get: () => AppState,
   set: (patch: Partial<AppState>) => void,
 ): Promise<boolean> {
+  const generation = sessionGeneration;
   const queue = await idb.readQueue();
+  checkSession(generation);
   await settleOrphans(
     { syncToken: get().snapshot.syncToken, ...repairAccount(get) },
     new Set(queue.map((cmd) => cmd.uuid)),
@@ -94,14 +106,17 @@ export async function flushQueue(
     .filter((cmd) => !held.has(cmd.uuid))
     // A write still sending these is their sender, not this flush (#468).
     .filter((cmd) => !claimed.has(cmd.uuid))
-    .filter((cmd) => !cmd.userId || !account || cmd.userId === account)
+    .filter((cmd) => account ? cmd.userId === account : !cmd.userId)
     // The bookkeeping stays here: Todoist is sent the command and nothing else.
     .map(({ queuedAt: _q, attempts: _a, userId: _u, ...cmd }) => cmd);
   if (commands.length === 0) return false;
   try {
     const optimistic = get().snapshot;
-    const result = await sendCommands(get().snapshot.syncToken, commands, repairAccount(get));
+    await checkTurn(generation);
+    const result = await sendCommands(get().snapshot.syncToken, resolveCommandIds(commands, get().resolvedIds), repairAccount(get));
+    await checkTurn(generation);
     let merged = applyWrite(get().snapshot, result.responses, result.mapping);
+    merged = overlayQueuedIntent(merged, optimistic, result.undelivered, result.mapping);
     if (result.error) recordSyncFailure('write', result.error);
 
     /* A refused creation takes its placeholder with it. A refused edit is
@@ -126,27 +141,27 @@ export async function flushQueue(
 
     set({ snapshot: hidePending(reapplyWaiting(merged)), resolvedIds: { ...get().resolvedIds, ...result.mapping } });
     const safety = await verifyEstimateWrites(get, set, commands, result, optimistic);
-    await idb.dequeue(result.delivered.filter((id) => !safety.pending.some((cmd) => cmd.uuid === id)));
-    if (safety.pending.length > 0) await idb.updateQueued(safety.pending);
-    if (result.undelivered.length > 0) await idb.updateQueued(result.undelivered);
+    await checkTurn(generation);
+    await idb.settleQueue(result.delivered, [...safety.pending, ...result.undelivered], result.mapping, get().snapshot, account);
     set({ pendingCount: (await idb.readQueue()).length });
-    schedulePersist(get().snapshot);
     const failures = result.failures.filter((f) => !safety.handled.has(f.uuid));
     if (failures.length > 0) {
       recordRefusal('write', failures, commands.filter((cmd) => failures.some((f) => f.uuid === cmd.uuid)).map((cmd) => cmd.type));
       get().toast(
-        explainFailures(failures, result.delivered.length, get().prefs.locale),
+        explainFailures(identifyDeadlineRefusals(failures, commands), result.delivered.length, get().prefs.locale),
         undefined,
         { tone: 'error' },
       );
     }
-    // A full read would wipe the placeholders of what is still waiting to go.
+    // A failed batch must stop the read too: otherwise a successful read can
+    // hide pending work and falsely turn the sync indicator back to idle.
+    if (result.error) throw result.error;
     return stale && get().pendingCount === 0;
   } catch (error) {
     /* Only the network can throw from here (see `failures` above), so this is
        always "still unreachable": the queue is left alone and retried later. */
-    recordSyncFailure('write', error);
-    return false;
+    if (!(error instanceof StaleSession)) recordSyncFailure('write', error);
+    throw error;
   }
 }
 
@@ -166,11 +181,15 @@ export async function dropForeignQueue(
   userId: string | undefined,
   legacyOwner: string | null | undefined,
 ): Promise<number> {
-  const queue = await idb.readQueue();
+  let queue = await idb.readQueue();
   if (!userId || queue.length === 0) return queue.length;
+  if (legacyOwner && queue.some((entry) => !entry.userId)) {
+    await idb.claimLegacyQueue(legacyOwner);
+    queue = await idb.readQueue();
+  }
   const { foreign } = partitionQueue(queue, userId, legacyOwner);
   if (foreign.length === 0) return queue.length;
-  await idb.dequeue(foreign.map((cmd) => cmd.uuid));
+  // Keep foreign work on the device for its owner; never send it as this user.
   set({ pendingCount: queue.length - foreign.length });
   get().toast(
     translate(get().prefs.locale, 'sync.foreignQueue', { count: foreign.length }),
@@ -186,8 +205,10 @@ async function readFromTodoist(
   set: (patch: Partial<AppState>) => void,
   full: boolean,
   signedIn: { legacyOwner: string | null } | undefined,
+  generation: number,
 ): Promise<void> {
   try {
+    checkSession(generation);
     let stale: boolean;
     if (signedIn) {
       /* Someone has just signed in, and whose account it is decides what in
@@ -195,8 +216,10 @@ async function readFromTodoist(
          then send the rest (#129). The read is already the whole account, so
          what follows is one incremental read, not a second full one. */
       const response = await sync('*');
+      await checkTurn(generation);
       const fresh = applySync(emptySnapshot(), response);
       const checked = await readAccountSettings(fresh);
+      checkSession(generation);
       const initial = checked ?? fresh;
       if (signedIn.legacyOwner && signedIn.legacyOwner !== initial.user?.id) clearPrefsDirty();
       const localPrefs = signedIn.legacyOwner && signedIn.legacyOwner !== initial.user?.id
@@ -218,7 +241,7 @@ async function readFromTodoist(
        incremental read only carries what changed since: it would never
        bring the filters that already existed. One full read fills them. */
     const missingFilters = !get().snapshot.filters;
-    let fromScratch = signedIn ? stale : (full || stale || missingFilters || failureStreak === FULL_READ_AFTER_FAILURES);
+    let fromScratch = signedIn ? stale : (full || stale || missingFilters);
     let response: Awaited<ReturnType<typeof sync>>;
     try {
       response = await sync(fromScratch ? '*' : get().snapshot.syncToken, undefined, get().snapshot.workspaces);
@@ -227,11 +250,12 @@ async function readFromTodoist(
          rate limit, refusing the token this device kept: an old one, or one
          from before something changed on the account. Reading everything
          again is the way out, rather than "Sync failed" on every poll (#466). */
-      if (fromScratch || !(error instanceof ApiError) || !error.isRefusal) throw error;
+      if (fromScratch || !(error instanceof ApiError) || !error.isInvalidSyncToken) throw error;
       recordSyncFailure('read', error);
       fromScratch = true;
       response = await sync('*', undefined, get().snapshot.workspaces);
     }
+    await checkTurn(generation);
     for (const failure of response.failedFolderWorkspaces ?? []) recordSyncFailure('folders', failure.error);
     /* What the screen shows for writes still waiting their turn goes back
        over what was read, before the settings are read from it. From
@@ -239,6 +263,7 @@ async function readFromTodoist(
        whose folders could not be read this time are kept. */
     let snapshot = reapplyWaiting(applySync(fromScratch ? { ...emptySnapshot(), folders: get().snapshot.folders } : get().snapshot, response));
     const checked = await readAccountSettings(snapshot);
+    await checkTurn(generation);
     if (checked) snapshot = checked;
     const canonical = preferencesWriteTimer || checked === null
       ? null
@@ -246,7 +271,6 @@ async function readFromTodoist(
     if (canonical) setWeekLabel(canonical.weekLabel);
     const adopted = canonical && JSON.stringify(canonical) !== JSON.stringify(get().prefs) ? canonical : get().prefs;
     const prefs = checked === null ? adopted : withOnboarding(snapshot, adopted);
-    failureStreak = 0;
     set({ snapshot: hidePending(snapshot), prefs, syncState: 'idle', syncError: null, settingsChecked: checked !== null, settingsUnavailable: checked === null });
     schedulePersist(snapshot);
     if (canonical || prefs !== adopted) void idb.savePrefs(PREFS_KEY, prefs);
@@ -254,17 +278,12 @@ async function readFromTodoist(
        moves an account off the old settings task the first time. */
     if (checked !== null) window.setTimeout(() => void get().ensurePreferencesTask(), 0);
   } catch (error) {
+    if (error instanceof StaleSession) return;
     if (error instanceof NotConnectedError) {
       set({ connected: false, syncState: 'idle', syncError: 'invalid' });
       return;
     }
     recordSyncFailure('read', error);
-    /* Only Todoist's own refusals and unreadable answers count towards a
-       fresh read: a lost network or a laptop waking up says nothing about
-       the token, and must not cost a whole account's download. */
-    const todoistSaidNo = (error instanceof ApiError && !error.isAuthError && error.status !== 429)
-      || (error instanceof Error && /could not be read/.test(error.message));
-    if (todoistSaidNo) failureStreak += 1;
     const offline = !navigator.onLine || !(error instanceof ApiError);
     set({
       syncState: offline ? 'offline' : 'error',
@@ -277,7 +296,7 @@ async function readFromTodoist(
   } finally {
     /* Whatever happened above, this sync is over. A state left on
        "syncing" stops every later sync from starting. */
-    if (get().syncState === 'syncing') set({ syncState: 'idle' });
+    if (generation === sessionGeneration && get().syncState === 'syncing') set({ syncState: 'idle' });
   }
 }
 
@@ -289,14 +308,19 @@ async function sendNow(
   before: ReturnType<typeof emptySnapshot>,
   after: ReturnType<typeof emptySnapshot>,
   release: () => void,
+  generation: number,
 ): Promise<Record<string, string>> {
   /* Claimed before they were queued, so no flush can have sent them: they are
      this write's to send, even on a device whose outbox cannot be written. */
-  const toSend = commands;
+  const toSend = resolveCommandIds(commands, get().resolvedIds);
   try {
     // The token as it is now: a read may have moved it while this waited.
+    await checkTurn(generation);
+    const optimistic = get().snapshot;
     const result = await sendCommands(get().snapshot.syncToken, toSend, repairAccount(get));
+    await checkTurn(generation);
     let merged = applyWrite(get().snapshot, result.responses, result.mapping);
+    merged = overlayQueuedIntent(merged, optimistic, result.undelivered, result.mapping);
     if (result.error) recordSyncFailure('write', result.error);
     /* Todoist refused some of it, and the screen must not keep what it
        refused: each refused command gives back only the objects it touched,
@@ -307,8 +331,8 @@ async function sendNow(
       /* In development, the refused commands and Todoist's full answer, to
          diagnose a refusal on a real account (#28). */
       if (import.meta.env.DEV) {
-        const refused = new Set(result.failures.map((failure) => failure.uuid));
-        console.warn('[todoist] refused', toSend.filter((cmd) => refused.has(cmd.uuid)), result.failures);
+        // Commands can contain private task content; do not log their payloads.
+        console.warn('[todoist] refused commands', result.failures.length);
       }
     }
 
@@ -317,29 +341,26 @@ async function sendNow(
     release();
     set({
       snapshot: hidePending(reapplyWaiting(merged)),
-      syncState: result.error ? 'offline' : 'idle',
+      syncState: result.error ? (result.error instanceof ApiError ? 'error' : 'offline') : 'idle',
       resolvedIds: { ...get().resolvedIds, ...result.mapping },
     });
-    schedulePersist(get().snapshot);
-
     /* Only what Todoist received leaves the queue. What the network lost
        part-way stays, with the ids resolved so far written into it. */
     const safety = await verifyEstimateWrites(get, set, toSend, result, after);
-    await idb.dequeue(result.delivered.filter((id) => !safety.pending.some((cmd) => cmd.uuid === id)));
-    if (safety.pending.length > 0) await idb.updateQueued(safety.pending);
-    if (result.undelivered.length > 0) await idb.updateQueued(result.undelivered);
+    await checkTurn(generation);
+    await idb.settleQueue(result.delivered, [...safety.pending, ...result.undelivered], result.mapping, get().snapshot, before.user?.id);
     set({ pendingCount: (await idb.readQueue()).length });
 
-    schedulePersist(get().snapshot);
     const failures = result.failures.filter((f) => !safety.handled.has(f.uuid));
     if (failures.length > 0) {
       recordRefusal('write', failures, toSend.filter((cmd) => failures.some((f) => f.uuid === cmd.uuid)).map((cmd) => cmd.type));
       get().toast(explainFailures(
-        failures, result.delivered.length, get().prefs.locale,
+        identifyDeadlineRefusals(failures, toSend), result.delivered.length, get().prefs.locale,
       ), undefined, { tone: 'error' });
     }
     return result.mapping;
   } catch (error) {
+    if (error instanceof StaleSession) return {};
     if (error instanceof NotConnectedError || (error instanceof ApiError && error.isAuthError)) {
       await auth.disconnect();
       set({ connected: false, syncState: 'idle', syncError: 'invalid' });
@@ -349,7 +370,7 @@ async function sendNow(
        `failures` above. The change stays queued and goes out on the next
        sync. */
     recordSyncFailure('write', error);
-    set({ syncState: 'offline' });
+    set({ syncState: error instanceof ApiError ? 'error' : 'offline' });
     return {};
   }
 }
@@ -375,7 +396,7 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
       /* A page load that is Todoist sending the person back from its consent
          page finishes the sign-in first, so what follows finds a connection. */
       const signIn = await completeSignIn();
-      if (signIn === 'signed-in') { sessionRemove('demo'); auth.forgetPastedToken(); }
+      if (signIn === 'signed-in') { invalidateSession(); sessionRemove('demo'); auth.forgetPastedToken(); }
       if (signIn === 'denied' || signIn === 'failed') set({ signInError: signIn });
 
       const [storedPrefs, snapshot, queue, storedKept] = await Promise.all([
@@ -421,14 +442,33 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
     }
   },
   async connect(token: string) {
+    // Changing credentials must not discard deletions still in their undo
+    // window. Persist them for their original owner before cancelling timers.
+    const previousOwner = get().snapshot.user?.id;
+    const deletes = [...pendingDeletes.values()].filter((pending) => !pending.queued).flatMap((pending) => pending.commands);
+    if (deletes.length && !get().demo) {
+      try {
+        if (!previousOwner) throw new Error('Unknown owner');
+        await idb.enqueue(deletes, previousOwner);
+      } catch {
+        get().toast(translate(get().prefs.locale, 'sync.storageFailed'), undefined, { tone: 'error' });
+        return false;
+      }
+    }
+    invalidateSession();
+    const generation = ++sessionGeneration;
+    cancelPendingSessionWork();
+    cancelPreferencesWrite();
     set({ syncState: 'loading', syncError: null, settingsChecked: false, settingsUnavailable: false });
     await auth.set(token);
     // Whose copy the device holds now, before the one just read replaces it.
     const legacyOwner = get().snapshot.user?.id ?? null;
     try {
       const response = await sync('*');
+      checkSession(generation);
       let snapshot = applySync(emptySnapshot(), response);
       const checked = await readAccountSettings(snapshot);
+      checkSession(generation);
       if (checked) snapshot = checked;
       // A setting changed on another account is not this account's to keep.
       if (legacyOwner && legacyOwner !== snapshot.user?.id) clearPrefsDirty();
@@ -450,6 +490,7 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
       if (checked !== null) window.setTimeout(() => void get().ensurePreferencesTask(), 0);
       return true;
     } catch (error) {
+      if (error instanceof StaleSession) return false;
       await auth.disconnect();
       set({
         connected: false,
@@ -477,12 +518,28 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
     });
   },
   async disconnect() {
+    invalidateSession();
+    ++sessionGeneration;
+    const owner = get().snapshot.user?.id;
+    const deletes = [...pendingDeletes.values()].filter((pending) => !pending.queued).flatMap((pending) => pending.commands);
+    const demo = get().demo;
+    cancelPendingSessionWork();
+    cancelPreferencesWrite();
     clearProjectPeopleCache();
-    clearPrefsDirty();
+    resetPrefsDirty();
     sessionRemove('demo');
     usePomodoro.getState().end();
-    await auth.disconnect();
-    await idb.clearAll();
+    // Mark the session closed before waiting for any in-flight sync turn.
+    set({ connected: false });
+    let storageFailed = false;
+    await exclusive(async () => {
+      try {
+        if (owner && !demo) await idb.claimLegacyQueue(owner);
+        if (deletes.length && !demo) await idb.enqueue(deletes, owner);
+      } catch { storageFailed = true; }
+      await auth.disconnect();
+      try { await idb.clearSession(); } catch { storageFailed = true; }
+    });
     set({
       connected: false,
       demo: false,
@@ -492,6 +549,9 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
       settingsUnavailable: false,
       pendingCount: 0,
       syncState: 'idle',
+      syncError: storageFailed ? 'storage-signout' : null,
+      undoStack: [],
+      toasts: [],
       resolvedIds: {},
       dustKept: {},
       // What was asked of one account's tasks is not asked of the next one's.
@@ -509,7 +569,8 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
     set({ syncState: 'syncing', syncError: null });
     /* A write in flight finishes first, and the next one waits for this read
        to land, so neither can undo the other on screen (#468). */
-    await exclusive(() => readFromTodoist(get, set, full, signedIn));
+    const generation = sessionGeneration;
+    await exclusive(() => readFromTodoist(get, set, full, signedIn, generation));
   },
   startPolling() {
     const tick = () => {
@@ -535,6 +596,7 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
    * rather than leaving it showing something Todoist never accepted.
    */
   async apply(commands, optimistic, options) {
+    const generation = sessionGeneration;
     const before = get().snapshot;
     const after = optimistic(before);
 
@@ -556,8 +618,9 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
       return {};
     }
 
+    if (commands.some((entry) => entry.type.startsWith('item_'))) invalidateHistory();
+
     set({ snapshot: after });
-    schedulePersist(after);
 
     /* These commands are this write's to send: the outbox keeps them for a
        reload, and its flush leaves them alone while this write holds them.
@@ -565,7 +628,20 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
     for (const cmd of commands) claimed.add(cmd.uuid);
     const release = holdOptimistic(optimistic);
     try {
-      await idb.enqueue(commands, get().snapshot.user?.id);
+      try {
+        await idb.enqueue(commands, before.user?.id, withPending(after), withPending(before));
+      } catch {
+        if (generation === sessionGeneration) {
+          const failures = commands.map((cmd) => ({ uuid: cmd.uuid, error: 'Storage unavailable' }));
+          const snapshot = revertRefused(get().snapshot, before, commands, failures);
+          set({ snapshot });
+          schedulePersist(snapshot);
+          get().toast(translate(get().prefs.locale, 'sync.storageFailed'), undefined, { tone: 'error' });
+        }
+        return {};
+      }
+      checkSession(generation);
+      schedulePersist(get().snapshot);
       set({ pendingCount: (await idb.readQueue()).length });
 
       if (!navigator.onLine) {
@@ -575,7 +651,7 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
 
       /* A write made while another one is answered (the estimate fallback)
          is already inside the turn: waiting for it would wait for itself. */
-      const send = () => sendNow(get, set, commands, before, after, release);
+      const send = () => sendNow(get, set, commands, before, after, release, generation);
       return await (options?.inTurn ? send() : exclusive(send));
     } finally {
       release();

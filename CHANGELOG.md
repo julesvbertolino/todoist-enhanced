@@ -42,6 +42,20 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.33.0
+
+🐛 **Recurring tasks reset their subtasks.** When Reset sub-tasks is enabled in Todoist, completing a recurring task prepares its direct subtasks for the next occurrence.
+
+🎨 **Empty views are more visual.** An illustration and a message help you get started when a project or a view has no tasks.
+
+🎨 **Choose an icon and a colour.** Open a project’s icon from its title to choose its icon and colour together.
+
+🎨 **Simpler project icons.** The progress circle on projects is gone: it was causing sync bugs because Enhanced had to read all your completed tasks in the background to draw it. A project without its own icon shows a plain # again.
+
+🐛 **Know when a deadline needs Pro.** Free accounts now see why deadlines require a Todoist Pro or Business subscription before adding one.
+
+🐛 **Sync improvements and fixes.** Enhanced handles some interruptions and Todoist rate limits more reliably.
+
 ## 2.32.4
 
 🎨 **Set an estimate faster in Notifications.** A task without an estimate now offers a menu of the usual durations (15 min, 30 min, 1 h…) instead of an empty box. You can still type any other duration.

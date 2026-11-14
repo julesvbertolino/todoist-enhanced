@@ -1,6 +1,9 @@
+import { CursorGuard } from './pagination';
 import { ApiError, request } from './client';
 import type { CompletedItem } from '@/domain/types';
 import { addDays, differenceInCalendarDays, min as earliest } from 'date-fns';
+import { accountOnDevice } from '@/lib/accountWatch';
+import { sharedRead } from './sharedRead';
 
 /**
  * Reading history, for Insights.
@@ -73,6 +76,7 @@ async function fetchWindow(
 ): Promise<CompletedItem[]> {
   const out: CompletedItem[] = [];
   let cursor: string | undefined;
+  const guard = new CursorGuard();
 
   do {
     const page = await request<CompletedResponse>('/tasks/completed/by_completion_date', {
@@ -93,6 +97,7 @@ async function fetchWindow(
       signal,
     });
     out.push(...(page.items ?? []));
+    guard.next(page.next_cursor);
     cursor = page.next_cursor ?? undefined;
   } while (cursor);
 
@@ -118,6 +123,7 @@ async function fetchRecurringWindow(
 ): Promise<CompletedItem[]> {
   const out: CompletedItem[] = [];
   for (let offset = 0; ; offset += PAGE_LIMIT) {
+    if (offset >= PAGE_LIMIT * 1000) throw new Error('Pagination limit exceeded');
     const page = await request<{ items?: CompletionEntry[] }>('/tasks/completed', {
       query: {
         since: since.toISOString(),
@@ -227,6 +233,22 @@ export async function fetchCompleted(
   signal?: AbortSignal,
   scope: CompletedScope = {},
   options: CompletedOptions = {},
+): Promise<CompletedItem[]> {
+  /* Only the moving "now" endpoint is allowed ten seconds of staleness.
+     Fixed historical boundaries remain exact, and a shared result is clipped
+     to this caller's range so a later query cannot include earlier completions. */
+  const end = until.getTime();
+  const nearNow = Math.abs(Date.now() - end) < 10_000;
+  const query = JSON.stringify([since.getTime(), nearNow ? `now:${Math.floor(end / 10_000)}` : end, scope.project_id ?? null, Boolean(options.recurring)]);
+  const items = await sharedRead(accountOnDevice(), query, signal, (sharedSignal) => fetchCompletedUnshared(since, until, sharedSignal, scope, options));
+  return items.filter((item) => {
+    const completed = Date.parse(item.completed_at);
+    return !Number.isFinite(completed) || (completed >= since.getTime() && completed <= end);
+  });
+}
+
+async function fetchCompletedUnshared(
+  since: Date, until: Date, signal: AbortSignal, scope: CompletedScope, options: CompletedOptions,
 ): Promise<CompletedItem[]> {
   const span = differenceInCalendarDays(until, since);
   if (span <= WINDOW_DAYS) return fetchRange(since, until, WINDOW_DAYS, signal, scope, options);

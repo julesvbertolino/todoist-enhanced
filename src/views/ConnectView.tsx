@@ -105,6 +105,7 @@ export function ConnectView() {
             return after === undefined ? t('connect.oauth') : <>{before}<TodoistMark /> Todoist{after}</>;
           })()}
         </button>
+        {syncError === 'storage-signout' && <p className="connect-error" role="alert">{t('sync.signOutStorageFailed')}</p>}
         {syncError === 'invalid' && <p className="connect-error" role="alert">{t('connect.sessionEnded')}</p>}
         {signInError === 'denied' && <p className="connect-error">{t('connect.oauthDenied')}</p>}
         {signInError === 'failed' && <p className="connect-error">{t('connect.oauthFailed')}</p>}
