@@ -498,10 +498,12 @@ ul{margin:0;padding:0;list-style:none}
 }
 
 /* icons: one sprite, one stroke weight, one size scale */
-.ic{width:16px;height:16px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.ic{width:16px;height:16px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+/* Hugeicons draws its stroke on every path; this lets the per-place weights below reach them. */
+.ic *{stroke-width:inherit}
 /* 2px beside semibold labels, 1.5px beside regular body text */
-.btn .ic,.tb .ic,.navitem .ic,.addbtn .ic,.ptitle .ic{stroke-width:1.95}
-.meta .ic,.est .ic,.metrics .ic,.upnext .ic{stroke-width:1.55}
+.btn .ic,.tb .ic,.navitem .ic,.addbtn .ic,.ptitle .ic{stroke-width:1.75}
+.meta .ic,.est .ic,.metrics .ic,.upnext .ic{stroke-width:1.5}
 .ic-sm{width:14px;height:14px}
 .ic-lg{width:20px;height:20px}
 
@@ -678,7 +680,7 @@ ul{margin:0;padding:0;list-style:none}
 .metrics .sep{color:var(--border-strong)}
 .loadpill{padding:3px 9px;display:inline-flex;align-items:center;gap:4px;border-radius:var(--r-full);
   font-size:var(--fs-12);font-weight:700;font-variant-numeric:tabular-nums}
-.loadpill .ic{width:12px;height:12px;stroke-width:2}
+.loadpill .ic{width:12px;height:12px;stroke-width:1.8}
 .loadpill.ok{color:var(--ok);background:var(--ok-soft)}
 .loadpill.warn{color:var(--warn);background:var(--warn-soft)}
 .loadpill.over{color:var(--accent-dark);background:var(--accent-soft)}
@@ -772,7 +774,7 @@ ul{margin:0;padding:0;list-style:none}
 .gdate{color:var(--faint);font-size:var(--fs-12);font-weight:500;white-space:nowrap}
 .gflag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:var(--r-full);
   color:var(--warn);background:var(--warn-soft);font-size:var(--fs-11);font-weight:600;white-space:nowrap}
-.gflag .ic{width:12px;height:12px;stroke-width:2}
+.gflag .ic{width:12px;height:12px;stroke-width:1.8}
 .gtoggle{display:flex;align-items:center;gap:8px;flex:1;min-width:0;padding:10px 0;text-align:left}
 .gtoggle .caret{width:14px;height:14px;color:var(--faint);transition:transform .15s ease}
 .group.collapsed .gtoggle .caret{transform:rotate(-90deg)}
@@ -813,7 +815,7 @@ ul{margin:0;padding:0;list-style:none}
 
 .check{width:16px;height:16px;margin-top:3px;flex:0 0 auto;display:grid;place-items:center;
   border:1.5px solid var(--p3);border-radius:var(--r-sm);background:rgba(36,111,224,.06);color:transparent}
-.check .ic{width:10px;height:10px;stroke-width:2.8}
+.check .ic{width:10px;height:10px;stroke-width:2.4}
 .check:hover{background:rgba(36,111,224,.16)}
 .check.p1{border-color:var(--p1);background:rgba(209,69,59,.07)}
 .check.p2{border-color:var(--p2);background:rgba(181,101,0,.07)}
@@ -1012,7 +1014,7 @@ ul{margin:0;padding:0;list-style:none}
 .loadweek .over em{color:var(--accent-dark);font-weight:700}
 .loadweek .free b{background:var(--border-strong)}
 .loadweek em{display:flex;align-items:center;justify-content:flex-end;gap:4px;font-style:normal;font-variant-numeric:tabular-nums}
-.loadweek em .ic{width:12px;height:12px;stroke-width:2}
+.loadweek em .ic{width:12px;height:12px;stroke-width:1.8}
 .minifacts{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s2);margin-top:var(--s4);
   padding-top:var(--s3);border-top:1px solid var(--border)}
 .minifacts strong{display:block;font-size:var(--fs-16);font-weight:700;letter-spacing:-.01em}

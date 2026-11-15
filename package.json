@@ -1,7 +1,7 @@
 {
   "name": "todoist-enhancements",
   "private": true,
-  "version": "2.33.0",
+  "version": "2.34.0",
   "engines": {
     "node": ">=20"
   },
@@ -29,10 +29,11 @@
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@hugeicons/core-free-icons": "^4.4.0",
+    "@hugeicons/react": "^1.1.10",
     "date-fns": "^4.1.0",
     "emojibase-data": "17.0.0",
     "idb": "^8.0.3",
-    "lucide-react": "^1.47.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zustand": "^5.0.8"
@@ -47,6 +48,7 @@
     "eslint": "^9.39.5",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.13.0",
+    "lucide-react": "^1.47.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.71.1",
     "vite": "^6.0.11",

@@ -63,6 +63,8 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
   let content: ReactNode;
   switch (kind) {
     case null: return null;
+    case 'iconSet':
+      content = <div className="cv-icon-set">{(['calendar', 'clock', 'flag', 'tag', 'inbox', 'sun', 'star', 'bell', 'search', 'settings', 'filter', 'user', 'mail', 'link', 'project', 'board', 'table', 'comment', 'repeat', 'flame', 'someday', 'sparkles', 'deadline', 'dashboard'] as IconName[]).map((icon) => <span key={icon}><Icon name={icon} size="lg" /></span>)}</div>; break;
     case 'projectColours':
       /* The real picker, as it opens from a project's title: same grid, same swatches.
          Not a `.popover`: a dialog treats one of those in the page as an open menu and would ignore Escape. */
