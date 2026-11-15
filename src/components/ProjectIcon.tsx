@@ -1,5 +1,5 @@
 import { lazy, Suspense, useSyncExternalStore } from 'react';
-import type { LucideIcon } from 'lucide-react';
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
 
 /*
  * The catalogue of project icons is some 100 kB of drawings, and most of the
@@ -8,7 +8,7 @@ import type { LucideIcon } from 'lucide-react';
  * screen back: until it arrives an icon is an empty square of the same size,
  * so nothing moves when it does.
  */
-type Catalogue = Record<string, LucideIcon>;
+type Catalogue = Record<string, IconSvgElement>;
 let catalogue: Catalogue | null = null;
 const listeners = new Set<() => void>();
 const loading = import('@/domain/projectIconCatalog').then((module) => {
@@ -27,9 +27,9 @@ export function ProjectIcon({
   const sizeClass = size === 'sm' ? ' ic-sm' : size === 'lg' ? ' ic-lg' : '';
   const classes = `ic${sizeClass}${className ? ` ${className}` : ''}`;
   if (!icons) return <svg className={classes} style={style} aria-hidden="true" />;
-  const Glyph = icons[iconId];
-  if (!Glyph) return null;
-  return <Glyph className={classes} style={style} aria-hidden="true" />;
+  const glyph = icons[iconId];
+  if (!glyph) return null;
+  return <HugeiconsIcon icon={glyph} className={classes} style={style} aria-hidden="true" />;
 }
 
 const Grid = lazy(() => import('./ProjectIconPicker').then((module) => ({ default: module.ProjectIconGrid })));

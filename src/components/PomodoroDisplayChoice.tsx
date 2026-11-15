@@ -1,4 +1,5 @@
-import { Pause, Timer } from 'lucide-react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { PauseIcon, Timer01Icon } from '@hugeicons/core-free-icons';
 import { useT } from '@/hooks/useT';
 
 type Display = 'discreet' | 'fullscreen';
@@ -8,12 +9,12 @@ function Preview({ kind }: { kind: Display }) {
   return kind === 'discreet' ? (
     <div className="pomo-choice-preview discreet" aria-hidden="true">
       <span className="pc-title">Website</span>
-      <span className="pc-pill"><Timer size={10} />18:42<Pause size={9} /></span>
+      <span className="pc-pill"><HugeiconsIcon icon={Timer01Icon} size={10} />18:42<HugeiconsIcon icon={PauseIcon} size={9} /></span>
       {[78, 62, 70, 54].map((w, i) => <span className="pc-row" key={i}><i /><b style={{ width: `${w}%` }} /></span>)}
     </div>
   ) : (
     <div className="pomo-choice-preview fullscreen" aria-hidden="true">
-      <span className="pc-bar"><Timer size={9} />Focus</span>
+      <span className="pc-bar"><HugeiconsIcon icon={Timer01Icon} size={9} />Focus</span>
       <span className="pc-digits">18:42</span>
       <i className="pc-button">Pause</i>
     </div>

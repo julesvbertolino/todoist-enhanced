@@ -8,6 +8,10 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.34.0
+
+🎨 **Les icônes changent de look.** Chaque icône a été remplacée par un style plus arrondi et plus léger. Vous allez les adorer !
+
 ## 2.33.0
 
 🐛 **Les tâches récurrentes réinitialisent leurs sous-tâches.** Si l’option est activée dans Todoist, terminer une tâche récurrente prépare ses sous-tâches directes pour la prochaine occurrence.

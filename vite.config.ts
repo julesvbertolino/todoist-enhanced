@@ -92,6 +92,22 @@ function oauthClientDocument(publicUrl: string): Plugin {
   };
 }
 
+/**
+ * Hugeicons draws its paths with five decimals. On a 24px grid two are far
+ * below what an eye can tell, and they shorten the icons we ship by about a
+ * quarter once compressed.
+ */
+function roundHugeiconsPaths(): Plugin {
+  return {
+    name: 'round-hugeicons-paths',
+    enforce: 'pre',
+    transform(code, id) {
+      if (!/[\\/]@hugeicons[\\/]core-free-icons[\\/]dist[\\/]esm[\\/][^\\/]+\.js$/.test(id)) return null;
+      return code.replace(/\bd: "([^"]+)"/g, (_all, path: string) => `d: "${path.replace(/-?\d+\.\d{3,}/g, (n) => String(Number(Number(n).toFixed(2))))}"`);
+    },
+  };
+}
+
 export default defineConfig({
   // Relative base so the build can be dropped into any subfolder on Infomaniak.
   base: './',
@@ -104,6 +120,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    roundHugeiconsPaths(),
     oauthClientDocument(PUBLIC_URL),
     VitePWA({
       /* The app decides when a new build takes over (src/lib/appUpdate.ts):

@@ -654,14 +654,14 @@ button.subprog[aria-expanded="false"]{background:var(--subtle)}
 .group.accent-dust .gheadblock{border-bottom-color:var(--dust)}
 
 /* A heavier tick reads better at this size. */
-.check .ic{stroke-width:2.6}
+.check .ic{stroke-width:2.2}
 
 /* The recurring marker takes the colour of the date it belongs to. */
 .repeatdot{
   width:18px;height:18px;display:inline-grid;place-items:center;
   border-radius:var(--r-full);flex:0 0 auto;
 }
-.repeatdot .ic{width:11px;height:11px;stroke-width:2}
+.repeatdot .ic{width:11px;height:11px;stroke-width:1.8}
 .repeatdot.today{color:var(--p3);background:rgba(36,111,224,.14)}
 .repeatdot.late{color:var(--late);background:rgba(209,69,59,.14)}
 .repeatdot.future{color:var(--muted);background:var(--subtle)}
@@ -1343,7 +1343,7 @@ button.subprog[aria-expanded="false"]{background:var(--subtle)}
   width:16px;height:16px;display:grid;place-items:center;
   border-radius:var(--r-sm);color:#fff;
 }
-.logtick .ic{width:11px;height:11px;stroke-width:3}
+.logtick .ic{width:11px;height:11px;stroke-width:2.5}
 .logtick.p1{background:var(--p1)}
 .logtick.p2{background:var(--p2)}
 .logtick.p3{background:var(--p3)}
@@ -2668,7 +2668,7 @@ button.subprog[aria-expanded="false"]{background:var(--subtle)}
   width:44px;height:44px;flex:0 0 auto;display:grid;place-items:center;
   border-radius:14px;color:var(--on-accent,#fff);background:var(--accent);
 }
-.wt-mark .ic{width:22px;height:22px;stroke-width:2}
+.wt-mark .ic{width:22px;height:22px;stroke-width:1.8}
 .wt-skip{
   flex:0 0 auto;padding:4px 8px;border-radius:var(--r-sm);
   color:var(--muted);font-size:var(--fs-12);font-weight:600;

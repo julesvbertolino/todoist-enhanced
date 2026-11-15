@@ -184,3 +184,6 @@
 .cv-picker .iconpickergrid{height:38px!important;overflow:hidden}
 .cv-picker .project-picker-color-label{margin:8px 0 4px}
 .cv-picker{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:var(--sh-md);padding:12px}
+
+.cv-icon-set{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}
+.cv-icon-set span{display:grid;place-items:center;aspect-ratio:1;border-radius:10px;background:var(--hover);color:var(--text)}

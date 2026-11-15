@@ -42,6 +42,10 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.34.0
+
+🎨 **Icons got a new look.** Every icon has been replaced in a rounder, lighter style. You’re going to love them!
+
 ## 2.33.0
 
 🐛 **Recurring tasks reset their subtasks.** When Reset sub-tasks is enabled in Todoist, completing a recurring task prepares its direct subtasks for the next occurrence.
