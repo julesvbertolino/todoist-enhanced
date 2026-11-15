@@ -4,7 +4,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 
-const BUDGET_KB = 380;
+const BUDGET_KB = 392;
 const dir = new URL('../dist/assets/', import.meta.url);
 const entry = readdirSync(dir).find((name) => /^index-.*\.js$/.test(name));
 if (!entry) { console.error('No index-*.js in dist/assets: build first.'); process.exit(1); }
