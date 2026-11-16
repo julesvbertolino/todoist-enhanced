@@ -17,12 +17,14 @@
  * description) in Todoist's own apps too.
  */
 
+import { isProjectIconId } from './projectIconIds';
+
 const MARKER = /\n{0,2}<!--\s*icon:([a-z0-9-]+)\s*-->\s*$/i;
 
 /** The icon a project's description is carrying, if any. */
 export function readProjectIcon(description: string | null | undefined): string | null {
   const match = (description ?? '').match(MARKER);
-  return match ? match[1] : null;
+  return match && isProjectIconId(match[1]) ? match[1] : null;
 }
 
 /** The description with any icon marker taken back out — what a person should ever read or edit. */

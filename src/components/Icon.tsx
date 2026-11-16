@@ -1,7 +1,6 @@
 import type { CSSProperties } from 'react';
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
 import {
-  Add02Icon,
   Alert02Icon,
   Analytics01Icon,
   ArrowDown01Icon,
@@ -99,6 +98,11 @@ export type IconName =
   | 'bold' | 'italic' | 'strike' | 'heading1' | 'heading2' | 'quote' | 'code' | 'list-ordered';
 
 /** Hugeicons Free (Stroke Rounded), picked to stay close to the Lucide drawings they replace. */
+/* A plain plus, a touch heavier than the 1.5 line of the rest so that it holds at 16px. */
+const PlusIcon = [
+  ['path', { d: 'M12 5.5v13M5.5 12h13', stroke: 'currentColor', strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '2', key: '0' }],
+] as unknown as IconSvgElement;
+
 const ICONS: Record<IconName, IconSvgElement> = {
   'wrap-text': TextWrapIcon,
   'full-width': ArrowHorizontalIcon,
@@ -160,7 +164,7 @@ const ICONS: Record<IconName, IconSvgElement> = {
   logout: LogOutIcon,
   menu: Menu11Icon,
   more: MoreHorizontalIcon,
-  plus: Add02Icon,
+  plus: PlusIcon,
   project: Folder01Icon,
   repeat: RepeatIcon,
   flame: FireIcon,
