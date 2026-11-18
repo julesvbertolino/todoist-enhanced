@@ -1802,3 +1802,7 @@ html.desktop-app .macapp,html.desktop-app .macapp-line{display:none}
 
 .deadline-upgrade { opacity: .7; text-decoration: none; }
 .deadline-upgrade:hover { opacity: 1; }
+
+/* A standing title occupies the checkbox track in the task view too. */
+.detail-headline[data-uncompletable] > .detail-content,
+.detail-section .subtaskrow[data-uncompletable] > :is(.subtaskbody, .namefield) { grid-column: span 2; }

@@ -227,9 +227,9 @@ test('assigning from row hover changes the task without reloading the page', asy
   expect(await demo.evaluate(() => performance.timeOrigin)).toBe(started);
 });
 
-test('Upcoming extension is hidden when there is no further work and exposes the extended date when there is', async ({ demo }) => {
+test('Upcoming always offers more days, including when there are no later tasks', async ({ demo }) => {
   await seed(demo); await go(demo, '#/upcoming');
-  await expect(demo.getByRole('button', { name: 'Show 15 more days' })).toHaveCount(0);
+  await expect(demo.getByRole('button', { name: 'Show 7 more days' })).toBeVisible();
   await demo.evaluate(async () => {
     const url = performance.getEntriesByType('resource').map((entry) => entry.name).find((url) => /\/src\/store\/store\.ts(?:\?|$)/.test(url))!;
     const { useStore } = await import(url); const state = useStore.getState();
@@ -239,7 +239,8 @@ test('Upcoming extension is hidden when there is no further work and exposes the
     useStore.setState({ snapshot: { ...state.snapshot, items: { ...state.snapshot.items, beyond: { ...item, id: 'beyond', content: '203 beyond horizon', due: { ...item.due, date: day } } } } });
   });
   await expect(row(demo, '203 beyond horizon')).toHaveCount(0);
-  await demo.getByRole('button', { name: 'Show 15 more days' }).click();
+  await demo.getByRole('button', { name: 'Show 7 more days' }).click();
+  await demo.getByRole('button', { name: 'Show 7 more days' }).click();
   await expect(row(demo, '203 beyond horizon')).toBeVisible();
   await expect(demo.getByText(/^Showing dates through/)).toBeVisible();
 });
@@ -337,11 +338,11 @@ test('Review avatar follows the title on the same line', async ({ demo }) => {
   expect(Math.abs(avatar.y + avatar.height / 2 - text.y - text.height / 2)).toBeLessThan(2);
 });
 
-test('Upcoming contextual composer recognises dans un mois over its prefilled date', async ({ demo }) => {
+test('Upcoming contextual composer recognises in one month over its prefilled date', async ({ demo }) => {
   await seed(demo); await go(demo, '#/upcoming');
   await demo.locator('.screen.active').getByRole('button', { name: 'Add task', exact: true }).first().click();
   const dialog = demo.getByRole('dialog', { name: 'Add task', exact: true });
-  await dialog.getByRole('textbox', { name: 'Task name', exact: true }).fill('Faire ceci dans un mois');
+  await dialog.getByRole('textbox', { name: 'Task name', exact: true }).fill('Do this in one month');
   const expected = await demo.evaluate(() => {
     const today = new Date(); const day = today.getDate();
     today.setDate(1); today.setMonth(today.getMonth() + 1);
@@ -354,7 +355,7 @@ test('Upcoming contextual composer recognises dans un mois over its prefilled da
     const url = performance.getEntriesByType('resource').map((entry) => entry.name).find((url) => /\/src\/store\/store\.ts(?:\?|$)/.test(url))!;
     const { useStore } = await import(url);
     const items = Object.values(useStore.getState().snapshot.items) as Array<{ content: string; due?: { date: string } | null }>;
-    return items.find((item) => item.content === 'Faire ceci')?.due?.date;
+    return items.find((item) => item.content === 'Do this')?.due?.date;
   });
   expect(due).toBe(expected);
 });

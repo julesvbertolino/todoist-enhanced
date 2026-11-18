@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { loadTone, summariseLoad } from './load';
+import { loadTone, summariseLoad, unestimatedWorkload } from './load';
 import { item } from '@/test/items';
 
 describe('the tone of the header duration (#173)', () => {
@@ -37,4 +37,38 @@ describe('a subtask listed on its own as well as under its parent (#405)', () =>
     expect(summariseLoad([parent, child], childrenOf, null)).toMatchObject({ taskCount: 2, estimatedMinutes: 30 });
     expect(summariseLoad([child], childrenOf, null)).toMatchObject({ taskCount: 1, estimatedMinutes: 30 });
   });
+});
+
+describe('uncompletable tasks in load', () => {
+  it('does not count them or their estimates, including when nested under a normal task', () => {
+    const normal = item({ id: 'normal', labels: ['est-30'] });
+    const note = item({ id: 'note', content: '* Reference', labels: ['est-60'] });
+    const child = item({ id: 'child', content: '* Reminder', labels: ['est-90'], parent_id: 'normal' });
+    const childrenOf = (id: string) => id === 'normal' ? [child] : [];
+    expect(summariseLoad([normal, note], childrenOf, 60)).toMatchObject({ taskCount: 1, estimatedMinutes: 30, unestimatedCount: 0, percentage: 50 });
+  });
+});
+
+it('keeps a normal descendant under an uncompletable heading in the load', () => {
+  const parent = item({ id: 'p' });
+  const heading = item({ id: 'h', content: '* Heading', parent_id: 'p', labels: ['est-80'] });
+  const child = item({ id: 'c', parent_id: 'h', labels: ['est-20'] });
+  const childrenOf = (id: string) => id === 'p' ? [heading] : id === 'h' ? [child] : [];
+  expect(summariseLoad([parent, heading, child], childrenOf, null)).toMatchObject({ taskCount: 2, estimatedMinutes: 20 });
+});
+
+
+it('includes ordinary children of a standing parent even when only the parent is listed', () => {
+  const heading = item({ id: 'heading', content: '* Heading', labels: ['est-90'] });
+  const child = item({ id: 'c', parent_id: 'heading', labels: ['est-20'] });
+  expect(summariseLoad([heading], (id) => id === 'heading' ? [child] : [], null)).toMatchObject({ taskCount: 0, estimatedMinutes: 20 });
+});
+
+
+it('offers the unestimated child of a standing parent for estimation', () => {
+  const heading = item({ id: 'heading', content: '* Heading' });
+  const child = item({ id: 'child', parent_id: 'heading' });
+  const childrenOf = (id: string) => id === 'heading' ? [child] : [];
+  expect(summariseLoad([heading], childrenOf, null).unestimatedCount).toBe(1);
+  expect(unestimatedWorkload([heading], childrenOf).map((task) => task.id)).toEqual(['child']);
 });

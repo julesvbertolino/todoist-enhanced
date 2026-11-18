@@ -42,13 +42,23 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.36.0
+
+🎨 **Uncompletable tasks are easier to use.** A new task-menu button switches a task between completable and uncompletable. Uncompletable tasks have a clearer appearance and no longer count towards workload or progress.
+
+🎨 **Date recognition improvements.** In a task title, use short weekdays and phrases such as “next weekend” or “next month”. Dates are read in the app’s language.
+
+🎨 **Upcoming view refinements.** See overdue tasks and today before the days ahead, including empty days, weeks and months. Show more periods to plan further, and return to today from the board.
+
+🐛 **Create sections in an empty project.** The project shows its creation controls again. Its ⋯ menu can also add a section.
+
 ## 2.35.0
 
 🆕 **Choose your own tag for “Anytime this month”.** In Settings, next to the tag for “Anytime this week”, pick a shorter name such as month or mth, so you can type it faster when you add a task.
 
 🆕 **Rename a folder and file projects in it.** In a team workspace, the ⋯ menu of a folder lets you rename it, or delete it once it is empty. When you add or edit a project, the Parent field now lists the workspace’s folders, so a project can go straight into one.
 
-🎨 **Icon refinements.** The plus is now a simple cross and the menu button on your phone shows the familiar three lines.
+🎨 **Icon refinements.** The plus is now a simple cross, the menu button on your phone shows the familiar three lines.
 
 🐛 **Tags with a slash are recognised.** Typing a tag such as @Status/Waiting in a task title now reads and creates the whole tag, instead of stopping at the slash.
 
@@ -59,8 +69,6 @@ translation lives in CHANGELOG.fr.md.
 ## 2.33.0
 
 🐛 **Recurring tasks reset their subtasks.** When Reset sub-tasks is enabled in Todoist, completing a recurring task prepares its direct subtasks for the next occurrence.
-
-🎨 **Empty views are more visual.** An illustration and a message help you get started when a project or a view has no tasks.
 
 🎨 **Choose an icon and a colour.** Open a project’s icon from its title to choose its icon and colour together.
 

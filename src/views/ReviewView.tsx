@@ -19,7 +19,7 @@ import { markerStyle } from '@/domain/colors';
 import { nextOccurrence, nextOccurrenceLabel } from '@/domain/nextOccurrence';
 import { formatDuration, effectiveEstimate } from '@/domain/estimates';
 import { dueDate, formatRelativeDay } from '@/domain/dates';
-import { summariseInsights } from '@/domain/insights';
+import { isCountableCompletion, summariseInsights } from '@/domain/insights';
 import { summariseLoad, weeklyCapacity } from '@/domain/load';
 import {
   Bars, ChartCard, Donut, SplitBar, seriesColor,
@@ -395,8 +395,9 @@ export function ReviewView({ onOpen }: ReviewViewProps) {
 
   /** The number on a step's pip: how many things it is still asking about. */
   function countOf(s: ReviewStep): number {
-    if (s.id === 'load') return s.items.length;
-    return s.items.length + s.projects.length + s.completed.length;
+    const tasks = s.items.filter((item) => !isUncompletable(item)).length;
+    if (s.id === 'load') return tasks;
+    return tasks + s.projects.length + s.completed.filter((item) => isCountableCompletion(item, snapshot)).length;
   }
 
   function body() {
@@ -779,7 +780,7 @@ export function ReviewView({ onOpen }: ReviewViewProps) {
     const byDay: BarDatum[] = useMemo(() => {
       const counts = new Map(summary.byDay.map((d) => [d.date, d.count]));
       const before = new Map<string, number>();
-      for (const done of previous) {
+      for (const done of previous.filter((item) => isCountableCompletion(item, snapshot))) {
         const key = format(new Date(done.completed_at), 'yyyy-MM-dd');
         before.set(key, (before.get(key) ?? 0) + 1);
       }

@@ -187,3 +187,6 @@
 
 .cv-icon-set{display:grid;grid-template-columns:repeat(8,1fr);gap:8px}
 .cv-icon-set span{display:grid;place-items:center;aspect-ratio:1;border-radius:10px;background:var(--hover);color:var(--text)}
+
+.cv-kind-uncompletableMenu .cv-fit{display:flex;justify-content:center}
+.cv-uncompletable-menu{display:block;width:min(100%, 310px);height:auto;border-radius:8px;box-shadow:0 5px 18px #0002}

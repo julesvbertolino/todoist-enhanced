@@ -1,6 +1,6 @@
 import { differenceInCalendarDays, format, startOfDay, subDays } from 'date-fns';
 import type { CompletedItem, Item, Snapshot } from './types';
-import { ESTIMATE_PREFIX, toDisplayPriority } from './types';
+import { ESTIMATE_PREFIX, isUncompletable, toDisplayPriority } from './types';
 import { estimateOf } from './estimates';
 import { bucketKey, bucketsOf, type Grain, type Range } from './periods';
 
@@ -103,12 +103,20 @@ function streaks(days: Set<string>, now: Date): { current: number; longest: numb
   return { current, longest };
 }
 
+/** Ignore a completion when its still-open task is now a standing item. */
+export function isCountableCompletion(item: CompletedItem, snapshot: Snapshot): boolean {
+  const current = snapshot.items[item.task_id ?? item.id];
+  return !isUncompletable(item) && (!current || !isUncompletable(current));
+}
+
 export function summariseInsights(
   completed: CompletedItem[],
   openTasks: Item[],
   snapshot: Snapshot,
   now = new Date(),
 ): InsightsSummary {
+  completed = completed.filter((item) => isCountableCompletion(item, snapshot));
+  openTasks = openTasks.filter((item) => !isUncompletable(item));
   const dayCounts = new Map<string, number>();
   const hourCounts = new Array<number>(24).fill(0);
   const projectCounts = new Map<string, number>();
@@ -212,7 +220,7 @@ export interface ProjectProgress {
  */
 export function projectProgress(completedTotal: number | undefined, open: Item[]): ProjectProgress | null {
   if (completedTotal === undefined) return null;
-  const active = open.length;
+  const active = open.filter((item) => !isUncompletable(item)).length;
   const total = completedTotal + active;
   return { completed: completedTotal, active, percentage: total > 0 ? Math.round((completedTotal / total) * 100) : 0 };
 }

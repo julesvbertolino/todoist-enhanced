@@ -20,6 +20,7 @@ describe('a month is read from its own words, not its first three letters (#123)
   it('reads the abbreviations both languages use', () => {
     expect(read('sept 10')?.date).toBe('2027-09-10');
     expect(read('10 sept.')?.matched).toBe('10 sept.');
+    expect(read('10 mar')?.date).toBe('2027-03-10');
     expect(read('14 juil')?.date).toBe('2027-07-14');
     expect(read('Call 3 mars')?.date).toBe('2027-03-03');
   });
@@ -128,5 +129,35 @@ describe('Todoist short forms (#283)', () => {
   it('removes the short form from the task name', () => {
     const reading = read('buy milk tmr')!;
     expect(reading.matched).toBe('tmr');
+  });
+});
+
+describe('dates in the selected language (#491)', () => {
+  const en = { locale: 'en' as const };
+  const fr = { locale: 'fr' as const };
+  it('does not read a foreign weekday or date phrase', () => {
+    expect(read('appeler mon client', fr)).toBeNull();
+    expect(read('call lundi', en)).toBeNull();
+    expect(read('rappeler tomorrow', fr)).toBeNull();
+    expect(read('call demain', en)).toBeNull();
+    expect(read('réunion 14 july', fr)).toBeNull();
+  });
+  it('recognises abbreviations in the chosen language', () => {
+    expect(read('call thur', en)?.date).toBe('2026-10-01');
+    expect(read('call next thur', en)?.date).toBe('2026-10-08');
+    expect(read('réunion jeu', fr)?.date).toBe('2026-10-01');
+  });
+  it('reads relative dates and preserves the highlighted range', () => {
+    expect(read('call this weekend', en)).toMatchObject({ matched: 'this weekend', date: '2026-10-03', index: 5 });
+    expect(read('next weekend', en)?.date).toBe('2026-10-10');
+    expect(read('later this week', en)?.date).toBe('2026-09-30');
+    expect(read('le mois prochain', fr)?.date).toBe('2026-10-28');
+    expect(read('un jour', fr)?.date).toBe('2026-11-28');
+  });
+  it('clamps month and year offsets and skips invalid ordinal days', () => {
+    expect(readNaturalDate('next month', new Date(2026, 0, 31), en)?.date).toBe('2026-02-28');
+    expect(readNaturalDate('someday', new Date(2028, 11, 31), en)?.date).toBe('2029-02-28');
+    expect(readNaturalDate('next year', new Date(2028, 1, 29), en)?.date).toBe('2029-02-28');
+    expect(readNaturalDate('31st', new Date(2026, 3, 30), en)?.date).toBe('2026-05-31');
   });
 });

@@ -1,7 +1,8 @@
+import { summariseLoad } from './load';
 import { addDays, endOfWeek, startOfDay } from 'date-fns';
-import type { CompletedItem, Item, Project } from './types';
+import { isUncompletable, type CompletedItem, type Item, type Project } from './types';
 import { anytimeItems, bucketOf, isOpen, weekItems } from './views';
-import { effectiveEstimate, estimateOf } from './estimates';
+import { estimateOf } from './estimates';
 import { deadlineDate, dueDate } from './dates';
 
 /**
@@ -192,7 +193,7 @@ function contentOf(
           const inPlay = cadence === 'daily'
             ? bucket === 'overdue' || bucket === 'today'
             : bucket === 'overdue' || bucket === 'today' || bucket === 'anytime' || deadlineThisWeek(i);
-          return inPlay && estimateOf(i) === null;
+          return inPlay && !isUncompletable(i) && estimateOf(i) === null;
         }),
       };
 
@@ -296,10 +297,7 @@ export function buildReview(cadence: ReviewCadence, input: ReviewInput): ReviewS
 /** True when the week ahead asks for more time than the settings allow it. */
 function overloaded(items: Item[], input: ReviewInput): boolean {
   if (input.weeklyCapacityMinutes <= 0) return false;
-  const minutes = items.reduce(
-    (total, item) => total + (effectiveEstimate(item, input.childrenOf).minutes ?? 0),
-    0,
-  );
+  const minutes = summariseLoad(items, input.childrenOf, null).estimatedMinutes;
   return minutes > input.weeklyCapacityMinutes;
 }
 

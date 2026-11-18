@@ -6,7 +6,7 @@ import { assignees } from '@/domain/sharing';
 import { useProjectPeople } from '@/hooks/useProjectPeople';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { toTodoistPriority } from '@/domain/types';
+import { isUncompletable, toggleUncompletableContent, toTodoistPriority } from '@/domain/types';
 import { Icon } from './Icon';
 import { useT } from '@/hooks/useT';
 import { useMenuKeys } from '@/hooks/useMenuKeys';
@@ -746,6 +746,9 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
             <button className="opt" onClick={() => {
               setMenu('none'); void useStore.getState().duplicateTask(item.id).then(() => toast(t('task.duplicated')));
             }}><span><Icon name="copy" size="sm" />{t('task.duplicate')}</span></button>
+            <button className="opt" onClick={() => {
+              setMenu('none'); void updateTask(item.id, { content: toggleUncompletableContent(item) });
+            }}><span><Icon name="lock" size="sm" />{t(isUncompletable(item) ? 'task.makeCompletable' : 'task.makeUncompletable')}</span></button>
             <hr />
             <button
               className="opt danger"

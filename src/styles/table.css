@@ -184,3 +184,6 @@
 .tablemenu .tablemenu-label{display:inline-flex;align-items:center;gap:8px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tablemenu .tablemenu-check .check{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border-strong);display:inline-grid;place-items:center;flex:none;color:transparent}
 .tablemenu .tablemenu-check .check.on{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* An uncompletable title takes the checkbox track without disturbing other columns. */
+.task-table .task[data-uncompletable] > .tmain { grid-column: span 2; left: var(--fz-check); }

@@ -51,7 +51,7 @@ export const fr: Record<TranslationKey, string> = {
   "calendar.emptySource": "Aucune tâche sans date ici",
   "calendar.failed": "La modification du calendrier n’a pas pu être enregistrée.",
 
-  "upcoming.extend": "Afficher 15 jours de plus",
+  "upcoming.extend": "Afficher {days} jours de plus",
   "upcoming.visibleThrough": "Dates affichées jusqu’au {date}",
 
   "assignee.everyone": "Tout le monde",
@@ -636,6 +636,8 @@ export const fr: Record<TranslationKey, string> = {
   'comment.delete': 'Supprimer',
   'comment.deleteTitle': 'Supprimer ce commentaire ?',
   'comment.deleteBody': 'Cette action est irréversible.',
+  'task.makeCompletable': 'Rendre terminable',
+  'task.makeUncompletable': 'Rendre non terminable',
   'task.duplicate': 'Dupliquer',
   'task.delete': 'Supprimer',
   'task.move': 'Déplacer vers',

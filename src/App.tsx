@@ -60,8 +60,8 @@ import { labelRoots, rootItems } from './store/selectors';
 import { detectConflicts } from './domain/conflicts';
 import { placementForPage } from './domain/dnd';
 import { useParentEstimates } from './hooks/useParentEstimates';
-import { bucketOf, monthItems, somedayItems, upcomingItems, weekItems } from './domain/views';
-import { effectiveEstimate } from './domain/estimates';
+import { bucketOf, monthItems, somedayItems, weekItems } from './domain/views';
+import { unestimatedWorkload } from './domain/load';
 import type { Item } from './domain/types';
 import type { TranslationKey } from './i18n';
 import { useUpdateReady } from './lib/appUpdate';
@@ -746,7 +746,7 @@ function AppShell({
         };
       }
       case 'upcoming':
-        return { contextItems: upcomingItems(roots), contextLabel: t('nav.upcoming') };
+        return { contextItems: roots.filter((item) => ['overdue', 'today', 'upcoming'].includes(bucketOf(item))), contextLabel: t('nav.upcoming') };
       case 'review':
         return { contextItems: weekItems(roots), contextLabel: t('nav.review') };
       case 'month':
@@ -768,7 +768,7 @@ function AppShell({
   }, [route, roots, items, snapshot, t]);
 
   const unestimatedItems = useMemo(
-    () => contextItems.filter((i) => effectiveEstimate(i, childrenOf).minutes === null),
+    () => unestimatedWorkload(contextItems, childrenOf),
     [contextItems, childrenOf],
   );
   /* The estimate pass is for the page in front, unless something else names
@@ -1071,7 +1071,7 @@ function AppShell({
       <Unestimated
         open={unestimatedOpen}
         onClose={() => { setUnestimatedOpen(false); setUnestimatedFor(null); }}
-        items={unestimatedFor ?? unestimatedItems}
+        items={unestimatedFor ? unestimatedWorkload(unestimatedFor, childrenOf) : unestimatedItems}
         onOpen={openTask}
       />
       <BulkBar />

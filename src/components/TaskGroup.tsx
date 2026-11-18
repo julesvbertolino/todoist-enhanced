@@ -10,7 +10,8 @@ import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
 import { TaskRow } from './TaskRow';
 import { SectionMenu } from './SectionMenu';
-import { formatDuration, effectiveEstimate } from '@/domain/estimates';
+import { formatDuration } from '@/domain/estimates';
+import { summariseLoad } from '@/domain/load';
 import type { Item } from '@/domain/types';
 
 export interface TaskGroupProps {
@@ -100,13 +101,10 @@ export function TaskGroup({
   // section: empty, it is still the only way to add a task outside them.
   if (items.length === 0 && !sectionId && !keepWhenEmpty && !(dropTarget && dragging)) return null;
 
-  const totalMinutes = items.reduce(
-    (acc, item) => acc + (effectiveEstimate(item, childrenOf).minutes ?? 0),
-    0,
-  );
+  const { taskCount, estimatedMinutes: totalMinutes } = summariseLoad(items, childrenOf, null);
   const stats = (
     <span className="gstats">
-      <span className="gcount">{t('metrics.tasks', { count: items.length })}</span>
+      <span className="gcount">{t('metrics.tasks', { count: taskCount })}</span>
       {totalMinutes > 0 && <span className="gtime">{formatDuration(totalMinutes, locale)}</span>}
     </span>
   );

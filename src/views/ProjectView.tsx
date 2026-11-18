@@ -456,11 +456,8 @@ function ProjectBody({
       />}
 
 
-      {current.mode === 'list' && sections.length > 0 && !current.filters.showCompleted && !items.some((item) => item.project_id === projectId && !item.checked && !item.is_deleted) && (
-        <EmptyState view={project.inbox_project ? 'inbox' : 'project'} onAdd={() => onAddTaskTo({ projectId })} />
-      )}
-      {current.mode === 'list' && sections.length === 0 && !current.filters.showCompleted && !items.some((item) => item.project_id === projectId && !item.checked && !item.is_deleted) ? (
-        <EmptyState view={project.inbox_project ? "inbox" : "project"} onAdd={() => onAddTaskTo({ projectId })} />
+      {current.mode === 'list' && project.inbox_project && sections.length === 0 && !current.filters.showCompleted && !items.some((item) => item.project_id === projectId && !item.checked && !item.is_deleted) ? (
+        <EmptyState view="inbox" onAdd={() => onAddTaskTo({ projectId })} />
       ) : current.mode === 'table' && current.group === 'none' ? (
         <TableSurface viewKey={viewKey} childrenOf={childrenOf} onOpen={onOpen}
           groups={[

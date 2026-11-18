@@ -82,6 +82,7 @@ interface TaskNameFieldProps {
   fieldClassName?: string;
   /** Called when the field loses the caret, for a title that saves on blur. */
   onBlur?: () => void;
+  onFocus?: () => void;
   /** Escape, when no list is open: for a field whose edit can be abandoned. */
   onCancel?: () => void;
   /** The field's own element, for a caller that has to focus or release it. */
@@ -138,10 +139,10 @@ interface TaskNameFieldProps {
  */
 export function TaskNameField({
   value, onChange, onSubmit, placeholder, ariaLabel, snapshot, naturalDates,
-  refusals, onRefusals, multiline = false, fieldClassName, onBlur, onCancel, fieldRef, onPasteList,
+  refusals, onRefusals, multiline = false, fieldClassName, onBlur, onFocus, onCancel, fieldRef, onPasteList,
   estimateOnly = false, autoFocus, peopleOf,
 }: TaskNameFieldProps) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const createLabel = useStore((s) => s.createLabel);
   const dateFormat = useStore((s) => s.prefs.dateFormat);
   const inputRef = useRef<(HTMLInputElement & HTMLTextAreaElement) | null>(null);
@@ -149,7 +150,7 @@ export function TaskNameField({
   const [caret, setCaret] = useState(0);
   const [pick, setPick] = useState(0);
 
-  const read = parseShorthand(value, snapshot, naturalDates, refusals, dateFormat, peopleOf);
+  const read = parseShorthand(value, snapshot, naturalDates, refusals, dateFormat, peopleOf, undefined, locale);
   const tail = estimateOnly ? trailingEstimate(value) : null;
   const ranges = estimateOnly
     ? (tail ? [{ start: tail.start, end: tail.end, kind: 'duration' as const }] : [])
@@ -172,7 +173,7 @@ export function TaskNameField({
    */
   const live = refusals.filter((refusal) => {
     const without = refusals.filter((other) => other !== refusal);
-    return parseShorthand(value, snapshot, naturalDates, without, dateFormat, peopleOf).ranges.some(
+    return parseShorthand(value, snapshot, naturalDates, without, dateFormat, peopleOf, undefined, locale).ranges.some(
       (mark) => mark.start === refusal.start && mark.end === refusal.end,
     );
   });
@@ -498,6 +499,7 @@ export function TaskNameField({
         autoFocus: autoFocus ?? !multiline,
         rows: multiline ? 1 : undefined,
         onBlur,
+        onFocus,
         value,
         onPaste: (e: ClipboardEvent<HTMLInputElement>) => {
           const field = e.currentTarget;
