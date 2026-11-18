@@ -44,7 +44,13 @@ translation lives in CHANGELOG.fr.md.
 
 ## 2.34.0
 
-🎨 **Icons got a new look.** Every icon has been replaced in a rounder, lighter style. You’re going to love them!
+🆕 **Choose your own tag for “Anytime this month”.** In Settings, next to the tag for “Anytime this week”, pick a shorter name such as month or mth, so you can type it faster when you add a task.
+
+🆕 **Rename a folder and file projects in it.** In a team workspace, the ⋯ menu of a folder lets you rename it, or delete it once it is empty. When you add or edit a project, the Parent field now lists the workspace’s folders, so a project can go straight into one.
+
+🎨 **Icons got a new look.** Every icon has been replaced in a rounder, lighter style. You’re going to love them! The plus is now a simple cross, and the menu button on your phone is the familiar three lines.
+
+🐛 **Tags with a slash are recognised.** Typing a tag such as @Status/Waiting in a task title now applies the whole tag, instead of stopping at the slash.
 
 ## 2.33.0
 

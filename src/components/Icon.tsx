@@ -1,7 +1,6 @@
 import type { CSSProperties } from 'react';
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
 import {
-  Add02Icon,
   Alert02Icon,
   Analytics01Icon,
   ArrowDown01Icon,
@@ -54,10 +53,11 @@ import {
   LockKeyholeIcon,
   LogOutIcon,
   Mail01Icon,
-  Menu11Icon,
+  Menu01Icon,
   MoreHorizontalIcon,
   Notification01Icon,
   PaletteIcon,
+  PlusSignIcon,
   QuoteDownIcon,
   Refresh03Icon,
   RepeatIcon,
@@ -158,9 +158,9 @@ const ICONS: Record<IconName, IconSvgElement> = {
   inbox: InboxIcon,
   list: ListIcon,
   logout: LogOutIcon,
-  menu: Menu11Icon,
+  menu: Menu01Icon,
   more: MoreHorizontalIcon,
-  plus: Add02Icon,
+  plus: PlusSignIcon,
   project: Folder01Icon,
   repeat: RepeatIcon,
   flame: FireIcon,

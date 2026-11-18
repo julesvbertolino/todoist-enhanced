@@ -30,7 +30,7 @@ import { applyFilters, groupRoots, labelRoots, pullQuick, sortItems } from '@/st
 import { monthItems, somedayItems, splitDust } from '@/domain/views';
 import { summariseLoad } from '@/domain/load';
 import type { TranslationKey } from '@/i18n';
-import { SYSTEM_LABELS, type Item } from '@/domain/types';
+import { type Item, monthLabel } from '@/domain/types';
 import type { DropTarget, RowOrder, TaskPlacement } from '@/domain/dnd';
 
 interface SimpleListViewProps {
@@ -196,7 +196,7 @@ function SimpleListBody({
       ? (inboxId ? { kind: 'project', projectId: inboxId } : undefined)
       : (labelName ? { kind: 'label', label: labelName } : undefined);
   const addition = kind === 'month'
-    ? { labels: [SYSTEM_LABELS.month] }
+    ? { labels: [monthLabel()] }
     : kind === 'someday' || kind === 'filter'
     ? {}
     : kind === 'inbox'

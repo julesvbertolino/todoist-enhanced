@@ -1,4 +1,4 @@
-import type { Project } from './types';
+import type { Folder, Project } from './types';
 
 export interface ParentChoice {
   id: string;
@@ -46,4 +46,20 @@ export function parentChoices(
   };
   walk(null, 0);
   return choices;
+}
+
+/**
+ * The folders of a workspace a project can be created in, in the order the
+ * sidebar draws them (#463). A folder is a place for projects, never a parent
+ * project and never a task destination, so it is offered here and nowhere else.
+ */
+export function folderChoices(
+  folders: Record<string, Folder> | undefined,
+  workspaceId: string | null,
+): Array<{ id: string; name: string }> {
+  if (!workspaceId) return [];
+  return Object.values(folders ?? {})
+    .filter((folder) => !folder.is_deleted && folder.workspace_id === workspaceId)
+    .sort((a, b) => (a.child_order ?? a.default_order ?? 0) - (b.child_order ?? b.default_order ?? 0))
+    .map((folder) => ({ id: folder.id, name: folder.name }));
 }

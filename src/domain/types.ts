@@ -335,11 +335,11 @@ export const SYSTEM_LABELS = {
   quick: 'quick',
   automation: 'automation',
   waiting: 'waiting',
-  /** The month's horizon: tasks for this month with no set day. */
-  month: 'thismonth',
 } as const;
 
 export const DEFAULT_WEEK_LABEL = 'week';
+/** The month's horizon: tasks for this month with no set day. Renamable, like the week's. */
+export const DEFAULT_MONTH_LABEL = 'thismonth';
 
 /**
  * The tag that means "committed to this week, but to no particular day".
@@ -365,11 +365,19 @@ export const setWeekLabel = (name: string): void => {
   weekLabelName = name.trim() || DEFAULT_WEEK_LABEL;
 };
 
+let monthLabelName: string = DEFAULT_MONTH_LABEL;
+
+export const monthLabel = (): string => monthLabelName;
+
+export const setMonthLabel = (name: string): void => {
+  monthLabelName = name.trim() || DEFAULT_MONTH_LABEL;
+};
+
 /** The horizon tags a date replaces: the week's (whatever it is called) and `later`. */
 export const withoutHorizons = (labels: string[]): string[] =>
   labels.filter((l) => {
     const name = l.toLowerCase();
-    return name !== weekLabelName.toLowerCase() && name !== SYSTEM_LABELS.month;
+    return name !== weekLabelName.toLowerCase() && name !== monthLabelName.toLowerCase();
   });
 
 export const ESTIMATE_PREFIX = 'est-';

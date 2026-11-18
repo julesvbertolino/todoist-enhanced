@@ -23,7 +23,7 @@ import { usePhoneBehaviour } from '@/hooks/useTouchLayout';
 import { useRowGesture } from '@/hooks/useRowGesture';
 import { useStore } from '@/store/store';
 import { completionTick } from '@/store/tick';
-import { SYSTEM_LABELS, displayTaskContent, isUncompletable, toDisplayPriority, weekLabel, type Item } from '@/domain/types';
+import { displayTaskContent, isUncompletable, toDisplayPriority, weekLabel, type Item, monthLabel } from '@/domain/types';
 import { effectiveEstimate, formatDuration } from '@/domain/estimates';
 import { dateTone, deadlineDate, dueDate, formatRelativeDay, formatTime, hasTime, isOverdue, isToday, overdueBy } from '@/domain/dates';
 import { markerStyle } from '@/domain/colors';
@@ -296,9 +296,9 @@ function TaskRowView({
      date would be, not by the tag that carries it. */
   const horizon = item.due ? null : item.labels.some((l) => l.toLowerCase() === weekLabel().toLowerCase())
     ? 'review.to.anytime' as const
-    : item.labels.some((l) => l.toLowerCase() === SYSTEM_LABELS.month) ? 'review.to.month' as const : null;
+    : item.labels.some((l) => l.toLowerCase() === monthLabel().toLowerCase()) ? 'review.to.month' as const : null;
   const visibleLabels = item.labels.filter((l) => !l.toLowerCase().startsWith('est-')
-    && !(horizon && [weekLabel().toLowerCase(), SYSTEM_LABELS.month].includes(l.toLowerCase())));
+    && !(horizon && [weekLabel().toLowerCase(), monthLabel().toLowerCase()].includes(l.toLowerCase())));
 
   /* A tag carries a colour in Todoist, so it carries it here too. The task
      stores names, and the colour lives on the label, which is the lookup. */

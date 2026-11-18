@@ -248,3 +248,19 @@ describe('the Later horizon', () => {
     expect(bucketOf(dated, NOW)).toBe('upcoming');
   });
 });
+
+describe('a renamed month tag (#475)', () => {
+  it('reads the chosen tag as the month and no longer the default one', async () => {
+    const types = await import('./types');
+    const { hasLabel } = await import('./views');
+    types.setMonthLabel('mth');
+    try {
+      expect(types.monthLabel()).toBe('mth');
+      expect(hasLabel({ labels: ['MTH'] } as never, types.monthLabel())).toBe(true);
+      expect(types.withoutHorizons(['mth', 'work', 'thismonth'])).toEqual(['work', 'thismonth']);
+    } finally {
+      types.setMonthLabel('');
+    }
+    expect(types.monthLabel()).toBe('thismonth');
+  });
+});

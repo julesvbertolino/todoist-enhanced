@@ -180,3 +180,32 @@ describe('+name gives the task to a person of the project (#269)', () => {
     expect(read('Send the file +Anne').assigneeId).toBeNull();
   });
 });
+
+describe('a tag whose name holds a slash (#477)', () => {
+  const tagged: Snapshot = {
+    ...emptySnapshot(),
+    labels: {
+      w: { id: 'w', name: 'Status/Waiting', color: 'red', item_order: 1, is_deleted: false, is_favorite: false },
+      s: { id: 's', name: 'Status', color: 'blue', item_order: 2, is_deleted: false, is_favorite: false },
+    },
+  };
+  const readTagged = (raw: string) => parseShorthand(raw, tagged, false);
+
+  it('reads the whole name and takes it out of the title', () => {
+    const result = readTagged('Call Anne @Status/Waiting');
+    expect(result.labels).toEqual(['Status/Waiting']);
+    expect(result.content).toBe('Call Anne');
+  });
+  it('reads it case-insensitively and before a full stop or more words', () => {
+    expect(readTagged('Call @status/waiting. now').labels).toEqual(['status/waiting']);
+  });
+  it('still reads a tag without a slash', () => {
+    const result = readTagged('Call Anne @Status today');
+    expect(result.labels).toEqual(['Status']);
+  });
+  it('keeps a slash as text when it does not name a tag', () => {
+    const result = readTagged('Call Anne @Status/Other');
+    expect(result.labels).toEqual(['Status']);
+    expect(result.content).toBe('Call Anne /Other');
+  });
+});

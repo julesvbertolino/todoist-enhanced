@@ -22,7 +22,7 @@ import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
 import { formatDuration } from '@/domain/estimates';
 import { markerStyle } from '@/domain/colors';
-import { SYSTEM_LABELS, toTodoistPriority, weekLabel, withoutHorizons, type DisplayPriority } from '@/domain/types';
+import { toTodoistPriority, weekLabel, withoutHorizons, type DisplayPriority, monthLabel } from '@/domain/types';
 import { toApiDate } from '@/domain/dates';
 import { taskShortcuts } from '../DatePicker';
 import {
@@ -205,7 +205,7 @@ export function Composer({
   /* No day, but a horizon picked: the date chip says so in words. */
   const horizonText = date || recurrence ? null
     : allTagsHas(labels, weekLabel()) ? t('review.to.anytime')
-    : allTagsHas(labels, SYSTEM_LABELS.month) ? t('review.to.month') : null;
+    : allTagsHas(labels, monthLabel()) ? t('review.to.month') : null;
   const allTags = parsed.labels.reduce(
     (tags, read) => (tags.some((tag) => sameTag(tag, read)) ? tags : [...tags, read]),
     labels,
@@ -593,7 +593,7 @@ export function Composer({
               day: (day) => { setDate(toApiDate(day)); setRecurrence(null); setLabels(withoutHorizons); },
               today: () => { setDate(toApiDate(new Date())); setRecurrence(null); setLabels(withoutHorizons); },
               anytime: () => { setDate(''); setRecurrence(null); setLabels((prev) => [...withoutHorizons(prev), weekLabel()]); },
-              month: () => { setDate(''); setRecurrence(null); setLabels((prev) => [...withoutHorizons(prev), SYSTEM_LABELS.month]); },
+              month: () => { setDate(''); setRecurrence(null); setLabels((prev) => [...withoutHorizons(prev), monthLabel()]); },
               someday: () => { setDate(''); setRecurrence(null); setLabels(withoutHorizons); },
             })}
             recurrence={recurrence}

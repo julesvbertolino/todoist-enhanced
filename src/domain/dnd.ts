@@ -1,5 +1,5 @@
 import { withStep, stepLabel, STEPS, type Step } from './steps';
-import { SYSTEM_LABELS, weekLabel, withoutHorizons, type Item } from './types';
+import { SYSTEM_LABELS, weekLabel, withoutHorizons, type Item, monthLabel } from './types';
 import { toApiDate } from './dates';
 import { dueForDate } from './recurrence';
 import { byChildOrder } from './orderKey';
@@ -62,7 +62,7 @@ const withWeek = (labels: string[]): string[] =>
   withoutHorizon(labels).concat(weekLabel());
 
 const withMonth = (labels: string[]): string[] =>
-  withoutHorizon(labels).concat(SYSTEM_LABELS.month);
+  withoutHorizon(labels).concat(monthLabel());
 
 /**
  * A due value for a calendar date.
@@ -108,7 +108,7 @@ export function placementFor(target: DropTarget, now = new Date()): TaskPlacemen
     case 'anytime':
       return { labels: [weekLabel()] };
     case 'month':
-      return { labels: [SYSTEM_LABELS.month] };
+      return { labels: [monthLabel()] };
     // Nothing to carry: Someday is what a task with no date and no week label
     // already is.
     case 'someday':

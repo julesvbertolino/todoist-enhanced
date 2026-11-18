@@ -1,8 +1,8 @@
 import type { Snapshot } from './types';
-import { SYSTEM_LABELS } from './types';
+import { DEFAULT_MONTH_LABEL, SYSTEM_LABELS, monthLabel } from './types';
 export function reservedLabel(name: string, weekLabel: string): boolean {
   const n = name.toLowerCase();
-  return n === 'week' || n === weekLabel.toLowerCase() || Object.values(SYSTEM_LABELS).some((v) => v === n) || n.startsWith('est-');
+  return n === 'week' || n === weekLabel.toLowerCase() || Object.values(SYSTEM_LABELS).some((v) => v === n) || n === DEFAULT_MONTH_LABEL || n === monthLabel().toLowerCase() || n.startsWith('est-');
 }
 export const cleanLabelName = (name: string): string => name.trim().replace(/\s+/g, '-');
 export function labelRenameError(snapshot: Snapshot, id: string, name: string, weekLabel: string): 'empty' | 'reserved' | 'duplicate' | null {

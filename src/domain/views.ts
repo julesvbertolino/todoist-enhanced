@@ -1,5 +1,5 @@
 import { addMonths, differenceInMonths, isSameDay, parseISO, startOfDay } from 'date-fns';
-import { SYSTEM_LABELS, weekLabel, type Bucket, type Item } from './types';
+import { SYSTEM_LABELS, weekLabel, type Bucket, type Item, monthLabel } from './types';
 import { estimateOf } from './estimates';
 import { deadlineDate, dueDate, hasTime, isFuture, isOverdue, isToday, toApiDate } from './dates';
 
@@ -227,12 +227,12 @@ export function upcomingItems(items: Item[], now = new Date()): Item[] {
 
 /** Later: no date, no `week` commitment, carrying the `later` tag. */
 export function monthItems(items: Item[], now = new Date()): Item[] {
-  return items.filter((i) => bucketOf(i, now) === 'someday' && hasLabel(i, SYSTEM_LABELS.month));
+  return items.filter((i) => bucketOf(i, now) === 'someday' && hasLabel(i, monthLabel()));
 }
 
 /** Someday / backlog: no date, no `week` commitment and no `later` tag. */
 export function somedayItems(items: Item[], now = new Date()): Item[] {
-  return items.filter((i) => bucketOf(i, now) === 'someday' && !hasLabel(i, SYSTEM_LABELS.month));
+  return items.filter((i) => bucketOf(i, now) === 'someday' && !hasLabel(i, monthLabel()));
 }
 
 /** Anytime this week: no date, carrying `week`. */

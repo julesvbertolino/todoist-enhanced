@@ -13,7 +13,7 @@ import { applySync, applyWrite, sync } from '@/api/sync';
 import { resolveCommandIds, sendCommands, type Command } from '@/api/commands';
 import { settleOrphans } from '@/api/repair';
 import * as idb from '@/db/idb';
-import { emptySnapshot, setWeekLabel } from '@/domain/types';
+import { emptySnapshot, setMonthLabel, setWeekLabel } from '@/domain/types';
 import { readKept } from '@/domain/views';
 import { detectLocale, translate } from '@/i18n';
 import { buildDemoSnapshot } from '@/demo/demoData';
@@ -268,7 +268,7 @@ async function readFromTodoist(
     const canonical = preferencesWriteTimer || checked === null
       ? null
       : remotePreferences(snapshot, get().prefs);
-    if (canonical) setWeekLabel(canonical.weekLabel);
+    if (canonical) { setWeekLabel(canonical.weekLabel); setMonthLabel(canonical.monthLabel); }
     const adopted = canonical && JSON.stringify(canonical) !== JSON.stringify(get().prefs) ? canonical : get().prefs;
     const prefs = checked === null ? adopted : withOnboarding(snapshot, adopted);
     set({ snapshot: hidePending(snapshot), prefs, syncState: 'idle', syncError: null, settingsChecked: checked !== null, settingsUnavailable: checked === null });
@@ -413,6 +413,7 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
          everywhere; they are told the name once, here, rather than being handed
          preferences they have no other use for. */
       setWeekLabel(prefs.weekLabel);
+      setMonthLabel(prefs.monthLabel);
       const connected = auth.isConnected();
       const resumeDemo = !connected && sessionGet('demo') === '1';
 
@@ -475,7 +476,7 @@ export const createSyncSlice: Slice<SyncSlice> = (set, get) => ({
       const localPrefs = legacyOwner && legacyOwner !== snapshot.user?.id
         ? { ...get().prefs, onboarded: false, setupDone: false } : get().prefs;
       const canonical = checked === null ? null : remotePreferences(snapshot, localPrefs);
-      if (canonical) setWeekLabel(canonical.weekLabel);
+      if (canonical) { setWeekLabel(canonical.weekLabel); setMonthLabel(canonical.monthLabel); }
       const adopted = canonical && JSON.stringify(canonical) !== JSON.stringify(localPrefs) ? canonical : localPrefs;
       const prefs = checked === null ? adopted : withOnboarding(snapshot, adopted);
       set({

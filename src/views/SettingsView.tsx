@@ -20,7 +20,7 @@ import { formatDuration, parseDurationInput } from '@/domain/estimates';
 import { defaultCapacity, weeklyCapacity, type DailyCapacity } from '@/domain/load';
 import { DATE_FORMATS, formatDay, type DateFormat } from '@/domain/dates';
 import { FALLBACK_HOME, HOME_VIEWS, type HomeView } from '@/store/prefs';
-import { DEFAULT_WEEK_LABEL } from '@/domain/types';
+import { DEFAULT_MONTH_LABEL, DEFAULT_WEEK_LABEL } from '@/domain/types';
 import { DUST_MONTHS, isDustMonths } from '@/domain/views';
 import type { Locale, TranslationKey } from '@/i18n';
 import { APP_NAME, AUTHOR, AUTHOR_AVATAR_URL, AUTHOR_GITHUB_URL, COFFEE_URL, GITHUB_URL, LINKEDIN_URL, VERSION, X_URL } from '@/app-info';
@@ -369,6 +369,18 @@ export function SettingsView() {
                   const next = event.target.value.trim().replace(/^@/, '');
                   setPrefs({ weekLabel: next || DEFAULT_WEEK_LABEL });
                   event.target.value = next || DEFAULT_WEEK_LABEL;
+                }}
+              />
+            </Row>
+            <Row title={t('settings.monthLabel')} hint={t('settings.monthLabelHint')}>
+              <input
+                className="estinput"
+                defaultValue={prefs.monthLabel}
+                aria-label={t('settings.monthLabel')}
+                onBlur={(event) => {
+                  const next = event.target.value.trim().replace(/^@/, '');
+                  setPrefs({ monthLabel: next || DEFAULT_MONTH_LABEL });
+                  event.target.value = next || DEFAULT_MONTH_LABEL;
                 }}
               />
             </Row>
