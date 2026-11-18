@@ -90,7 +90,7 @@ test('duration Enter normalizes input and confirms acceptance without closing th
 test('recurring forecasts show load and open their source, without mutation controls', async ({ demo: page }) => {
   await seed(page); await go(page, 'upcoming');
   const forecasts = page.locator('[data-projection-id]').filter({ hasText: 'Release recurring' });
-  expect(await forecasts.count()).toBeGreaterThan(5);
+  expect(await forecasts.count()).toBeGreaterThanOrEqual(4); // A seven-day window contains five weekdays; the source may occupy one.
   await expect(forecasts.first().getByRole('checkbox')).toHaveAttribute('aria-disabled', 'true');
   await expect(forecasts.first()).not.toContainText('Future occurrence');
   await expect(page.locator('.projection-note')).toHaveCount(0);
