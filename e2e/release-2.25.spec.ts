@@ -20,7 +20,7 @@ test('#376 every day of Upcoming carries its date', async ({ demo: page }) => {
   await go(page, '#/upcoming');
   const names = page.locator('.screen.active .gname');
   await expect(names.first()).toBeVisible();
-  for (const name of await names.allInnerTexts()) expect(name, name).toMatch(/\d/);
+  for (const name of await names.allInnerTexts()) if (name !== 'Behind schedule') expect(name, name).toMatch(/\d/);
 });
 
 test('#408 a task\'s tags are chips with their own way out', async ({ demo: page }) => {

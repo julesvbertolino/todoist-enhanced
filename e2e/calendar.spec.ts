@@ -239,9 +239,9 @@ test('selecting an empty slot opens the composer with day, time, estimate and ta
 test('the composer understands an exact clock span and stores its estimate as a tag', async ({ demo: page }) => {
   await seed(page); await page.keyboard.press('q');
   const composer = page.locator('.composerbox');
-  await composer.locator('[contenteditable="true"], textarea').first().fill('Rendez-vous demain de 12h à 12h12');
+  await composer.locator('[contenteditable="true"], textarea').first().fill('Appointment tomorrow from 12h to 12h12');
   await composer.getByRole('button', { name: 'Add task', exact: true }).click();
-  const created = await page.evaluate(() => Object.values((window as any).__store.getState().snapshot.items).find((item: any) => item.content === 'Rendez-vous') as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const created = await page.evaluate(() => Object.values((window as any).__store.getState().snapshot.items).find((item: any) => item.content === 'Appointment') as any); // eslint-disable-line @typescript-eslint/no-explicit-any
   expect(created.due.date).toContain('T12:00:00');
   expect(created.labels).toContain('est-12');
   expect(created.duration).toBeNull();

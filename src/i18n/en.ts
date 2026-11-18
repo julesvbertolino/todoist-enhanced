@@ -49,7 +49,7 @@ export const en = {
   "calendar.emptySource": "No undated tasks here",
   "calendar.failed": "The calendar change could not be saved.",
 
-  "upcoming.extend": "Show 15 more days",
+  "upcoming.extend": "Show {days} more days",
   "upcoming.visibleThrough": "Showing dates through {date}",
 
   "assignee.everyone": "Everyone",
@@ -634,6 +634,8 @@ export const en = {
   'comment.delete': 'Delete',
   'comment.deleteTitle': 'Delete this comment?',
   'comment.deleteBody': 'This cannot be undone.',
+  'task.makeCompletable': 'Make completable',
+  'task.makeUncompletable': 'Make uncompletable',
   'task.duplicate': 'Duplicate',
   'task.delete': 'Delete',
   'task.move': 'Move to',

@@ -50,10 +50,14 @@ describe('completions per bucket (#174)', () => {
 });
 
 describe('project progress (#239)', () => {
-  const open = (id: string, parent_id: string | null = null) => ({ id, parent_id } as never);
+  const open = (id: string, parent_id: string | null = null) => ({ id, parent_id, content: 'Task' } as never);
 
   it("takes the completed total from Todoist's count and counts every open task, subtasks included", () => {
     expect(projectProgress(3, [open('a'), open('s1', 'a'), open('s2', 'a')])).toEqual({ completed: 3, active: 3, percentage: 50 });
+  });
+
+  it('excludes uncompletable tasks from progress', () => {
+    expect(projectProgress(1, [open('a'), { id: 'n', content: '* Reference' } as never])).toEqual({ completed: 1, active: 1, percentage: 50 });
   });
 
   it('has no figure until the count has loaded, instead of reading 0%', () => {
@@ -75,5 +79,23 @@ describe('completed tasks of a project (#239)', () => {
     expect(completedTaskCount([
       done({ id: 'e1', task_id: 'b' }), done({ id: 'e2', task_id: 'b' }), done({ id: 'e3', task_id: 'a' }),
     ])).toBe(2);
+  });
+});
+
+describe('uncompletable tasks in statistics', () => {
+  it('excludes past completions when the current open task is now uncompletable', () => {
+    const snapshot = emptySnapshot();
+    snapshot.items.standing = { id: 'standing', content: '* Reference' } as never;
+    const summary = summariseInsights([done({ id: 'event', task_id: 'standing', content: 'Reference' })], [], snapshot);
+    expect(summary.completedCount).toBe(0);
+  });
+
+  it('excludes marked tasks from counts, progress, and completed time', () => {
+    const summary = summariseInsights(
+      [done({ id: 'one', labels: ['est-20'] }), done({ id: 'note', content: '* Old note', labels: ['est-60'] })],
+      [{ content: 'Work', labels: [], duration: null }, { content: '* Reference', labels: ['est-90'], duration: null }] as never,
+      emptySnapshot(),
+    );
+    expect(summary).toMatchObject({ completedCount: 1, completedMinutes: 20, activeCount: 1, progressPercentage: 50 });
   });
 });

@@ -1,4 +1,4 @@
-import type { Item } from './types';
+import { isUncompletable, type Item } from './types';
 import { effectiveEstimate } from './estimates';
 
 /** Capacity in minutes for each day, indexed 0 = Sunday .. 6 = Saturday. */
@@ -42,6 +42,34 @@ export function insideOthers(items: Item[], childrenOf: (parentId: string) => It
   return inside;
 }
 
+/** Skip standing headings but keep their ordinary descendants in workload totals. */
+export function completableChildrenOf(childrenOf: (parentId: string) => Item[]): (id: string) => Item[] {
+  return (id) => {
+    const visited = new Set([id]);
+    const collect = (parentId: string): Item[] => childrenOf(parentId).flatMap((child) => {
+      if (visited.has(child.id) || child.checked || child.is_deleted) return [];
+      visited.add(child.id);
+      return isUncompletable(child) ? collect(child.id) : [child];
+    });
+    return collect(id);
+  };
+}
+
+/** The topmost completable tasks represented in a workload, including children of standing headings. */
+export function workloadRoots(items: Item[], childrenOf: (parentId: string) => Item[]): Item[] {
+  const countable = items.filter((item) => !isUncompletable(item));
+  const children = completableChildrenOf(childrenOf);
+  const workload = [...new Map([...countable, ...items.filter(isUncompletable).flatMap((item) => children(item.id))].map((item) => [item.id, item])).values()];
+  const inside = insideOthers(workload, children);
+  return workload.filter((item) => !inside.has(item.id));
+}
+
+/** The very same tasks that the load summary calls unestimated. */
+export function unestimatedWorkload(items: Item[], childrenOf: (parentId: string) => Item[]): Item[] {
+  const children = completableChildrenOf(childrenOf);
+  return workloadRoots(items, childrenOf).filter((item) => effectiveEstimate(item, children).minutes === null);
+}
+
 /**
  * The header line: X tasks, X h X min, X % of capacity, X unestimated.
  *
@@ -56,17 +84,17 @@ export function summariseLoad(
   let estimatedMinutes = 0;
   let unestimatedCount = 0;
 
-  const inside = insideOthers(items, childrenOf);
-  for (const item of items) {
-    if (inside.has(item.id)) continue;
-    const { minutes } = effectiveEstimate(item, childrenOf);
+  const countable = items.filter((item) => !isUncompletable(item));
+  const countableChildren = completableChildrenOf(childrenOf);
+  for (const item of workloadRoots(items, childrenOf)) {
+    const { minutes } = effectiveEstimate(item, countableChildren);
     if (minutes === null) unestimatedCount += 1;
     else estimatedMinutes += minutes;
   }
 
   if (capacityMinutes === null || capacityMinutes <= 0) {
     return {
-      taskCount: items.length,
+      taskCount: countable.length,
       estimatedMinutes,
       unestimatedCount,
       percentage: null,
@@ -78,7 +106,7 @@ export function summariseLoad(
   // Under 80 % reads as comfortable, 80 to 100 as tight, above as over capacity.
   const level = percentage < 80 ? 'ok' : percentage <= 100 ? 'tight' : 'over';
 
-  return { taskCount: items.length, estimatedMinutes, unestimatedCount, percentage, level };
+  return { taskCount: countable.length, estimatedMinutes, unestimatedCount, percentage, level };
 }
 
 /**

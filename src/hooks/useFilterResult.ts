@@ -1,3 +1,4 @@
+import { isUncompletable } from '@/domain/types';
 import { useEffect, useMemo } from 'react';
 import { create } from 'zustand';
 import { ApiError } from '@/api/client';
@@ -217,7 +218,7 @@ function countOf(parts: FilterPart[] | null | undefined, snapshot: Snapshot): nu
   let count = 0;
   for (const id of ids) {
     const item = snapshot.items[id];
-    if (item && !item.checked && !item.is_deleted) count += 1;
+    if (item && !item.checked && !item.is_deleted && !isUncompletable(item)) count += 1;
   }
   return count;
 }

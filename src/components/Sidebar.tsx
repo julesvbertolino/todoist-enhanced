@@ -1,3 +1,4 @@
+import { isUncompletable } from '@/domain/types';
 import { useSafeDisconnect } from '@/hooks/useSafeDisconnect';
 import { readFolderState, writeFolderState } from '@/domain/folderState';
 import { matrixRoots, matrixSettings } from '@/domain/eisenhower';
@@ -182,7 +183,7 @@ export function Sidebar({
       const dated = (group: GroupKey, layout: boolean) =>
         datedRoots(openItems(scoped), scoped, group, { subtasks: filters.showSubtasks, layout, quick: prefs.showQuickGroup });
       const list = key === 'upcoming' ? dated('none', false) : ['today', 'week'].includes(key) ? dated(viewPrefs(prefs, key).group, viewPrefs(prefs, key).group === 'none') : key === 'inbox' ? openItems(scoped) : rootItems(openItems(scoped));
-      return applyFilters(list, ['today', 'week', 'upcoming'].includes(key) ? { ...filters, includeScheduled: true } : filters, snapshot, makeChildrenOf(childIndex(scoped)));
+      return applyFilters(list, ['today', 'week', 'upcoming'].includes(key) ? { ...filters, includeScheduled: true } : filters, snapshot, makeChildrenOf(childIndex(scoped))).filter((item) => !isUncompletable(item));
     };
     return {
       inbox: inboxId ? scope('inbox').filter((i) => i.project_id === inboxId).length : 0,
@@ -197,7 +198,7 @@ export function Sidebar({
         const filters = viewPrefs(prefs, 'matrix').filters;
         const scoped = assigneeItems(snapshot, filters.assignees);
         const workspaceItems = filters.workspaces.length ? Object.fromEntries(Object.entries(scoped).filter(([, item]) => filters.workspaces.includes(snapshot.projects[item.project_id]?.workspace_id ?? 'personal'))) : scoped;
-        return matrixRoots(openItems({ ...snapshot, items: workspaceItems }), snapshot.projects, matrixSettings(prefs, snapshot.user?.start_day)).cards.length;
+        return matrixRoots(openItems({ ...snapshot, items: workspaceItems }), snapshot.projects, matrixSettings(prefs, snapshot.user?.start_day)).cards.filter((item) => !isUncompletable(item)).length;
       })(),
       month: monthItems(scope('month')).length,
       someday: somedayItems(scope('someday')).length,
@@ -633,7 +634,7 @@ export function Sidebar({
             {favourites.projects.map((p) =>
               projectNode({ project: p, children: [] }, 'fav-'))}
             {favourites.labels.map((l) =>
-              tagItem(l.name, l.color, labelRoots(items, l.name, snapshot).length))}
+              tagItem(l.name, l.color, labelRoots(items, l.name, snapshot).filter((item) => !isUncompletable(item)).length))}
             {/* The count is Todoist's answer to the query, asked again when
                 the tasks change; it shows once Todoist has answered. */}
             {favourites.filters.map((f) => (

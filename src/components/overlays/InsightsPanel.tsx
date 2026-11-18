@@ -1,3 +1,4 @@
+import { isUncompletable } from '@/domain/types';
 import { useMemo } from 'react';
 import { addDays, endOfDay, format, startOfDay, startOfWeek } from 'date-fns';
 import { Overlay } from './Overlay';
@@ -8,7 +9,7 @@ import { useData } from '@/hooks/useData';
 import { useCompleted } from '@/hooks/useCompleted';
 import { daysOf } from '@/domain/periods';
 import { navigate } from '@/hooks/useRoute';
-import { completedSince, projectProgress, summariseInsights } from '@/domain/insights';
+import { completedSince, isCountableCompletion, projectProgress, summariseInsights } from '@/domain/insights';
 import { openItems } from '@/store/selectors';
 import { useProjectCompletedCount } from '@/hooks/useProjectCompletedCount';
 import { weekStartsOnOf } from '@/domain/dates';
@@ -47,7 +48,7 @@ export function InsightsPanel({
   }, [today]);
   const { data: history, loading, error, retry } = useCompleted(window7, open, viewKey);
 
-  const completed = useMemo(() => projectId ? history.filter((entry) => entry.project_id === projectId) : history, [history, projectId]);
+  const completed = useMemo(() => history.filter((entry) => isCountableCompletion(entry, snapshot) && (!projectId || entry.project_id === projectId)), [history, projectId, snapshot]);
 
   const summary = useMemo(
     () => summariseInsights(completed, items, snapshot),
@@ -70,9 +71,11 @@ export function InsightsPanel({
      Todoist's way: the tasks it lists and their open subtasks (#239). */
   const activeCount = useMemo(() => {
     const seen = new Set<string>();
+    const visited = new Set<string>();
     const walk = (item: Item) => {
-      if (seen.has(item.id) || item.checked || item.is_deleted) return;
-      seen.add(item.id);
+      if (visited.has(item.id) || item.checked || item.is_deleted) return;
+      visited.add(item.id);
+      if (!isUncompletable(item)) seen.add(item.id);
       childrenOf(item.id).forEach(walk);
     };
     items.forEach(walk);
@@ -81,7 +84,7 @@ export function InsightsPanel({
   const thisWeek = useMemo(() => completedSince(completed, weekStart), [completed, weekStart]);
 
   const late = useMemo(
-    () => items.filter((i) => isOverdue(i)).sort((a, b) => overdueBy(b) - overdueBy(a)),
+    () => items.filter((i) => !isUncompletable(i) && isOverdue(i)).sort((a, b) => overdueBy(b) - overdueBy(a)),
     [items],
   );
 

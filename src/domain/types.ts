@@ -330,6 +330,11 @@ export const isUncompletable = (item: Pick<Item, 'content'>): boolean =>
 export const displayTaskContent = (item: Pick<Item, 'content'>): string =>
   isUncompletable(item) ? item.content.slice(UNCOMPLETABLE_PREFIX.length) : item.content;
 
+/** Toggle the same marker Todoist uses, without changing the displayed title. */
+export const toggleUncompletableContent = (item: Pick<Item, 'content'>): string =>
+  isUncompletable(item) ? displayTaskContent(item) : UNCOMPLETABLE_PREFIX + item.content;
+
+
 /** The technical labels the product reads. These are never translated. */
 export const SYSTEM_LABELS = {
   quick: 'quick',

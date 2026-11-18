@@ -26,6 +26,8 @@ test('date views remove the scheduled switch; This week filters Today only', asy
   }
 });
 test('French weekday wording creates one unified chip and projects weekdays as ordinary rows', async ({ demo: page }) => {
+  await go(page, '#/settings');
+  await page.getByRole('radiogroup', { name: 'Language' }).getByRole('radio', { name: 'Français' }).click();
   await page.keyboard.press('q');
   const title = page.locator('.composerbox textarea').first();
   await title.fill('test chaque jour de la semaine #123');
@@ -201,6 +203,8 @@ test('Today stays reachable by keyboard when hidden in the sidebar and excluded 
 
 
 test('relative hours create a date chip rather than a duration chip', async ({ demo: page }) => {
+  await go(page, '#/settings');
+  await page.getByRole('radiogroup', { name: 'Language' }).getByRole('radio', { name: 'Français' }).click();
   await page.keyboard.press('q');
   const input = page.locator('.composerbox textarea').first();
   for (const phrase of ['Appeler dans deux heures', 'Appeler dans 2 heures', 'Appeler dans 30 minutes']) {

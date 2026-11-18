@@ -17,5 +17,5 @@ test('#98 Upcoming groups by day, week or month, in the list and on the board', 
   await board.click();
   await page.keyboard.press('Escape');
   const titles = page.locator('.screen.active .board .col .chead strong');
-  await expect(titles.first()).toHaveText(/This week|Next week|Week of/);
+  await expect(titles.filter({ hasText: /This week|Next week|Week of/ }).first()).toBeVisible();
 });

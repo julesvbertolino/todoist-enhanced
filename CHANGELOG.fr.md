@@ -8,13 +8,23 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.36.0
+
+🎨 **Les tâches non terminables sont plus simples à utiliser.** Un bouton dans le menu d’une tâche permet de la rendre non terminable ou de la réactiver. Leur présentation est plus claire et elles ne comptent plus dans la charge ni la progression.
+
+🎨 **Reconnaissance des dates améliorée.** Dans le titre d’une tâche, utilisez les jours abrégés et des expressions comme « week-end prochain » ou « le mois prochain ». Les dates sont reconnues dans la langue de l’application.
+
+🎨 **Améliorations de Prochainement.** Retrouvez les tâches en retard et celles du jour avant les périodes suivantes, y compris les jours, semaines et mois vides. Affichez davantage de périodes pour planifier plus loin et revenez à aujourd’hui depuis le tableau.
+
+🐛 **Créez des sections dans un projet vide.** Le projet affiche à nouveau ses commandes de création. Son menu ⋯ propose aussi d’ajouter une section.
+
 ## 2.35.0
 
 🆕 **Choisissez votre étiquette pour « n’importe quand ce mois-ci ».** Dans les réglages, à côté de l’étiquette de la semaine, choisissez un nom plus court comme mois ou mth pour la taper plus vite en ajoutant une tâche.
 
 🆕 **Renommez un dossier et rangez-y des projets.** Dans un espace d’équipe, le menu ⋯ d’un dossier permet de le renommer, ou de le supprimer une fois vide. En ajoutant ou modifiant un projet, le champ Parent liste maintenant les dossiers de l’espace : un projet peut aller directement dans l’un d’eux.
 
-🎨 **Icônes affinées.** Le plus est maintenant une simple croix, et le bouton de menu sur téléphone reprend les trois traits habituels.
+🎨 **Icônes affinées.** Le plus est maintenant une simple croix, le bouton de menu sur téléphone reprend les trois traits habituels.
 
 🐛 **Les étiquettes avec une barre oblique sont reconnues.** Taper une étiquette comme @Statut/En-attente dans le titre d’une tâche lit et crée maintenant l’étiquette entière, au lieu de s’arrêter à la barre.
 
@@ -25,8 +35,6 @@ Chaque ligne est marquée :
 ## 2.33.0
 
 🐛 **Les tâches récurrentes réinitialisent leurs sous-tâches.** Si l’option est activée dans Todoist, terminer une tâche récurrente prépare ses sous-tâches directes pour la prochaine occurrence.
-
-🎨 **Les vues vides sont plus visuelles.** Une illustration et un message vous aident à démarrer quand un projet ou une vue ne contient aucune tâche.
 
 🎨 **Choisissez une icône et une couleur.** Cliquez sur l’icône dans le titre d’un projet pour choisir son icône et sa couleur au même endroit.
 

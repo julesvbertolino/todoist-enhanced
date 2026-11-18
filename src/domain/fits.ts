@@ -1,5 +1,6 @@
+import { completableChildrenOf } from './load';
 import { differenceInCalendarDays, startOfDay } from 'date-fns';
-import { SYSTEM_LABELS, type Item } from './types';
+import { SYSTEM_LABELS, isUncompletable, type Item } from './types';
 import { effectiveEstimate } from './estimates';
 import { dueDate } from './dates';
 import { QUICK_THRESHOLD_MINUTES, bucketOf, hasLabel, isOpen } from './views';
@@ -60,7 +61,7 @@ export function countedMinutes(
   item: Item,
   childrenOf: (parentId: string) => Item[],
 ): number | null {
-  const { minutes } = effectiveEstimate(item, childrenOf);
+  const { minutes } = effectiveEstimate(item, completableChildrenOf(childrenOf));
   if (minutes !== null) return minutes;
   return hasLabel(item, SYSTEM_LABELS.quick) ? QUICK_THRESHOLD_MINUTES : null;
 }
@@ -86,7 +87,7 @@ export function fitsIn(
   let next: number | null = null;
 
   for (const item of items) {
-    if (!isOpen(item) || item.parent_id) continue;
+    if (!isOpen(item) || item.parent_id || isUncompletable(item)) continue;
     const bucket = fitBucketOf(item, now);
     if (!bucket) continue;
 

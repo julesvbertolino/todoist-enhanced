@@ -14,8 +14,8 @@ import { useT } from '@/hooks/useT';
 import { sortItems } from '@/store/selectors';
 import { viewPrefs } from '@/store/prefs';
 import { clampColumnWidth, columnMinWidth, columnWidth, dropTableColumn, tableColumnIcon, tableColumns, tableColumnLabel, tableColumnSort } from '@/domain/table';
-import { effectiveEstimate, formatDuration } from '@/domain/estimates';
-import { insideOthers } from '@/domain/load';
+import { formatDuration } from '@/domain/estimates';
+import { summariseLoad } from '@/domain/load';
 import type { Item, TableColumn, ViewPrefs } from '@/domain/types';
 import type { TaskGroupProps } from './TaskGroup';
 
@@ -85,8 +85,8 @@ export function TableSurface({ groups, viewKey, childrenOf, onOpen }: {
     return () => { window.removeEventListener('resize', measure); box.removeEventListener('scroll', slid); observer.disconnect(); };
   }, []);
   const all = [...new Map(groups.flatMap((group) => group.items).map((item) => [item.id, item])).values()];
-  const inside = insideOthers(all, childrenOf);
-  const total = all.reduce((sum, item) => sum + (inside.has(item.id) ? 0 : effectiveEstimate(item, childrenOf).minutes ?? 0), 0);
+  const summary = summariseLoad(all, childrenOf, null);
+  const total = summary.estimatedMinutes;
   return <TableContext.Provider value={{ columns, coloration: current.tableColoration ?? 'none', freeze }}>
     <div ref={scrollRef} className="table-scroll fullwidth"
       style={room ? { maxHeight: room } : undefined}>
@@ -114,7 +114,7 @@ export function TableSurface({ groups, viewKey, childrenOf, onOpen }: {
           return <TaskGroup key={`${group.sectionId ?? group.title ?? ''}-${index}`} {...group} viewKey={viewKey}
             items={current.tableDescending ? sorted.reverse() : sorted} childrenOf={groupChildren} onOpen={onOpen} keepWhenEmpty />;
         })}
-        <footer className="table-footer"><span>{t('metrics.tasks', { count: all.length })} · {formatDuration(total, locale)}</span></footer>
+        <footer className="table-footer"><span>{t('metrics.tasks', { count: summary.taskCount })} · {formatDuration(total, locale)}</span></footer>
       </div>
     </div>
   </TableContext.Provider>;

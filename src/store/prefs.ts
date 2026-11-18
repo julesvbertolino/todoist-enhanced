@@ -501,7 +501,7 @@ export const defaultPreferences = (locale: Locale): Preferences => ({
   views: {},
   projectViews: {},
   activeViews: {},
-  upcomingHorizonDays: 15,
+  upcomingHorizonDays: 7,
   weekLayout: 'unified',
   weekLabel: DEFAULT_WEEK_LABEL,
   monthLabel: DEFAULT_MONTH_LABEL,

@@ -1,3 +1,4 @@
+import { isUncompletable } from '@/domain/types';
 import { useEffect, useMemo, useState } from 'react';
 import { subDays } from 'date-fns';
 import { buildDemoCompleted } from '@/demo/demoData';
@@ -100,7 +101,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
   const dateFormat = intlDate(locale === 'fr' ? 'fr-FR' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   const rows = entries.map(({ project, depth, projectCount }) => {
     const items = Object.values(snapshot.items).filter((item) => item.project_id === project.id && !item.is_deleted);
-    const active = snapshot.projects[project.id] ? items.filter((item) => !item.checked).length : undefined;
+    const active = snapshot.projects[project.id] ? items.filter((item) => !item.checked && !isUncompletable(item)).length : undefined;
     const completed = demo ? (demoCounts[project.id] ?? 0) + items.filter((item) => item.checked).length : extra.counts !== undefined && snapshot.projects[project.id] ? extra.counts[project.id] ?? 0 : snapshot.completedProjectCounts?.[project.id];
     const progress = active !== undefined && completed !== undefined ? (active + completed ? Math.round(100 * completed / (active + completed)) : 0) : undefined;
     return { project, depth, projectCount, active, completed, progress };
@@ -145,7 +146,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
     <i aria-hidden="true">·</i><span><b>{done}</b>/{done + open} {t('workspace.completedLabel')}</span><i aria-hidden="true">·</i><span>{t('workspace.openLabel', { count: open })}</span></span>;
   const archived = (archive ?? []).filter((p) => !p.is_deleted && !p.is_folder);
   const archivedProgress = (project: Project) => {
-    const open = Object.values(snapshot.items).filter((item) => item.project_id === project.id && !item.is_deleted && !item.checked).length;
+    const open = Object.values(snapshot.items).filter((item) => item.project_id === project.id && !item.is_deleted && !item.checked && !isUncompletable(item)).length;
     const done = demo ? demoCounts[project.id] : extra.counts?.[project.id];
     return done === undefined ? undefined : { done, open, progress: done + open ? Math.round(100 * done / (done + open)) : 0 };
   };

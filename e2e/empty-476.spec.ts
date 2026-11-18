@@ -9,7 +9,7 @@ test('empty lists explain the view and preserve the correct add action', async (
     const state = store.getState();
     store.setState({ snapshot: { ...state.snapshot, items: {}, sections: {} }, prefs: { ...state.prefs, views: {} }, hireNote: false });
   });
-  for (const [route, title] of [['#/today', 'Nothing planned for today'], ['#/week', 'Nothing planned this week'], ['#/month', 'Nothing planned this month'], ['#/someday', 'Nothing saved for someday'], ['#/inbox', 'Your inbox is clear'], ['#/project/home', 'No tasks in this project'], ['#/label/quick', 'No tasks with this tag']]) {
+  for (const [route, title] of [['#/today', 'Nothing planned for today'], ['#/week', 'Nothing planned this week'], ['#/month', 'Nothing planned this month'], ['#/someday', 'Nothing saved for someday'], ['#/inbox', 'Your inbox is clear'], ['#/label/quick', 'No tasks with this tag']]) {
     await go(page, route);
     await expect(page.locator('.screen.active .project-empty h2')).toHaveText(title);
     await expect(page.locator('.screen.active .project-empty-cta')).toBeVisible();
@@ -18,7 +18,8 @@ test('empty lists explain the view and preserve the correct add action', async (
   await expect(page.locator('.screen.active .project-empty h2')).toHaveText('No matching tasks');
   await expect(page.locator('.screen.active .project-empty-cta')).toHaveCount(0);
   await go(page, '#/project/home');
-  await page.locator('.screen.active .project-empty-cta').click();
+  await expect(page.locator('.screen.active .project-empty')).toHaveCount(0);
+  await page.locator('.screen.active').getByRole('button', { name: 'Add task', exact: true }).last().click();
   await expect(page.getByRole('dialog')).toBeVisible();
 });
 

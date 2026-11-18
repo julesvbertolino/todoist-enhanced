@@ -1,6 +1,6 @@
-import { addMonths } from 'date-fns';
+import { addMonths, addYears } from 'date-fns';
 import { toApiDate, type DateFormat } from './dates';
-import { MONTH_WORDS } from './dateVocabulary';
+import { MONTH_WORDS, WEEKDAY_WORDS } from './dateVocabulary';
 
 /**
  * Reading a date out of what somebody typed.
@@ -23,22 +23,6 @@ export interface DateReading {
   hasTime: boolean;
 }
 
-const WEEKDAYS: Record<'en' | 'fr', string[]> = {
-  en: ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
-  fr: ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'],
-};
-
-/**
- * For each month, every word either language has for it, longest first so
- * "juillet" is tried before "juil". Exact words and their abbreviations, never
- * a stem: reading a month from its first three letters made "14 juillet" June
- * and "2 maisons" the 2nd of May (#123).
- */
-const MONTH_ALTERNATIVES: string[] = Array.from({ length: 12 }, (_, month) =>
-  [...MONTH_WORDS.en[month].split('|'), ...MONTH_WORDS.fr[month].split('|')]
-    .sort((a, b) => b.length - a.length)
-    .join('|'));
-
 export interface DateReadingOptions {
   /**
    * The order a numeric date is written in. `12/03` is the 12th of March
@@ -47,6 +31,8 @@ export interface DateReadingOptions {
    */
   dateFormat?: DateFormat;
   bareTime?: boolean;
+  /** Omit for the bilingual date picker and recurrence reader. */
+  locale?: 'en' | 'fr';
 }
 
 /**
@@ -79,7 +65,7 @@ export interface TimeReading {
 }
 
 /** A time of day appearing anywhere in the phrase: "at 14:00", "2pm", "à 9h30". */
-export function readTime(text: string): TimeReading | null {
+export function readTime(text: string, locale?: 'en' | 'fr'): TimeReading | null {
   const span = (match: RegExpMatchArray) => {
     /* The pattern may have eaten the space in front of the time, and that
        space belongs to the sentence rather than to the reading. */
@@ -110,13 +96,15 @@ export function readTime(text: string): TimeReading | null {
    * a task written here and the same task written there land at the same time.
    * Afternoon is tried before noon, because "après-midi" contains it.
    */
-  const parts: Array<[RegExp, number]> = [
-    [/\b(?:apres[- ]midi|afternoon)\b/i, 14],
-    [/\b(?:matin|matinee|morning)\b/i, 9],
-    [/\b(?:soir|soiree|evening|tonight)\b/i, 19],
-    [/\b(?:midi|noon)\b/i, 12],
-    [/\b(?:nuit|night)\b/i, 21],
+  const french: Array<[RegExp, number]> = [
+    [/\bapres[- ]midi\b/i, 14], [/\b(?:matin|matinee)\b/i, 9],
+    [/\b(?:soir|soiree)\b/i, 19], [/\bmidi\b/i, 12], [/\bnuit\b/i, 21],
   ];
+  const english: Array<[RegExp, number]> = [
+    [/\bafternoon\b/i, 14], [/\bmorning\b/i, 9], [/\b(?:evening|tonight)\b/i, 19],
+    [/\bnoon\b/i, 12], [/\bnight\b/i, 21],
+  ];
+  const parts = locale === 'fr' ? french : locale === 'en' ? english : [...french, ...english];
   for (const [pattern, hours] of parts) {
     const match = text.match(pattern);
     if (match) return { hours, minutes: 0, ...span(match) };
@@ -152,7 +140,7 @@ export function readNaturalDate(
   const found = (day: Date, match: RegExpMatchArray): DateReading => {
     const start = match.index!;
     const end = start + match[0].length;
-    const time = readTime(text);
+    const time = readTime(text, options.locale);
 
     /* A time is part of this phrase when it is beside it. One further off in
        the sentence belongs to the sentence: "12:14 is the deadline, call
@@ -184,7 +172,8 @@ export function readNaturalDate(
     deux: 2, two: 2, trois: 3, three: 3, quatre: 4, four: 4, cinq: 5, five: 5,
     six: 6, sept: 7, seven: 7, huit: 8, eight: 8, neuf: 9, nine: 9,
     dix: 10, ten: 10, onze: 11, eleven: 11, douze: 12, twelve: 12 };
-  const offset = text.match(/\b(?:in|dans)\s+(\d{1,3}|un|une|a|an|one|deux|two|trois|three|quatre|four|cinq|five|six|sept|seven|huit|eight|neuf|nine|dix|ten|onze|eleven|douze|twelve)\s*(hours?|heures?|h|minutes?|mins?|min|mn)\b/);
+  const offsetPattern = options.locale === 'fr' ? /\bdans\s+(\d{1,3}|un|une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix|onze|douze)\s*(heures?|h|minutes?|min|mn)\b/ : options.locale === 'en' ? /\bin\s+(\d{1,3}|a|an|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s*(hours?|h|minutes?|mins?|min)\b/ : /\b(?:in|dans)\s+(\d{1,3}|un|une|a|an|one|deux|two|trois|three|quatre|four|cinq|five|six|sept|seven|huit|eight|neuf|nine|dix|ten|onze|eleven|douze|twelve)\s*(hours?|heures?|h|minutes?|mins?|min|mn)\b/;
+  const offset = text.match(offsetPattern);
   if (offset) {
     const count = /^\d+$/.test(offset[1]) ? Number(offset[1]) : amounts[offset[1]];
     if (count > 0) {
@@ -197,15 +186,15 @@ export function readNaturalDate(
   }
 
   // "today" / "tomorrow" / the day after
-  const plain: Array<[RegExp, number]> = [
-    /* Today, said by naming a part of it. "ce soir" is the commonest way
-       anybody writes tonight, and it names the hour at the same time — the
-       time reader takes the same words a moment later. */
-    [/\b(ce soir|cette nuit|ce matin|cet? apres[- ]midi|this (?:morning|afternoon|evening)|tonight)\b/, 0],
-    [/\b(today|aujourd'?hui|auj)\b/, 0],
-    [/\b(tomorrow|demain|tmrw?|tmw)\b/, 1],
-    [/\b(after tomorrow|apres-demain|apres demain)\b/, 2],
+  const frenchDays: Array<[RegExp, number]> = [
+    [/\b(ce soir|cette nuit|ce matin|cet? apres[- ]midi)\b/, 0],
+    [/\b(aujourd'?hui|auj)\b/, 0], [/\b(apres-demain|apres demain)\b/, 2], [/\bdemain\b/, 1],
   ];
+  const englishDays: Array<[RegExp, number]> = [
+    [/\b(this (?:morning|afternoon|evening)|tonight)\b/, 0], [/\btoday\b/, 0],
+    [/\bafter tomorrow\b/, 2], [/\b(tomorrow|tmrw?|tmw)\b/, 1],
+  ];
+  const plain = options.locale === 'fr' ? frenchDays : options.locale === 'en' ? englishDays : [...frenchDays, ...englishDays];
   for (const [pattern, offset] of plain) {
     const match = text.match(pattern);
     if (match) return found(addDays(today, offset), match);
@@ -214,19 +203,19 @@ export function readNaturalDate(
   /* Todoist's own short forms, "tod" and "tom" (#283). Those two are also first
      names, so they only count when typed in lower case: "call Tom" stays a task
      about Tom. */
-  const short = text.match(/\b(tod|tom)\b/);
+  const short = options.locale === 'fr' ? null : text.match(/\b(tod|tom)\b/);
   if (short && raw.slice(short.index!, short.index! + short[0].length) === short[0]) {
     return found(addDays(today, short[0] === 'tod' ? 0 : 1), short);
   }
 
   // "next week" / "la semaine prochaine" — the coming Monday
-  const nextWeek = text.match(/\b(next week|semaine prochaine|la semaine prochaine)\b/);
+  const nextWeek = text.match(options.locale === 'fr' ? /\b(?:la )?semaine prochaine\b/ : options.locale === 'en' ? /\bnext week\b/ : /\b(next week|semaine prochaine|la semaine prochaine)\b/);
   if (nextWeek) {
     return found(addDays(today, ((8 - today.getDay()) % 7) || 7), nextWeek);
   }
 
   // "in 3 days" / "dans 2 semaines"
-  const relative = text.match(/\b(?:in|dans)\s+(\d{1,3}|un|une|a|an|one)\s+(days?|jours?|weeks?|semaines?|months?|mois)\b/);
+  const relative = text.match(options.locale === 'fr' ? /\bdans\s+(\d{1,3}|un|une)\s+(jours?|semaines?|mois)\b/ : options.locale === 'en' ? /\bin\s+(\d{1,3}|a|an|one)\s+(days?|weeks?|months?)\b/ : /\b(?:in|dans)\s+(\d{1,3}|un|une|a|an|one)\s+(days?|jours?|weeks?|semaines?|months?|mois)\b/);
   if (relative) {
     const count = /^\d+$/.test(relative[1]) ? Number(relative[1]) : 1;
     const weeks = relative[2].startsWith('week') || relative[2].startsWith('semaine');
@@ -234,25 +223,41 @@ export function readNaturalDate(
     return found(months ? addMonths(today, count) : addDays(today, count * (weeks ? 7 : 1)), relative);
   }
 
-  // A weekday name, in either language: the next one that is not today.
-  for (const names of Object.values(WEEKDAYS)) {
-    for (let index = 0; index < names.length; index += 1) {
-      const name = fold(names[index]);
-      const match = text.match(new RegExp(`\\b(?:next |prochain |le )?${name}\\b`));
-      if (!match) continue;
-      const delta = ((index - today.getDay() + 7) % 7) || 7;
-      return found(addDays(today, delta), match);
-    }
+  const english = options.locale !== 'fr';
+  const french = options.locale !== 'en';
+  const named: Array<[RegExp, (date: Date) => Date]> = [
+    ...(english ? [
+      [/\bthis weekend\b/, (d: Date) => addDays(d, (6 - d.getDay() + 7) % 7)],
+      [/\bnext weekend\b/, (d: Date) => addDays(d, (6 - d.getDay() + 7) % 7 + 7)],
+      [/\blater this week\b/, (d: Date) => addDays(d, 2)],
+      [/\bnext month\b/, (d: Date) => addMonths(d, 1)],
+      [/\bnext year\b/, (d: Date) => addYears(d, 1)],
+      [/\bsomeday\b/, (d: Date) => addMonths(d, 2)],
+    ] as Array<[RegExp, (date: Date) => Date]> : []),
+    ...(french ? [
+      [/\b(?:ce|cet) week[- ]end\b/, (d: Date) => addDays(d, (6 - d.getDay() + 7) % 7)],
+      [/\b(?:le )?week[- ]end prochain\b/, (d: Date) => addDays(d, (6 - d.getDay() + 7) % 7 + 7)],
+      [/\bplus tard cette semaine\b/, (d: Date) => addDays(d, 2)],
+      [/\b(?:le )?mois prochain\b/, (d: Date) => addMonths(d, 1)],
+      [/\b(?:l'|la )?annee prochaine\b/, (d: Date) => addYears(d, 1)],
+      [/\bun jour\b/, (d: Date) => addMonths(d, 2)],
+    ] as Array<[RegExp, (date: Date) => Date]> : []),
+  ];
+  for (const [pattern, date] of named) {
+    const match = text.match(pattern);
+    if (match) return found(date(today), match);
   }
 
+  const languages = options.locale ? [options.locale] : ['en', 'fr'] as const;
   /* "10 sept", "3 mars", "1er juillet", "July 1st", "sept 10": the next
-     occurrence of that calendar day. Both languages are read on purpose, and
+     occurrence of that calendar day. Use the selected language when provided;
      each month is matched by its exact words with a boundary after them. When
      a sentence holds more than one, the one that starts first is the one read;
      the caller reads on from there for a later one. */
   let earliest: { at: number; day: Date; match: RegExpMatchArray } | null = null;
   for (let month = 0; month < 12; month += 1) {
-    const words = `(?:${MONTH_ALTERNATIVES[month]})\\.?(?![a-z])`;
+    const alternatives = languages.flatMap((language) => MONTH_WORDS[language][month].split('|')).sort((a, b) => b.length - a.length).join('|');
+    const words = `(?:${alternatives})\\.?(?![a-z])`;
     const dayFirst = text.match(new RegExp(`\\b(\\d{1,2})(?:er|e|st|nd|rd|th)?\\s+${words}`));
     const monthFirst = text.match(new RegExp(`\\b${words}\\s+(\\d{1,2})(?:er|st|nd|rd|th)?\\b`));
     for (const match of [dayFirst, monthFirst]) {
@@ -266,6 +271,20 @@ export function readNaturalDate(
     }
   }
   if (earliest) return found(earliest.day, earliest.match);
+
+  for (const language of languages) {
+    for (let index = 0; index < 7; index += 1) {
+      const name = WEEKDAY_WORDS[language][index];
+      const prefix = language === 'en' ? '(?:next )?' : '(?:prochain |le )?';
+      const match = text.match(new RegExp(`\\b${prefix}(?:${name})\\b`));
+      if (!match) continue;
+      const delta = language === 'en' && match[0].startsWith('next ')
+        ? (((8 - today.getDay()) % 7) || 7) + ((index + 6) % 7)
+        : ((index - today.getDay() + 7) % 7) || 7;
+      return found(addDays(today, delta), match);
+    }
+  }
+
 
   /* "12/03" and "12/03/2026". Day first, except when the Date format setting
      says month first: the order is a preference, not a fact about a language. */
@@ -286,8 +305,21 @@ export function readNaturalDate(
     }
   }
 
+  // An ordinal without a month means the next real occurrence of that day.
+  const ordinal = text.match(options.locale === 'fr' ? /\b(\d{1,2})(?:er|e|eme)\b/ : options.locale === 'en' ? /\b(\d{1,2})(?:st|nd|rd|th)\b/ : /\b(\d{1,2})(?:st|nd|rd|th|er|eme|e)\b/);
+  if (ordinal) {
+    const day = Number(ordinal[1]);
+    if (day >= 1 && day <= 31) {
+      for (let step = 0; step < 12; step += 1) {
+        const first = new Date(today.getFullYear(), today.getMonth() + step, 1);
+        const candidate = new Date(first.getFullYear(), first.getMonth(), day);
+        if (candidate.getMonth() === first.getMonth() && candidate >= today) return found(candidate, ordinal);
+      }
+    }
+  }
+
   if (options.bareTime !== false) {
-    const time = readTime(text);
+    const time = readTime(text, options.locale);
     if (time) {
       const token = text.slice(time.start, time.end);
       // Small h-values remain durations; explicit prefixes and clock formats are unambiguous.

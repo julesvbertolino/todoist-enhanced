@@ -22,7 +22,7 @@ import { useData } from '@/hooks/useData';
 import { useCompleted } from '@/hooks/useCompleted';
 import { navigate, useRoute } from '@/hooks/useRoute';
 import { rootItems } from '@/store/selectors';
-import { completionBuckets, summariseInsights } from '@/domain/insights';
+import { completionBuckets, isCountableCompletion, summariseInsights } from '@/domain/insights';
 import {
   isDefaultDashboardOrder, moveDashboardCard, resolveDashboardOrder, type DashboardCardId,
 } from '@/domain/dashboard';
@@ -141,7 +141,7 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
      the summary cards, where they do not obscure individual days or hours. */
   const perBucket: BarDatum[] = useMemo(() => {
     if (grain === null) return [];
-    const buckets = completionBuckets(completed, range, grain);
+    const buckets = completionBuckets(completed.filter((item) => isCountableCompletion(item, snapshot)), range, grain);
     /* Every bar in the data colour, and the best one in the accent: the
        card's subtitle names it, and the bar it names is the one lit up. */
     const best = firstBest(buckets.map((bucket) => bucket.value));
@@ -152,7 +152,7 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
       value: bucket.value,
       current: index === best,
     }));
-  }, [completed, range, grain, intl]);
+  }, [completed, range, grain, intl, snapshot]);
 
   const byHour: BarDatum[] = useMemo(() => {
     const best = firstBest(summary.byHour);
@@ -241,7 +241,7 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
   /* Every selected day is loaded, including a full year. The grid can scroll
      horizontally rather than hiding the longest and most useful timeframe. */
   const contribution: ContributionDatum[] = useMemo(() => {
-    const counts = countByDay(completed);
+    const counts = countByDay(completed.filter((item) => isCountableCompletion(item, snapshot)));
     return daysOf(range).map((at) => {
       const key = format(at, 'yyyy-MM-dd');
       return {
@@ -250,7 +250,7 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
         value: counts.get(key) ?? 0,
       } satisfies ContributionDatum;
     });
-  }, [completed, range, intl]);
+  }, [completed, range, intl, snapshot]);
 
   const bestBucket = grain === 'month'
     ? perBucket.reduce<BarDatum | null>((best, bucket) => (!best || bucket.value > best.value ? bucket : best), null)

@@ -19,6 +19,8 @@ test('today and upcoming include open tasks on their deadline day', async ({ dem
   await expect(page.locator('.screen.active [data-task-id="deadline-today"]')).toBeVisible();
   await expect(page.locator('.screen.active [data-task-id="deadline-tomorrow"]')).toBeVisible();
   await go(page, '#/upcoming');
-  await expect(page.locator('.screen.active [data-task-id="deadline-tomorrow"]')).toBeVisible();
+  // It appears on its start day and its different deadline day, while the same-day pair appears once.
+  await expect(page.locator('.screen.active [data-task-id="deadline-tomorrow"]')).toHaveCount(2);
   await expect(page.locator('.screen.active [data-task-id="deadline-duplicate"]')).toHaveCount(1);
+  await expect(page.locator('.screen.active .metrics')).toContainText('3 tasks');
 });

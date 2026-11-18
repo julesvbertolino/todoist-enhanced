@@ -42,7 +42,7 @@ import { CommentThread } from '../CommentThread';
 import { DateField } from '../DateField';
 import { markerStyle } from '@/domain/colors';
 import { assignees } from '@/domain/sharing';
-import { ESTIMATE_PREFIX, displayTaskContent, isUncompletable, toDisplayPriority, toTodoistPriority, weekLabel, type Item, monthLabel } from '@/domain/types';
+import { ESTIMATE_PREFIX, displayTaskContent, isUncompletable, toggleUncompletableContent, toDisplayPriority, toTodoistPriority, weekLabel, type Item, monthLabel } from '@/domain/types';
 import { dropMutation, type DropTarget } from '@/domain/dnd';
 import { taskShortcuts } from '../DatePicker';
 import { matchesSearch } from '@/domain/search';
@@ -65,7 +65,7 @@ export const subtaskRowId = (id: string): string => `subtask:${id}`;
  * way the sidebar's project rows do, and it is both the handle and the landing
  * place — dropping one on another puts it in that one's position.
  */
-function SubtaskRow({ id, done, children }: { id: string; done: boolean; children: React.ReactNode }) {
+function SubtaskRow({ id, done, uncompletable, children }: { id: string; done: boolean; uncompletable: boolean; children: React.ReactNode }) {
   const rowId = subtaskRowId(id);
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: rowId });
   const { setNodeRef: setDropRef, isOver } = useDroppable({ id: rowId });
@@ -74,6 +74,7 @@ function SubtaskRow({ id, done, children }: { id: string; done: boolean; childre
   return (
     <div
       ref={setDropRef}
+      data-uncompletable={uncompletable ? '' : undefined}
       className={`subtaskrow${done ? ' done' : ''}${isDragging ? ' lifting' : ''}${isOver && !isDragging ? ' landing' : ''}`}
     >
       {/* Dragged by its handle, so the row's own controls keep working. */}
@@ -142,7 +143,7 @@ function EditableSubtask({ child, onOpen }: { child: Item; onOpen: (id: string) 
   useEffect(() => {
     if (!editing) {
       setDraft(child.content);
-      setRefusals(savedRefusals(child.content, snapshot, naturalDates, dateFormat));
+      setRefusals(savedRefusals(child.content, snapshot, naturalDates, dateFormat, locale));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- re-read only when the title or the mode changes.
   }, [child.content, editing]);
@@ -155,14 +156,15 @@ function EditableSubtask({ child, onOpen }: { child: Item; onOpen: (id: string) 
     /* Read as a title is (#264): a date, a repeat, `p1`, `@tag` and an
        estimate apply to the subtask. A `#project` stays text, since a subtask
        cannot live outside its parent's project. */
-    const first = parseShorthand(draft, snapshot, naturalDates, refusals, dateFormat);
+    const first = parseShorthand(draft, snapshot, naturalDates, refusals, dateFormat, undefined, undefined, locale);
     const asText = first.ranges.filter((r) => r.kind === 'project').map(({ start, end }) => ({ start, end }));
     const read = asText.length > 0
-      ? parseShorthand(draft, snapshot, naturalDates, [...refusals, ...asText], dateFormat) : first;
+      ? parseShorthand(draft, snapshot, naturalDates, [...refusals, ...asText], dateFormat, undefined, undefined, locale) : first;
     const content = read.content.trim();
     if (!content) { inputRef.current?.focus(); return; }
     const fields: Record<string, unknown> = {};
-    if (content !== child.content) fields.content = content;
+    const storedContent = content;
+    if (storedContent !== child.content) fields.content = storedContent;
     if (read.date) fields.due = dueForDate(child.due, read.date);
     if (read.priority) fields.priority = toTodoistPriority(read.priority);
     if (read.labels.length > 0) fields.labels = [...new Set([...child.labels, ...read.labels])];
@@ -187,10 +189,8 @@ function EditableSubtask({ child, onOpen }: { child: Item; onOpen: (id: string) 
   return (
     /* The box and the title both read `child.checked`, through the row's
        `done` class, so one can never say done while the other says open (#164). */
-    <SubtaskRow id={child.id} done={child.checked}>
-      {isUncompletable(child) ? (
-        <span className={`check p${toDisplayPriority(child.priority)} nocheck`} aria-hidden="true" />
-      ) : (
+    <SubtaskRow id={child.id} done={child.checked} uncompletable={isUncompletable(child)}>
+      {!isUncompletable(child) && (
         <span
           className={`check p${toDisplayPriority(child.priority)}`}
           role="checkbox"
@@ -482,7 +482,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
   // Re-seed the editable fields whenever a different task is opened.
   useEffect(() => {
     if (!item) return;
-    setTitle(item.content);
+    setTitle(displayTaskContent(item));
     setDescription(item.description);
     setEditingDescription(false);
     setEditingTitle(false);
@@ -490,7 +490,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
     setSubtaskDraft('');
     /* The saved title is a name, not something being typed: nothing in it is
        read until it is edited (#117). */
-    setRefusals(savedRefusals(item.content, snapshot, naturalDates, dateFormat));
+    setRefusals(savedRefusals(displayTaskContent(item), snapshot, naturalDates, dateFormat, locale));
     setMenuOpen(false);
     setTagPickerOpen(false);
   }, [item?.id]); // eslint-disable-line react-hooks/exhaustive-deps -- Re-seed only for a different task; sync updates must preserve edits.
@@ -528,7 +528,8 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
   };
   const deadline = deadlineDate(item);
   const subtasks = childrenOf(item.id);
-  const doneSubtasks = subtasks.filter((c) => c.checked).length;
+  const countableSubtasks = subtasks.filter((c) => !isUncompletable(c));
+  const doneSubtasks = countableSubtasks.filter((c) => c.checked).length;
   const { minutes, computed } = effectiveEstimate(item, childrenOf);
   /* The parents above this task, outermost first. Guarded against a cycle the
      server should never send but which would otherwise hang the panel. */
@@ -578,7 +579,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
    * stays in the name exactly as it was typed.
    */
   /** Whether the title holds an edit that has not been saved yet. */
-  const titleDirty = title !== item.content;
+  const titleDirty = title !== displayTaskContent(item) && title !== item.content;
 
   /* Both ways out of an edit also let the field go: a title that has just been
      saved is not being edited any more, and a box still wearing its focus ring
@@ -586,23 +587,24 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
   const releaseTitle = () => { titleRef.current?.blur(); };
 
   const cancelTitle = () => {
-    setTitle(item.content);
-    setRefusals(savedRefusals(item.content, snapshot, naturalDates, dateFormat));
+    setTitle(displayTaskContent(item));
+    setRefusals(savedRefusals(displayTaskContent(item), snapshot, naturalDates, dateFormat, locale));
     releaseTitle();
   };
 
   const commitTitle = () => {
-    const read = parseShorthand(title, snapshot, naturalDates, refusals, dateFormat);
+    const read = parseShorthand(title, snapshot, naturalDates, refusals, dateFormat, undefined, undefined, locale);
     const next = read.content.trim();
     if (!next) {
       // Nothing left to call it by: the edit is dropped rather than the name.
-      setTitle(item.content);
-      setRefusals(savedRefusals(item.content, snapshot, naturalDates, dateFormat));
+      setTitle(displayTaskContent(item));
+      setRefusals(savedRefusals(displayTaskContent(item), snapshot, naturalDates, dateFormat, locale));
       return;
     }
 
     const fields: Record<string, unknown> = {};
-    if (next !== item.content) fields.content = next;
+    const storedContent = next;
+    if (storedContent !== item.content) fields.content = storedContent;
     if (read.date) fields.due = dueForDate(item.due, read.date);
     if (read.priority) fields.priority = toTodoistPriority(read.priority);
 
@@ -649,7 +651,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
 
     /* Saved, the title is a name again: what is left of it is not read a
        second time. */
-    setRefusals(savedRefusals(next, snapshot, naturalDates, dateFormat));
+    setRefusals(savedRefusals(next, snapshot, naturalDates, dateFormat, locale));
     setTitle(next);
     releaseTitle();
   };
@@ -679,10 +681,10 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
     /* Read the way the composer reads a title (#264): a date, a repeat, `p1`,
        `@tag` and `(25)` in the line apply to the subtask. A `#project` does
        not: a subtask lives in its parent's project, so that word stays text. */
-    const first = parseShorthand(content, snapshot, naturalDates, subtaskRefusals, dateFormat);
+    const first = parseShorthand(content, snapshot, naturalDates, subtaskRefusals, dateFormat, undefined, undefined, locale);
     const keepAsText = first.ranges.filter((r) => r.kind === 'project').map(({ start, end }) => ({ start, end }));
     const read = keepAsText.length > 0
-      ? parseShorthand(content, snapshot, naturalDates, [...subtaskRefusals, ...keepAsText], dateFormat)
+      ? parseShorthand(content, snapshot, naturalDates, [...subtaskRefusals, ...keepAsText], dateFormat, undefined, undefined, locale)
       : first;
     const title = read.content.trim() || content;
     void createTask({
@@ -848,6 +850,10 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
                 >
                   <span><Icon name="copy" size="sm" /> {t('task.duplicate')}</span>
                 </button>
+                <button className="opt" onClick={() => {
+                  setMenuOpen(false);
+                  void updateTask(item.id, { content: toggleUncompletableContent(item) });
+                }}><span><Icon name="lock" size="sm" /> {t(isUncompletable(item) ? 'task.makeCompletable' : 'task.makeUncompletable')}</span></button>
                 <hr />
                 <button className="opt danger" onClick={askThenDelete}>
                   <span><Icon name="close" size="sm" /> {t('task.delete')}</span>
@@ -884,10 +890,8 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
               </button>
             </p>
           )}
-          <div className={`detail-headline${item.checked ? ' done' : ''}`}>
-            {isUncompletable(item) ? (
-              <span className={`check p${priority} nocheck`} aria-hidden="true" />
-            ) : (
+          <div className={`detail-headline${item.checked ? ' done' : ''}`} data-uncompletable={isUncompletable(item) ? '' : undefined}>
+            {!isUncompletable(item) && (
               <span
                 className={`check p${priority}`}
                 role="checkbox"
@@ -918,12 +922,16 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
                   aria-label={t('detail.title')}
                   onClick={(e) => {
                     if ((e.target as Element).closest('a[href]')) return;
+                    setTitle(item.content);
+                    setRefusals(savedRefusals(item.content, snapshot, naturalDates, dateFormat, locale));
                     setEditingTitle(true);
                   }}
                   onKeyDown={(e) => {
                     if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
                       e.preventDefault();
-                      setEditingTitle(true);
+                      setTitle(item.content);
+                    setRefusals(savedRefusals(item.content, snapshot, naturalDates, dateFormat, locale));
+                    setEditingTitle(true);
                     }
                   }}
                   dangerouslySetInnerHTML={{ __html: renderTitle(displayTaskContent(item)) }}
@@ -938,7 +946,13 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
                   onChange={setTitle}
                   onSubmit={() => { commitTitle(); setEditingTitle(false); }}
                   onCancel={() => { cancelTitle(); setEditingTitle(false); }}
-                  onBlur={() => setEditingTitle(false)}
+                  onFocus={() => {
+                    if (isUncompletable(item) && title === displayTaskContent(item)) {
+                      setTitle(item.content);
+                      setRefusals(savedRefusals(item.content, snapshot, naturalDates, dateFormat, locale));
+                    }
+                  }}
+                  onBlur={() => { setEditingTitle(false); setTitle((value) => value === item.content ? displayTaskContent(item) : value); }}
                   autoFocus={editingTitle}
                   placeholder={t('detail.title')}
                   ariaLabel={t('detail.title')}
@@ -1032,10 +1046,10 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
           <section className="detail-section boxed">
             <h3 className="sectionlabel">
               {t('detail.subtasks')}
-              {subtasks.length > 0 && (
+              {countableSubtasks.length > 0 && (
                 <span className="count subprog">
-                  <ProgressRing done={doneSubtasks} total={subtasks.length} size="sm" />
-                  {t('task.subtaskProgress', { done: doneSubtasks, total: subtasks.length })}
+                  <ProgressRing done={doneSubtasks} total={countableSubtasks.length} size="sm" />
+                  {t('task.subtaskProgress', { done: doneSubtasks, total: countableSubtasks.length })}
                 </span>
               )}
             </h3>

@@ -179,7 +179,22 @@ export function ProjectMenu({
         visibility: position ? undefined : 'hidden',
       }}
     >
-      {/* The Inbox is the one project that is not yours to rename, move or delete: all it offers is its link. */}
+      <button className="opt" role="menuitem" onClick={() => {
+        onClose();
+        const projectHash = `#/project/${encodeURIComponent(project.id)}`;
+        if (!window.location.hash.startsWith(projectHash)) navigate('project', project.id);
+        let attempts = 0;
+        const openInline = () => {
+          if (!window.location.hash.startsWith(projectHash)) return;
+          const button = document.querySelector<HTMLButtonElement>('.coladdsection .addsection-col, .mode > .addsection-slot:last-child .addsection');
+          if (button) { button.scrollIntoView({ block: 'nearest', inline: 'nearest' }); button.click(); }
+          else if (attempts++ < 60) window.setTimeout(openInline, 50);
+        };
+        window.setTimeout(openInline, 50);
+      }}>
+        <Icon name="plus" size="sm" /><span>{t('section.add')}</span>
+      </button>
+      {/* The Inbox is the one project that is not yours to rename, move or delete. */}
       {project.inbox_project ? (
         <button
           className="opt"

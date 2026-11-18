@@ -6,6 +6,7 @@ import { COLOUR_CHOICES } from './ProjectSheet';
 import { colorValue } from '@/domain/colors';
 import type { ChangelogVisual } from '@/domain/changelogVisuals';
 import './changelog-preview.css';
+import uncompletableMenu from '@/assets/changelog-uncompletable.png';
 
 const PAD = 15;
 
@@ -63,6 +64,8 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
   let content: ReactNode;
   switch (kind) {
     case null: return null;
+    case 'uncompletableMenu':
+      content = <img className="cv-uncompletable-menu" src={uncompletableMenu} alt="" />; break;
     case 'iconSet':
       content = <div className="cv-icon-set">{(['calendar', 'clock', 'flag', 'tag', 'inbox', 'sun', 'star', 'bell', 'search', 'settings', 'filter', 'user', 'mail', 'link', 'project', 'board', 'table', 'comment', 'repeat', 'flame', 'someday', 'sparkles', 'deadline', 'dashboard'] as IconName[]).map((icon) => <span key={icon}><Icon name={icon} size="lg" /></span>)}</div>; break;
     case 'projectColours':

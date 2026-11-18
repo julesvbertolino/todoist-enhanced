@@ -72,6 +72,10 @@ interface ModeSurfaceProps {
   lead?: ReactNode;
   /** A row that sits first in the first group of a list, before its tasks (the note for Todoist's people). */
   firstGroupLead?: ReactNode;
+  /** Show a shortcut back to the current day on the Upcoming board. */
+  todayColumnId?: string;
+  /** Fixed groups shown before the date groups on Upcoming. */
+  leadingGroups?: Array<{ id: string; title: string; items: Item[]; action?: ReactNode; accent?: 'late' }>;
 }
 
 /**
@@ -95,7 +99,7 @@ function useGrouped(props: ModeSurfaceProps) {
 
   return useMemo(() => {
     const sorted = sortItems(items, sort, childrenOf, order, snapshot);
-    return groupItems(sorted, group, snapshot, {
+    const grouped = groupItems(sorted, group, snapshot, {
       step: (step) => t(`step.${step}`),
       none: t('common.none'),
       overdue: viewKey?.startsWith('filter:') ? t('filters.overdueGroup') : undefined,
@@ -123,7 +127,8 @@ function useGrouped(props: ModeSurfaceProps) {
       scheduled: t('section.scheduled'),
       available: t('section.available'),
     });
-  }, [items, group, sort, childrenOf, order, viewKey, snapshot, t, locale]);
+    return [...(props.leadingGroups ?? []).map((g) => ({ key: g.id, title: g.title, items: g.items })), ...grouped];
+  }, [items, group, sort, childrenOf, order, viewKey, snapshot, t, locale, props.leadingGroups]);
 }
 
 function GroupedTable(props: ModeSurfaceProps) {
@@ -140,6 +145,7 @@ function GroupedTable(props: ModeSurfaceProps) {
   return <TableSurface viewKey={props.viewKey ?? 'table'} childrenOf={props.childrenOf} onOpen={props.onOpen}
     groups={groups.length ? groups.map((group) => ({ title: group.title || undefined, items: group.items,
       childrenOf: props.childrenOf, onOpen: props.onOpen, onAddTask: props.addToGroup?.(group.key),
+      actions: props.leadingGroups?.find((g) => g.id === group.key)?.action,
       reorderable: props.order })) : [{ items: [], childrenOf: props.childrenOf, onOpen: props.onOpen,
         onAddTask: props.addToGroup?.('none') }]} />;
 }
@@ -148,7 +154,7 @@ function ListSurface(props: ModeSurfaceProps) {
   const { t } = useT();
   const groups = useGrouped(props);
 
-  if (props.group !== 'step' && props.items.length === 0 && !props.lead && !props.firstGroupLead) {
+  if (props.group !== 'step' && props.items.length === 0 && !props.leadingGroups?.some((g) => g.items.length) && !props.lead && !props.firstGroupLead) {
     return <p className="empty">{t('task.noTasks')}</p>;
   }
 
@@ -166,6 +172,8 @@ function ListSurface(props: ModeSurfaceProps) {
           key={group.key}
           lead={index === 0 ? props.firstGroupLead : undefined}
           title={group.title || undefined}
+          actions={props.leadingGroups?.find((g) => g.id === group.key)?.action}
+          accent={props.leadingGroups?.find((g) => g.id === group.key)?.accent}
           items={group.items}
           childrenOf={props.childrenOf}
           onOpen={props.onOpen}
@@ -213,6 +221,8 @@ function BoardSurface(props: ModeSurfaceProps) {
   const columns: NonNullable<ModeSurfaceProps['boardColumns']> =
     props.boardColumns ??
     groups.map((g) => ({ id: g.key, title: g.title || t('common.all'), items: g.items,
+      action: props.leadingGroups?.find((entry) => entry.id === g.key)?.action,
+      accent: props.leadingGroups?.find((entry) => entry.id === g.key)?.accent,
       dropTarget: props.group === 'step' ? { kind: 'step' as const, step: g.key as Step } : undefined }));
 
   const boardRef = useRef<HTMLDivElement>(null);
@@ -336,6 +346,14 @@ function BoardSurface(props: ModeSurfaceProps) {
             >
               <Icon name="arrow-left" size="sm" />
             </button>
+            {props.todayColumnId && (
+              <button className="btn quiet sm" onClick={() => {
+                const board = boardRef.current;
+                const index = columns.findIndex((column) => column.id === props.todayColumnId);
+                const column = board?.children.item(index) as HTMLElement | null;
+                if (board && column) board.scrollTo({ left: column.offsetLeft - board.offsetLeft, behavior: 'smooth' });
+              }}>{t('nav.today')}</button>
+            )}
             <button
               className="iconbtn"
               aria-label={t('board.next')}
@@ -383,7 +401,7 @@ function BoardSurface(props: ModeSurfaceProps) {
                   <strong>{column.title}</strong>
                 )}
                 <small className={load.level === 'over' ? 'over' : undefined}>
-                  {[t('metrics.tasks', { count: column.items.length }), ...parts].join(' · ')}
+                  {[t('metrics.tasks', { count: load.taskCount }), ...parts].join(' · ')}
                 </small>
               </div>
               {column.action}

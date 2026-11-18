@@ -111,6 +111,7 @@ export function parseShorthand(
   /** Who a task of this project can be given to, for `+name`. Asked once the project is known. */
   peopleOf?: (projectId: string | null) => Array<{ id: string; name: string }>,
   baseDate?: string,
+  locale?: 'en' | 'fr',
 ): Shorthand {
   const ranges: Highlight[] = [];
   const claim = (start: number, length: number, kind: HighlightKind, tone?: string, keep?: boolean) =>
@@ -279,7 +280,7 @@ export function parseShorthand(
     for (let guard = 0; guard < 8; guard += 1) {
       const repeat = readRecurrence(text);
       if (!repeat) break;
-      last = { at: repeat.index, length: repeat.matched.length, reading: repeat };
+      if (!locale || repeat.lang === locale) last = { at: repeat.index, length: repeat.matched.length, reading: repeat };
       text = blank(text, repeat.index, repeat.matched.length);
     }
     if (last?.reading) {
@@ -305,7 +306,7 @@ export function parseShorthand(
     let text = mask(raw, [...ranges, ...refused, ...linkRanges]);
     let last: { at: number; length: number; date: string } | null = null;
     for (let guard = 0; guard < 8; guard += 1) {
-      const reading = readNaturalDate(text, new Date(), { dateFormat, bareTime: guard === 0 });
+      const reading = readNaturalDate(text, new Date(), { dateFormat, bareTime: guard === 0, locale });
       if (!reading) break;
       last = { at: reading.index, length: reading.matched.length, date: reading.date };
       text = blank(text, reading.index, reading.matched.length);
@@ -363,11 +364,11 @@ export function parseShorthand(
  * left alone.
  */
 export function savedRefusals(
-  raw: string, snapshot: Snapshot, naturalDates: boolean, dateFormat: DateFormat = 'dmy',
+  raw: string, snapshot: Snapshot, naturalDates: boolean, dateFormat: DateFormat = 'dmy', locale?: 'en' | 'fr',
 ): TextRange[] {
   const refused: TextRange[] = [];
   for (let guard = 0; guard < 16; guard += 1) {
-    const found = parseShorthand(raw, snapshot, naturalDates, refused, dateFormat).ranges
+    const found = parseShorthand(raw, snapshot, naturalDates, refused, dateFormat, undefined, undefined, locale).ranges
       .filter((range) => !range.keep);
     if (found.length === 0) break;
     refused.push(...found.map(({ start, end }) => ({ start, end })));

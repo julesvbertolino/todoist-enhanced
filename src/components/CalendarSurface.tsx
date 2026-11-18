@@ -307,7 +307,7 @@ export function CalendarSurface({ viewKey, items, onOpen, onAddTaskTo, childrenO
     const day = new Date(); day.setHours(0, minute, 0, 0);
     return intlDate(locale, { hour: 'numeric', minute: '2-digit', hour12: prefs.hour12 }).format(day);
   };
-  const tint = (item: Item) => options.coloration === 'priority' ? `var(--p${toDisplayPriority(item.priority)})`
+  const tint = (item: Item) => isUncompletable(item) ? 'var(--muted)' : options.coloration === 'priority' ? `var(--p${toDisplayPriority(item.priority)})`
     : options.coloration === 'project' ? colorValue(snapshot.projects[item.project_id]?.color)
       : colorValue(Object.values(snapshot.labels).find((label) => item.labels.includes(label.name) && !label.name.startsWith('est-'))?.color);
   /** ⌘/Ctrl+click picks a card instead of opening it; the bulk bar edits the ones picked (#323). */

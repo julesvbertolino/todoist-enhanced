@@ -249,7 +249,8 @@ function TaskRowView({
   const uncompletable = isUncompletable(item);
   const children = childrenOf(item.id);
   const openChildren = children.filter((c) => !c.checked);
-  const doneChildren = children.length - openChildren.length;
+  const countableChildren = children.filter((c) => !isUncompletable(c));
+  const doneChildren = countableChildren.filter((c) => c.checked).length;
 
   const { minutes, computed } = effectiveEstimate(item, childrenOf);
   const priority = toDisplayPriority(item.priority);
@@ -402,16 +403,20 @@ function TaskRowView({
         }}
         onKeyDown={(e) => e.stopPropagation()}
       >
-        <ProgressRing done={doneChildren} total={children.length} />
-        {t('task.subtaskProgress', { done: doneChildren, total: children.length })}
+        {countableChildren.length > 0 && <>
+          <ProgressRing done={doneChildren} total={countableChildren.length} />
+          {t('task.subtaskProgress', { done: doneChildren, total: countableChildren.length })}
+        </>}
         <Icon name="caret" size="sm" className="subprog-chev" />
       </button>
-    ) : (
+    ) : countableChildren.length > 0 ? (
       <span className="subprog" key="subtasks">
-        <ProgressRing done={doneChildren} total={children.length} />
-        {t('task.subtaskProgress', { done: doneChildren, total: children.length })}
+        {countableChildren.length > 0 && <>
+          <ProgressRing done={doneChildren} total={countableChildren.length} />
+          {t('task.subtaskProgress', { done: doneChildren, total: countableChildren.length })}
+        </>}
       </span>
-    )
+    ) : null
   ) : null;
 
   return (
@@ -437,6 +442,7 @@ function TaskRowView({
         data-tour-extend={
           showSubtasks && expanded && openChildren.length > 0 ? 'siblings' : undefined
         }
+        data-uncompletable={uncompletable ? '' : undefined}
         data-table-colored={table && tableRowColor(item, table.coloration, project?.color) ? '' : undefined}
         data-depth={depth > 0 ? depth : undefined}
         style={{
@@ -500,13 +506,8 @@ function TaskRowView({
 
         {table && columnsBefore.length > 0 && <TableCells item={item} hideProject={!projectVisible} columns={columnsBefore} childrenOf={childrenOf} />}
 
-        {item.projection ? (
+        {uncompletable ? null : item.projection ? (
           <span className={`check forecast-check p${fields.priority ? priority : 4}`} role="checkbox" aria-checked="false" aria-disabled="true" aria-label={t('upcoming.projected')} onClick={(e) => e.stopPropagation()} />
-        ) : uncompletable ? (
-          /* Todoist gives a "* " task no checkbox at all, so this one does
-             not click, focus, or announce itself as one — it only holds the
-             row's alignment. */
-          <span className={`check p${priority} nocheck`} aria-hidden="true" />
         ) : (
           <span
             className={`check p${fields.priority ? priority : 4}`}

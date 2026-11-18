@@ -1,3 +1,4 @@
+import { isUncompletable } from '@/domain/types';
 import { STEPS, stepOf, type Step } from '@/domain/steps';
 import { matchesAssignee, assigneeName } from '@/domain/assignees';
 import {
@@ -708,6 +709,7 @@ export function projectTree(snapshot: Snapshot, order: string[] = []): Workspace
 export function projectCounts(items: Item[]): Map<string, number> {
   const counts = new Map<string, number>();
   for (const item of items) {
+    if (isUncompletable(item)) continue;
     counts.set(item.project_id, (counts.get(item.project_id) ?? 0) + 1);
   }
   return counts;
