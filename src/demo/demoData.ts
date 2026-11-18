@@ -233,7 +233,7 @@ export function buildDemoSnapshot(locale: Locale = 'en', seed = 20260914): Snaps
     due: due(today, undefined, everyDay),
   });
   addItem({
-    content: L('Send Netflix password to Laura', 'Envoyer le mot de passe Netflix à Laura'),
+    content: L('Send Netflix password to Sarah', 'Envoyer le mot de passe Netflix à Sarah'),
     project_id: 'personal', section_id: 'p-rel', labels: ['quick', 'est-3'], priority: P3, due: due(today),
   });
   addItem({
