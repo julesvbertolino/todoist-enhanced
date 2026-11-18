@@ -6,7 +6,7 @@ export type ChangelogVisual =
  * Add a preview deliberately, including an occasional design entry with a concrete UI change.
  */
 export const CHANGELOG_VISUALS = {
-  '2.34.0:0': 'iconSet', // A grid of the new rounded icons.
+  '2.34.0:2': 'iconSet', // A grid of the new rounded icons.
   '2.33.0:0': 'emptyProject',
   '2.33.0:1': 'projectColours',
   '2.31.0:0': 'dayNav', // Today moves to the days around it.

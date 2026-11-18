@@ -76,6 +76,29 @@ th{color:var(--muted);font-weight:600;font-size:12px}
 td.y{color:var(--teal);font-weight:600}td.n{color:var(--muted)}
 .reco{border-left:4px solid var(--teal);background:var(--card);border-radius:10px;padding:14px 18px;border:1px solid var(--line);border-left-width:4px}
 .reco p{color:var(--text)}
+
+/* E-J: indentation and other cues */
+.E .u .slot,.F .u .slot,.G .u .slot{display:none}
+.E .u{padding-left:0}.E .u .title{font-weight:600}
+.F .u{margin-left:0;padding-left:0}.F .u .title{font-weight:600}
+.F .row:not(.u){padding-left:14px}
+.F .rule{height:1px;background:var(--line)}
+.G .u{padding-left:28px;border-left:2px solid var(--teal);margin-left:9px;border-radius:0 6px 6px 0}
+.G .u .title{color:var(--muted)}
+.H .u{background:var(--hl);border-radius:8px;border-bottom-color:transparent;margin:2px 0}
+.H .u .slot{width:18px}
+.I .u .title{font-style:italic;color:var(--muted)}.I .u .slot{width:18px;display:grid;place-items:center;color:var(--faint)}
+.J .u .title::after{content:"";}
+.J .u .meta .pin{color:var(--teal);display:inline-flex}
+.J .u .slot{width:18px}
+.ctx{width:260px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgb(0 0 0/.14);padding:6px;font-size:14px}
+.ctx .it{display:flex;gap:10px;align-items:center;padding:7px 10px;border-radius:8px}.ctx .it.hot{background:var(--hl)}.ctx hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+.ctx .k{margin-left:auto;color:var(--faint);font-size:12px}
+.modal{border:1px solid var(--line);border-radius:14px;background:var(--card);padding:14px 16px;position:relative}
+.modal .top{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px;margin-bottom:10px}
+.modal .top .btns{display:flex;gap:6px}.modal .top .btns span{width:28px;height:28px;border-radius:8px;display:grid;place-items:center}
+.modal .top .btns span.on{background:var(--chip);color:var(--text)}
+.modal .menu{position:absolute;right:12px;top:48px}
 [data-fr]{display:none}
 html[data-lang=fr] [data-en]{display:none}
 html[data-lang=fr] [data-fr]{display:revert}
@@ -98,7 +121,7 @@ html[data-lang=fr] [data-fr]{display:revert}
   </div>
 
   <h1>Telling normal tasks from uncompletable ones <span style="color:var(--muted);font-weight:400">· #454</span></h1>
-  <p class="lead"><span data-en>Exploration only: four high-fidelity directions to compare, then a written recommendation. Nothing here is built.</span><span data-fr>Exploration uniquement : quatre pistes détaillées à comparer, puis une recommandation écrite. Rien n’est développé.</span></p>
+  <p class="lead"><span data-en>Exploration only: ten high-fidelity directions to compare, then a written recommendation. Nothing here is built.</span><span data-fr>Exploration uniquement : dix pistes détaillées à comparer, puis une recommandation écrite. Rien n’est développé.</span></p>
 
   <h2><span data-en>0 · What exists today</span><span data-fr>0 · Ce qui existe aujourd’hui</span></h2>
   <p><span data-en><b>Observed in the code.</b> Todoist already has uncompletable tasks: a title that starts with <code>* </code> has no checkbox, and Enhanced already reads that prefix, hides the prefix from the title and removes the checkbox. But the checkbox is replaced by an <em>empty, invisible slot</em>: the task looks like a normal one that lost something. Nothing says why, nothing says how to make or undo one, and the Matrix, load and counts treat it like any other open task.</span><span data-fr><b>Observé dans le code.</b> Todoist connaît déjà les tâches non terminables : un titre qui commence par <code>* </code> n’a pas de case. Enhanced lit déjà ce préfixe, le cache dans le titre et retire la case. Mais la case est remplacée par un <em>emplacement vide et invisible</em> : la tâche ressemble à une tâche normale à qui il manque quelque chose. Rien n’explique pourquoi, rien ne dit comment en créer ou en défaire une, et la Matrice, la charge et les compteurs la traitent comme n’importe quelle tâche ouverte.</span></p>
@@ -147,6 +170,75 @@ html[data-lang=fr] [data-fr]{display:revert}
       <div class="row u"><span class="glyph"><svg><use href="#infinity"/></svg></span><span class="title">Standing reference: brand colours</span><span class="meta">Brand</span></div>
       <div class="row u"><span class="glyph"><svg><use href="#infinity"/></svg></span><span class="title">Weekly reminder: back up the site</span><span class="meta"><svg><use href="#cal"/></svg>Fri</span></div>
       <p class="cap"><span data-en>Keeps the work list clean and ends accidental ticks by distance. But it breaks the order of the user’s own sort and the grouping by date or project, which is a big promise to keep everywhere.</span><span data-fr>Garde la liste de travail propre et évite les erreurs par la distance. Mais cela casse l’ordre choisi par la personne et les regroupements par date ou projet : une promesse lourde à tenir partout.</span></p></div>
+  </div>
+
+
+  <h2><span data-en>1b · More directions: indentation and other cues</span><span data-fr>1b · Autres pistes : indentation et autres repères</span></h2>
+  <p><span data-en>In Todoist an uncompletable task has no checkbox and its title moves left into the checkbox’s column, so it reads like a heading or a note. Directions E to G play with that; H to J use other cues. Same five tasks again.</span><span data-fr>Dans Todoist, une tâche non terminable n’a pas de case et son titre glisse à gauche dans la colonne de la case, comme un titre ou une note. Les pistes E à G jouent là-dessus ; H à J utilisent d’autres repères. Toujours les mêmes cinq tâches.</span></p>
+  <div class="grid">
+<div class="panel E"><h3>E · <span data-en>Todoist-style: title slides left</span><span data-fr>Façon Todoist : le titre glisse à gauche</span></h3>
+      <div class="row"><span class="check p1"></span><span class="title">Send the quote to the client</span><span class="meta">Today</span></div>
+      <div class="row u"><span class="title">Standing reference: brand colours</span><span class="meta">Brand</span></div>
+      <div class="row"><span class="check p3"></span><span class="title">Review the homepage copy</span><span class="meta">Tomorrow</span></div>
+      <div class="row u"><span class="title">Weekly reminder: back up the site</span><span class="meta"><svg><use href="#cal"/></svg>Fri</span></div>
+      <div class="row"><span class="check"></span><span class="title">Order business cards</span><span class="meta">Printing</span></div>
+      <p class="cap"><span data-en>The title takes the checkbox’s place, semi-bold. It is exactly what Todoist does, so nothing to learn for people who know it. Weak point: on a long list it reads as a section title, and the two kinds of rows no longer share a left edge.</span><span data-fr>Le titre prend la place de la case, en demi-gras. C’est exactement ce que fait Todoist, rien à apprendre pour ceux qui le connaissent. Point faible : dans une longue liste on croit voir un titre de section, et les deux types de lignes n’ont plus le même bord gauche.</span></p></div><div class="panel F"><h3>F · <span data-en>Hanging indent: the other rows step in</span><span data-fr>Retrait suspendu : les autres lignes se décalent</span></h3>
+      <div class="row"><span class="check p1"></span><span class="title">Send the quote to the client</span><span class="meta">Today</span></div>
+      <div class="row u"><span class="title">Standing reference: brand colours</span><span class="meta">Brand</span></div>
+      <div class="row"><span class="check p3"></span><span class="title">Review the homepage copy</span><span class="meta">Tomorrow</span></div>
+      <div class="row u"><span class="title">Weekly reminder: back up the site</span><span class="meta"><svg><use href="#cal"/></svg>Fri</span></div>
+      <div class="row"><span class="check"></span><span class="title">Order business cards</span><span class="meta">Printing</span></div>
+      <p class="cap"><span data-en>Standing tasks sit flush left and normal tasks are indented under them, as if the standing task were a heading they belong to. Strong when a reference sits above the tasks it concerns; confusing in a list where it is unrelated to its neighbours.</span><span data-fr>Les tâches permanentes restent à gauche et les tâches normales sont en retrait dessous, comme si la permanente était un titre auquel elles appartiennent. Fort quand une référence précède les tâches qu’elle concerne ; confus dans une liste où elle n’a aucun lien avec ses voisines.</span></p></div><div class="panel G"><h3>G · <span data-en>Indented with a rule</span><span data-fr>En retrait avec un filet</span></h3>
+      <div class="row"><span class="check p1"></span><span class="title">Send the quote to the client</span><span class="meta">Today</span></div>
+      <div class="row u"><span class="title">Standing reference: brand colours</span><span class="meta">Brand</span></div>
+      <div class="row"><span class="check p3"></span><span class="title">Review the homepage copy</span><span class="meta">Tomorrow</span></div>
+      <div class="row u"><span class="title">Weekly reminder: back up the site</span><span class="meta"><svg><use href="#cal"/></svg>Fri</span></div>
+      <div class="row"><span class="check"></span><span class="title">Order business cards</span><span class="meta">Printing</span></div>
+      <p class="cap"><span data-en>The title is pushed right of a thin teal rule, so the row looks like a quoted note rather than a task. Clear at a glance and free of any icon, but it uses width, which hurts on a phone.</span><span data-fr>Le titre est poussé à droite d’un filet vert fin, la ligne ressemble à une note citée plus qu’à une tâche. Lisible d’un coup d’œil et sans icône, mais cela prend de la largeur, ce qui gêne sur téléphone.</span></p></div><div class="panel H"><h3>H · <span data-en>Tinted row</span><span data-fr>Ligne teintée</span></h3>
+      <div class="row"><span class="check p1"></span><span class="title">Send the quote to the client</span><span class="meta">Today</span></div>
+      <div class="row u"><span class="slot"></span><span class="title">Standing reference: brand colours</span><span class="meta">Brand</span></div>
+      <div class="row"><span class="check p3"></span><span class="title">Review the homepage copy</span><span class="meta">Tomorrow</span></div>
+      <div class="row u"><span class="slot"></span><span class="title">Weekly reminder: back up the site</span><span class="meta"><svg><use href="#cal"/></svg>Fri</span></div>
+      <div class="row"><span class="check"></span><span class="title">Order business cards</span><span class="meta">Printing</span></div>
+      <p class="cap"><span data-en>A soft warm background on the whole row. No icon, no word, no shift. Works in lists, tables and boards, but a tint is easily read as “selected” or “highlighted”, and it needs a dark-mode pair.</span><span data-fr>Un fond chaud et doux sur toute la ligne. Ni icône, ni mot, ni décalage. Fonctionne en liste, en tableau et en tableau de cartes, mais une teinte se lit facilement comme « sélectionnée » ou « mise en avant », et demande une version sombre.</span></p></div><div class="panel I"><h3>I · <span data-en>Italic, muted, with a dash</span><span data-fr>Italique, atténué, avec un tiret</span></h3>
+      <div class="row"><span class="check p1"></span><span class="title">Send the quote to the client</span><span class="meta">Today</span></div>
+      <div class="row u"><span class="slot">–</span><span class="title">Standing reference: brand colours</span><span class="meta">Brand</span></div>
+      <div class="row"><span class="check p3"></span><span class="title">Review the homepage copy</span><span class="meta">Tomorrow</span></div>
+      <div class="row u"><span class="slot">–</span><span class="title">Weekly reminder: back up the site</span><span class="meta"><svg><use href="#cal"/></svg>Fri</span></div>
+      <div class="row"><span class="check"></span><span class="title">Order business cards</span><span class="meta">Printing</span></div>
+      <p class="cap"><span data-en>Reads as a note: italic, grey, a dash where the checkbox was. Very light and fully typographic. The risk is accessibility: low contrast, and grey is also what “done” looks like.</span><span data-fr>Se lit comme une note : italique, gris, un tiret à la place de la case. Très léger et purement typographique. Le risque est l’accessibilité : faible contraste, et le gris est aussi l’aspect d’une tâche « terminée ».</span></p></div><div class="panel J"><h3>J · <span data-en>Pin on the right, next to the date</span><span data-fr>Épingle à droite, près de la date</span></h3>
+      <div class="row"><span class="check p1"></span><span class="title">Send the quote to the client</span><span class="meta">Today</span></div>
+      <div class="row u"><span class="slot"></span><span class="title">Standing reference: brand colours</span><span class="meta"><span class="pin"><svg><use href="#pin"/></svg></span>Brand</span></div>
+      <div class="row"><span class="check p3"></span><span class="title">Review the homepage copy</span><span class="meta">Tomorrow</span></div>
+      <div class="row u"><span class="slot"></span><span class="title">Weekly reminder: back up the site</span><span class="meta"><span class="pin"><svg><use href="#pin"/></svg></span><svg><use href="#cal"/></svg>Fri</span></div>
+      <div class="row"><span class="check"></span><span class="title">Order business cards</span><span class="meta">Printing</span></div>
+      <p class="cap"><span data-en>The checkbox column stays empty and the cue moves to the metadata, where the eye already reads the date and the project. Quiet and cheap on a phone, but the empty slot remains, which is exactly what looks odd today.</span><span data-fr>La colonne de la case reste vide et le repère passe dans les métadonnées, là où l’œil lit déjà la date et le projet. Discret et peu coûteux sur téléphone, mais l’emplacement vide demeure, ce qui est justement ce qui paraît étrange aujourd’hui.</span></p></div>  </div>
+
+  <h2><span data-en>1c · Where the button lives</span><span data-fr>1c · Où vit le bouton</span></h2>
+  <p><span data-en>As you suggested: the same line in the right-click menu of a row and in the three-dot menu of the open task. One action, one toggle, two places.</span><span data-fr>Comme tu l’as proposé : la même ligne dans le menu du clic droit d’une ligne et dans le menu ⋯ de la tâche ouverte. Une action, un interrupteur, deux endroits.</span></p>
+  <div class="grid">
+    <div class="panel"><h3><span data-en>Right click on a row</span><span data-fr>Clic droit sur une ligne</span></h3>
+      <div class="ctx">
+        <div class="it"><svg><use href="#edit"/></svg><span data-en>Edit</span><span data-fr>Modifier</span><span class="k">E</span></div>
+        <div class="it"><svg><use href="#cal"/></svg><span data-en>Schedule</span><span data-fr>Planifier</span><span class="k">T</span></div>
+        <div class="it"><svg><use href="#flag"/></svg><span data-en>Priority</span><span data-fr>Priorité</span></div>
+        <div class="it"><svg><use href="#copy"/></svg><span data-en>Duplicate</span><span data-fr>Dupliquer</span></div>
+        <hr>
+        <div class="it hot cur"><svg><use href="#pin"/></svg><span data-en>Make it uncompletable</span><span data-fr>Rendre non terminable</span></div>
+      </div>
+      <p class="cap"><span data-en>Placed after the everyday actions and before the destructive ones. On a phone, a long press opens the same list as a bottom sheet.</span><span data-fr>Placée après les actions courantes et avant les destructrices. Sur téléphone, un appui long ouvre la même liste en feuille du bas.</span></p></div>
+    <div class="panel"><h3><span data-en>Three-dot menu in the open task</span><span data-fr>Menu ⋯ dans la tâche ouverte</span></h3>
+      <div class="modal A" style="min-height:250px">
+        <div class="top"><span data-en>Brand</span><span data-fr>Brand</span><div class="btns"><span class="on"><svg><use href="#more"/></svg></span></div></div>
+        <div class="row u" style="border:0"><span class="glyph"><svg style="width:18px;height:18px"><use href="#pin"/></svg></span><span class="title" style="font-size:17px;font-weight:600;white-space:normal;max-width:48%">Weekly reminder: back up the site</span></div>
+        <div class="menu">
+          <div class="it"><svg><use href="#copy"/></svg><span data-en>Duplicate</span><span data-fr>Dupliquer</span></div>
+          <div class="it"><svg><use href="#flag"/></svg><span data-en>Copy link</span><span data-fr>Copier le lien</span></div>
+          <hr>
+          <div class="it hot cur"><svg><use href="#pin"/></svg><span data-en>Make it completable</span><span data-fr>Rendre terminable</span></div>
+        </div>
+      </div>
+      <p class="cap"><span data-en>Once marked, the line flips to “Make it completable”, and the pin appears in front of the title at once.</span><span data-fr>Une fois marquée, la ligne devient « Rendre terminable », et l’épingle apparaît aussitôt devant le titre.</span></p></div>
   </div>
 
   <h2><span data-en>2 · Cards: Matrix and boards (direction A)</span><span data-fr>2 · Cartes : Matrice et tableaux (piste A)</span></h2>
@@ -217,7 +309,7 @@ html[data-lang=fr] [data-fr]{display:revert}
   <h2><span data-en>6 · Recommendation</span><span data-fr>6 · Recommandation</span></h2>
   <div class="reco">
     <p><b><span data-en>Adapt, don’t build from scratch.</span><span data-fr>Adapter, pas construire de zéro.</span></b> <span data-en>The data model and the checkbox removal already exist, because Todoist defines the <code>* </code> prefix. What is missing is only how it looks, how it is switched, and how it is counted.</span><span data-fr>Le modèle de données et le retrait de la case existent déjà, car Todoist définit le préfixe <code>* </code>. Il ne manque que l’apparence, l’interrupteur et la règle de comptage.</span></p>
-    <p><b><span data-en>Choose A (pin in the checkbox’s place).</span><span data-fr>Retenir A (épingle à la place de la case).</span></b> <span data-en>It costs no width, needs no translation, keeps the row aligned on phone and desktop, and cannot be mistaken for “done” the way B’s muted title can. C is the fallback if testing shows the pin alone is not understood; D is the most ambitious and the least compatible with the sorts and groupings people already chose, so drop it.</span><span data-fr>Elle ne coûte aucune largeur, n’a pas besoin de traduction, garde la ligne alignée sur téléphone et sur ordinateur, et ne se confond pas avec « terminé » comme le titre grisé de B. C est le plan B si les essais montrent que l’épingle seule n’est pas comprise ; D est la plus ambitieuse et la moins compatible avec les tris et regroupements déjà choisis : à abandonner.</span></p>
+    <p><b><span data-en>Choose A (pin in the checkbox’s place), optionally with E’s indentation on desktop.</span><span data-fr>Retenir A (épingle à la place de la case).</span></b> <span data-en>It costs no width, needs no translation, keeps the row aligned on phone and desktop, and cannot be mistaken for “done” the way B’s muted title can. C is the fallback if testing shows the pin alone is not understood; D is the most ambitious and the least compatible with the sorts and groupings people already chose, so drop it.</span><span data-fr>Elle ne coûte aucune largeur, n’a pas besoin de traduction, garde la ligne alignée sur téléphone et sur ordinateur, et ne se confond pas avec « terminé » comme le titre grisé de B. C est le plan B si les essais montrent que l’épingle seule n’est pas comprise ; D est la plus ambitieuse et la moins compatible avec les tris et regroupements déjà choisis : à abandonner.</span></p>
     <p><b><span data-en>Three doors, one marker:</span><span data-fr>Trois accès, un seul marqueur :</span></b> <span data-en>row menu, task panel toggle, and the typed <code>* </code> in the composer. Counts, load and progress leave these tasks out (§5).</span><span data-fr>menu de la ligne, interrupteur du panneau, et le <code>* </code> saisi dans le composeur. Compteurs, charge et progression les laissent de côté (§5).</span></p>
     <p><b><span data-en>Assumptions to check before building:</span><span data-fr>Hypothèses à vérifier avant de développer :</span></b> <span data-en>(1) people actually use the <code>* </code> prefix in their accounts, which a quick look at a few real accounts would show; (2) a pin is read as “stays here” by people who have never seen it, which needs five quick tests; (3) excluding them from Insights does not surprise people who counted them before.</span><span data-fr>(1) les gens utilisent bien le préfixe <code>* </code> dans leurs comptes, ce que quelques comptes réels suffiraient à montrer ; (2) l’épingle se lit « reste là » pour qui ne l’a jamais vue, ce qui demande cinq essais rapides ; (3) leur exclusion d’Insights ne surprend pas ceux qui les comptaient avant.</span></p>
   </div>
