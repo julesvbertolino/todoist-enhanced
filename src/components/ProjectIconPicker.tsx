@@ -3,7 +3,7 @@ import { Icon } from './Icon';
 import { ProjectIcon } from './ProjectIcon';
 import { useT } from '@/hooks/useT';
 import { matchesSearch } from '@/domain/search';
-import { PROJECT_ICONS, PROJECT_ICON_IDS, PROJECT_ICON_SYNONYMS } from '@/domain/projectIconCatalog';
+import { PROJECT_ICON_IDS, PROJECT_ICON_SYNONYMS } from '@/domain/projectIconCatalog';
 
 interface ProjectIconGridProps {
   value: string | null;
@@ -36,8 +36,7 @@ export function ProjectIconGrid({ value, onPick, focusSearch }: ProjectIconGridP
     return () => window.clearTimeout(id);
   }, [focusSearch]);
 
-  const choices = value && PROJECT_ICONS[value] && !PROJECT_ICON_IDS.includes(value) ? [value, ...PROJECT_ICON_IDS] : PROJECT_ICON_IDS;
-  const matches = choices.filter((id) => {
+  const matches = PROJECT_ICON_IDS.filter((id) => {
     const words = [id.replace(/-/g, ' '), ...(PROJECT_ICON_SYNONYMS[id] ?? [])];
     return words.some((word) => matchesSearch(word, query));
   });
