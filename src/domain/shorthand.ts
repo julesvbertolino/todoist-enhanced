@@ -206,11 +206,13 @@ export function parseShorthand(
   const findLabel = (text: string) => Object.values(snapshot.labels).find(
     (l) => !l.is_deleted && fold(l.name) === fold(text),
   );
-  for (const label of raw.matchAll(/(?<=^|\s)@((?:[\p{L}\p{N}\p{Extended_Pictographic}_-]|\u200d|\ufe0f)+)/gu)) {
-    /* A tag name may hold characters the plain reader stops at, like the `/` of
-       `Status/Waiting` (#477). When the whole run up to the next space names a
-       tag that exists, that tag is the one meant; otherwise the plain reading
-       stands, so a `/` in ordinary text stays text. */
+  /* A tag name is words joined by slashes: `@Status/Waiting` is one tag, whether
+     or not it exists yet (#477). A slash with nothing after it is not part of it. */
+  const tagChar = '(?:[\\p{L}\\p{N}\\p{Extended_Pictographic}_-]|\\u200d|\\ufe0f)';
+  const tagPattern = new RegExp(`(?<=^|\\s)@(${tagChar}+(?:/${tagChar}+)*)`, 'gu');
+  for (const label of raw.matchAll(tagPattern)) {
+    /* A name with characters beyond these is still read when it is a tag that
+       exists, as before. */
     const run = /^\S+/u.exec(raw.slice(label.index! + 1))?.[0] ?? '';
     const whole = run.length > label[1].length ? readName(run, findLabel) : null;
     const typed = whole && whole.length > label[1].length ? run.slice(0, whole.length) : label[1];

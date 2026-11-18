@@ -351,7 +351,7 @@ export function Sidebar({
           {/* A folder takes a project dropped on it, which is the only thing a
               folder is for and was the one place in the sidebar you could not
               drag a project into. */}
-          {node.nativeFolder ? <div className={`navrow${rowMenu?.key === `folder-${project.id}` ? ' menuopen' : ''}`}>
+          {node.nativeFolder ? <div className={`navrow folderrow${rowMenu?.key === `folder-${project.id}` ? ' menuopen' : ''}`}>
             <button className="navitem folderitem" aria-expanded={isOpen}
               onClick={() => toggleFolder(project.id)}>
               <Icon name="project" /><span className="label">{project.name}</span>

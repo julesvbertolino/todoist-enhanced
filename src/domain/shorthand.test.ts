@@ -203,9 +203,15 @@ describe('a tag whose name holds a slash (#477)', () => {
     const result = readTagged('Call Anne @Status today');
     expect(result.labels).toEqual(['Status']);
   });
-  it('keeps a slash as text when it does not name a tag', () => {
-    const result = readTagged('Call Anne @Status/Other');
-    expect(result.labels).toEqual(['Status']);
-    expect(result.content).toBe('Call Anne /Other');
+  it('reads a new tag with a slash whole, so it can be created (#477)', () => {
+    const result = readTagged('Call Anne @Client/Alpha/Beta now');
+    expect(result.labels).toEqual(['Client/Alpha/Beta']);
+    expect(result.content).toBe('Call Anne now');
+    const range = result.ranges.find((r) => r.kind === 'label');
+    expect('Call Anne @Client/Alpha/Beta now'.slice(range!.start, range!.end)).toBe('@Client/Alpha/Beta');
+  });
+  it('treats a slash that is last, or in plain text, as text', () => {
+    expect(readTagged('Call @Status/ now').labels).toEqual(['Status']);
+    expect(readTagged('Call Anne and/or Bob').labels).toEqual([]);
   });
 });

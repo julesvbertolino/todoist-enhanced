@@ -3123,3 +3123,18 @@ html.desktop-app.quickadd body::before{display:none}
 :root:not([data-theme="dark"]) .descview.placeholder { color: #808080; }
 
 :root[data-background="colored"]:not([data-theme="dark"]) .sidebar :is(input, textarea)::placeholder { color: rgba(255,255,255,.62); }
+
+/* A team folder row: the chevron and the ⋯ share the right edge, so the ⋯ takes
+   the place of the chevron while the row is hovered, focused or its menu is open (#463). */
+.navrow:hover .folderitem .disclose,
+.navrow:focus-within .folderitem .disclose,
+.navrow.menuopen .folderitem .disclose{opacity:0}
+/* No hover and no long press on a team folder, so on a touch screen its ⋯ stays
+   in view, beside the chevron rather than over it. */
+@media (hover:none),(max-width:720px){
+  .navrow.folderrow .navmore{display:grid;opacity:1;pointer-events:auto}
+  .navrow.folderrow .navend{right:34px}
+  .navrow.folderrow:hover .folderitem .disclose,
+  .navrow.folderrow:focus-within .folderitem .disclose,
+  .navrow.folderrow.menuopen .folderitem .disclose{opacity:1}
+}
