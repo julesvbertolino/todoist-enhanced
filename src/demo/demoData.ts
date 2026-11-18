@@ -387,6 +387,11 @@ export function buildDemoSnapshot(locale: Locale = 'en', seed = 20260914): Snaps
     project_id: 'team', section_id: 't-maya', labels: ['est-90'], due: due(day(7)), responsible_uid: 'demo-maya',
   });
 
+  addItem({
+    content: L('Add Hercule Poirot to the watchlist', 'Ajouter Hercule Poirot à la watchlist'),
+    priority: P3,
+  });
+
   // ── Domaine Aurel, Bloom & Co ──────────────────────────────────────────
   addItem({
     content: L('Send a proposal to Domaine Aurel', 'Envoyer une proposition à Domaine Aurel'),
