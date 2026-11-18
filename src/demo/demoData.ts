@@ -237,6 +237,10 @@ export function buildDemoSnapshot(locale: Locale = 'en', seed = 20260914): Snaps
     project_id: 'personal', section_id: 'p-rel', labels: ['quick', 'est-3'], priority: P3, due: due(today),
   });
   addItem({
+    content: L('Send a message to Lily', 'Envoyer un message à Lili'),
+    project_id: 'personal', section_id: 'p-rel', labels: ['quick', 'est-3'], priority: P1, due: due(today),
+  });
+  addItem({
     content: L('Buy a gift for Laura', 'Acheter un cadeau pour Laura'),
     description: L('Something small, under 40 €.', 'Quelque chose de petit, moins de 40 €.'),
     project_id: 'personal', section_id: 'p-rel', labels: ['errands', 'est-45'], priority: P2,
@@ -381,6 +385,11 @@ export function buildDemoSnapshot(locale: Locale = 'en', seed = 20260914): Snaps
     content: L('Write the Bloom & Co case study', 'Écrire l’étude de cas de Bloom & Co'),
     description: L('Context, what we did, the result in one number.', 'Le contexte, ce que nous avons fait, le résultat en un chiffre.'),
     project_id: 'team', section_id: 't-maya', labels: ['est-90'], due: due(day(7)), responsible_uid: 'demo-maya',
+  });
+
+  addItem({
+    content: L('Add Hercule Poirot to the watchlist', 'Ajouter Hercule Poirot à la watchlist'),
+    priority: P3,
   });
 
   // ── Domaine Aurel, Bloom & Co ──────────────────────────────────────────

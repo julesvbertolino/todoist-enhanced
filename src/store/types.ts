@@ -317,8 +317,14 @@ export interface AppState {
     /** Places the new project next to an existing one instead of at the end. */
     anchor?: { siblingId: string; position: 'above' | 'below' } | null,
     /** The rest of what the sheet asks for, so creating and editing match. */
-    extra?: { description?: string; favourite?: boolean; parentId?: string | null; viewStyle?: 'list' | 'board'; access?: string },
+    extra?: { description?: string; favourite?: boolean; parentId?: string | null; folderId?: string | null; viewStyle?: 'list' | 'board'; access?: string },
   ) => Promise<string>;
+  /** Renames a team workspace folder (#463). */
+  renameFolder: (id: string, name: string) => Promise<void>;
+  /** Deletes an EMPTY team folder. A folder that still holds projects is left alone. */
+  deleteFolder: (id: string) => Promise<void>;
+  /** Files a workspace project in a folder, or takes it out with `null`. */
+  moveProjectToFolder: (id: string, folderId: string | null) => Promise<void>;
   /** Puts a project out of sight without destroying it. Todoist keeps the tasks. */
   archiveProject: (id: string) => Promise<void>;
   /** Deletes a project and everything in it. Todoist holds it for seven days. */
@@ -414,5 +420,5 @@ export type DustSlice = Pick<AppState, 'dustKept' | 'keepInSomeday'>;
 export type PreferencesSlice = Pick<AppState, 'prefs' | 'walkthrough' | 'setPrefs' | 'setViewPrefs' | 'setProjectViews' | 'setActiveView' | 'removeViewPrefs' | 'setLocale' | 'ensurePreferencesTask' | 'beginTourPreview' | 'endTourPreview' | 'setWalkthrough'>;
 export type TasksSlice = Pick<AppState, 'logbookEntry' | 'setLogbookEntry' | 'loadTask' | 'updateTask' | 'addComment' | 'updateComment' | 'deleteComment' | 'toggleReaction' | 'duplicateTask' | 'setRecurrence' | 'setEstimates' | 'toggleTask' | 'completeTasks' | 'removeTask' | 'removeTasks' | 'restoreTasks' | 'createTaskId' | 'createTask' | 'createTasks' | 'setTaskLabels' | 'setTaskPriority' | 'skipOccurrence' | 'skipOccurrences' | 'reorderSubtasks'>;
 export type TasksMoveSlice = Pick<AppState, 'sendTo' | 'sendManyTo' | 'updateMany' | 'moveMany' | 'nestMany' | 'moveTask'>;
-export type StructureSlice = Pick<AppState, 'createLabel' | 'createLabelOn' | 'renameLabel' | 'setLabelFavourite' | 'setLabelColour' | 'deleteLabel' | 'setFilterFavourite' | 'createFilter' | 'updateFilter' | 'deleteFilter' | 'reorderFilters' | 'reorderLabels' | 'reorderProjects' | 'nestProject' | 'moveProjectToWorkspace' | 'createProject' | 'archiveProject' | 'deleteProject' | 'duplicateProject' | 'updateProjectFields' | 'createSection' | 'moveSection' | 'removeSection' | 'archiveSection' | 'moveSectionToProject' | 'duplicateSection' | 'updateSectionFields'>;
+export type StructureSlice = Pick<AppState, 'createLabel' | 'createLabelOn' | 'renameLabel' | 'setLabelFavourite' | 'setLabelColour' | 'deleteLabel' | 'setFilterFavourite' | 'createFilter' | 'updateFilter' | 'deleteFilter' | 'reorderFilters' | 'reorderLabels' | 'reorderProjects' | 'nestProject' | 'moveProjectToWorkspace' | 'createProject' | 'renameFolder' | 'deleteFolder' | 'moveProjectToFolder' | 'archiveProject' | 'deleteProject' | 'duplicateProject' | 'updateProjectFields' | 'createSection' | 'moveSection' | 'removeSection' | 'archiveSection' | 'moveSectionToProject' | 'duplicateSection' | 'updateSectionFields'>;
 export type UiSlice = Pick<AppState, 'toasts' | 'undoStack' | 'draggingTaskId' | 'draggingSectionId' | 'nesting' | 'outdenting' | 'draggingProjectId' | 'draggingTag' | 'selection' | 'selectionAnchor' | 'toast' | 'dismissToast' | 'pushUndo' | 'undo' | 'consumeUndo' | 'setDraggingSection' | 'setDraggingTag' | 'setNesting' | 'setOutdenting' | 'setDraggingProject' | 'sidePanel' | 'openSidePanel' | 'closeSidePanel' | 'hireNote' | 'setHireNote' | 'timeFilter' | 'setTimeFilter' | 'toggleSelection' | 'setSelectionAnchor' | 'selectRange' | 'clearSelection' | 'setDragging'>;

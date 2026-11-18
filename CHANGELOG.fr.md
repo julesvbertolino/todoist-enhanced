@@ -8,6 +8,16 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.35.0
+
+🆕 **Choisissez votre étiquette pour « n’importe quand ce mois-ci ».** Dans les réglages, à côté de l’étiquette de la semaine, choisissez un nom plus court comme mois ou mth pour la taper plus vite en ajoutant une tâche.
+
+🆕 **Renommez un dossier et rangez-y des projets.** Dans un espace d’équipe, le menu ⋯ d’un dossier permet de le renommer, ou de le supprimer une fois vide. En ajoutant ou modifiant un projet, le champ Parent liste maintenant les dossiers de l’espace : un projet peut aller directement dans l’un d’eux.
+
+🎨 **Icônes affinées.** Le plus est maintenant une simple croix, et le bouton de menu sur téléphone reprend les trois traits habituels.
+
+🐛 **Les étiquettes avec une barre oblique sont reconnues.** Taper une étiquette comme @Statut/En-attente dans le titre d’une tâche lit et crée maintenant l’étiquette entière, au lieu de s’arrêter à la barre.
+
 ## 2.34.0
 
 🎨 **Les icônes changent de look.** Chaque icône a été remplacée par un style plus arrondi et plus léger. Vous allez les adorer !

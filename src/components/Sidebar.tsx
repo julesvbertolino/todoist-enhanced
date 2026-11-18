@@ -32,6 +32,7 @@ import { Droppable } from './dnd/Droppable';
 import { ProjectDropRow, ProjectRowSortable } from './dnd/ProjectRowSortable';
 import { COFFEE_URL, FEEDBACK_URL } from '@/app-info';
 import { ProjectMenu } from './ProjectMenu';
+import { FolderMenu } from './FolderMenu';
 import { DraggableTag } from './dnd/DraggableTag';
 import { dragClock } from './dnd/DragProvider';
 import type { ProjectSheetTarget } from './overlays/ProjectSheet';
@@ -350,12 +351,29 @@ export function Sidebar({
           {/* A folder takes a project dropped on it, which is the only thing a
               folder is for and was the one place in the sidebar you could not
               drag a project into. */}
-          {node.nativeFolder ? <div className="navrow">
+          {node.nativeFolder ? <div className={`navrow folderrow${rowMenu?.key === `folder-${project.id}` ? ' menuopen' : ''}`}>
             <button className="navitem folderitem" aria-expanded={isOpen}
               onClick={() => toggleFolder(project.id)}>
               <Icon name="project" /><span className="label">{project.name}</span>
               <Icon name={isOpen ? 'caret-up' : 'caret'} size="sm" className="disclose" />
             </button>
+            {/* A folder can be renamed, and deleted once it is empty (#463). */}
+            <span className="navend">
+              <button
+                className="navmore"
+                aria-label={t('folder.actions')}
+                title={t('folder.actions')}
+                aria-haspopup="menu"
+                aria-expanded={rowMenu?.key === `folder-${project.id}`}
+                onClick={(event) => setRowMenu(rowMenu?.key === `folder-${project.id}` ? null
+                  : { key: `folder-${project.id}`, anchor: event.currentTarget })}
+              >
+                <Icon name="more" size="sm" />
+              </button>
+            </span>
+            {rowMenu?.key === `folder-${project.id}` && (
+              <FolderMenu folderId={project.id} anchor={rowMenu.anchor} onClose={() => setRowMenu(null)} />
+            )}
           </div> : <ProjectDropRow projectId={project.id}>
             <button
               className="navitem folderitem"

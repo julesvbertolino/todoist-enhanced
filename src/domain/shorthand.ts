@@ -203,13 +203,24 @@ export function parseShorthand(
   /* A tag starts a word: `@work` after a space or at the start. Glued to
      something, it is not one: `@@link0@@` is text, and so is the `@example` of
      an address like `me@example.com`, which used to make a tag out of it. */
-  for (const label of raw.matchAll(/(?<=^|\s)@((?:[\p{L}\p{N}\p{Extended_Pictographic}_-]|\u200d|\ufe0f)+)/gu)) {
-    if (isOff(label.index!, label[0].length)) continue;
-    labels.push(label[1]);
-    const tag = Object.values(snapshot.labels).find(
-      (l) => !l.is_deleted && fold(l.name) === fold(label[1]),
-    );
-    claim(label.index!, label[0].length, 'label', tag ? colorValue(tag.color) : undefined);
+  const findLabel = (text: string) => Object.values(snapshot.labels).find(
+    (l) => !l.is_deleted && fold(l.name) === fold(text),
+  );
+  /* A tag name is words joined by slashes: `@Status/Waiting` is one tag, whether
+     or not it exists yet (#477). A slash with nothing after it is not part of it. */
+  const tagChar = '(?:[\\p{L}\\p{N}\\p{Extended_Pictographic}_-]|\\u200d|\\ufe0f)';
+  const tagPattern = new RegExp(`(?<=^|\\s)@(${tagChar}+(?:/${tagChar}+)*)`, 'gu');
+  for (const label of raw.matchAll(tagPattern)) {
+    /* A name with characters beyond these is still read when it is a tag that
+       exists, as before. */
+    const run = /^\S+/u.exec(raw.slice(label.index! + 1))?.[0] ?? '';
+    const whole = run.length > label[1].length ? readName(run, findLabel) : null;
+    const typed = whole && whole.length > label[1].length ? run.slice(0, whole.length) : label[1];
+    const length = 1 + typed.length;
+    if (isOff(label.index!, length)) continue;
+    labels.push(typed);
+    const tag = findLabel(typed);
+    claim(label.index!, length, 'label', tag ? colorValue(tag.color) : undefined);
   }
 
   /* `+Anne` gives the task to a person of the project, the way Todoist does:

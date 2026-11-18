@@ -328,6 +328,8 @@ export const createStructureSlice: Slice<StructureSlice> = (_set, get) => ({
     if (workspaceId) args.workspace_id = workspaceId;
     if (sibling?.parent_id) args.parent_id = sibling.parent_id;
     if (extra.parentId) args.parent_id = extra.parentId;
+    /* A folder holds a project in place of a parent project (#463). */
+    if (extra.folderId && workspaceId && !extra.parentId) args.folder_id = extra.folderId;
     if (extra.description) args.description = extra.description;
     if (extra.favourite) args.is_favorite = true;
     if (extra.viewStyle) args.view_style = extra.viewStyle;
@@ -387,6 +389,7 @@ export const createStructureSlice: Slice<StructureSlice> = (_set, get) => ({
         [tempId]: {
           id: tempId, name, color,
           parent_id: extra.parentId ?? sibling?.parent_id ?? null,
+          ...(args.folder_id ? { folder_id: args.folder_id as string } : {}),
           child_order: childOrder,
           order_key: orderKey,
           description: extra.description ?? '',
@@ -399,6 +402,40 @@ export const createStructureSlice: Slice<StructureSlice> = (_set, get) => ({
       },
     }));
     return mapping[tempId] ?? tempId;
+  },
+  async renameFolder(id, raw) {
+    const folder = get().snapshot.folders?.[id];
+    const name = raw.trim();
+    if (!folder || !name || name === folder.name) return;
+    const patch = (to: string) => (snapshot: Snapshot): Snapshot => {
+      const own = snapshot.folders?.[id];
+      return own ? { ...snapshot, folders: { ...snapshot.folders, [id]: { ...own, name: to } } } : snapshot;
+    };
+    await get().apply([command('folder_update', { id, workspace_id: folder.workspace_id, name })], patch(name));
+  },
+  async deleteFolder(id) {
+    const snapshot = get().snapshot;
+    const folder = snapshot.folders?.[id];
+    if (!folder) return;
+    /* What a folder's deletion does to the projects inside it is not something
+       to find out on someone's team, so only an empty one can go. */
+    const holds = Object.values(snapshot.projects).some((p) => p.folder_id === id && !p.is_deleted);
+    if (holds) return;
+    await get().apply([command('folder_delete', { id, workspace_id: folder.workspace_id })], (current) => {
+      const { [id]: _gone, ...rest } = current.folders ?? {};
+      return { ...current, folders: rest };
+    });
+  },
+  async moveProjectToFolder(id, folderId) {
+    const project = get().snapshot.projects[id];
+    if (!project || !project.workspace_id || project.is_folder) return;
+    if ((project.folder_id ?? null) === folderId) return;
+    if (folderId && get().snapshot.folders?.[folderId]?.workspace_id !== project.workspace_id) return;
+    await get().apply([command('project_update', { id, folder_id: folderId })], (snapshot) => {
+      const own = snapshot.projects[id];
+      if (!own) return snapshot;
+      return { ...snapshot, projects: { ...snapshot.projects, [id]: { ...own, folder_id: folderId, ...(folderId ? { parent_id: null } : {}) } } };
+    });
   },
   async archiveProject(id) {
     const project = get().snapshot.projects[id];

@@ -7,7 +7,7 @@ import { command, type Command, deleteItem, newUuid } from '@/api/commands';
 import * as idb from '@/db/idb';
 import { leaseTurn } from '@/db/lease';
 import { mergePreferenceChanges } from '@/lib/mergeChanges';
-import { setWeekLabel, type Note, type Snapshot } from '@/domain/types';
+import { setMonthLabel, setWeekLabel, type Note, type Snapshot } from '@/domain/types';
 import { defaultSidebarNav } from '@/domain/sidebar';
 import { detectLocale, translate } from '@/i18n';
 import { buildDemoSnapshot } from '@/demo/demoData';
@@ -266,6 +266,7 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
     const prefs = { ...get().prefs, ...patch };
     if (prefs.estimateStorage === 'duration' && !canStoreDurations(get().snapshot.user)) prefs.estimateStorage = 'tag';
     if (patch.weekLabel !== undefined) setWeekLabel(prefs.weekLabel);
+    if (patch.monthLabel !== undefined) setMonthLabel(prefs.monthLabel);
     journalPreferenceChange(get, get().prefs, prefs);
     set({ prefs });
     void idb.savePrefs(PREFS_KEY, prefs);
@@ -390,6 +391,7 @@ export const createPreferencesSlice: Slice<PreferencesSlice> = (set, get) => ({
           const canonical = localChange ? null : remotePreferences(snapshot, get().prefs);
           if (canonical) {
             setWeekLabel(canonical.weekLabel);
+            setMonthLabel(canonical.monthLabel);
             set({ prefs: canonical });
             void idb.savePrefs(PREFS_KEY, canonical);
           }

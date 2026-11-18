@@ -9,7 +9,7 @@ import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
 import { colorValue, markerStyle } from '@/domain/colors';
 import { readProjectIcon, stripProjectIcon, withProjectIcon } from '@/domain/projectIcons';
-import { parentChoices } from '@/domain/projectParents';
+import { folderChoices, parentChoices } from '@/domain/projectParents';
 import { WorkspaceAvatar } from '../WorkspaceFilter';
 import { accessChoices, accessOf, defaultAccess } from '@/domain/projectAccess';
 import type { TranslationKey } from '@/i18n';
@@ -23,6 +23,8 @@ export const COLOUR_CHOICES = [
 
 /** The value the destination select uses for the personal space. */
 const PERSONAL = 'personal';
+/** Marks a folder among the parents in the placement field (#463). */
+const FOLDER_PREFIX = 'folder:';
 
 /**
  * What the sheet was opened to do.
@@ -59,6 +61,7 @@ export function ProjectSheet({ target, onClose }: ProjectSheetProps) {
   const createProject = useStore((s) => s.createProject);
   const updateProjectFields = useStore((s) => s.updateProjectFields);
   const nestProject = useStore((s) => s.nestProject);
+  const moveProjectToFolder = useStore((s) => s.moveProjectToFolder);
   const moveProjectToWorkspace = useStore((s) => s.moveProjectToWorkspace);
   const setViewPrefs = useStore((s) => s.setViewPrefs);
   const prefs = useStore((s) => s.prefs);
@@ -99,7 +102,7 @@ export function ProjectSheet({ target, onClose }: ProjectSheetProps) {
       setIcon(readProjectIcon(project?.description));
       setFavourite(project?.is_favorite ?? false);
       setDestination(project?.workspace_id ?? PERSONAL);
-      setParent(project?.parent_id ?? '');
+      setParent(project?.folder_id ? `${FOLDER_PREFIX}${project.folder_id}` : project?.parent_id ?? '');
       setAccess(accessOf(project, project?.workspace_id ? snapshot.workspaces[project.workspace_id] : null));
       /* Enhanced's own choice wins; before one is made, Todoist's decides. */
       const own = prefs.views[`project:${target.projectId}`]?.mode;
@@ -141,14 +144,18 @@ export function ProjectSheet({ target, onClose }: ProjectSheetProps) {
     () => parentChoices(snapshot.projects, workspaceId, target?.mode === 'edit' ? target.projectId : undefined),
     [snapshot.projects, workspaceId, target],
   );
+  const folders = useMemo(() => folderChoices(snapshot.folders, workspaceId), [snapshot.folders, workspaceId]);
   const parentOptions = useMemo(
     () => [
       { value: '', label: t('project.parentNone') },
+      ...(target?.mode === 'edit' && snapshot.projects[target.projectId]?.is_folder ? [] : folders.map((folder) => ({
+        value: `${FOLDER_PREFIX}${folder.id}`, label: folder.name, icon: 'project' as const,
+      }))),
       ...parents.map((choice) => ({
         value: choice.id, label: choice.name, marker: snapshot.projects[choice.id]?.color, sub: choice.depth > 0,
       })),
     ],
-    [parents, snapshot.projects, t],
+    [parents, folders, snapshot.projects, target, t],
   );
 
   /* Where the project already is decides whether a changed destination hides
@@ -169,6 +176,10 @@ export function ProjectSheet({ target, onClose }: ProjectSheetProps) {
     box.style.height = 'auto';
     box.style.height = `${box.scrollHeight}px`;
   }, [description, target]);
+
+  /* A folder is chosen in the same field as a parent project, told apart by its prefix. */
+  const inFolder = parent.startsWith(FOLDER_PREFIX);
+  const currentParent = editing?.folder_id ? `${FOLDER_PREFIX}${editing.folder_id}` : editing?.parent_id ?? '';
 
   async function submit() {
     if (!name.trim() || saving || !target) return;
@@ -192,7 +203,13 @@ export function ProjectSheet({ target, onClose }: ProjectSheetProps) {
       });
       setViewPrefs(`project:${target.projectId}`, { mode: view });
       if (movedSpace) await moveProjectToWorkspace(target.projectId, destination === PERSONAL ? null : destination);
-      else if (parent !== (editing?.parent_id ?? '')) await nestProject(target.projectId, parent || null);
+      else if (parent !== currentParent) {
+        if (inFolder) await moveProjectToFolder(target.projectId, parent.slice(FOLDER_PREFIX.length));
+        else {
+          if (editing?.folder_id) await moveProjectToFolder(target.projectId, null);
+          if (parent !== (editing?.parent_id ?? '')) await nestProject(target.projectId, parent || null);
+        }
+      }
     } else {
       const id = await createProject(
         name.trim(),
@@ -200,7 +217,7 @@ export function ProjectSheet({ target, onClose }: ProjectSheetProps) {
         destination === PERSONAL ? null : destination,
         target.anchor ?? null,
         {
-          description: finalDescription, favourite, parentId: parent || null, viewStyle: view,
+          description: finalDescription, favourite, parentId: inFolder ? null : parent || null, folderId: inFolder ? parent.slice(FOLDER_PREFIX.length) : null, viewStyle: view,
           // Left out when it is what Todoist would give anyway, so a refusal of Public never costs a plain project.
           ...(access !== defaultAccess(workspaceId ? snapshot.workspaces[workspaceId] : null) ? { access } : {}),
         },

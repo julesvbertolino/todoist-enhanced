@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parentChoices } from './projectParents';
+import { folderChoices, parentChoices } from './projectParents';
 import type { Project } from './types';
 
 const project = (id: string, extra: Partial<Project> = {}): Project => ({
@@ -41,5 +41,20 @@ describe('parentChoices', () => {
     const withFolder = { ...projects, work: { ...projects.work, is_folder: true } };
     expect(parentChoices(withFolder, null, 'work')).toEqual([]);
     expect(parentChoices(withFolder, null, 'home').map((c) => c.id)).toContain('work');
+  });
+});
+
+describe('folderChoices (#463)', () => {
+  const folder = (id: string, workspace_id: string, child_order: number, extra: object = {}) => ({ id, name: id, workspace_id, child_order, ...extra });
+  const folders = {
+    b: folder('b', 'w1', 2), a: folder('a', 'w1', 1), gone: folder('gone', 'w1', 3, { is_deleted: true }),
+    other: folder('other', 'w2', 1),
+  };
+  it('lists the workspace\'s folders in sidebar order, empty ones included', () => {
+    expect(folderChoices(folders, 'w1')).toEqual([{ id: 'a', name: 'a' }, { id: 'b', name: 'b' }]);
+  });
+  it('offers none in the personal space, and none when there are no folders', () => {
+    expect(folderChoices(folders, null)).toEqual([]);
+    expect(folderChoices(undefined, 'w1')).toEqual([]);
   });
 });

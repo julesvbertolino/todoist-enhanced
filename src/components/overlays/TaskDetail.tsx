@@ -42,7 +42,7 @@ import { CommentThread } from '../CommentThread';
 import { DateField } from '../DateField';
 import { markerStyle } from '@/domain/colors';
 import { assignees } from '@/domain/sharing';
-import { ESTIMATE_PREFIX, SYSTEM_LABELS, displayTaskContent, isUncompletable, toDisplayPriority, toTodoistPriority, weekLabel, type Item } from '@/domain/types';
+import { ESTIMATE_PREFIX, displayTaskContent, isUncompletable, toDisplayPriority, toTodoistPriority, weekLabel, type Item, monthLabel } from '@/domain/types';
 import { dropMutation, type DropTarget } from '@/domain/dnd';
 import { taskShortcuts } from '../DatePicker';
 import { matchesSearch } from '@/domain/search';
@@ -108,9 +108,9 @@ function EditableSubtask({ child, onOpen }: { child: Item; onOpen: (id: string) 
   /* A subtask committed to the week or the month with no day is shown by that, as a row does, not by the tag that carries it. */
   const horizon = child.due ? null : child.labels.some((l) => l.toLowerCase() === weekLabel().toLowerCase())
     ? 'review.to.anytime' as const
-    : child.labels.some((l) => l.toLowerCase() === SYSTEM_LABELS.month) ? 'review.to.month' as const : null;
+    : child.labels.some((l) => l.toLowerCase() === monthLabel().toLowerCase()) ? 'review.to.month' as const : null;
   const labels = child.labels.filter((label) => !label.toLowerCase().startsWith(ESTIMATE_PREFIX)
-    && !(horizon && [weekLabel().toLowerCase(), SYSTEM_LABELS.month].includes(label.toLowerCase())));
+    && !(horizon && [weekLabel().toLowerCase(), monthLabel().toLowerCase()].includes(label.toLowerCase())));
   const preview = fields.description ? checklistPreview(child.description) : '';
   const { childrenOf } = useData();
   const { minutes, computed } = effectiveEstimate(child, childrenOf);
@@ -521,7 +521,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
   const due = dueDate(item);
   /* No day, but committed to the week or the month: the start date says so, in words. */
   const hasTag = (name: string) => item.labels.some((l) => l.toLowerCase() === name.toLowerCase());
-  const horizonText = item.due ? null : hasTag(weekLabel()) ? t('review.to.anytime') : hasTag(SYSTEM_LABELS.month) ? t('review.to.month') : null;
+  const horizonText = item.due ? null : hasTag(weekLabel()) ? t('review.to.anytime') : hasTag(monthLabel()) ? t('review.to.month') : null;
   const moveTo = (target: DropTarget) => {
     const mutation = dropMutation(item, target);
     if (mutation?.update) return updateTask(item.id, mutation.update);

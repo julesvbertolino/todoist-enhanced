@@ -1,7 +1,7 @@
 import type { Locale } from '@/i18n';
 import { DEFAULT_COMPLETION_CHOICE, isCompletionChoice, type CompletionChoice } from '@/lib/completionSound';
 import type { EstimateStorage, ViewId } from '@/domain/types';
-import { DEFAULT_WEEK_LABEL, defaultViewPrefs, type ViewPrefs } from '@/domain/types';
+import { DEFAULT_MONTH_LABEL, DEFAULT_WEEK_LABEL, defaultViewPrefs, type ViewPrefs } from '@/domain/types';
 import { defaultConflictSettings, type ConflictSettings } from '@/domain/conflicts';
 import { defaultCapacity, type DailyCapacity } from '@/domain/load';
 import { DATE_FORMATS, type DateFormat } from '@/domain/dates';
@@ -413,6 +413,8 @@ export interface Preferences {
    * either rare enough or structural enough not to need the same courtesy.
    */
   weekLabel: string;
+  /** The tag that means "for this month, no day yet". `thismonth` unless changed (#475). */
+  monthLabel: string;
   /**
    * How long a project may go untouched before the weekly review mentions it.
    *
@@ -502,6 +504,7 @@ export const defaultPreferences = (locale: Locale): Preferences => ({
   upcomingHorizonDays: 15,
   weekLayout: 'unified',
   weekLabel: DEFAULT_WEEK_LABEL,
+  monthLabel: DEFAULT_MONTH_LABEL,
   quietAfterDays: 14,
   includeSectionsInSearch: true,
   eisenhowerEnabled: false,
@@ -590,6 +593,9 @@ export function hydratePreferences(stored: unknown, locale: Locale): Preferences
     weekLabel: typeof s.weekLabel === 'string' && s.weekLabel.trim()
       ? s.weekLabel.trim()
       : base.weekLabel,
+    monthLabel: typeof s.monthLabel === 'string' && s.monthLabel.trim()
+      ? s.monthLabel.trim()
+      : base.monthLabel,
     quietAfterDays: Number.isFinite(s.quietAfterDays) && (s.quietAfterDays as number) > 0
       ? Math.round(s.quietAfterDays as number)
       : base.quietAfterDays,

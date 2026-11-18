@@ -8,7 +8,7 @@ import { usePomodoro } from '@/store/pomodoro';
 import { usePomodoroNow } from '@/hooks/usePomodoroClock';
 import { displayMsAt, formatClock } from '@/domain/pomodoro';
 import { colorValue } from '@/domain/colors';
-import { SYSTEM_LABELS, displayTaskContent, toDisplayPriority, weekLabel, type Item } from '@/domain/types';
+import { displayTaskContent, toDisplayPriority, weekLabel, type Item, monthLabel } from '@/domain/types';
 import { dueDate, formatRelativeDay } from '@/domain/dates';
 import { effectiveEstimate, formatDuration } from '@/domain/estimates';
 import { Icon } from '../Icon';
@@ -91,7 +91,7 @@ function TaskPanel({ item }: { item: Item }) {
   const has = (name: string) => item.labels.some((l) => l.toLowerCase() === name.toLowerCase());
   const when = due ? formatRelativeDay(due, locale)
     : has(weekLabel()) ? t('review.to.anytime')
-    : has(SYSTEM_LABELS.month) ? t('review.to.month') : null;
+    : has(monthLabel()) ? t('review.to.month') : null;
   const priority = toDisplayPriority(item.priority);
   /* The title is saved when the screen goes, too: ending the session closes it
      before the field has lost focus, and a rename must not be lost with it. */

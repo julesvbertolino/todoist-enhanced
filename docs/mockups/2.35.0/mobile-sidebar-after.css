@@ -1,0 +1,10 @@
+.sidebar .profile .avatar{width:40px!important;height:40px!important}
+.sidebar .profile .identity strong{font-size:17px!important}
+.sidebar .karma small{font-size:12.5px!important}
+.sidebar .bellbtn{width:44px!important;height:44px!important}
+.sidebar .bellbtn .ic{width:22px!important;height:22px!important}
+.sidebar .side-head{font-size:12.5px!important}
+.sidebar .navitem{padding-right:16px!important}
+.sidebar .navend{right:16px!important}
+.sidebar .navitem .count,.sidebar .navend .count{min-width:28px;text-align:right;font-size:13px!important;font-variant-numeric:tabular-nums}
+.sidebar .navitem .hash{width:22px!important;height:22px!important;display:grid!important;place-items:center}
