@@ -179,7 +179,7 @@ export function ProjectMenu({
         visibility: position ? undefined : 'hidden',
       }}
     >
-      <button className="opt" role="menuitem" onClick={() => {
+      {!project.inbox_project && <button className="opt" role="menuitem" onClick={() => {
         onClose();
         const projectHash = `#/project/${encodeURIComponent(project.id)}`;
         if (!window.location.hash.startsWith(projectHash)) navigate('project', project.id);
@@ -193,7 +193,7 @@ export function ProjectMenu({
         window.setTimeout(openInline, 50);
       }}>
         <Icon name="plus" size="sm" /><span>{t('section.add')}</span>
-      </button>
+      </button>}
       {/* The Inbox is the one project that is not yours to rename, move or delete. */}
       {project.inbox_project ? (
         <button
