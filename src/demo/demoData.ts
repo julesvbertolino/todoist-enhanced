@@ -237,6 +237,10 @@ export function buildDemoSnapshot(locale: Locale = 'en', seed = 20260914): Snaps
     project_id: 'personal', section_id: 'p-rel', labels: ['quick', 'est-3'], priority: P3, due: due(today),
   });
   addItem({
+    content: L('Send a message to Lily', 'Envoyer un message à Lili'),
+    project_id: 'personal', section_id: 'p-rel', labels: ['quick', 'est-3'], priority: P1, due: due(today),
+  });
+  addItem({
     content: L('Buy a gift for Laura', 'Acheter un cadeau pour Laura'),
     description: L('Something small, under 40 €.', 'Quelque chose de petit, moins de 40 €.'),
     project_id: 'personal', section_id: 'p-rel', labels: ['errands', 'est-45'], priority: P2,
