@@ -66,6 +66,13 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
     case null: return null;
     case 'uncompletableMenu':
       content = <img className="cv-uncompletable-menu" src={uncompletableMenu} alt="" />; break;
+    case 'tableSection':
+      content = <div className="cv-seam">
+        {row(say('Pick the typefaces', 'Choisir les polices'), 'checkbox', 'Fri')}
+        <div className="cv-seam-line"><i /><b>{say('Add a section', 'Ajouter une section')}</b><i /></div>
+        <div className="cv-seam-head"><Icon name="caret" size="sm" /><b>Launch</b><small>1</small></div>
+        {row(say('Publish the site', 'Publier le site'), 'checkbox', 'Mon')}
+      </div>; break;
     case 'iconSet':
       content = <div className="cv-icon-set">{(['calendar', 'clock', 'flag', 'tag', 'inbox', 'sun', 'star', 'bell', 'search', 'settings', 'filter', 'user', 'mail', 'link', 'project', 'board', 'table', 'comment', 'repeat', 'flame', 'someday', 'sparkles', 'deadline', 'dashboard'] as IconName[]).map((icon) => <span key={icon}><Icon name={icon} size="lg" /></span>)}</div>; break;
     case 'projectColours':
