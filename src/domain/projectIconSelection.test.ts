@@ -18,6 +18,13 @@ describe('project and filter icon selection', () => {
     expect(find('echecs')).toContain('chess-knight');
     expect(find('social media')).toContain('message-circle');
     expect(find('pointeur')).toContain('mouse-pointer');
+    expect(find('timer')).toEqual(expect.arrayContaining(['alarm-clock', 'hourglass']));
+    expect(find('time')).toContain('alarm-clock');
+    expect(find('run')).toContain('running');
+    expect(find('weight')).toContain('dumbbell');
+    expect(find('health')).toContain('heart');
+    expect(find('linkedin')).toContain('thumbs-up');
+    expect(find('instagram')).toContain('thumbs-up');
   });
   it('treats an icon that is no longer offered as no icon, so the default # shows', () => {
     expect(readProjectIcon('Notes\n\n<!-- icon:ambulance -->')).toBeNull();

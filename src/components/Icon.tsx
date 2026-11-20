@@ -22,6 +22,7 @@ import {
   Clock01Icon,
   CodeIcon,
   Coffee02Icon,
+  Bug01Icon,
   Comment02Icon,
   Copy01Icon,
   CornerDownRightIcon,
@@ -87,7 +88,7 @@ import {
 export type IconName =
   | 'wrap-text' | 'full-width' | 'sun' | 'sofa' | 'calendar-arrow-right' | 'calendar-x' | 'volume' | 'reset'
   | 'arrow-left' | 'arrow-right' | 'bars' | 'bell' | 'board' | 'calendar'
-  | 'caret' | 'caret-up' | 'check' | 'clock' | 'close' | 'coffee' | 'comment'
+  | 'bug' | 'caret' | 'caret-up' | 'check' | 'clock' | 'close' | 'coffee' | 'comment'
   | 'dashboard' | 'deadline' | 'drag' | 'edit' | 'export' | 'external'
   | 'filter' | 'flag' | 'flame' | 'group' | 'inbox' | 'link' | 'list' | 'logout' | 'mail' | 'menu' | 'more'
   | 'plus' | 'project' | 'repeat' | 'search' | 'settings' | 'sidebar'
@@ -141,6 +142,7 @@ const ICONS: Record<IconName, IconSvgElement> = {
   bell: Notification01Icon,
   board: KanbanIcon,
   calendar: Calendar04Icon,
+  bug: Bug01Icon,
   caret: ArrowDown01Icon,
   'caret-up': ArrowUp01Icon,
   check: Tick02Icon,

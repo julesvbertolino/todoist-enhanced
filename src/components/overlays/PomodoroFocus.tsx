@@ -134,13 +134,14 @@ function TaskPanel({ item }: { item: Item }) {
       </div>
       <div className="pomo-fs-titlerow">
         <button type="button" className={`check p${priority}`} role="checkbox" aria-checked={item.checked} aria-label={t('task.complete')} onClick={() => void toggleTask(item.id)} />
-        <input
+        <textarea
           className="pomo-fs-title"
+          rows={2}
           value={title}
           aria-label={t('detail.title')}
-          onChange={(event) => setTitle(event.target.value)}
+          onChange={(event) => setTitle(event.target.value.replace(/\n/g, ' '))}
           onBlur={commitTitle}
-          onKeyDown={(event) => { if (event.key === 'Enter') (event.target as HTMLInputElement).blur(); }}
+          onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); (event.target as HTMLTextAreaElement).blur(); } }}
         />
       </div>
       {(when || minutes !== null) && (

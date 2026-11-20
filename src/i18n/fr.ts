@@ -152,7 +152,7 @@ export const fr: Record<TranslationKey, string> = {
   'pomodoro.startBreak': 'Lancer la pause',
   'pomodoro.end': 'Terminer',
   'pomodoro.fullscreen': 'Plein écran',
-  'pomodoro.back': 'Retour à mes tâches',
+  'pomodoro.back': 'Réduire le minuteur',
   'pomodoro.focus': 'Focus',
   'pomodoro.noTask': 'Session libre · aucune tâche liée',
   'pomodoro.openTask': 'Ouvrir la tâche',

@@ -94,6 +94,11 @@ export function PomodoroButton({ taskId = null }: { taskId?: string | null }) {
       >
         {paused || timer.status === 'done' ? <HugeiconsIcon icon={PlayIcon} size={14} strokeWidth={1.7} /> : <HugeiconsIcon icon={PauseIcon} size={14} strokeWidth={1.7} />}
       </button>
+      {taskId !== null && (
+        <button type="button" className="pomo-pause" aria-label={t('pomodoro.fullscreen')} title={t('pomodoro.fullscreen')} onClick={() => setFullscreen(true)}>
+          <HugeiconsIcon icon={ArrowExpand01Icon} size={14} strokeWidth={1.7} />
+        </button>
+      )}
       {popover && createPortal(<SessionPopover openedFrom={taskId} anchor={wrap.current} onFullscreen={() => setFullscreen(true)} />, document.body)}
     </span>
   );

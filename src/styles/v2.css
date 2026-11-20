@@ -669,7 +669,8 @@ html.dragging-row .task,html.dragging-row .subtaskrow{transition:margin .16s eas
 /* Sidebar: no dot before the sync line; a plain white search field with ⌘K as text. */
 .sidebar .syncdot{display:none}
 .sidebar .searchbtn{background:var(--surface);border:1px solid var(--border);color:var(--muted)}
-.sidebar .searchbtn kbd{border:0;background:transparent;padding:0;font:inherit;font-size:11px;color:var(--faint)}
+.sidebar .searchbtn kbd{border:0;background:transparent;padding:0;font:inherit;font-size:11px;color:var(--faint);opacity:.65;transition:opacity .15s}
+.sidebar .searchbtn:is(:hover,:focus-visible) kbd{opacity:1}
 
 /* The profile menu hangs below the profile, narrower, like the reference. */
 .sidebar .side-top .menu{top:calc(100% - 2px);left:4px;width:max-content;min-width:198px;max-width:240px}
@@ -1225,7 +1226,7 @@ img.notifav{display:block;width:34px;height:34px;object-fit:cover}
 }
 .comment-file small{color:var(--faint)}
 /* Todoist's solid mark is heavier than the line icons around it: a softer grey keeps the menu even. */
-.menu-mark{color:var(--muted)}
+.menu-mark{color:#8f8f8f;width:14px;height:14px;border-radius:28%}
 .comment-edit{display:grid;gap:8px;margin-top:4px}
 .comment-edit .comment-field{border-radius:14px}
 .comment-edit .comment-field:focus{outline:none;border-color:color-mix(in srgb,var(--text) 30%,var(--border-strong));box-shadow:none}

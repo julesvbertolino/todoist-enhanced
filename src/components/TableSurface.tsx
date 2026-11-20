@@ -1,5 +1,5 @@
 import { useDataSnapshot } from '@/hooks/useDataSnapshot';
-import { useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { Fragment, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import {
   DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent,
 } from '@dnd-kit/core';
@@ -8,6 +8,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Icon } from './Icon';
 import { TableHeaderMenu } from './TableHeaderMenu';
 import { TaskGroup } from './TaskGroup';
+import { AddSectionLine } from './AddSectionLine';
 import { TableContext } from './TableContext';
 import { useStore } from '@/store/store';
 import { useT } from '@/hooks/useT';
@@ -19,8 +20,10 @@ import { summariseLoad } from '@/domain/load';
 import type { Item, TableColumn, ViewPrefs } from '@/domain/types';
 import type { TaskGroupProps } from './TaskGroup';
 
-export function TableSurface({ groups, viewKey, childrenOf, onOpen }: {
+export function TableSurface({ groups, viewKey, childrenOf, onOpen, onAddSection }: {
   groups: Array<TaskGroupProps>; viewKey: string; childrenOf: (id: string) => Item[]; onOpen: (id: string) => void;
+  /** A project's table: the first group is the tasks in no section, the others are its sections; the seam between two sections can make a new one. */
+  onAddSection?: (index: number) => void;
 }) {
   const { t, locale } = useT();
   const prefs = useStore((s) => s.prefs);
@@ -111,9 +114,13 @@ export function TableSurface({ groups, viewKey, childrenOf, onOpen }: {
         {groups.map((group, index) => {
           const groupChildren = group.childrenOf ?? childrenOf;
           const sorted = sortItems(group.items, current.sort, groupChildren, group.reorderable || 'project', snapshot);
-          return <TaskGroup key={`${group.sectionId ?? group.title ?? ''}-${index}`} {...group} viewKey={viewKey}
-            items={current.tableDescending ? sorted.reverse() : sorted} childrenOf={groupChildren} onOpen={onOpen} keepWhenEmpty />;
+          return <Fragment key={`${group.sectionId ?? group.title ?? ''}-${index}`}>
+            {onAddSection && index > 0 && <AddSectionLine label={t('section.add')} slotId={String(index - 1)} onAdd={() => onAddSection(index - 1)} />}
+            <TaskGroup {...group} viewKey={viewKey}
+              items={current.tableDescending ? sorted.reverse() : sorted} childrenOf={groupChildren} onOpen={onOpen} keepWhenEmpty />
+          </Fragment>;
         })}
+        {onAddSection && <AddSectionLine label={t('section.add')} slotId={String(groups.length - 1)} onAdd={() => onAddSection(groups.length - 1)} />}
         <footer className="table-footer"><span>{t('metrics.tasks', { count: summary.taskCount })} · {formatDuration(total, locale)}</span></footer>
       </div>
     </div>

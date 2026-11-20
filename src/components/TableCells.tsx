@@ -2,6 +2,7 @@ import { useContext, useMemo } from 'react';
 import { TableContext } from './TableContext';
 import { Icon } from './Icon';
 import { DateField } from './DateField';
+import { taskShortcuts } from './DatePicker';
 import { DurationField } from './DurationField';
 import { MultiSelect } from './MultiSelect';
 import { Select } from './Select';
@@ -9,7 +10,7 @@ import { useStore } from '@/store/store';
 import { useT } from '@/hooks/useT';
 import { effectiveEstimate, formatDuration } from '@/domain/estimates';
 import { dateTone, isOverdue } from '@/domain/dates';
-import { toDisplayPriority, toTodoistPriority, type Item, type TableColumn, type DisplayPriority } from '@/domain/types';
+import { monthLabel, toDisplayPriority, toTodoistPriority, weekLabel, type Item, type TableColumn, type DisplayPriority } from '@/domain/types';
 import { tableColumnLabel } from '@/domain/table';
 import { byLabelOrder } from '@/domain/orderKey';
 import { markerStyle } from '@/domain/colors';
@@ -18,6 +19,7 @@ import { AssigneeField } from './AssigneeField';
 import { PersonAvatar } from './PersonAvatar';
 import { assignees } from '@/domain/sharing';
 import { readProjectIcon } from '@/domain/projectIcons';
+import { dropMutation, type DropTarget } from '@/domain/dnd';
 
 /** Inline values use the same controls and store commands as task details. */
 export function TableCells({ item, columns, childrenOf, hideProject = false }: { hideProject?: boolean; item: Item; columns: TableColumn[]; childrenOf: (id: string) => Item[] }) {
@@ -40,7 +42,20 @@ export function TableCells({ item, columns, childrenOf, hideProject = false }: {
     let content;
     if (column === 'date' || column === 'deadline') {
       const due = column === 'date';
-      content = <DateField premiumDeadline={!due} value={(due ? item.due?.date : item.deadline?.date) ?? ''}
+      /* The start date offers the same places as everywhere else: this week, this month, someday. */
+      const moveTo = (target: DropTarget) => {
+        const mutation = dropMutation(item, target);
+        if (mutation?.update) void updateTask(item.id, mutation.update);
+      };
+      const hasTag = (name: string) => item.labels.some((l) => l.toLowerCase() === name.toLowerCase());
+      const horizon = !due || item.due ? null : hasTag(weekLabel()) ? t('nav.week') : hasTag(monthLabel()) ? t('nav.month') : null;
+      content = <DateField premiumDeadline={!due} placeholder={horizon ?? undefined} shortcuts={due ? taskShortcuts(t, locale, {
+        day: (date) => moveTo({ kind: 'day', date }),
+        today: () => moveTo({ kind: 'today' }),
+        anytime: () => moveTo({ kind: 'anytime' }),
+        month: () => moveTo({ kind: 'month' }),
+        someday: () => moveTo({ kind: 'someday' }),
+      }) : undefined} value={(due ? item.due?.date : item.deadline?.date) ?? ''}
         label={t(tableColumnLabel[column])} withTime={due}
         recurrence={due && item.due?.is_recurring ? { string: item.due.string, lang: item.due.lang } : null}
         onRecurrence={due ? (rule) => void setRecurrence(item.id, rule) : undefined}

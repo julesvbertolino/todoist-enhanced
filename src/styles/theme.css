@@ -1533,6 +1533,7 @@ button.subprog[aria-expanded="false"]{background:var(--subtle)}
   opacity:0;transition:opacity .12s ease-out;
 }
 .mode:hover .addsection:hover,
+.task-table .addsection:hover,
 .addsection:focus-visible,
 /* While a section is being dragged, every slot shows where it could land. */
 .addsection-slot.over .addsection{opacity:1}

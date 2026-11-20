@@ -12,6 +12,7 @@ import { FilterMark } from './FilterMark';
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon, type IconName } from './Icon';
+import { TodoistMark } from './TodoistMark';
 import { WorkspaceAvatar } from './WorkspaceFilter';
 import { useT } from '@/hooks/useT';
 import { useData } from '@/hooks/useData';
@@ -534,7 +535,10 @@ export function Sidebar({
               : initials}
           </span>
           <span className="identity">
-            <strong>{firstName(user?.full_name)}</strong>
+            <span className="idname">
+              <strong>{firstName(user?.full_name)}</strong>
+              <Icon name="caret" size="sm" />
+            </span>
             {karma ? (
               <span className="karma" title={t('karma.progress', {
                 remaining: karma.remaining ?? 0,
@@ -549,7 +553,6 @@ export function Sidebar({
               <small>{user?.email ?? ''}</small>
             )}
           </span>
-          <Icon name="caret" size="sm" />
         </button>
 
         {/* Notifications and conflicts, one door. The dot says there is
@@ -586,7 +589,7 @@ export function Sidebar({
               {t('nav.whatsNew')}
             </button>
             <button onClick={() => { setMenuOpen(false); window.open(FEEDBACK_URL, '_blank', 'noopener,noreferrer'); }}>
-              <Icon name="comment" />
+              <Icon name="bug" />
               {t('nav.feedback')}
             </button>
             <button onClick={() => window.open(COFFEE_URL, '_blank', 'noopener,noreferrer')}>
@@ -595,7 +598,7 @@ export function Sidebar({
             </button>
             <hr />
             <button onClick={() => window.open('https://app.todoist.com', '_blank', 'noopener')}>
-              <Icon name="external" />
+              <TodoistMark className="ic ic-sm menu-mark" />
               {t('nav.openTodoist')}
             </button>
             <button className="danger" onClick={() => { setMenuOpen(false); void disconnect(); }}>
