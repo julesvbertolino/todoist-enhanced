@@ -461,7 +461,7 @@ function ProjectBody({
       ) : current.mode === 'table' && current.group === 'none' ? (
         <TableSurface viewKey={viewKey} childrenOf={childrenOf} onOpen={onOpen} onAddSection={(index) => void addSection(index)}
           groups={[
-            { title: t('group.noSection'), items: looseItems, childrenOf, onOpen,
+            { items: looseItems, childrenOf, onOpen,
               dropTarget: { kind: 'section', sectionId: null, projectId }, reorderable: 'project', onAddTask: () => onAddTaskTo({ projectId }) },
             ...sectionGroups.map((group) => ({ title: group.title, items: group.items, childrenOf, onOpen,
               sectionId: group.id, projectId, reorderable: 'project' as const,

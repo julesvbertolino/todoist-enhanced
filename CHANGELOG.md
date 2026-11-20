@@ -44,7 +44,7 @@ translation lives in CHANGELOG.fr.md.
 
 ## 2.37.0
 
-🆕 **Add a section from a table.** In a project’s table, point between two sections and click Add a section to create one right there.
+🎨 **Add a section from a table.** In a project’s table, point between two sections and click Add a section to create one right there.
 
 🎨 **Project icon refinements.** An icon can now be found with several words, in English and in French: try health, run or linkedin in the icon picker. New icons join it, such as a trophy, a bike, a running shoe and a dumbbell.
 

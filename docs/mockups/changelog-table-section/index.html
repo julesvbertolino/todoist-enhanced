@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Changelog image: add a section from a table</title>
+<style>
+:root{--surface:#fff;--bg:#f4f3f2;--hover:#f0efee;--border:#ececec;--text:#202020;--muted:#666;--faint:#8a8a8a;--accent:#d1453b;--accent-soft:#fbeceb}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:32px}
+h1{font-size:18px;margin:0 0 4px}p.lead{color:var(--muted);margin:0 0 24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(520px,1fr));gap:28px}
+figure{margin:0}figcaption{font-weight:600;margin:0 0 8px}figcaption small{display:block;font-weight:400;color:var(--muted)}
+.frame{aspect-ratio:16/10;background:var(--surface);border-radius:16px;box-shadow:0 1px 0 #0000000d,0 10px 30px #00000014;position:relative;overflow:hidden;container-type:inline-size}
+/* everything inside is sized in cqw so the picture scales like the app's Fit */
+.in{position:absolute;inset:0;padding:5cqw 5.5cqw;display:flex;flex-direction:column;justify-content:center}
+.sec{display:flex;align-items:center;gap:1.4cqw;font-weight:700;font-size:2.6cqw;padding:1.2cqw 0;border-bottom:1px solid var(--border)}
+.sec i{font-style:normal;color:var(--faint);font-weight:500;font-size:2.2cqw}
+.sec svg{width:2.4cqw;height:2.4cqw;color:var(--faint)}
+.row{display:grid;grid-template-columns:3cqw 1fr auto auto;gap:2cqw;align-items:center;padding:1.7cqw 0;border-bottom:1px solid var(--border);font-size:2.5cqw}
+.row .c{width:2.7cqw;height:2.7cqw;border-radius:50%;border:.25cqw solid #b5b5b5}
+.chip{background:var(--hover);border-radius:99px;padding:.7cqw 1.6cqw;font-size:2.1cqw;color:var(--muted);white-space:nowrap}
+.add{display:flex;align-items:center;gap:1.6cqw;color:var(--accent);font-weight:600;font-size:2.2cqw;margin:1.6cqw 0;position:relative}
+.add b{flex:1;height:.35cqw;background:var(--accent);border-radius:1cqw;display:block}
+.cursor{position:absolute;width:3.4cqw;right:21cqw;top:1.2cqw;filter:drop-shadow(0 .3cqw .4cqw #0004)}
+.new{background:var(--accent-soft);border-radius:1.4cqw;padding:0 1.5cqw;margin:0 -1.5cqw}
+.head{display:grid;grid-template-columns:3cqw 1fr 12cqw 10cqw;gap:2cqw;color:var(--faint);font-size:2.1cqw;padding-bottom:1.2cqw;border-bottom:1px solid var(--border)}
+.row.t{grid-template-columns:3cqw 1fr 12cqw 10cqw}
+.two{display:grid;grid-template-columns:1fr 4cqw 1fr;align-items:center;gap:1.5cqw;position:absolute;inset:0;padding:5cqw 4.5cqw}
+.two .mini{font-size:.82em}.arrow{color:var(--faint);font-size:4cqw;text-align:center}
+.zoom{font-size:1.45em}
+.zoom .in{padding:5cqw 7cqw}
+</style></head><body>
+<h1>Add a section from a table: four pictures</h1>
+<p class="lead">Each one sits in the changelog's frame. Pick one by its letter.</p>
+<svg width="0" height="0" style="position:absolute"><defs><symbol id="caret" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="cur" viewBox="0 0 16 22"><path d="M1.5 1.5v16l4-3.7 2.6 6 2.6-1.1-2.6-5.9h5.6z" fill="#fff" stroke="#202020" stroke-width="1.5" stroke-linejoin="round"/></symbol></defs></svg>
+<div class="grid">
+
+<figure><figcaption>A · The seam under the pointer<small>A table, the red line and its label between two sections.</small></figcaption>
+<div class="frame"><div class="in">
+ <div class="sec"><svg><use href="#caret"/></svg>Design <i>2</i></div>
+ <div class="row"><span class="c"></span><span>Draw the homepage</span><span class="chip">Today</span><span class="chip">P2</span></div>
+ <div class="row"><span class="c"></span><span>Pick the typefaces</span><span class="chip">Fri</span><span class="chip">P3</span></div>
+ <div class="add"><b></b>Add a section<b></b><svg class="cursor" viewBox="0 0 16 22"><use href="#cur"/></svg></div>
+ <div class="sec"><svg><use href="#caret"/></svg>Launch <i>1</i></div>
+ <div class="row"><span class="c"></span><span>Publish the site</span><span class="chip">Mon</span><span class="chip">P1</span></div>
+</div></div></figure>
+
+<figure><figcaption>B · Close-up of the seam<small>Only the join: last row, the line, the next heading. Big and readable.</small></figcaption>
+<div class="frame zoom"><div class="in">
+ <div class="row"><span class="c"></span><span>Pick the typefaces</span><span class="chip">Fri</span><span class="chip">P3</span></div>
+ <div class="add"><b></b>Add a section<b></b><svg class="cursor" viewBox="0 0 16 22" style="right:19cqw;top:1.4cqw"><use href="#cur"/></svg></div>
+ <div class="sec"><svg><use href="#caret"/></svg>Launch <i>1</i></div>
+ <div class="row"><span class="c"></span><span>Publish the site</span><span class="chip">Mon</span><span class="chip">P1</span></div>
+</div></div></figure>
+
+<figure><figcaption>C · Before and after<small>Two sections become three, the new one highlighted.</small></figcaption>
+<div class="frame"><div class="two">
+ <div class="mini">
+  <div class="sec"><svg><use href="#caret"/></svg>Design <i>2</i></div>
+  <div class="row"><span class="c"></span><span>Draw the homepage</span><span></span><span></span></div>
+  <div class="add"><b></b>Add a section<b></b></div>
+  <div class="sec"><svg><use href="#caret"/></svg>Launch <i>1</i></div>
+  <div class="row"><span class="c"></span><span>Publish the site</span><span></span><span></span></div>
+ </div>
+ <div class="arrow">→</div>
+ <div class="mini">
+  <div class="sec"><svg><use href="#caret"/></svg>Design <i>2</i></div>
+  <div class="row"><span class="c"></span><span>Draw the homepage</span><span></span><span></span></div>
+  <div class="new"><div class="sec" style="border:0"><svg><use href="#caret"/></svg>Review <i>0</i></div></div>
+  <div class="sec"><svg><use href="#caret"/></svg>Launch <i>1</i></div>
+  <div class="row"><span class="c"></span><span>Publish the site</span><span></span><span></span></div>
+ </div>
+</div></div></figure>
+
+<figure><figcaption>D · The whole table<small>Column headings, three sections, the line shown on the second join.</small></figcaption>
+<div class="frame"><div class="in">
+ <div class="head"><span></span><span>Title</span><span>Start date</span><span>Priority</span></div>
+ <div class="row t" style="padding:1.3cqw 0"><span class="c"></span><span>Write the brief</span><span class="chip">Today</span><span class="chip">P3</span></div>
+ <div class="sec"><svg><use href="#caret"/></svg>Design <i>2</i></div>
+ <div class="row t" style="padding:1.3cqw 0"><span class="c"></span><span>Draw the homepage</span><span class="chip">Fri</span><span class="chip">P2</span></div>
+ <div class="add" style="margin:1.1cqw 0"><b></b>Add a section<b></b><svg class="cursor" viewBox="0 0 16 22"><use href="#cur"/></svg></div>
+ <div class="sec"><svg><use href="#caret"/></svg>Launch <i>1</i></div>
+ <div class="row t" style="padding:1.3cqw 0"><span class="c"></span><span>Publish the site</span><span class="chip">Mon</span><span class="chip">P1</span></div>
+</div></div></figure>
+
+</div></body></html>

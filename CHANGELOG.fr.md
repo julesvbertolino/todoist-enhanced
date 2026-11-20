@@ -10,7 +10,7 @@ Chaque ligne est marquée :
 
 ## 2.37.0
 
-🆕 **Ajoutez une section depuis un tableau.** Dans le tableau d’un projet, survolez l’espace entre deux sections et cliquez sur Ajouter une section pour en créer une à cet endroit.
+🎨 **Ajoutez une section depuis un tableau.** Dans le tableau d’un projet, survolez l’espace entre deux sections et cliquez sur Ajouter une section pour en créer une à cet endroit.
 
 🎨 **Icônes de projet affinées.** Une icône se trouve maintenant avec plusieurs mots, en français comme en anglais : essayez santé, courir ou linkedin dans le sélecteur. De nouvelles icônes l’enrichissent, comme un trophée, un vélo, une chaussure de course et un haltère.
 
