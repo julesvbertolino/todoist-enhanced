@@ -150,7 +150,7 @@ export const en = {
   'pomodoro.startBreak': 'Start a break',
   'pomodoro.end': 'End session',
   'pomodoro.fullscreen': 'Full screen',
-  'pomodoro.back': 'Back to my tasks',
+  'pomodoro.back': 'Minimise timer',
   'pomodoro.focus': 'Focus',
   'pomodoro.noTask': 'Free session · no task attached',
   'pomodoro.openTask': 'Open task',

@@ -42,6 +42,16 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.37.0
+
+🎨 **Add a section from a table.** In a project’s table, point between two sections and click Add a section to create one right there.
+
+🎨 **Project icon refinements.** An icon can now be found with several words, in English and in French: try health, run or linkedin in the icon picker. New icons join it, such as a trophy, a bike, a running shoe and a dumbbell.
+
+🎨 **Design refinements.** The ⌘K hint in the search is calmer until you point at it. In the account menu, Open Todoist shows a cleaner Todoist logo and the bug or idea link has a bug icon.
+
+🐛 **Start dates in a table offer every choice.** The start date of a task in a table now lists this week, this month and someday, like everywhere else, and shows the period you picked.
+
 ## 2.36.0
 
 🎨 **Uncompletable tasks are easier to use.** A new task-menu button switches a task between completable and uncompletable. Uncompletable tasks have a clearer appearance and no longer count towards workload or progress.

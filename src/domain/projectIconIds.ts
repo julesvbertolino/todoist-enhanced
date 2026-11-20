@@ -11,7 +11,7 @@ export const PROJECT_ICON_IDS = [
   'traffic-cone', 'sun', 'sticky-note', 'at-sign', 'calendar', 'coffee', 'construction', 'eye',
   'chef-hat', 'bookmark', 'mic', 'map-pin', 'plane', 'map', 'navigation', 'pencil-ruler',
   'mail', 'hourglass', 'piggy-bank', 'camera', 'video',
-  'alarm-clock', 'baby', 'bell', 'bike', 'braces', 'bug', 'brush', 'car', 'check-square', 'cross', 'dog',
+  'alarm-clock', 'baby', 'bell', 'bike', 'braces', 'bug', 'brush', 'car', 'check-square', 'cross', 'dog', 'dumbbell', 'running',
   'file-code', 'graduation-cap', 'landmark', 'list', 'send', 'trophy', 'user',
 ];
 

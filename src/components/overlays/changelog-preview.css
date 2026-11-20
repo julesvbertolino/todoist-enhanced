@@ -190,3 +190,12 @@
 
 .cv-kind-uncompletableMenu .cv-fit{display:flex;justify-content:center}
 .cv-uncompletable-menu{display:block;width:min(100%, 310px);height:auto;border-radius:8px;box-shadow:0 5px 18px #0002}
+
+.cv-seam{display:grid;gap:4px}
+.cv-seam .cv-row{border-bottom:1px solid var(--border);border-radius:0}
+.cv-seam-line{display:flex;align-items:center;gap:8px;margin:6px 0;color:var(--accent);font-size:10px}
+.cv-seam-line i{flex:1;height:2px;border-radius:1px;background:var(--accent)}
+.cv-seam-line b{font-weight:600}
+.cv-seam-head{display:flex;align-items:center;gap:6px;font-size:11px;padding:4px 5px;border-bottom:1px solid var(--border)}
+.cv-seam-head .ic{color:var(--muted)}
+.cv-seam-head small{color:var(--muted)}

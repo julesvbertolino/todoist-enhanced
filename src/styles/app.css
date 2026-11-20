@@ -538,6 +538,8 @@ ul{margin:0;padding:0;list-style:none}
 .avatar img{width:100%;height:100%;object-fit:cover;display:block}
 .identity{min-width:0;display:grid;line-height:1.2}
 .identity strong{font-size:var(--fs-13);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.idname{display:flex;align-items:center;gap:4px;min-width:0}
+.idname .ic{flex:none;color:var(--muted)}
 .identity small{color:var(--muted);font-size:var(--fs-11)}
 .iconbtn{width:32px;height:32px;flex:0 0 auto;display:grid;place-items:center;border-radius:var(--r-sm);color:var(--muted)}
 .iconbtn:hover{color:var(--text);background:var(--hover)}

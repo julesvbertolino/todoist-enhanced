@@ -8,6 +8,16 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.37.0
+
+🎨 **Ajoutez une section depuis un tableau.** Dans le tableau d’un projet, survolez l’espace entre deux sections et cliquez sur Ajouter une section pour en créer une à cet endroit.
+
+🎨 **Icônes de projet affinées.** Une icône se trouve maintenant avec plusieurs mots, en français comme en anglais : essayez santé, courir ou linkedin dans le sélecteur. De nouvelles icônes l’enrichissent, comme un trophée, un vélo, une chaussure de course et un haltère.
+
+🎨 **Retouches de design.** Le rappel ⌘K de la recherche est plus discret tant que vous ne le survolez pas. Dans le menu du compte, Ouvrir Todoist affiche un logo Todoist plus net et le lien bug ou idée a une icône de bug.
+
+🐛 **La date de début d’un tableau propose tous les choix.** Dans un tableau, la date de début d’une tâche liste maintenant cette semaine, ce mois-ci et un jour, comme partout ailleurs, et affiche la période choisie.
+
 ## 2.36.0
 
 🎨 **Les tâches non terminables sont plus simples à utiliser.** Un bouton dans le menu d’une tâche permet de la rendre non terminable ou de la réactiver. Leur présentation est plus claire et elles ne comptent plus dans la charge ni la progression.
