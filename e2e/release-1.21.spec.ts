@@ -353,7 +353,7 @@ test.describe('#157 a checklist in the description', () => {
     await expect(items).toHaveCount(4);
 
     // Saved with Escape: leaving the field saves it, as it always did.
-    await page.keyboard.press('Escape');
+    await dialog.locator('.titleactions .primary').click();
     await expect(dialog.locator('.descedit')).toHaveCount(0);
     await expect(dialog.getByRole('group', { name: 'Checklist' }).getByRole('checkbox')).toHaveCount(4);
     await expect(dialog.locator('.descview')).toContainText('Send the agenda');

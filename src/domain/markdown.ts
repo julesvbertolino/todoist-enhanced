@@ -139,6 +139,22 @@ const emphasise = (text: string): string =>
     .replace(/(^|[^_])_([^_\n]+)_/g, '$1<em>$2</em>')
     .replace(/~~([^~]+)~~/g, '<del>$1</del>');
 
+/* Link labels pasted from rich text can contain HTML entities. */
+function entityCharacter(entity: string): string | undefined {
+  const named: Record<string, string> = { amp: '&', quot: '"', apos: "'", lt: '<', gt: '>', rsquo: '’', lsquo: '‘', rdquo: '”', ldquo: '“', ndash: '–', mdash: '—', nbsp: '\u00a0' };
+  if (entity[0] !== '#') return named[entity.toLowerCase()];
+  const n = entity[1].toLowerCase() === 'x' ? parseInt(entity.slice(2), 16) : parseInt(entity.slice(1), 10);
+  return n > 0 && n <= 0x10ffff && !(n >= 0xd800 && n <= 0xdfff) ? String.fromCodePoint(n) : undefined;
+}
+
+/* The label is already escaped here; escape decoded characters before inserting HTML. */
+function linkLabel(label: string): string {
+  return label.replace(/&amp;(#x[\da-f]+|#\d+|[a-z]+);/gi, (original, entity: string) => {
+    const decoded = entityCharacter(entity);
+    return decoded === undefined ? original : escapeHtml(decoded);
+  });
+}
+
 export interface InlineOptions {
   /**
    * False renders a link as its label alone. A one-line preview lives inside
@@ -186,7 +202,7 @@ function inline(text: string, { anchors = true }: InlineOptions = {}): string {
     // The bracket form's label reads its own emphasis; the other two show
     // the address exactly as typed — an underscore in one is not emphasis.
     const bracketed = out[span.start] === '[';
-    marked += slot(link(span.href, bracketed ? emphasise(span.label) : span.label));
+    marked += slot(link(span.href, bracketed ? emphasise(linkLabel(span.label)) : span.label));
     cursor = span.end;
   }
   marked += out.slice(cursor);
@@ -254,7 +270,8 @@ export function renderTitle(content: string, options?: InlineOptions): string {
  */
 export function plainTitle(content: string): string {
   return content
-    .replace(/\[([^\]]+)\]\((?:[^)\s]+)\)/g, '$1')
+    .replace(/\[([^\]]+)\]\((?:[^)\s]+)\)/g, (_match, label: string) =>
+      label.replace(/&(#x[\da-f]+|#\d+|[a-z]+);/gi, (original, entity: string) => entityCharacter(entity) ?? original))
     .replace(/\*\*([^*]+)\*\*|__([^_]+)__/g, (_m, a?: string, b?: string) => a ?? b ?? '')
     .replace(/~~([^~]+)~~/g, '$1')
     .replace(/`([^`]+)`/g, '$1');

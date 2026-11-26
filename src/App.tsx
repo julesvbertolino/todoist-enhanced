@@ -241,6 +241,16 @@ export function App() {
     if (!connected && !demo) { setOnboardingStarted(false); setupAsked.current = false; }
   }, [connected, demo]);
 
+  // At most one settings update per distinct local day, capped at three days.
+  useEffect(() => {
+    if (QUICK_ADD || !ready || !connected || demo || !settingsChecked || !settled || tourOpen || walkthroughOpen || !setupDone || !hasOnboarded(userId)) return;
+    const current = useStore.getState().prefs;
+    if (current.surveyDismissed || current.surveyVisitDays.length >= 3) return;
+    const now = new Date();
+    const day = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    if (!current.surveyVisitDays.includes(day)) setPrefs({ surveyVisitDays: [...current.surveyVisitDays, day].sort().slice(-3) });
+  }, [ready, connected, demo, settingsChecked, settled, tourOpen, walkthroughOpen, setupDone, userId, setPrefs]);
+
   /* The first run — for a real account that has not had one, and for the demo,
      which is where most people meet this app first and is exactly where a tour
      has something to point at.

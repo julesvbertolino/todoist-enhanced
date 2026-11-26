@@ -1,3 +1,4 @@
+import { SurveyBanner } from '@/components/SurveyBanner';
 import { matchesDashboardOpen } from '@/domain/dashboardFilters';
 import { viewPrefs } from '@/store/prefs';
 import { Select } from '@/components/Select';
@@ -466,6 +467,7 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
         </div>
       </div>
       <HireNote />
+      <SurveyBanner />
       {tab === 'overview' && missingFilterData > 0 && <p role="status" className="displayhelp">{t('dashboard.incompleteFilterHistory', { count: missingFilterData })}</p>}
       {tab === 'overview' && editing && <div className="dashboard-layout-tools">
         <button className="btn" disabled={isDefaultDashboardOrder(order)} onClick={resetLayout}>{t('dashboard.resetLayout')}</button>

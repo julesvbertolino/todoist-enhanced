@@ -322,6 +322,10 @@ export const isWeekLayout = (value: unknown): value is WeekLayout =>
 
 /** Everything the user can tune. Stored on the device, never on a server. */
 export interface Preferences {
+  /** Days on which the voluntary survey invitation was eligible, at most three. */
+  surveyVisitDays: string[];
+  /** A permanent, account-synchronised refusal of the automatic invitation. */
+  surveyDismissed: boolean;
   locale: Locale;
   /** Null means this account has not yet chosen; reads and writes default to tags. */
   estimateStorage: EstimateStorage | null;
@@ -466,6 +470,8 @@ export interface Preferences {
 }
 
 export const defaultPreferences = (locale: Locale): Preferences => ({
+  surveyVisitDays: [],
+  surveyDismissed: false,
   locale,
   estimateStorage: null,
   homepage: 'week',
@@ -623,6 +629,8 @@ export function hydratePreferences(stored: unknown, locale: Locale): Preferences
     // Only the delays the Settings offers: anything else reads as the default.
     dustAfterMonths: isDustMonths(s.dustAfterMonths) ? s.dustAfterMonths : base.dustAfterMonths,
     onboarded: s.onboarded === true,
+    surveyVisitDays: Array.isArray(s.surveyVisitDays) ? [...new Set(s.surveyVisitDays.filter((day): day is string => typeof day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day)))].sort().slice(-3) : [],
+    surveyDismissed: s.surveyDismissed === true,
     setupDone: s.setupDone === true,
     workspaceOrder: Array.isArray(s.workspaceOrder)
       ? s.workspaceOrder.filter((id): id is string => typeof id === 'string')

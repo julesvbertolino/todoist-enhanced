@@ -1,3 +1,4 @@
+import { SurveyBanner } from '@/components/SurveyBanner';
 import { isUncompletable } from '@/domain/types';
 import { HireNote } from '@/components/HireNote';
 import { useMemo, useRef, useState } from 'react';
@@ -100,6 +101,7 @@ export function LabelsView() {
         </div>
       </div>
       <HireNote />
+      <SurveyBanner />
 
       {labels.length === 0 ? (
         <p className="empty">{t('labels.none')}</p>

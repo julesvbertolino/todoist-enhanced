@@ -1,3 +1,4 @@
+import { SurveyBanner } from '@/components/SurveyBanner';
 import { HireNote } from '@/components/HireNote';
 import { useMemo, useState } from 'react';
 import { DndContext, PointerSensor, KeyboardSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
@@ -65,6 +66,7 @@ export function FiltersView() {
         </div>
       </div>
       <HireNote />
+      <SurveyBanner />
 
       {filters.length === 0 ? (
         <p className="empty">{t('filters.none')}</p>

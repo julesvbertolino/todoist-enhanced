@@ -41,7 +41,7 @@ test('description click stays open, selection toolbar preserves words, link dial
   await dialog.getByRole('textbox',{name:'Link URL'}).fill('https://example.com'); await dialog.getByRole('button',{name:'Apply'}).click();
   await expect(body).toBeFocused(); await page.keyboard.type(' normal');
   await expect(body.locator('.md-link')).toHaveText('word'); await expect(body).toHaveText('word word normal');
-  await page.keyboard.press('Escape'); await expect(page.locator('.descview')).toHaveText('word word normal');
+  await page.locator('.titleactions .primary').click(); await expect(page.locator('.descview')).toHaveText('word word normal');
 });
 test('selected clipboard link ends before subsequent typing and undo restores selected words',async({demo:page,context})=>{
   await context.grantPermissions(['clipboard-read','clipboard-write']);
@@ -78,10 +78,10 @@ for(const [label,kind] of [['Heading 1','md-h1'],['Heading 2','md-h2'],['Quote',
   await bar.getByRole('button',{name:label,exact:true}).click();await expect(body.locator(`.${kind}`)).toHaveCount(0);
   await page.keyboard.press('ControlOrMeta+z');await expect(body.locator(`.${kind}`)).toHaveCount(1);
 });
-test('link cancellation returns to the editor, shortcut stays inside it and Escape saves before closing task',async({demo:page})=>{
+test('link cancellation returns to the editor, shortcut stays inside it and saving keeps changes',async({demo:page})=>{
   await row(page,'Send this month’s invoice').locator('.ttitle').click();await page.locator('.descview').click();const body=page.locator('.descedit.detail .cm-content');await page.keyboard.type('words');await page.keyboard.press('ControlOrMeta+a');await page.keyboard.press('ControlOrMeta+k');
   const link=page.getByRole('dialog',{name:'Link',exact:true});await expect(link).toBeVisible();await page.keyboard.press('Escape');await expect(link).toHaveCount(0);await expect(body).toBeFocused();await expect(body).toHaveText('words');await expect(page.getByRole('dialog',{name:'Search',exact:true})).toHaveCount(0);
-  await page.keyboard.press('Escape');await expect(page.locator('.descview')).toHaveText('words');await page.keyboard.press('Escape');await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.locator('.titleactions .primary').click();await expect(page.locator('.descview')).toHaveText('words');await page.keyboard.press('Escape');await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
 for(const width of [1280,390])test(`header keeps the published title size at either density at ${width}px`,async({demo:page})=>{

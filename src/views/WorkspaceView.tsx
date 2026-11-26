@@ -1,3 +1,4 @@
+import { SurveyBanner } from '@/components/SurveyBanner';
 import { isUncompletable } from '@/domain/types';
 import { useEffect, useMemo, useState } from 'react';
 import { subDays } from 'date-fns';
@@ -155,6 +156,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
       <WorkspaceAvatar id={personal ? 'personal' : workspaceId} name={title} logo={personal ? snapshot.user?.avatar_big : snapshot.workspaces[workspaceId]?.logo_big} />
       <h1 className="ptitle">{title}</h1>
     </div>
+    <SurveyBanner />
     {failed && <p role="status">{t('workspace.unavailable')}</p>}
     {offline && !demo && <p role="status">{t('workspace.cached')}</p>}
     <div className="workspace-toolbar">

@@ -1,3 +1,4 @@
+import { SurveyBanner } from '@/components/SurveyBanner';
 import { useSafeDisconnect } from '@/hooks/useSafeDisconnect';
 import { useDataSnapshot } from '@/hooks/useDataSnapshot';
 import { PrivacyInformation } from '@/components/PrivacyInformation';
@@ -101,6 +102,7 @@ export function SettingsView() {
 
       </div>
       <HireNote />
+      <SurveyBanner />
 
       <div className="settings">
         {/* The menu navigates the page rather than replacing it, so these are
