@@ -16,6 +16,7 @@ import { PersonAvatar } from './PersonAvatar';
 import { bySectionOrder } from '@/domain/orderKey';
 import { splitPastedList } from '@/domain/pastedList';
 import { linkSelection } from '@/domain/editorInput';
+import { isLinkUrl } from '@/domain/markdown';
 
 /** A name with its spaces, case and accents set aside, as the parser reads it. */
 const squash = (text: string): string =>
@@ -504,6 +505,29 @@ export function TaskNameField({
         onPaste: (e: ClipboardEvent<HTMLInputElement>) => {
           const field = e.currentTarget;
           const text = e.clipboardData.getData('text/plain');
+          const html = e.clipboardData.getData('text/html');
+          if (html && !/\[[^\]]+\]\([^)]+\)/.test(text)) {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            let cursor = 0;
+            let result = '';
+            for (const anchor of doc.querySelectorAll('a[href]')) {
+              const label = anchor.textContent ?? '';
+              const href = anchor.getAttribute('href') ?? '';
+              const at = label ? text.indexOf(label, cursor) : -1;
+              if (at < 0 || !isLinkUrl(href)) continue;
+              result += text.slice(cursor, at) + `[${label.replace(/\[/g, '\\[').replace(/\]/g, '\\]')}](${href.replace(/\)/g, '%29')})`;
+              cursor = at + label.length;
+            }
+            if (cursor) {
+              const pasted = (result + text.slice(cursor)).replace(/\r?\n/g, ' ');
+              const from = field.selectionStart ?? 0;
+              const to = field.selectionEnd ?? from;
+              e.preventDefault();
+              onChange(value.slice(0, from) + pasted + value.slice(to));
+              requestAnimationFrame(() => field.setSelectionRange(from + pasted.length, from + pasted.length));
+              return;
+            }
+          }
           const link = linkSelection(value, field.selectionStart ?? 0, field.selectionEnd ?? 0, text);
           if (link) {
             e.preventDefault();

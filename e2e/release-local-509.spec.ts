@@ -70,3 +70,37 @@ test('ending a linked focus session keeps an unfinished title and description', 
   await saved.locator('.ttitle').click();
   await expect(page.locator('.descview')).toContainText('Focus draft description');
 });
+
+test('arrow keys move between title and description at their boundaries', async ({ demo: page }) => {
+  await go(page, '#/inbox');
+  await rows(page).first().locator('.ttitle').click();
+  const title = page.getByRole('textbox', { name: 'Task', exact: true });
+  await title.click();
+  await title.fill('A title');
+  await title.press('End');
+  await title.press('ArrowDown');
+  const description = page.locator('.descedit .cm-content');
+  await expect(description).toBeFocused();
+  await description.press('ArrowUp');
+  await expect(title).toBeFocused();
+  await expect(page.locator('.titleactions')).toBeVisible();
+});
+
+test('rich pasted links remain in the task title', async ({ demo: page }) => {
+  await go(page, '#/inbox');
+  await rows(page).first().locator('.ttitle').click();
+  const title = page.getByRole('textbox', { name: 'Task', exact: true });
+  await title.click();
+  await title.fill('');
+  await title.evaluate((element) => {
+    const data = new DataTransfer();
+    data.setData('text/plain', 'Notes and ticket');
+    data.setData('text/html', '<a href="https://example.com/notes">Notes</a> and <a href="https://example.com/ticket">ticket</a>');
+    element.dispatchEvent(new ClipboardEvent('paste', { bubbles: true, cancelable: true, clipboardData: data }));
+  });
+  await page.locator('.titleactions .primary').click();
+  const links = page.locator('.titleview a');
+  await expect(links).toHaveCount(2);
+  await expect(links.nth(0)).toHaveAttribute('href', 'https://example.com/notes');
+  await expect(links.nth(1)).toHaveAttribute('href', 'https://example.com/ticket');
+});

@@ -12,6 +12,7 @@ import { displayTaskContent, toDisplayPriority, weekLabel, type Item, monthLabel
 import { dueDate, formatRelativeDay } from '@/domain/dates';
 import { effectiveEstimate, formatDuration } from '@/domain/estimates';
 import { Icon } from '../Icon';
+import { editSurfaceKeys } from '../editSurfaceKeys';
 import { toggleItemAt } from '@/domain/checklist';
 import { DescriptionEditor, DescriptionView } from '../Checklist';
 
@@ -82,6 +83,7 @@ function TaskPanel({ item }: { item: Item }) {
   const toggleTask = useStore((s) => s.toggleTask);
   const project = useStore((s) => s.snapshot.projects[item.project_id]);
   const [title, setTitle] = useState(displayTaskContent(item));
+  const titleRef = useRef<HTMLTextAreaElement>(null);
   const [editing, setEditing] = useState(false);
   const [focusDescription, setFocusDescription] = useState(false);
   const [description, setDescription] = useState(item.description);
@@ -129,7 +131,7 @@ function TaskPanel({ item }: { item: Item }) {
   };
 
   return (
-    <article className="pomo-fs-task">
+    <article className="pomo-fs-task" onKeyDownCapture={(event) => { if (editing) editSurfaceKeys(event, titleRef.current); }}>
       <div className="pomo-fs-top">
         {project && (
           <div className="pomo-fs-project" style={{ color: colorValue(project.color) }}><span>#</span>{project.name}</div>
@@ -141,6 +143,7 @@ function TaskPanel({ item }: { item: Item }) {
       <div className="pomo-fs-titlerow">
         <button type="button" className={`check p${priority}`} role="checkbox" aria-checked={item.checked} aria-label={t('task.complete')} onClick={() => void toggleTask(item.id)} />
         <textarea
+          ref={titleRef}
           className="pomo-fs-title"
           rows={2}
           value={title}

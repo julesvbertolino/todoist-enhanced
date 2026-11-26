@@ -16,6 +16,7 @@ import { isTopOverlay } from './overlayStack';
 import { Icon } from '../Icon';
 import { ProgressRing } from '../ProgressRing';
 import { PomodoroButton } from '../PomodoroButton';
+import { editSurfaceKeys } from '../editSurfaceKeys';
 import { ChecklistProgress, DescriptionEditor, DescriptionView } from '../Checklist';
 import { checklistPreview, toggleItemAt } from '@/domain/checklist';
 import { useT } from '@/hooks/useT';
@@ -920,7 +921,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
             )}
 
             <div className="detail-content">
-              <div className={editingTitle ? "detail-edit-surface is-editing" : "detail-edit-surface"}>
+              <div className={editingTitle ? "detail-edit-surface is-editing" : "detail-edit-surface"} onKeyDownCapture={(event) => { if (editingTitle) editSurfaceKeys(event, titleRef.current); }}>
               {/* A title with a link in it reads as it does in the list, "Title (video)",
                   and the Markdown is only shown once it is clicked to be edited. */}
               {links.length > 0 && !editingTitle && !titleDirty ? (
