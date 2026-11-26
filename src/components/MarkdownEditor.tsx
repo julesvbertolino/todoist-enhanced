@@ -15,7 +15,7 @@ import { useT } from '@/hooks/useT';
 import { openTodoistLink } from '@/hooks/useTodoistLinks';
 import { inlineSpans, type InlineSpan } from '@/domain/inlineMarks';
 import { richEnter, normalizeLink } from '@/domain/editorInput';
-import { isWebUrl } from '@/domain/markdown';
+import { isLinkUrl, isWebUrl } from '@/domain/markdown';
 import { pressEnter, readLine, type NoteLine } from '@/domain/descriptionLines';
 import { itemText, pasteIntoItem, parseLines } from '@/domain/checklist';
 
@@ -37,6 +37,8 @@ interface MarkdownEditorProps {
   onChange: (next: string) => void;
   /** The caret left the field, or Escape / ⌘↵ was pressed in a description. */
   onCommit?: () => void;
+  onCancel?: () => void;
+  commitOnBlur?: boolean;
   placeholder: string;
   ariaLabel: string;
   autoFocus?: boolean;
@@ -379,7 +381,7 @@ const taskTyping = EditorView.inputHandler.of((view, from, to, text) => {
 const baseKeymap = defaultKeymap.filter((binding) => !/Enter|Escape/.test(`${binding.key ?? ''}${binding.mac ?? ''}`));
 
 export function MarkdownEditor({
-  value, onChange, onCommit, placeholder, ariaLabel, autoFocus = false, variant = 'detail',
+  value, onChange, onCommit, onCancel, commitOnBlur = true, placeholder, ariaLabel, autoFocus = false, variant = 'detail',
   accept, onRefused, removable = false, initialLinkSelection,
 }: MarkdownEditorProps) {
   const { t } = useT();
@@ -407,8 +409,8 @@ export function MarkdownEditor({
   };
   const view = useRef<EditorView | null>(null);
   // The latest of everything the editor calls back into, so it is built once.
-  const live = useRef({ onChange, onCommit, accept, onRefused, variant });
-  live.current = { onChange, onCommit, accept, onRefused, variant };
+  const live = useRef({ onChange, onCommit, onCancel, commitOnBlur, accept, onRefused, variant });
+  live.current = { onChange, onCommit, onCancel, commitOnBlur, accept, onRefused, variant };
   const labels = useRef<Labels>({ tick: t('checklist.tick'), remove: t('checklist.remove') });
   labels.current = { tick: t('checklist.tick'), remove: t('checklist.remove') };
   const initial = useRef({ value, ariaLabel, placeholder, autoFocus, removable, initialLinkSelection });
@@ -489,7 +491,8 @@ export function MarkdownEditor({
             if (event.key === 'Escape' || (event.key === 'Enter' && mod)) {
               event.preventDefault();
               event.stopPropagation();
-              live.current.onCommit?.();
+              if (event.key === 'Escape' && live.current.onCancel) live.current.onCancel();
+              else live.current.onCommit?.();
               (event.target as HTMLElement).blur();
               return true;
             }
@@ -499,12 +502,35 @@ export function MarkdownEditor({
             const next = event.relatedTarget as Node | null;
             // StrictMode destroys and recreates effects; that blur is not a user leaving the field.
             if (disposing || linking.current || (next && (host.current?.contains(next) || toolbar.current?.contains(next)))) return false;
-            live.current.onCommit?.();
+            if (live.current.commitOnBlur) live.current.onCommit?.();
             return false;
           },
           paste(event, editor) {
             // Several lines pasted into a task are several tasks, not one line with breaks in it.
-            const pasted = event.clipboardData?.getData('text/plain') ?? '';
+            let pasted = event.clipboardData?.getData('text/plain') ?? '';
+            const html = event.clipboardData?.getData('text/html') ?? '';
+            /* Rich text often supplies only link labels in text/plain. Recover
+               URLs from anchors without changing the surrounding plain text. */
+            if (html && !/\[[^\]]+\]\([^)]+\)/.test(pasted)) {
+              const doc = new DOMParser().parseFromString(html, 'text/html');
+              let cursor = 0;
+              let result = '';
+              for (const anchor of doc.querySelectorAll('a[href]')) {
+                const label = anchor.textContent ?? '';
+                const href = anchor.getAttribute('href') ?? '';
+                const at = label ? pasted.indexOf(label, cursor) : -1;
+                if (at < 0 || !isLinkUrl(href)) continue;
+                result += pasted.slice(cursor, at) + `[${label.replace(/\[/g, '\\[').replace(/\]/g, '\\]')}](${href.replace(/\)/g, '%29')})`;
+                cursor = at + label.length;
+              }
+              if (cursor) {
+                pasted = result + pasted.slice(cursor);
+                event.preventDefault();
+                const selected = editor.state.selection.main;
+                editor.dispatch({ changes: { from: selected.from, to: selected.to, insert: pasted }, selection: { anchor: selected.from + pasted.length }, userEvent: 'input.paste' });
+                return true;
+              }
+            }
             const address = pasted.trim();
             const selected = editor.state.selection.main;
             if (!selected.empty && normalizeLink(address)) {

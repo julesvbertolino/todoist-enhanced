@@ -8,6 +8,14 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.38.0
+
+🆕 **Une nouvelle enquête sur Enhanced.** Vous pouvez désormais donner votre avis sur votre utilisation d’Enhanced et les améliorations souhaitées directement depuis le menu du compte.
+
+🐛 **Les liens dans le titre d’une tâche s’affichent correctement.** Les apostrophes et les autres caractères apparaissent normalement dans les libellés des liens.
+
+🐛 **Coller une note conserve ses liens.** Les liens copiés avec une note restent présents dans la description de la tâche.
+
 ## 2.37.0
 
 🎨 **Ajoutez une section depuis un tableau.** Dans le tableau d’un projet, survolez l’espace entre deux sections et cliquez sur Ajouter une section pour en créer une à cet endroit.

@@ -121,6 +121,8 @@ interface DescriptionEditorProps {
   onChange: (next: string) => void;
   /** The caret left the editor, or Escape / ⌘↵ was pressed: save what is here. */
   onCommit: () => void;
+  onCancel?: () => void;
+  commitOnBlur?: boolean;
   placeholder: string;
   ariaLabel: string;
   /** Put the caret in at the end when it opens. */
@@ -137,7 +139,7 @@ interface DescriptionEditorProps {
  * source of truth, so the words around a checklist are never rewritten.
  */
 export function DescriptionEditor({
-  value, onChange, onCommit, placeholder, ariaLabel, autoFocus = false, variant = 'detail',
+  value, onChange, onCommit, onCancel, commitOnBlur = true, placeholder, ariaLabel, autoFocus = false, variant = 'detail',
 }: DescriptionEditorProps) {
   const { t } = useT();
   const [full, setFull] = useState(false);
@@ -151,11 +153,13 @@ export function DescriptionEditor({
         value={value}
         autoFocus={autoFocus}
         onFocus={() => setFallbackFocused(true)}
-        onBlur={() => { setFallbackFocused(false); if (variant === 'detail') onCommit(); }}
+        onBlur={() => { setFallbackFocused(false); if (variant === 'detail' && commitOnBlur) onCommit(); }}
         onKeyDown={(event) => {
           if (event.key !== 'Escape' || variant === 'detail') event.stopPropagation();
           if (variant === 'detail' && (event.key === 'Escape' || (event.key === 'Enter' && (event.metaKey || event.ctrlKey)))) {
             event.preventDefault();
+            if (event.key === 'Escape' && onCancel) onCancel();
+            else onCommit();
             event.currentTarget.blur();
             return;
           }
@@ -175,6 +179,8 @@ export function DescriptionEditor({
         value={value}
         onChange={(next) => { setFull(false); onChange(next); }}
         onCommit={onCommit}
+        onCancel={onCancel}
+        commitOnBlur={commitOnBlur}
         placeholder={placeholder}
         ariaLabel={ariaLabel}
         autoFocus={autoFocus || fallbackFocused}

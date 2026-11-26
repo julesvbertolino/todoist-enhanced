@@ -322,3 +322,17 @@ describe('the Full width switch (#403)', () => {
   });
 });
 
+
+describe('survey invitation preferences', () => {
+  it('syncs the dismissed state and counted days across devices', () => {
+    const original = prefs({ surveyDismissed: true, surveyVisitDays: ['2026-11-24', '2026-11-25', '2026-11-26'] });
+    const restored = mergeSynced(prefs(), readSettingsComment(settingsCommentContent(original, 1))!, 'en');
+    expect(restored.surveyDismissed).toBe(true);
+    expect(restored.surveyVisitDays).toEqual(['2026-11-24', '2026-11-25', '2026-11-26']);
+  });
+  it('defaults to a hidden invitation for an account without survey history', () => {
+    const original = defaultPreferences('en');
+    expect(original.surveyDismissed).toBe(false);
+    expect(original.surveyVisitDays).toEqual([]);
+  });
+});

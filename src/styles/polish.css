@@ -635,3 +635,36 @@
 :root:not([data-chips="classic"]) :is(.task, .tcard, .preview-task) .meta > .tag{padding:2px 8px 2px 7px;margin-block:-1px}
 
 
+
+/* The account menu distinguishes a quick message from the longer survey. */
+.sidebar .side-top .menu:has(.account-feedback-copy){width:310px;max-width:calc(100vw - 24px)}
+.sidebar .side-top .menu button:has(.account-feedback-copy){white-space:normal;align-items:flex-start}
+.account-feedback-copy{display:flex;flex-direction:column;gap:3px;text-align:left;line-height:1.3;min-width:0}
+.account-feedback-copy small{font-size:var(--fs-11);color:var(--muted);font-weight:400}
+
+.survey-banner{position:relative;margin:16px 0 20px;padding:18px 20px;border-radius:var(--r-lg);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+.survey-banner h2{font-size:var(--fs-14);font-weight:650;margin:0 150px 6px 0}.survey-banner>p{font-size:var(--fs-13);color:var(--muted);line-height:1.5;margin:0;max-width:65ch}.survey-dismiss{position:absolute;top:12px;right:14px;display:flex;align-items:center;gap:5px;border:0;background:transparent;color:var(--muted);font-size:var(--fs-11);border-radius:6px;padding:5px;cursor:pointer}.survey-dismiss:hover{background:var(--subtle);color:var(--text)}.survey-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}@media(max-width:600px){.survey-banner{padding:17px}.survey-banner h2{margin-right:0;padding-top:26px}.survey-dismiss{top:8px;right:9px}}
+
+.sidebar .menu .account-feedback-copy small{margin-left:0;align-self:flex-start;white-space:normal}
+.detail-edit-surface.is-editing{border:1px solid var(--border-strong);border-radius:var(--r-md);padding:5px 7px 8px}
+.detail-edit-surface.is-editing .namefield.multiline{margin-left:0}
+.detail-edit-surface.is-editing .namefield.multiline .titlefield,.detail-edit-surface.is-editing .namefield.multiline .titlefield:focus,.detail-edit-surface.is-editing .namefield.multiline .titlefield:hover{border-color:transparent;outline:0}
+.detail-edit-surface.is-editing .descedit.detail,.detail-edit-surface.is-editing .descedit.detail:focus-within{border:0;outline:0;padding:0;margin:2px 0 0;background:transparent}
+
+.sidebar .side-top .menu:has(.account-feedback-copy){width:280px}
+.detail-edit-surface,.detail-edit-surface.is-editing{border:1px solid transparent;border-radius:var(--r-md);padding:0 7px 8px;margin-left:-8px}
+.detail-edit-surface.is-editing{border-color:var(--border-strong)}
+.detail-edit-surface .namefield.multiline{margin-left:0}
+.detail-edit-surface .namefield.multiline .titlefield,.detail-edit-surface .namefield.multiline .namemirror{padding-left:0;padding-right:0}
+.detail-edit-surface .namefield.multiline .titlefield:hover,.detail-edit-surface .titleview:hover,.detail-edit-surface .descview:hover{border-color:transparent}
+.detail-edit-surface .titleview{margin-left:0;padding-left:0}
+.detail-edit-surface .descview,.detail-edit-surface.is-editing .descedit.detail{width:100%;margin:2px 0 0;padding:0;border:0}
+.detail-edit-surface .descview.placeholder{display:flex;align-items:center;gap:6px}
+.detail-edit-surface .descview.placeholder .ic{color:var(--faint)}
+
+/* Keep the task title aligned to its checkbox without a hover frame. */
+.detail-headline .detail-edit-surface .namefield.multiline .titlefield:hover,
+.detail-headline .detail-edit-surface .namefield.multiline .titlefield:focus:hover,
+.detail-headline .detail-edit-surface .titleview:hover{border-color:transparent;background:transparent;box-shadow:none}
+.survey-dismiss{font:inherit;font-size:var(--fs-12);font-weight:400;line-height:1.35;align-items:center;justify-content:center}
+.survey-dismiss .ic{flex:none}

@@ -2,6 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { plainTitle, renderTitle, titleLinks } from './markdown';
 
 describe('task titles with links (#101)', () => {
+  it('decodes entities only in link labels without allowing markup', () => {
+    const html = renderTitle('[d&rsquo;organisation &#8211; &amp; &quot;x&quot; &lt;script&gt;](https://example.com/?a=1&b=2) `&rsquo;`');
+    expect(html).toContain('d’organisation – &amp; &quot;x&quot; &lt;script&gt;');
+    expect(html).toContain('href="https://example.com/?a=1&amp;b=2"');
+    expect(html).toContain('<code>&amp;rsquo;</code>');
+    expect(html).not.toContain('<script>');
+  });
   it('renders a Markdown link and a bare address as anchors that open a new tab', () => {
     const html = renderTitle('Read [the brief](https://example.com/a_b) and https://todoist.com/x');
     expect(html).toContain('<a href="https://example.com/a_b" target="_blank" rel="noopener noreferrer">the brief</a>');
@@ -15,6 +22,12 @@ describe('task titles with links (#101)', () => {
 
   it('reads as plain words where a title is text', () => {
     expect(plainTitle('Read [the brief](https://example.com) **now**')).toBe('Read the brief now');
+  });
+
+  it('shows decoded link labels as plain text while preserving literal entities elsewhere', () => {
+    expect(plainTitle('[d&rsquo;organisation &#8211; &lt;test&gt;](https://example.com) &rsquo;'))
+      .toBe('d’organisation – <test> &rsquo;');
+    expect(plainTitle('[&#x1f44b; &unknown;](https://example.com)')).toBe('👋 &unknown;');
   });
 
   it('lists the links a title carries, in order', () => {

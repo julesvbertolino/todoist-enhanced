@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon, LinkSquare02Icon, PauseIcon, PlayIcon, Timer01Icon } from '@hugeicons/core-free-icons';
 import { useT } from '@/hooks/useT';
@@ -83,6 +83,7 @@ function TaskPanel({ item }: { item: Item }) {
   const project = useStore((s) => s.snapshot.projects[item.project_id]);
   const [title, setTitle] = useState(displayTaskContent(item));
   const [editing, setEditing] = useState(false);
+  const [focusDescription, setFocusDescription] = useState(false);
   const [description, setDescription] = useState(item.description);
   const subtasks = childrenOf(item.id);
   const due = dueDate(item);
@@ -93,29 +94,20 @@ function TaskPanel({ item }: { item: Item }) {
     : has(weekLabel()) ? t('review.to.anytime')
     : has(monthLabel()) ? t('review.to.month') : null;
   const priority = toDisplayPriority(item.priority);
-  /* The title is saved when the screen goes, too: ending the session closes it
-     before the field has lost focus, and a rename must not be lost with it. */
-  const latest = useRef({ title, stored: displayTaskContent(item), id: item.id });
-  latest.current = { title, stored: displayTaskContent(item), id: item.id };
-  useEffect(() => () => {
-    const { title: draft, stored, id } = latest.current;
-    const next = draft.trim();
-    if (next && next !== stored) void useStore.getState().updateTask(id, { content: next });
-  }, []);
-
   const stored = displayTaskContent(item);
-  useEffect(() => { setTitle(stored); }, [item.id, stored]);
+  useEffect(() => { if (!editing) setTitle(stored); }, [item.id, stored, editing]);
   useEffect(() => { if (!editing) setDescription(item.description); }, [item.description, editing]);
 
   const commitTitle = () => {
     const next = title.trim();
     if (!next) { setTitle(displayTaskContent(item)); return; }
-    if (next !== displayTaskContent(item)) void updateTask(item.id, { content: next });
-  };
-  const commitDescription = () => {
+    const fields: Record<string, unknown> = {};
+    if (next !== displayTaskContent(item)) fields.content = next;
+    if (description !== item.description) fields.description = description;
+    if (Object.keys(fields).length) void updateTask(item.id, fields);
     setEditing(false);
-    if (description !== item.description) void updateTask(item.id, { description });
   };
+  const cancelEdit = () => { setTitle(displayTaskContent(item)); setDescription(item.description); setEditing(false); };
   const tick = (line: number) => {
     const latest = useStore.getState().snapshot.items[item.id]?.description ?? item.description;
     const next = toggleItemAt(latest, line);
@@ -140,8 +132,11 @@ function TaskPanel({ item }: { item: Item }) {
           value={title}
           aria-label={t('detail.title')}
           onChange={(event) => setTitle(event.target.value.replace(/\n/g, ' '))}
-          onBlur={commitTitle}
-          onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); (event.target as HTMLTextAreaElement).blur(); } }}
+          onFocus={() => { if (!editing) setFocusDescription(false); setEditing(true); }}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); cancelEdit(); }
+            if (event.key === 'Enter') { event.preventDefault(); commitTitle(); }
+          }}
         />
       </div>
       {(when || minutes !== null) && (
@@ -155,10 +150,12 @@ function TaskPanel({ item }: { item: Item }) {
         <DescriptionEditor
           value={description}
           onChange={setDescription}
-          onCommit={commitDescription}
+          onCommit={commitTitle}
+          onCancel={cancelEdit}
+          commitOnBlur={false}
           placeholder={t('detail.descriptionPlaceholder')}
           ariaLabel={t('detail.description')}
-          autoFocus
+          autoFocus={focusDescription}
         />
       ) : (
         <div
@@ -167,14 +164,15 @@ function TaskPanel({ item }: { item: Item }) {
           className={`descview${item.description ? '' : ' placeholder'}`}
           onClick={(event) => {
             if ((event.target as Element).closest('a[href], .checkitem input')) return;
-            setEditing(true);
+            setFocusDescription(true); setEditing(true);
           }}
-          onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setEditing(true); } }}
+          onKeyDown={(event) => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); setFocusDescription(true); setEditing(true); } }}
           aria-label={t('detail.description')}
         >
           {item.description ? <DescriptionView value={item.description} onToggle={tick} /> : t('detail.descriptionPlaceholder')}
         </div>
       )}
+      {editing && <div className="titleactions"><button type="button" className="btn sm" onClick={cancelEdit}>{t('common.cancel')}</button><button type="button" className="btn sm primary" onClick={commitTitle}>{t('common.save')}</button></div>}
       </div>
       {subtasks.length > 0 && (
         <div className="pomo-fs-subs">

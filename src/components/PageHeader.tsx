@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Icon } from './Icon';
 import { useT } from '@/hooks/useT';
 import { HireNote } from './HireNote';
+import { SurveyBanner } from './SurveyBanner';
 import { formatDuration } from '@/domain/estimates';
 import { loadTone, type LoadSummary } from '@/domain/load';
 
@@ -125,6 +126,7 @@ export function PageHeader({
         )}
       </div>}
       {hireNote && <HireNote />}
+      <SurveyBanner />
     </>
   );
 }

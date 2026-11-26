@@ -377,6 +377,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
   const [editingDescription, setEditingDescription] = useState(false);
   /* A title that holds links is read as the words it shows; clicking it opens the Markdown as written. */
   const [editingTitle, setEditingTitle] = useState(false);
+  const [focusDescription, setFocusDescription] = useState(false);
   const [subtaskDraft, setSubtaskDraft] = useState('');
   /** Readings of the title turned down while editing it. */
   const [refusals, setRefusals] = useState<TextRange[]>([]);
@@ -486,6 +487,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
     setDescription(item.description);
     setEditingDescription(false);
     setEditingTitle(false);
+    setFocusDescription(false);
     setAddingSubtask(false);
     setSubtaskDraft('');
     /* The saved title is a name, not something being typed: nothing in it is
@@ -588,6 +590,10 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
 
   const cancelTitle = () => {
     setTitle(displayTaskContent(item));
+    setDescription(item.description);
+    setEditingTitle(false);
+    setEditingDescription(false);
+    setFocusDescription(false);
     setRefusals(savedRefusals(displayTaskContent(item), snapshot, naturalDates, dateFormat, locale));
     releaseTitle();
   };
@@ -605,6 +611,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
     const fields: Record<string, unknown> = {};
     const storedContent = next;
     if (storedContent !== item.content) fields.content = storedContent;
+    if (description !== item.description) fields.description = description;
     if (read.date) fields.due = dueForDate(item.due, read.date);
     if (read.priority) fields.priority = toTodoistPriority(read.priority);
 
@@ -653,11 +660,10 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
        second time. */
     setRefusals(savedRefusals(next, snapshot, naturalDates, dateFormat, locale));
     setTitle(next);
-    releaseTitle();
-  };
-  const commitDescription = () => {
+    setEditingTitle(false);
     setEditingDescription(false);
-    if (description !== item.description) void updateTask(item.id, { description });
+    setFocusDescription(false);
+    releaseTitle();
   };
   /* The box is ticked on the text as it is now, not as it was when the panel
      opened: two ticks in a row, or one after a sync, lose neither (#157). */
@@ -669,6 +675,8 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
   /* Opened on what the task says now: a box ticked since the panel opened is in it. */
   const startEditingDescription = () => {
     setDescription(useStore.getState().snapshot.items[item.id]?.description ?? item.description);
+    setEditingTitle(true);
+    setFocusDescription(true);
     setEditingDescription(true);
   };
 
@@ -778,7 +786,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
               one sentence. */}
           <span className="crumbstep crumbself">
             <span className="crumb-sep">/</span>
-            <span className="crumbhere" aria-current="page">{plainTitle(displayTaskContent(item))}</span>
+            <span className="crumbhere" aria-current="page">{plainTitle(editingTitle ? title : displayTaskContent(item))}</span>
           </span>
         </nav>
 
@@ -912,6 +920,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
             )}
 
             <div className="detail-content">
+              <div className={editingTitle ? "detail-edit-surface is-editing" : "detail-edit-surface"}>
               {/* A title with a link in it reads as it does in the list, "Title (video)",
                   and the Markdown is only shown once it is clicked to be edited. */}
               {links.length > 0 && !editingTitle && !titleDirty ? (
@@ -925,6 +934,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
                     setTitle(item.content);
                     setRefusals(savedRefusals(item.content, snapshot, naturalDates, dateFormat, locale));
                     setEditingTitle(true);
+                    setEditingDescription(true);
                   }}
                   onKeyDown={(e) => {
                     if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
@@ -932,6 +942,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
                       setTitle(item.content);
                     setRefusals(savedRefusals(item.content, snapshot, naturalDates, dateFormat, locale));
                     setEditingTitle(true);
+                    setEditingDescription(true);
                     }
                   }}
                   dangerouslySetInnerHTML={{ __html: renderTitle(displayTaskContent(item)) }}
@@ -944,16 +955,18 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
                 <TaskNameField
                   value={title}
                   onChange={setTitle}
-                  onSubmit={() => { commitTitle(); setEditingTitle(false); }}
-                  onCancel={() => { cancelTitle(); setEditingTitle(false); }}
+                  onSubmit={commitTitle}
+                  onCancel={cancelTitle}
                   onFocus={() => {
+                    setEditingTitle(true);
+                    setEditingDescription(true);
                     if (isUncompletable(item) && title === displayTaskContent(item)) {
                       setTitle(item.content);
                       setRefusals(savedRefusals(item.content, snapshot, naturalDates, dateFormat, locale));
                     }
                   }}
-                  onBlur={() => { setEditingTitle(false); setTitle((value) => value === item.content ? displayTaskContent(item) : value); }}
-                  autoFocus={editingTitle}
+                  onBlur={() => {}}
+                  autoFocus={editingTitle && !focusDescription}
                   placeholder={t('detail.title')}
                   ariaLabel={t('detail.title')}
                   snapshot={snapshot}
@@ -964,31 +977,6 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
                   fieldClassName="titlefield"
                   fieldRef={titleRef}
                 />
-              )}
-
-              {titleDirty && (
-                <div className="titleactions">
-                  {/* The action runs on `click`, which is what a mouse press and
-                      Enter or Space on a focused button both send (#145). It
-                      used to run on `mousedown`, which the keyboard never
-                      sends, so the buttons did nothing for anyone tabbing to
-                      them. The mouse-down is only kept to stop the field
-                      losing its caret before the click lands. */}
-                  <button
-                    className="btn sm"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={cancelTitle}
-                  >
-                    {t('common.cancel')}
-                  </button>
-                  <button
-                    className="btn sm primary"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={commitTitle}
-                  >
-                    {t('common.save')}
-                  </button>
-                </div>
               )}
 
               {/* Where the checklist's progress is read: with the description it
@@ -1004,10 +992,12 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
                 <DescriptionEditor
                   value={description}
                   onChange={setDescription}
-                  onCommit={commitDescription}
+                  onCommit={commitTitle}
+                  onCancel={cancelTitle}
+                  commitOnBlur={false}
                   placeholder={t('detail.descriptionPlaceholder')}
                   ariaLabel={t('detail.description')}
-                  autoFocus
+                  autoFocus={focusDescription}
                 />
               ) : (
                 /* Not a <button>: the description holds links, and a link
@@ -1036,10 +1026,36 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
                   {item.description ? (
                     <DescriptionView value={item.description} onToggle={tickChecklist} />
                   ) : (
-                    t('detail.descriptionPlaceholder')
+                    <><Icon name="list" size="sm" /> {t('detail.description')}</>
                   )}
                 </div>
               )}
+              </div>
+              {editingTitle && (
+                <div className="titleactions">
+                  {/* The action runs on `click`, which is what a mouse press and
+                      Enter or Space on a focused button both send (#145). It
+                      used to run on `mousedown`, which the keyboard never
+                      sends, so the buttons did nothing for anyone tabbing to
+                      them. The mouse-down is only kept to stop the field
+                      losing its caret before the click lands. */}
+                  <button
+                    className="btn sm"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={cancelTitle}
+                  >
+                    {t('common.cancel')}
+                  </button>
+                  <button
+                    className="btn sm primary"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={commitTitle}
+                  >
+                    {t('common.save')}
+                  </button>
+                </div>
+              )}
+
             </div>
           </div>
 

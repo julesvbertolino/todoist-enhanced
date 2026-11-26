@@ -42,6 +42,14 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.38.0
+
+🆕 **There is a new survey about Enhanced.** You can now share more about how you use Enhanced and what you would like to improve, directly from the account menu.
+
+🐛 **Links in task titles now display correctly.** Apostrophes and other characters now appear as expected in link labels.
+
+🐛 **Pasting notes now keeps their links.** Links copied with a note stay in your task description.
+
 ## 2.37.0
 
 🎨 **Add a section from a table.** In a project’s table, point between two sections and click Add a section to create one right there.

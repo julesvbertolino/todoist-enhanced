@@ -590,7 +590,11 @@ export function Sidebar({
             </button>
             <button onClick={() => { setMenuOpen(false); window.open(FEEDBACK_URL, '_blank', 'noopener,noreferrer'); }}>
               <Icon name="bug" />
-              {t('nav.feedback')}
+              <span className="account-feedback-copy"><span>{t('nav.feedbackQuick')}</span><small>{t('nav.feedbackQuickHint')}</small></span>
+            </button>
+            <button onClick={() => { setMenuOpen(false); window.open('https://forms.fillout.com/t/vZmMCfDMcuus', '_blank', 'noopener,noreferrer'); }}>
+              <Icon name="tasks" />
+              <span className="account-feedback-copy"><span>{t('nav.survey')}</span><small>{t('nav.surveyHint')}</small></span>
             </button>
             <button onClick={() => window.open(COFFEE_URL, '_blank', 'noopener,noreferrer')}>
               <Icon name="coffee" />
