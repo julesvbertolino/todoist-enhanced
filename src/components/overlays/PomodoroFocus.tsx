@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon, LinkSquare02Icon, PauseIcon, PlayIcon, Timer01Icon } from '@hugeicons/core-free-icons';
 import { useT } from '@/hooks/useT';
@@ -95,6 +95,19 @@ function TaskPanel({ item }: { item: Item }) {
     : has(monthLabel()) ? t('review.to.month') : null;
   const priority = toDisplayPriority(item.priority);
   const stored = displayTaskContent(item);
+  // Leaving focus mode must not discard an edit that is still open.
+  const draft = useRef({ editing, title, description, item });
+  draft.current = { editing, title, description, item };
+  useEffect(() => () => {
+    const current = draft.current;
+    if (!current.editing) return;
+    const next = current.title.trim();
+    if (!next) return;
+    const fields: Record<string, unknown> = {};
+    if (next !== displayTaskContent(current.item)) fields.content = next;
+    if (current.description !== current.item.description) fields.description = current.description;
+    if (Object.keys(fields).length) void useStore.getState().updateTask(current.item.id, fields);
+  }, []);
   useEffect(() => { if (!editing) setTitle(stored); }, [item.id, stored, editing]);
   useEffect(() => { if (!editing) setDescription(item.description); }, [item.description, editing]);
 
@@ -104,10 +117,11 @@ function TaskPanel({ item }: { item: Item }) {
     const fields: Record<string, unknown> = {};
     if (next !== displayTaskContent(item)) fields.content = next;
     if (description !== item.description) fields.description = description;
+    draft.current.editing = false;
     if (Object.keys(fields).length) void updateTask(item.id, fields);
     setEditing(false);
   };
-  const cancelEdit = () => { setTitle(displayTaskContent(item)); setDescription(item.description); setEditing(false); };
+  const cancelEdit = () => { draft.current.editing = false; setTitle(displayTaskContent(item)); setDescription(item.description); setEditing(false); };
   const tick = (line: number) => {
     const latest = useStore.getState().snapshot.items[item.id]?.description ?? item.description;
     const next = toggleItemAt(latest, line);

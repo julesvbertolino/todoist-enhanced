@@ -52,3 +52,21 @@ test('breadcrumb displays punctuation in a pasted linked title', async ({ demo: 
   await page.locator('.titleactions .primary').click();
   await expect(page.locator('.crumbhere[aria-current="page"]')).toHaveText('d’organisation – test');
 });
+
+test('ending a linked focus session keeps an unfinished title and description', async ({ demo: page }) => {
+  await go(page, '#/inbox');
+  await rows(page).first().locator('.ttitle').click();
+  const detail = page.getByRole('dialog').filter({ has: page.locator('.pomo-control') });
+  await detail.locator('.pomo-main').click();
+  if (!await page.locator('.pomo-fs').isVisible()) await detail.locator('.pomo-pause').last().click();
+  const focus = page.locator('.pomo-fs');
+  await expect(focus).toBeVisible();
+  await focus.locator('.pomo-fs-title').fill('Focus draft title');
+  await focus.locator('.descedit .cm-content').fill('Focus draft description');
+  await focus.locator('.pomo-fs-controls .btn').last().click();
+  await expect(focus).toHaveCount(0);
+  const saved = rows(page).filter({ hasText: 'Focus draft title' });
+  await expect(saved).toBeVisible();
+  await saved.locator('.ttitle').click();
+  await expect(page.locator('.descview')).toContainText('Focus draft description');
+});
