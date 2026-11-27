@@ -49,7 +49,7 @@ export function TableCells({ item, columns, childrenOf, hideProject = false }: {
       };
       const hasTag = (name: string) => item.labels.some((l) => l.toLowerCase() === name.toLowerCase());
       const horizon = !due || item.due ? null : hasTag(weekLabel()) ? t('nav.week') : hasTag(monthLabel()) ? t('nav.month') : null;
-      content = <DateField premiumDeadline={!due} placeholder={horizon ?? undefined} shortcuts={due ? taskShortcuts(t, locale, {
+      content = <DateField premiumDeadline={!due} upgradeSource="table-deadline" placeholder={horizon ?? undefined} shortcuts={due ? taskShortcuts(t, locale, {
         day: (date) => moveTo({ kind: 'day', date }),
         today: () => moveTo({ kind: 'today' }),
         anytime: () => moveTo({ kind: 'anytime' }),

@@ -1,6 +1,7 @@
+import { PomodoroActionIcon } from '../PomodoroActionIcon';
 import { useEffect, useRef, useState } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Cancel01Icon, LinkSquare02Icon, PauseIcon, PlayIcon, Timer01Icon } from '@hugeicons/core-free-icons';
+import { Cancel01Icon, LinkSquare02Icon, Timer01Icon } from '@hugeicons/core-free-icons';
 import { useT } from '@/hooks/useT';
 import { useData } from '@/hooks/useData';
 import { useStore } from '@/store/store';
@@ -46,8 +47,8 @@ export function PomodoroFocus() {
     : timer.kind === 'break' ? t('pomodoro.phase.break') : t('pomodoro.phase.focus');
   const controls = (
     <div className="pomo-fs-controls">
-      <button type="button" className="btn primary" onClick={() => (done ? usePomodoro.getState().startNext() : usePomodoro.getState().togglePause())}>
-        {paused || done ? <HugeiconsIcon icon={PlayIcon} size={15} /> : <HugeiconsIcon icon={PauseIcon} size={15} />}
+      <button type="button" className="btn primary" data-pomo-action={paused || done ? 'play' : 'pause'} onClick={() => (done ? usePomodoro.getState().startNext() : usePomodoro.getState().togglePause())}>
+        <PomodoroActionIcon play={paused || done} size={15} />
         {done ? t(nextKey) : paused ? t('pomodoro.resume') : t('pomodoro.pause')}
       </button>
       <button type="button" className="btn" onClick={() => usePomodoro.getState().end()}>{t('pomodoro.end')}</button>

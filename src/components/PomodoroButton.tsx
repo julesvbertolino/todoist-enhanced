@@ -1,7 +1,8 @@
+import { PomodoroActionIcon } from './PomodoroActionIcon';
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowExpand01Icon, Link01Icon, PauseIcon, PlayIcon, Timer01Icon } from '@hugeicons/core-free-icons';
+import { ArrowExpand01Icon, Link01Icon, Timer01Icon } from '@hugeicons/core-free-icons';
 import { useT } from '@/hooks/useT';
 import { useStore } from '@/store/store';
 import { usePomodoro } from '@/store/pomodoro';
@@ -92,7 +93,7 @@ export function PomodoroButton({ taskId = null }: { taskId?: string | null }) {
         title={timer.status === 'done' ? t(nextKey) : paused ? t('pomodoro.resume') : t('pomodoro.pause')}
         onClick={() => (timer.status === 'done' ? usePomodoro.getState().startNext() : togglePause())}
       >
-        {paused || timer.status === 'done' ? <HugeiconsIcon icon={PlayIcon} size={14} strokeWidth={1.7} /> : <HugeiconsIcon icon={PauseIcon} size={14} strokeWidth={1.7} />}
+        <PomodoroActionIcon play={paused || timer.status === 'done'} />
       </button>
       {taskId !== null && (
         <button type="button" className="pomo-pause" aria-label={t('pomodoro.fullscreen')} title={t('pomodoro.fullscreen')} onClick={() => setFullscreen(true)}>
@@ -136,8 +137,8 @@ function SessionPopover({ openedFrom, anchor, onFullscreen }: { openedFrom: stri
         </button>
       ))}
       <div className="pomo-popover-actions">
-        <button type="button" className="btn primary" onClick={() => (timer.status === 'done' ? usePomodoro.getState().startNext() : usePomodoro.getState().togglePause())}>
-          {timer.status === 'paused' || timer.status === 'done' ? <HugeiconsIcon icon={PlayIcon} size={14} /> : <HugeiconsIcon icon={PauseIcon} size={14} />}
+        <button type="button" className="btn primary" data-pomo-action={timer.status === 'running' ? 'pause' : 'play'} onClick={() => (timer.status === 'done' ? usePomodoro.getState().startNext() : usePomodoro.getState().togglePause())}>
+          <PomodoroActionIcon play={timer.status === 'paused' || timer.status === 'done'} />
           {timer.status === 'done' ? t(nextKey) : timer.status === 'paused' ? t('pomodoro.resume') : t('pomodoro.pause')}
         </button>
         <button type="button" className="btn" onClick={() => usePomodoro.getState().end()}>{t('pomodoro.end')}</button>

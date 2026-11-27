@@ -442,11 +442,11 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
   };
 
   return (
-    <div className="page wide">
+    <div className={`page wide${tab === 'overview' ? ' dashboard-page' : ''}`}>
       <div className="phead">
         <div>
           <h1 className="ptitle">{t(tab === 'logbook' ? 'insights.logbook' : 'nav.dashboard')}</h1>
-          <p className="psub">{t(tab === 'logbook' ? 'insights.logbookSub' : 'insights.dashboardSub')}</p>
+          {tab === 'logbook' && <p className="psub">{t('insights.logbookSub')}</p>}
         </div>
         <div className="pactions">
           {tab === 'overview' && <>

@@ -75,7 +75,8 @@ export function IconTooltips() {
       /* The browser's own tooltip would come on top of this one. */
       const title = button.getAttribute('title');
       if (title !== null) { button.dataset.tipTitle = title; button.removeAttribute('title'); }
-      timer = setTimeout(() => show(button), Date.now() - lastShown < CHAIN_MS ? 0 : SHOW_AFTER_MS);
+      const delay = Number(button.dataset.tipDelay);
+      timer = setTimeout(() => show(button), Number.isFinite(delay) && delay > 0 ? delay : Date.now() - lastShown < CHAIN_MS ? 0 : SHOW_AFTER_MS);
     };
 
     const onOver = (event: PointerEvent) => {

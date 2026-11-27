@@ -668,3 +668,13 @@
 .detail-headline .detail-edit-surface .titleview:hover{border-color:transparent;background:transparent;box-shadow:none}
 .survey-dismiss{font:inherit;font-size:var(--fs-12);font-weight:400;line-height:1.35;align-items:center;justify-content:center}
 .survey-dismiss .ic{flex:none}
+
+/* Quiet secondary actions and keyboard hints. */
+.composer-cancel.btn.quiet, .composer-cancel.btn.quiet:hover { color:var(--muted); background:transparent; box-shadow:none; }
+.detail-side:hover .propkey { opacity:.6; }
+.prop:focus-within .propkey { opacity:1; }
+.dashboard-bento .dashboard-group-label { text-transform:none; letter-spacing:normal; }
+.descedit.composer .description-fallback{display:block;width:100%;min-height:1.5em;padding:0;border:0;resize:none;outline:0;background:transparent;color:var(--text);font:inherit;line-height:1.5}
+.descedit.composer .description-fallback::placeholder{color:var(--faint)}
+.subtaskactions .trow-actions { visibility:visible; }
+.subtaskactions .trow-actions > button:not(.row-more), .subtaskactions .trow-actions > .row-assignee { display:none; }

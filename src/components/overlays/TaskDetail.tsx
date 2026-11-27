@@ -3,6 +3,7 @@ import { TodoistMark } from '../TodoistMark';
 import { takeCommentsRequest } from '../TaskCommentBadge';
 import { useDismissiblePopover } from '@/hooks/useDismissiblePopover';
 import { Select } from '../Select';
+import { TaskActions } from '../TaskActions';
 import { usePhone } from '@/hooks/usePhone';
 import { useProjectPeople } from '@/hooks/useProjectPeople';
 import { AssigneeBadge } from '../AssigneeBadge';
@@ -76,6 +77,7 @@ function SubtaskRow({ id, done, uncompletable, children }: { id: string; done: b
     <div
       ref={setDropRef}
       data-uncompletable={uncompletable ? '' : undefined}
+      data-task-id={id}
       className={`subtaskrow${done ? ' done' : ''}${isDragging ? ' lifting' : ''}${isOver && !isDragging ? ' landing' : ''}`}
     >
       {/* Dragged by its handle, so the row's own controls keep working. */}
@@ -91,8 +93,6 @@ function EditableSubtask({ child, onOpen }: { child: Item; onOpen: (id: string) 
   const { t, locale } = useT();
   const updateTask = useStore((s) => s.updateTask);
   const toggleTask = useStore((s) => s.toggleTask);
-  const removeTask = useStore((s) => s.removeTask);
-  const confirm = useConfirm();
   const setRecurrence = useStore((s) => s.setRecurrence);
   const snapshot = useDataSnapshot();
   const naturalDates = useStore((s) => s.prefs.naturalDates);
@@ -174,19 +174,6 @@ function EditableSubtask({ child, onOpen }: { child: Item; onOpen: (id: string) 
     if (read.recurrence) void setRecurrence(child.id, read.recurrence);
     stopEditing();
   };
-  const deleteSubtask = async () => {
-    const ok = await confirm({
-      title: t('task.deleteTitle'),
-      body: t('task.deleteConfirm', { name: child.content }),
-      confirmLabel: t('task.delete'),
-      destructive: true,
-    });
-    if (ok) {
-      await removeTask(child.id);
-      document.querySelector<HTMLElement>('.detail-section .addline')?.focus();
-    } else editRef.current?.focus();
-  };
-
   return (
     /* The box and the title both read `child.checked`, through the row's
        `done` class, so one can never say done while the other says open (#164). */
@@ -243,9 +230,7 @@ function EditableSubtask({ child, onOpen }: { child: Item; onOpen: (id: string) 
             <Icon name="edit" size="sm" />
           </button>
         )}
-        <button className="subtaskaction danger" aria-label={t('detail.deleteSubtask')} onClick={() => void deleteSubtask()}>
-          {t('task.delete')}
-        </button>
+        <TaskActions item={child} childrenOf={childrenOf} onOpen={onOpen} fullMore />
       </span>
     </SubtaskRow>
   );
@@ -1159,6 +1144,7 @@ export function TaskDetail({ taskId, onClose, onOpen }: TaskDetailProps) {
             <PropLabel name={t('detail.deadline')} prop="deadline" />
             <DateField
               premiumDeadline
+              upgradeSource="task-detail-deadline"
               value={deadline ? toApiDate(deadline) : ''}
               label={t('detail.deadline')}
               /* The property's name is not drawn on a phone, where it is a chip:

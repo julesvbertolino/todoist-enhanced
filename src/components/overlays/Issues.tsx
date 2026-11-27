@@ -12,7 +12,7 @@ import { readEstimate } from '@/domain/estimates';
 import type { TranslationKey } from '@/i18n';
 import { en } from '@/i18n/en';
 import { plainTitle } from '@/domain/markdown';
-import { notificationGlyph, notificationList, sentenceKey, type NotificationView } from '@/domain/notifications';
+import { notificationList, sentenceKey, type NotificationView } from '@/domain/notifications';
 import { formatTimeAgo } from '@/domain/dates';
 import { TodoistMark } from '../TodoistMark';
 
@@ -28,11 +28,10 @@ function personColour(name: string): string {
 /**
  * Who a notification is from: their picture, else their initials on a steady
  * colour, else Todoist's mark when Todoist itself is speaking. A small badge
- * says what kind of thing happened.
+ * keeps the sender recognisable at a glance.
  */
 function NotificationAvatar({ n }: { n: NotificationView }) {
   const [broken, setBroken] = useState(false);
-  const glyph = notificationGlyph(n.type);
   const name = n.from ?? n.subject;
   return (
     <span className="notifav-wrap" aria-hidden="true">
@@ -45,7 +44,6 @@ function NotificationAvatar({ n }: { n: NotificationView }) {
           {(name ?? 'T').slice(0, 2).toUpperCase()}
         </span>
       )}
-      {glyph && !n.fromTodoist && <span className="notifbadge"><Icon name={glyph} size="sm" /></span>}
     </span>
   );
 }

@@ -42,6 +42,22 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.39.0
+
+🎨 **Task composer refinements.** When adding a task, use the search bar to find a project or section. If you try to close a draft, a confirmation lets you keep editing so you don’t lose your changes.
+
+🎨 **Quickly edit subtasks in an open task.** Right-click a subtask or use its three-dot menu to change its properties without opening the subtask.
+
+🎨 **Dashboard design refinements.** The header and date controls now align with the rest of the page. The Edit layout button is more discreet.
+
+🎨 **Notifications are easier to read.** Read notifications are more discreet, unread ones keep their coloured dot, and the extra icon on avatars has been removed.
+
+🎨 **Open task view design refinements.** The rest of the task fades when you edit its title or description. The subtasks have a light grey background, and the priority selector has a cleaner look.
+
+🎨 **Other design refinements.** Group and section chevrons point right when closed and down when open. In lists, section chevrons are back in the left margin, aligning the titles with the tasks.
+
+🐛 **Renaming a section no longer collapses it.** Editing a section name could cause it to close. Now it stays open while you rename it.
+
 ## 2.38.0
 
 🆕 **There is a new survey about Enhanced.** You can now share more about how you use Enhanced and what you would like to improve, directly from the account menu.

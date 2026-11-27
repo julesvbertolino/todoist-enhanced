@@ -24,14 +24,14 @@ import { FALLBACK_HOME, HOME_VIEWS, type HomeView } from '@/store/prefs';
 import { DEFAULT_MONTH_LABEL, DEFAULT_WEEK_LABEL } from '@/domain/types';
 import { DUST_MONTHS, isDustMonths } from '@/domain/views';
 import type { Locale, TranslationKey } from '@/i18n';
-import { APP_NAME, AUTHOR, AUTHOR_AVATAR_URL, AUTHOR_GITHUB_URL, COFFEE_URL, GITHUB_URL, LINKEDIN_URL, VERSION, X_URL } from '@/app-info';
+import { APP_NAME, AUTHOR, AUTHOR_AVATAR_URL, AUTHOR_GITHUB_URL, coffeeUrl, GITHUB_URL, LINKEDIN_URL, VERSION, X_URL } from '@/app-info';
 import { karmaStanding } from '@/domain/karma';
 import { PomodoroDisplayChoice } from '@/components/PomodoroDisplayChoice';
 import { projectTree } from '@/store/selectors';
 import { intlDate } from '@/lib/intl';
 
 /** Where the things this app only reads are changed. */
-const TODOIST_ACCOUNT_URL = 'https://app.todoist.com/app/settings/account';
+const TODOIST_ACCOUNT_URL = 'https://app.todoist.com/app/settings/account?utm_source=todoist_enhanced&utm_medium=referral&utm_campaign=product&utm_content=settings-account';
 
 const SECTIONS = ['account', 'general', 'appearance', 'sidebar', 'lists', 'features', 'conflicts', 'about', 'privacy'] as const;
 
@@ -188,7 +188,7 @@ export function SettingsView() {
                 <strong>{t('settings.coffeeCalloutTitle')}</strong>
                 <span>{t('settings.coffeeCalloutBody')}</span>
               </div>
-              <a className="btn coffee-btn" href={COFFEE_URL} target="_blank" rel="noreferrer noopener">
+              <a className="btn coffee-btn" href={coffeeUrl('settings')} target="_blank" rel="noreferrer noopener">
                 <Icon name="coffee" size="sm" />
                 {t('settings.coffeeCalloutAction')}
               </a>
@@ -586,7 +586,7 @@ export function SettingsView() {
             </div>
             {/* The author: supporting the project first, then where to follow the author, each in its network's colours (#231). */}
             <div className="alinks social">
-              <a className="btn social coffee" href={COFFEE_URL} target="_blank" rel="noreferrer noopener">
+              <a className="btn social coffee" href={coffeeUrl('settings-social')} target="_blank" rel="noreferrer noopener">
                 <Icon name="coffee" size="sm" />
                 {t('settings.support')}
               </a>

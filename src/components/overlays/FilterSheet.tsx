@@ -199,7 +199,7 @@ export function FilterSheet({ target, onClose }: { target: FilterSheetTarget; on
           />
           <span className="menuhint">
             {t('filters.queryHint')}{' '}
-            <a href="https://todoist.com/help/articles/introduction-to-filters-V98wIH" target="_blank" rel="noreferrer">
+            <a href="https://todoist.com/help/articles/introduction-to-filters-V98wIH?utm_source=todoist_enhanced&amp;utm_medium=referral&amp;utm_campaign=product&amp;utm_content=filter-help" target="_blank" rel="noreferrer">
               {t('filters.queryHelp')}
             </a>
           </span>

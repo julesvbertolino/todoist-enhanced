@@ -1419,6 +1419,7 @@
    heading and a count, and the way out on a bar of its own. Spacing and
    type make the hierarchy; there is no card inside the card. */
 .sheet .composerbox{padding:0;gap:0}
+.composerbox .composer-fields{min-width:0;margin:0;padding:0;border:0}
 /* Margin, not padding: the mirror behind the name covers its box exactly,
    and padding would put the marks above the words. */
 :is(.composerbox, .composer-fields) > .namefield{margin:var(--s4) var(--s5) 0}
@@ -1759,6 +1760,7 @@ html.desktop-app .macapp,html.desktop-app .macapp-line{display:none}
    that has something under its title gets room to breathe. */
 .detail-section .subtaskrow{align-items:start;padding-block:3px}
 .detail-section .subtaskrow>.check{margin-top:5px}
+.detail-section .subtaskrow:has(.subtaskedit)>.check{margin-top:12px}
 .detail-section .subtaskrow>.subtaskactions{margin-top:1px}
 .detail-section .subtaskrow>.subtaskedit,.detail-section .subtaskrow>.namefield{align-self:center}
 .subtaskbody{display:grid;min-width:0;justify-items:start}

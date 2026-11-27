@@ -32,7 +32,7 @@ import { applyUpdate, useUpdateCard, useUpdateReady } from '@/lib/appUpdate';
 import { UpdateCard } from './UpdateCard';
 import { Droppable } from './dnd/Droppable';
 import { ProjectDropRow, ProjectRowSortable } from './dnd/ProjectRowSortable';
-import { COFFEE_URL, FEEDBACK_URL } from '@/app-info';
+import { coffeeUrl, FEEDBACK_URL } from '@/app-info';
 import { ProjectMenu } from './ProjectMenu';
 import { FolderMenu } from './FolderMenu';
 import { DraggableTag } from './dnd/DraggableTag';
@@ -357,7 +357,7 @@ export function Sidebar({
             <button className="navitem folderitem" aria-expanded={isOpen}
               onClick={() => toggleFolder(project.id)}>
               <Icon name="project" /><span className="label">{project.name}</span>
-              <Icon name={isOpen ? 'caret-up' : 'caret'} size="sm" className="disclose" />
+              <Icon name="caret" size="sm" className="disclose disclosure-chevron" />
             </button>
             {/* A folder can be renamed, and deleted once it is empty (#463). */}
             <span className="navend">
@@ -385,7 +385,7 @@ export function Sidebar({
             >
               <Icon name="project" />
               <span className="label">{project.name}</span>
-              <Icon name={isOpen ? 'caret-up' : 'caret'} size="sm" className="disclose" />
+              <Icon name="caret" size="sm" className="disclose disclosure-chevron" />
             </button>
           </ProjectDropRow>}
           {isOpen && children.map((child) => projectNode(child, keyPrefix, depth + 1))}
@@ -473,7 +473,7 @@ export function Sidebar({
                 aria-label={project.name}
                 onClick={() => toggleFolder(project.id)}
               >
-                <Icon name={childrenOpen ? 'caret-up' : 'caret'} size="sm" />
+                <Icon name="caret" size="sm" className="disclosure-chevron" />
               </button>
             )}
 
@@ -596,12 +596,12 @@ export function Sidebar({
               <Icon name="tasks" />
               <span className="account-feedback-copy"><span>{t('nav.survey')}</span><small>{t('nav.surveyHint')}</small></span>
             </button>
-            <button onClick={() => window.open(COFFEE_URL, '_blank', 'noopener,noreferrer')}>
+            <button onClick={() => window.open(coffeeUrl('account-menu'), '_blank', 'noopener,noreferrer')}>
               <Icon name="coffee" />
               {t('nav.coffee')}
             </button>
             <hr />
-            <button onClick={() => window.open('https://app.todoist.com', '_blank', 'noopener')}>
+            <button onClick={() => window.open('https://app.todoist.com/?utm_source=todoist_enhanced&utm_medium=referral&utm_campaign=product&utm_content=account-menu', '_blank', 'noopener')}>
               <TodoistMark className="ic ic-sm menu-mark" />
               {t('nav.openTodoist')}
             </button>
@@ -779,7 +779,7 @@ function SideGroup({
           aria-label={t(open ? 'nav.collapseGroup' : 'nav.expandGroup', { name: title })}
           onClick={onToggle}
         >
-          <Icon name={open ? 'caret-up' : 'caret'} size="sm" />
+          <Icon name="caret" size="sm" className="disclosure-chevron" />
         </button>
     </div>
   );

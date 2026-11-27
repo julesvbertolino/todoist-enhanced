@@ -68,6 +68,7 @@
   .pactions .displaycount{position:absolute;top:-3px;right:-3px;margin:0}
   .phead:has(.dash-layout-edit) .ptitle,[data-density="compact"] .phead:has(.dash-layout-edit) .ptitle{font-size:25px}
   .phead:has(.dash-layout-edit) .pactions > .btn,.phead:has(.dash-layout-edit) .pactions > .displaywrap > .btn{width:36px;height:36px;min-height:36px}
+  .phead:has(.dash-layout-edit) .pactions > .dash-layout-edit{width:auto;padding-inline:8px}
 
   /* The navigation page slides in from the left, as a drawer does, and the page behind dims. */
   .overlay .sheet.sheet-full{width:100%;max-width:100%;opacity:1;transform:translateX(-100%);

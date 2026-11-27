@@ -10,7 +10,7 @@ import {
   changePresentation, localisedReleases, parseChangelog, releaseDisplay, unseenFeed, type Change, type ChangeKind, type Release,
 } from '@/domain/changelog';
 import { tourStops } from '@/domain/tour';
-import { COFFEE_URL } from '@/app-info';
+import { coffeeUrl } from '@/app-info';
 import type { TranslationKey } from '@/i18n';
 
 /* The pictures are only drawn once the list is open: they stay out of the first screen's code. */
@@ -254,7 +254,7 @@ export function WhatsNew({ scope, onClose, onShowMe, onSeeChangelog }: WhatsNewP
           }}>{t('whatsNew.seeChangelog')}</button>}
           <span className="whatsnew-end">
             {/* The full words are the name; a phone has room for two. */}
-            <a className="btn coffee" href={COFFEE_URL} target="_blank" rel="noreferrer noopener" aria-label={t('coffee.offer')} title={t('coffee.offer')}>
+            <a className="btn coffee" href={coffeeUrl(history ? 'full-changelog' : 'whats-new')} target="_blank" rel="noreferrer noopener" aria-label={t('coffee.offer')} title={t('coffee.offer')}>
               <Icon name="coffee" size="md" />
               <span className="coffee-long">{t('coffee.offer')}</span>
               <span className="coffee-short">{t('coffee.offerShort')}</span>
