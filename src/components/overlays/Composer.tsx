@@ -508,9 +508,19 @@ export function Composer({
     </>
   );
 
+  const requestClose = async () => {
+    const initialProject = defaultProjectId && snapshot.projects[defaultProjectId] && !snapshot.projects[defaultProjectId].is_deleted ? defaultProjectId : inboxId;
+    const dirty = Boolean(name.trim() || description.trim() || files.length || subtasks.length || subtaskDraft.trim()
+      || date !== (defaultDate ?? '') || deadline || recurrence || minutes !== (defaultMinutes ?? null)
+      || priority !== (defaultPriority ?? 4) || projectId !== initialProject || sectionId !== (defaultSectionId ?? '')
+      || responsibleUid !== (defaultResponsibleUid ?? null)
+      || [...labels].sort().join('\u0000') !== [...(defaultLabels ?? [])].sort().join('\u0000'));
+    if (!dirty || await confirm({ title: t('composer.discardTitle'), body: t('composer.discardBody'), cancelLabel: t('composer.keepEditing'), confirmLabel: t('composer.discardConfirm'), destructive: true })) onClose();
+  };
+
   return (
     <>
-    <Overlay open={open} onClose={saving ? () => {} : onClose} label={t('nav.addTask')} size="sm">
+    <Overlay open={open} onClose={saving ? () => {} : () => void requestClose()} label={t('nav.addTask')} size="sm">
       <div
         className="composerbox"
         onPasteCapture={(event) => {
@@ -607,6 +617,7 @@ export function Composer({
             variant="chip"
             icon="deadline"
             premiumDeadline
+            upgradeSource="composer-deadline"
             value={deadline}
             onChange={setDeadline}
             label={t('detail.deadline')}
@@ -808,7 +819,7 @@ export function Composer({
             <kbd>⌘</kbd><kbd>↵</kbd> {t('composer.hintAdd')}
           </span>
           {phone && <span className="composer-place">{placement}</span>}
-          <button className="btn quiet" disabled={saving} onClick={onClose}>{t('composer.cancel')}</button>
+          <button className="btn quiet composer-cancel" disabled={saving} onClick={() => void requestClose()}>{t('composer.cancel')}</button>
           {/* Everything typed can be read as a date, a project or a tag, and then
               there is no title left for Todoist: the button says so rather than
               doing nothing when clicked. */}

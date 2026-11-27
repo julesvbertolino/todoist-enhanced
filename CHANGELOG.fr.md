@@ -8,6 +8,22 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.39.0
+
+🎨 **Création de tâche affinée.** Lorsque vous ajoutez une tâche, recherchez un projet ou une section grâce au champ de recherche. Si vous tentez de fermer un brouillon, une confirmation vous permet de poursuivre sans perdre vos modifications.
+
+🎨 **Modifiez rapidement les sous-tâches.** Dans une tâche ouverte, faites un clic droit sur une sous-tâche ou utilisez son menu à trois points pour modifier ses propriétés sans l’ouvrir.
+
+🎨 **Tableau de bord affiné.** L’en-tête et le choix des dates sont alignés avec le reste de la page. Le bouton de modification de la disposition est plus discret.
+
+🎨 **Notifications plus faciles à lire.** Les notifications lues sont plus discrètes, tandis que les non-lues gardent leur point coloré. Les avatars n’affichent plus d’icône d’action supplémentaire.
+
+🎨 **Tâche ouverte affinée.** Le reste de la tâche s’estompe pendant la modification du titre ou de la description. Les sous-tâches reposent sur un fond gris clair et le sélecteur de priorité est plus épuré.
+
+🎨 **Autres retouches de design.** Les chevrons des groupes et sections pointent vers la droite lorsqu’ils sont fermés et vers le bas lorsqu’ils sont ouverts. Dans les listes, les chevrons des sections retrouvent la marge gauche et les titres sont alignés avec les tâches.
+
+🐛 **Renommer une section ne la replie plus.** Modifier le nom d’une section pouvait la fermer. Elle reste désormais ouverte pendant le renommage.
+
 ## 2.38.0
 
 🆕 **Une nouvelle enquête sur Enhanced.** Vous pouvez désormais donner votre avis sur votre utilisation d’Enhanced et les améliorations souhaitées directement depuis le menu du compte.

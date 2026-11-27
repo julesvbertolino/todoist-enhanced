@@ -37,6 +37,8 @@ interface DateFieldProps {
   shortcuts?: DateShortcut[];
   /** This date is a Todoist Pro/Business deadline. */
   premiumDeadline?: boolean;
+  /** Placement of the upgrade link for aggregate campaign reporting. */
+  upgradeSource?: string;
   /** A field, or a chip in the composer's planning line (#113). */
   variant?: 'field' | 'chip';
   /** The glyph beside the value: a calendar, or the deadline's flag. */
@@ -72,7 +74,7 @@ interface DateFieldProps {
  */
 export function DateField({
   value, onChange, label, placeholder, min, max, clearable = true, shortcuts,
-  variant = 'field', icon = 'calendar', withTime = false, premiumDeadline = false,
+  variant = 'field', icon = 'calendar', withTime = false, premiumDeadline = false, upgradeSource = 'deadline-picker',
   recurrence = null, onRecurrence, onClearRecurrence, showRecurrenceClear = true, duration, skip,
 }: DateFieldProps) {
   const chip = variant === 'chip';
@@ -189,7 +191,7 @@ export function DateField({
         visibility: position ? undefined : 'hidden',
       }}
     >
-      {locked ? <div className="deadline-pro-notice"><p>{t('deadline.proRequired')} <a href="https://www.todoist.com/pricing" target="_blank" rel="noopener noreferrer">{t('deadline.learnMore')}</a></p></div> : <DatePicker
+      {locked ? <div className="deadline-pro-notice"><p>{t('deadline.proRequired')} <a href={`https://www.todoist.com/pricing?utm_source=todoist_enhanced&utm_medium=referral&utm_campaign=product&utm_content=${encodeURIComponent(upgradeSource)}`} target="_blank" rel="noopener noreferrer">{t('deadline.learnMore')}</a></p></div> : <DatePicker
         value={value}
         label={label}
         min={min}

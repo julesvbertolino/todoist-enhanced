@@ -98,13 +98,14 @@ function useMenuPlacement(menu: string, anchorRef: React.RefObject<HTMLElement |
       const fitsAbove = height <= roomAbove;
       // Below by default: a menu only moves when the other side is genuinely better.
       const goUp = fitsBelow ? false : fitsAbove ? true : roomAbove > roomBelow;
-      const room = goUp ? roomAbove : roomBelow;
-      const shown = Math.min(height, Math.max(120, Math.floor(room)));
-      if (!fitsBelow && !fitsAbove) {
-        menuBox.style.maxHeight = `${shown}px`;
+      const available = Math.max(0, window.innerHeight - margin * 2);
+      const shown = Math.min(height, available);
+      if (height > available) {
+        menuBox.style.maxHeight = `${available}px`;
         menuBox.style.overflowY = 'auto';
       }
-      const top = goUp ? box.top - ROWMENU_GAP_PX - shown : box.bottom + ROWMENU_GAP_PX;
+      const preferredTop = goUp ? box.top - ROWMENU_GAP_PX - shown : box.bottom + ROWMENU_GAP_PX;
+      const top = Math.min(Math.max(margin, preferredTop), Math.max(margin, window.innerHeight - margin - shown));
       const left = Math.min(
         Math.max(margin, box.right - width),
         Math.max(margin, window.innerWidth - width - margin),
@@ -145,6 +146,7 @@ function useMenuPlacement(menu: string, anchorRef: React.RefObject<HTMLElement |
 interface TaskActionsProps {
   item: Item;
   contextOnly?: boolean;
+  fullMore?: boolean;
   childrenOf: (id: string) => Item[];
   onOpen: (id: string) => void;
   /** Present on a task gathering dust: keeps it in Someday on purpose (#161). */
@@ -157,7 +159,7 @@ interface TaskActionsProps {
  * Each one is an icon with a real label and tooltip, so nothing depends on the
  * reader guessing what a glyph does.
  */
-export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = false }: TaskActionsProps) {
+export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = false, fullMore = false }: TaskActionsProps) {
   const { t, locale } = useT();
   const warmPeople = useProjectPeople(item.project_id, false);
   const assignTask = useStore((state) => state.assignTask);
@@ -521,7 +523,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
       </div>}
       {menu === 'deadline' && <div className={`popover rowmenu schedulemenu${phone ? ' asSheet' : placement.className}`} role="menu" ref={placement.ref}>
         {back}
-        {deadlineLocked ? <div className="deadline-pro-notice"><p>{t('deadline.proRequired')} <a href="https://www.todoist.com/pricing" target="_blank" rel="noopener noreferrer">{t('deadline.learnMore')}</a></p></div> : <DatePicker value={item.deadline?.date ?? ''} label={t('detail.deadline')} onEscape={() => setMenu('none')} onPick={(date) => {
+        {deadlineLocked ? <div className="deadline-pro-notice"><p>{t('deadline.proRequired')} <a href="https://www.todoist.com/pricing?utm_source=todoist_enhanced&amp;utm_medium=referral&amp;utm_campaign=product&amp;utm_content=task-deadline" target="_blank" rel="noopener noreferrer">{t('deadline.learnMore')}</a></p></div> : <DatePicker value={item.deadline?.date ?? ''} label={t('detail.deadline')} onEscape={() => setMenu('none')} onPick={(date) => {
           setMenu('none'); void updateTask(item.id, { deadline: date ? { date: date.slice(0, 10), lang: locale } : null });
         }} />}
       </div>}
@@ -670,7 +672,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
                 to be the whole of what hovering one would have shown — the
                 swipe tray is the shortcut to the three most-used of these, not
                 the only way to reach them. */}
-            {(phone || contextPoint !== null) && (
+            {(phone || contextPoint !== null || fullMore) && (
               <>
                 <div className="task-quick-label">{t('task.schedule')}</div>
                 <div className="task-date-shortcuts" role="group" aria-label={t('task.schedule')}>

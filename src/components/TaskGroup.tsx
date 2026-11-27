@@ -151,16 +151,16 @@ export function TaskGroup({
               aria-expanded={!collapsed}
               aria-label={collapsed ? t('section.expand') : t('section.collapse')}
               title={collapsed ? t('section.expand') : t('section.collapse')}
+              data-tip-delay="900"
               onClick={() => setCollapsed((v) => !v)}
             >
               <Icon name="caret" size="sm" />
             </button>
           )}
-          <button
+          <div
             className="gtoggle"
-            aria-expanded={collapsible ? !collapsed : undefined}
             onClick={collapsible ? () => setCollapsed((v) => !v) : undefined}
-            style={collapsible ? (titleExtra ? { flex: '0 1 auto' } : undefined) : { cursor: 'default' }}
+            style={collapsible ? { cursor: 'pointer', ...(titleExtra ? { flex: '0 1 auto' } : {}) } : { cursor: 'default' }}
           >
             {onRename && sectionId ? (
               <SectionName
@@ -176,7 +176,7 @@ export function TaskGroup({
             {subtitle && <span className="gsub">{subtitle}</span>}
             {/* The round count follows the title, then the time (#185). */}
             {!titleExtra && stats}
-          </button>
+          </div>
           {/* A control after the title splits the toggle in two, so the chevron
               sits against the name and the count still follows it. */}
           {titleExtra && (

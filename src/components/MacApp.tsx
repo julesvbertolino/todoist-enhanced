@@ -86,7 +86,7 @@ export function MacAppCard() {
               onClick={() => setOpen((v) => !v)}
             >
               {t('macApp.download')}
-              <Icon name={open ? 'caret-up' : 'caret'} size="sm" />
+              <Icon name="caret" size="sm" className="disclosure-chevron" />
             </button>
           </div>
           {/* React 18's types do not know `inert` yet; the browser does. */}

@@ -1394,3 +1394,8 @@ kbd{padding:2px 5px;border:1px solid var(--border-strong);border-radius:var(--r-
 .dash-layout-edit:is(:hover, :focus-visible, .is-editing) .edit-layout-label { max-width: 180px; opacity: 1; margin-left: 8px; }
 .dashboard-layout-tools { display: flex; justify-content: flex-end; margin-bottom: 12px; }
 @media (prefers-reduced-motion: reduce) { .dash-layout-edit .edit-layout-label { transition: none; } }
+
+/* Secondary dashboard action keeps its label visible and quiet. */
+.dash-layout-edit.btn, .dash-layout-edit.btn:hover { gap: 6px; color: var(--muted); background: transparent; border-color: transparent; box-shadow: none; }
+.dash-layout-edit .edit-layout-label, .dash-layout-edit:is(:hover, :focus-visible, .is-editing) .edit-layout-label { max-width: none; opacity: 1; margin-left: 0; }
+.dashboard-bento .stat-label { text-transform: none; letter-spacing: normal; }

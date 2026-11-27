@@ -90,6 +90,7 @@ export function PlacementField({ label, ariaLabel, value, onChange, variant, onN
       variant={variant}
       matchWidth={matchWidth}
       flattenSearch
+      searchable
       maxPopupWidth={variant === 'chip' ? 280 : undefined}
       popupClassName={variant === 'chip' ? 'composer-place-menu' : undefined}
       onChange={(next) => {

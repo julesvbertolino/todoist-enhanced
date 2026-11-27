@@ -148,6 +148,7 @@ export function DescriptionEditor({
   return (
     <div className={`descedit ${variant}`}>
       <Suspense fallback={<textarea
+        className="description-fallback"
         aria-label={ariaLabel}
         placeholder={placeholder}
         value={value}

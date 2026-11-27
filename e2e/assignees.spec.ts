@@ -68,7 +68,7 @@ test('grouping by assignee prefills the modal and preserves project placement', 
   await demo.getByRole('button', { name: 'Grouping', exact: true }).click();
   await demo.getByRole('option', { name: 'Assignee', exact: true }).click();
   await demo.getByRole('button', { name: /^Display/ }).click();
-  const group = demo.locator('.screen.active .group').filter({ has: demo.getByRole('button', { name: /Alex Martin/ }) });
+  const group = demo.locator('.screen.active .group').filter({ has: demo.locator('.gname', { hasText: 'Alex Martin' }) });
   await group.getByRole('button', { name: /Add task/ }).click();
   const dialog = demo.getByRole('dialog', { name: 'Add task', exact: true });
   await expect(dialog.getByRole('button', { name: 'Assigned to' })).toContainText('Alex Martin');

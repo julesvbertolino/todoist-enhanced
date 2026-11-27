@@ -64,6 +64,31 @@ export function ChangelogPreview({ kind }: { kind: ChangelogVisual | null }) {
   let content: ReactNode;
   switch (kind) {
     case null: return null;
+    case 'subtaskActions':
+      content = <div className="cv-subtask-actions">
+        <div className="cv-subtask-actions-task">
+          <div className="cv-subtask-actions-title"><span className="cv-subtask-actions-check parent" /><strong>Rebuild the home page</strong></div>
+          <div className="cv-subtask-actions-box">
+            <div className="cv-subtask-actions-label">Subtasks <span>◌ 0/3</span></div>
+            <div className="cv-subtask-actions-row selected"><span className="cv-subtask-actions-check" /><span>Write the copy</span><Icon name="more" size="sm" /></div>
+            <div className="cv-subtask-actions-row"><span className="cv-subtask-actions-check" /><span>Choose the images</span></div>
+            <div className="cv-subtask-actions-row"><span className="cv-subtask-actions-check" /><span>Build the layout</span></div>
+          </div>
+        </div>
+        <div className="cv-subtask-actions-menu">
+          <div className="cv-subtask-actions-item"><Icon name="edit" size="sm" />Edit task</div>
+          <div className="cv-subtask-actions-separator" />
+          <div className="cv-subtask-actions-label">Start date</div>
+          <div className="cv-subtask-actions-dates">{(['sun', 'sofa', 'calendar-arrow-right', 'reset', 'calendar-x', 'calendar'] as IconName[]).map((icon) => <Icon key={icon} name={icon} size="sm" />)}</div>
+          <div className="cv-subtask-actions-separator" />
+          <div className="cv-subtask-actions-item"><Icon name="deadline" size="sm" />Deadline</div>
+          <div className="cv-subtask-actions-separator" />
+          <div className="cv-subtask-actions-label">Priority</div>
+          <div className="cv-subtask-actions-priorities">{[1, 2, 3, 4].map((p) => <span key={p} style={{ color: `var(--p${p})` }}><Icon name="flag" size="sm" />P{p}</span>)}</div>
+          <div className="cv-subtask-actions-separator" />
+          <div className="cv-subtask-actions-item"><Icon name="project" size="sm" />Move to project</div>
+        </div>
+      </div>; break;
     case 'uncompletableMenu':
       content = <img className="cv-uncompletable-menu" src={uncompletableMenu} alt="" />; break;
     case 'tableSection':

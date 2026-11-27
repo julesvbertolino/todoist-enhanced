@@ -8,7 +8,7 @@
  * cannot drift apart.
  */
 export const APP_NAME = 'Enhanced for Todoist';
-export const VERSION = '2.38.0';
+export const VERSION = '2.39.0';
 export const AUTHOR = 'julesbertolino';
 /** Public contact already used by the maintainer in the app. */
 export const PRIVACY_EMAIL = 'jules.bertolino@alias-digital.fr';
@@ -22,6 +22,7 @@ export const LINKEDIN_URL = 'https://www.linkedin.com/in/julesbertolino/';
 export const X_URL = 'https://x.com/julesvbertolino';
 export const AUTHOR_GITHUB_URL = 'https://github.com/julesvbertolino';
 export const COFFEE_URL = 'https://buymeacoffee.com/julesbertolino';
+export const coffeeUrl = (content: string): string => `${COFFEE_URL}?utm_source=todoist_enhanced&utm_medium=referral&utm_campaign=support&utm_content=${encodeURIComponent(content)}`;
 /** The Mac app lives in its own repository. The `latest/download` links never change from one release to the next. */
 export const MAC_APP_URL = 'https://github.com/julesvbertolino/todoist-enhanced-desktop';
 export const MAC_APP_RELEASES_URL = `${MAC_APP_URL}/releases/latest`;

@@ -172,7 +172,7 @@ export function WorkspaceView({ workspaceId }: { workspaceId: string }) {
         {rows.map(({ project, depth, projectCount, active, completed, progress }) => {
           if (project.is_folder) return <button key={project.id} type="button" className="workspace-folder" style={{ marginLeft: depth * 20, width: `calc(100% - ${depth * 20}px)` }}
             aria-expanded={!folded[project.id]} onClick={() => setFolded((previous) => ({ ...previous, [project.id]: !previous[project.id] }))}>
-            <Icon name={folded[project.id] ? 'caret' : 'caret-up'} size="sm" className="workspace-folder-caret" />
+            <Icon name="caret" size="sm" className="workspace-folder-caret disclosure-chevron" />
             <span className="workspace-icon workspace-folder-icon"><Icon name="project" size="sm" /></span>
             <span className="workspace-name"><strong>{project.name}</strong><small>{t('workspace.projectCount', { count: projectCount })}</small></span>
           </button>;

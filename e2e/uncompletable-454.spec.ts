@@ -28,7 +28,7 @@ test('task detail menu can undo an uncompletable task', async ({ demo: page }) =
   await dialog.getByRole('textbox', { name: 'Task' }).click();
   await expect(dialog.getByRole('textbox', { name: 'Task' })).toHaveValue('* Rebuild the home page');
   expect((await dialog.locator('.detail-headline .detail-content').boundingBox())!.width).toBeGreaterThan(120);
-  await dialog.getByRole('button', { name: 'More actions' }).click();
+  await dialog.getByRole('banner').getByRole('button', { name: 'More actions' }).click();
   await dialog.getByRole('button', { name: 'Make completable' }).click();
   await expect(dialog.locator('.detail-headline').getByRole('checkbox', { name: 'Complete task' })).toBeVisible();
 });

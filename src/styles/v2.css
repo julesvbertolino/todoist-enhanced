@@ -107,7 +107,7 @@
 .page .periodbar{justify-content:flex-start;gap:14px 18px;margin-top:18px;margin-bottom:6px}
 .periodbar .pagerlabel{min-width:128px;font-size:14px;letter-spacing:-.005em}
 .dashboard-bento .dashboard-group-label{
-  margin:30px 0 -2px;font-size:11.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);
+  margin:30px 0 -2px;font-size:11.5px;font-weight:600;letter-spacing:normal;text-transform:none;color:var(--faint);
 }
 .dashboard-bento .dashboard-group-label:first-child{margin-top:12px}
 .dashboard-bento .card{border-radius:22px;padding:22px 24px}
@@ -208,7 +208,7 @@
    follow without one, as the prototype has them. */
 .detail-main .detail-section{padding-left:0}
 .detail-main .detail-section.boxed{
-  margin-top:20px;padding:12px 14px;border:1px solid var(--border-strong);border-radius:16px;
+  margin-top:20px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--border) 55%,transparent);border-radius:16px;background:var(--surface-2);
 }
 .detail-main .detail-section.comments{margin-top:22px}
 .detail-main .detail-section .sectionlabel{font-size:12px;font-weight:700;color:var(--muted)}
@@ -999,7 +999,7 @@ html.dragging-row .col .taskwrap{transition:margin .16s ease}
 /* The open task. The check is a small squircle that sits on the title's first line; the blocks under the
    title (subtasks, comments) start where the title starts, not under the check. Comments are people. */
 .detail-headline{grid-template-columns:18px minmax(0,1fr);gap:12px}
-.detail-headline .check{width:18px;height:18px;margin-top:6px;border-radius:7px}
+.detail-headline .check{width:16px;height:16px;margin-top:10px;border-radius:5px}
 .detail-headline .check .ic{width:11px;height:11px}
 .detail-main .detail-section{margin-left:30px}
 .comment{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;padding:10px 0;border-bottom:0}
@@ -1871,6 +1871,8 @@ img.notifav{display:block;width:34px;height:34px;object-fit:cover}
 /* Equal page width for task lists, boards and their headers. */
 .page > :is(.phead,.metrics,.viewbar,.tabs,.mode,.empty),
 .page.wide > :is(.phead,.metrics,.viewbar,.tabs,.mode,.empty){max-width:none}
+.page.wide.dashboard-page > .phead{max-width:1092px}
+.page.wide.dashboard-page > .periodbar{max-width:1092px}
 /* Equal space around the toggle group between separators. */
 .display-toggles{padding-top:var(--s4)}
 :root[data-theme="dark"] .pactions .btn.insights-control{background:color-mix(in srgb,var(--accent) 24%,var(--surface));color:var(--text)}
@@ -2411,6 +2413,12 @@ html[data-navigation="pointer"] .task:focus-visible::after{content:none}
 .pactions .btn.insights-control { color:var(--accent-dark); }
 :root[data-theme="dark"] .pactions .btn.insights-control { color:var(--accent-dark); }
 .detail-side .priopill[aria-checked="true"] { text-decoration:none; }
+/* The chosen priority uses the same surface as the neighbouring fields. */
+.detail-side .priopills{background:transparent;padding:3px;gap:0}
+.detail-side .priopills::before{box-sizing:border-box;border:1px solid var(--border);box-shadow:0 1px 3px #0001}
+.detail-side .priopill:not([aria-checked="true"]){color:var(--muted)}
+.notiflist li:not(.unread) .notifline{color:var(--muted)}
+.notiflist li:not(.unread) .notifav-wrap{filter:grayscale(.8);opacity:.7}
 .propadd { padding:0; line-height:1; }
 .propadd .ic { display:block; }
 .estrow { align-items:start; }
@@ -2441,3 +2449,20 @@ html[data-navigation="pointer"] .task:focus-visible::after{content:none}
 .deadline-pro-notice { padding:14px; max-width:260px; font-size:var(--fs-13); }
 .deadline-pro-notice p { margin:0; }
 .deadline-pro-notice a { color:var(--accent); text-decoration:underline; text-underline-offset:2px; }
+
+/* Section titles start at the same edge as the task checkboxes. */
+@media (hover:hover) and (min-width:721px){
+  .ghead .gcaret{position:absolute;left:-27px;top:50%;transform:translateY(-50%);margin:0;width:22px;opacity:1}
+  .ghead:has(.gnamegrow) .gcaret{top:calc(var(--gline) - 11px);transform:none;margin:0}
+}
+.ghead .gcaret:hover{background:transparent;color:var(--faint)}
+.ghead .gcaret:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+:is(.navitem,.navtwist,.side-disclose,.workspace-folder,.macapp-actions .btn)[aria-expanded] > .disclosure-chevron{transition:transform .15s ease}
+:is(.navitem,.navtwist,.side-disclose,.workspace-folder,.macapp-actions .btn)[aria-expanded="false"] > .disclosure-chevron{transform:rotate(-90deg)}
+.detail-body:has(.detail-edit-surface.is-editing) .detail-side,
+.detail-body:has(.detail-edit-surface.is-editing) .detail-section{opacity:.38;transition:opacity .18s}
+@media (prefers-reduced-motion:reduce){
+  :is(.navitem,.navtwist,.side-disclose,.workspace-folder,.macapp-actions .btn)[aria-expanded] > .disclosure-chevron,
+  .detail-body:has(.detail-edit-surface.is-editing) .detail-side,
+  .detail-body:has(.detail-edit-surface.is-editing) .detail-section{transition:none}
+}

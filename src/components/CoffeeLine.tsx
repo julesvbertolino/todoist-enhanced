@@ -1,6 +1,6 @@
 import { Icon } from './Icon';
 import { useT } from '@/hooks/useT';
-import { COFFEE_URL } from '@/app-info';
+import { coffeeUrl } from '@/app-info';
 
 /**
  * The one place the app mentions that it costs its author something.
@@ -21,7 +21,7 @@ export function CoffeeLine() {
   return (
     <p className="coffeeline">
       <span>{t('coffee.free')}</span>
-      <a href={COFFEE_URL} target="_blank" rel="noreferrer noopener">
+      <a href={coffeeUrl('footer')} target="_blank" rel="noreferrer noopener">
         <Icon name="coffee" size="sm" />
         {t('coffee.offer')}
       </a>
