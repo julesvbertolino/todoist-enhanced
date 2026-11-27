@@ -46,7 +46,7 @@ test('a free account sees the deadline explanation from the usual composer butto
   await dialog.getByRole('button', { name: 'Deadline' }).click();
   const notice = page.locator('.deadline-pro-notice');
   await expect(notice).toContainText('Pro or Business is required to set a deadline.');
-  const link = notice.getByRole('link', { name: 'See Todoist plans' });
-  await expect(link).toHaveAttribute('href', 'https://www.todoist.com/pricing');
+  const link = notice.getByRole('link', { name: 'Upgrade my Todoist plan' });
+  await expect(link).toHaveAttribute('href', 'https://www.todoist.com/pricing?utm_source=todoist_enhanced&utm_medium=referral&utm_campaign=product&utm_content=composer-deadline');
   expect(await link.evaluate((node) => node.parentElement?.tagName)).toBe('P');
 });
