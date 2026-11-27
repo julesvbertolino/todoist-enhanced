@@ -171,16 +171,10 @@ test('subtasks use the selected light background in an open task', async ({ demo
 });
 
 test('notification avatars do not show action badges', async ({ demo: page }) => {
-  await page.evaluate(() => {
-    const store = (window as unknown as { __store: { getState: () => { snapshot: Record<string, unknown> }; setState: (v: unknown) => void } }).__store;
-    const snapshot = store.getState().snapshot;
-    store.setState({ snapshot: { ...snapshot, notifications: {
-      a: { id: 'a', is_unread: true, notification_type: 'item_assigned', from_name: 'Alex', item_content: 'A task' },
-      b: { id: 'b', is_unread: false, notification_type: 'note_added', from_name: 'Marie', item_content: 'A note' },
-    } } });
-  });
   await page.locator('[data-tour="notifications"]').click();
   await expect(page.locator('.notiflist li')).toHaveCount(2);
+  await expect(page.locator('.notiflist li.unread')).toHaveCount(1);
+  await expect(page.locator('.notiflist li:not(.unread)')).toHaveCount(1);
   await expect(page.locator('.notiflist .notifbadge')).toHaveCount(0);
   await expect(page.locator('.notiflist li.unread .notifdot')).toBeVisible();
 });
