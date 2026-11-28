@@ -17,6 +17,7 @@ import {
 } from './dnd/RowList';
 import { ROW_MOVE_EVENT, type RowMove } from '@/hooks/useKeyboard';
 import { TaskActions } from './TaskActions';
+import { useRowArmed } from '@/hooks/useRowArmed';
 import { DustActions, DustAge } from './DustRow';
 import { useT } from '@/hooks/useT';
 import { usePhoneBehaviour } from '@/hooks/useTouchLayout';
@@ -100,6 +101,8 @@ function TaskRowView({
   const { setRowRef, nestOver, landing, landingBefore } = useRowTarget(item.id, { nestable, disabled: !!item.projection });
   const list = useRowList();
   const rowEl = useRef<HTMLDivElement | null>(null);
+  /* Shown under the pointer only, so drawn the first time it comes (#365). */
+  const handleArmed = useRowArmed(rowEl, lifted);
 
   /* ⌘↑ / ⌘↓ from the keyboard: this task takes the place of the one above or
      below it — among the list's tasks, or among its parent's subtasks — the
@@ -179,7 +182,6 @@ function TaskRowView({
   const keepInSomeday = useStore((s) => s.keepInSomeday);
   const picked = useStore((s) => s.selection.includes(item.id));
   const toggleSelection = useStore((s) => s.toggleSelection);
-  const selectionAnchor = useStore((s) => s.selectionAnchor);
   const setSelectionAnchor = useStore((s) => s.setSelectionAnchor);
   const selectRange = useStore((s) => s.selectRange);
   const showSubtasks = useContext(ShowSubtasks) && !item.projection;
@@ -278,6 +280,9 @@ function TaskRowView({
       .map((row) => row.dataset.taskId)
       .filter((id): id is string => Boolean(id));
     const ids = [...new Set(visible)];
+    /* Read when the range is made: a subscription redrew every row of the
+       page each time a click moved the anchor (#367). */
+    const { selectionAnchor } = useStore.getState();
     const from = selectionAnchor ? ids.indexOf(selectionAnchor) : -1;
     const to = ids.indexOf(item.id);
     if (from < 0 || to < 0) {
@@ -500,7 +505,7 @@ function TaskRowView({
       >
         {dragHandleProps && (
           <span className="drag" title={t('task.drag')} {...dragHandleProps}>
-            <Icon name="drag" />
+            {handleArmed && <Icon name="drag" />}
           </span>
         )}
 

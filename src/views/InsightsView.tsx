@@ -82,8 +82,11 @@ export function InsightsView({ onOpen }: { onOpen?: (id: string) => void }) {
   /* The initialiser above only runs on mount, so arriving from the menu while
      the page was already open left the tab where it was. */
   useEffect(() => {
+    /* Leaving for another page: this one stays on screen until the next is
+       drawn, and must not flip to its other tab meanwhile. */
+    if (route.view !== 'insights') return;
     setTab(route.id === 'logbook' ? 'logbook' : 'overview');
-  }, [route.id]);
+  }, [route.view, route.id]);
   const startDay = snapshot.user?.start_day ?? 1;
   const range = useMemo(
     () => rangeFor(period, offset, custom, startDay),

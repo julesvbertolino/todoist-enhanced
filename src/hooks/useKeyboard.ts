@@ -156,6 +156,8 @@ interface KeyboardBridge {
   openSearch: (seed: string) => void;
   openComposer: () => void;
   openShortcuts: () => void;
+  /** A page has been asked for and is still being drawn behind the one on screen. */
+  navigating: () => boolean;
 }
 
 export function useKeyboard(bridge: KeyboardBridge) {
@@ -269,6 +271,45 @@ export function useKeyboard(bridge: KeyboardBridge) {
          Escape by itself, and nothing behind one should answer a letter typed
          into it. */
       if (document.querySelector('.overlay.open, .rowmenu, .bulkpop')) return;
+
+      /* `g`, then where to. A prefix rather than a letter each, so that the
+         letters themselves stay available for typing — which is the other
+         half of how this app is navigated. */
+      if (goingTo) {
+        e.preventDefault();
+        stopGoing();
+        const to = GO_TO[e.key.toLowerCase()];
+        if (!to) return;
+        /* Go to My Week only when it actually includes today's tasks.
+           Hiding Today in the sidebar does not make its tasks unreachable. */
+        const merged = to === 'today' && store.prefs.weekLayout === 'unified'
+          && viewPrefs(store.prefs, 'week').filters.includeScheduled;
+        navigate(merged ? 'week' : to);
+        return;
+      }
+      if (e.key === 'g' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        goingTo = true;
+        goingTimer = setTimeout(() => { goingTo = false; }, PREFIX_MS);
+        return;
+      }
+
+      // Quick add, whatever the cursor is on.
+      if (e.key === 'q' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        to.openComposer();
+        return;
+      }
+      if (e.key === '/' ) { e.preventDefault(); to.openSearch(''); return; }
+      if (e.key === '?') { e.preventDefault(); to.openShortcuts(); return; }
+
+      /* The page on screen is the one being left (#514): until the next one
+         is drawn, the list's own keys (moving the cursor, ticking, dating,
+         moving, deleting, selecting) are not for it. The `g` prefix, the
+         composer, the search and the shortcuts above still answer, and keys
+         this listener does not take are left to the browser: Tab, Enter and
+         Space keep working on the sidebar. */
+      if (to.navigating()) return;
 
       /* Select all means the tasks, not the page's text: nobody selects the
          words of a task list to do something with them, and everybody picks
@@ -389,36 +430,6 @@ export function useKeyboard(bridge: KeyboardBridge) {
         return;
       }
 
-      /* `g`, then where to. A prefix rather than a letter each, so that the
-         letters themselves stay available for typing — which is the other
-         half of how this app is navigated. */
-      if (goingTo) {
-        e.preventDefault();
-        stopGoing();
-        const to = GO_TO[e.key.toLowerCase()];
-        if (!to) return;
-        /* Go to My Week only when it actually includes today's tasks.
-           Hiding Today in the sidebar does not make its tasks unreachable. */
-        const merged = to === 'today' && store.prefs.weekLayout === 'unified'
-          && viewPrefs(store.prefs, 'week').filters.includeScheduled;
-        navigate(merged ? 'week' : to);
-        return;
-      }
-      if (e.key === 'g' && !e.metaKey && !e.ctrlKey && !e.altKey) {
-        e.preventDefault();
-        goingTo = true;
-        goingTimer = setTimeout(() => { goingTo = false; }, PREFIX_MS);
-        return;
-      }
-
-      // Quick add, whatever the cursor is on.
-      if (e.key === 'q' && !e.metaKey && !e.ctrlKey) {
-        e.preventDefault();
-        to.openComposer();
-        return;
-      }
-      if (e.key === '/' ) { e.preventDefault(); to.openSearch(''); return; }
-      if (e.key === '?') { e.preventDefault(); to.openShortcuts(); return; }
 
       if (current) {
         const id = current.dataset.taskId ?? '';

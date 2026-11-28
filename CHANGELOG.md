@@ -42,6 +42,10 @@ translation lives in CHANGELOG.fr.md.
 - Only what a person using the app can see or do. No technical work, no
   intermediate states of the same release.
 
+## 2.40.0
+
+🎨 **Performance refinements.** The sidebar responds the moment you click, and long lists appear up to twice as fast. On large accounts, typing a task, opening one and opening the search are more responsive.
+
 ## 2.39.0
 
 🎨 **Task composer refinements.** When adding a task, use the search bar to find a project or section. If you try to close a draft, a confirmation lets you keep editing so you don’t lose your changes.

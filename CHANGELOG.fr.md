@@ -8,6 +8,10 @@ Chaque ligne est marquée :
 - 🎨 Amélioré : ce qui existait et fonctionne ou se présente mieux,
 - 🐛 Corrigé : un bug ou une régression corrigés.
 
+## 2.40.0
+
+🎨 **Performances affinées.** La barre latérale réagit dès le clic et les longues listes s’affichent jusqu’à deux fois plus vite. Sur les gros comptes, saisir une tâche, en ouvrir une ou lancer la recherche est plus réactif.
+
 ## 2.39.0
 
 🎨 **Création de tâche affinée.** Lorsque vous ajoutez une tâche, recherchez un projet ou une section grâce au champ de recherche. Si vous tentez de fermer un brouillon, une confirmation vous permet de poursuivre sans perdre vos modifications.

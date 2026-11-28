@@ -371,6 +371,16 @@ export function TaskNameField({
     return () => input.removeEventListener('scroll', sync);
   }, [multiline]);
 
+  /* A wrapping field is given its text here rather than through React's
+     `value`: React also rewrites a textarea's text node on every change, and
+     on a long list that one change restyles thousands of rows behind the
+     field, about 25 ms a letter (#366). Written only when it differs, as React
+     does, so the caret and the undo history stay where they are. */
+  useLayoutEffect(() => {
+    const el = inputRef.current;
+    if (multiline && el && el.value !== value) el.value = value;
+  });
+
   /* A wrapping field is exactly as tall as its text, so the mirror behind it —
      which is the height of the box — cannot end up a line short. */
   useLayoutEffect(() => {
@@ -501,7 +511,7 @@ export function TaskNameField({
         rows: multiline ? 1 : undefined,
         onBlur,
         onFocus,
-        value,
+        value: multiline ? undefined : value,
         onPaste: (e: ClipboardEvent<HTMLInputElement>) => {
           const field = e.currentTarget;
           const text = e.clipboardData.getData('text/plain');

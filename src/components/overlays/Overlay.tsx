@@ -1,4 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { isTopOverlay, overlayCount, pushOverlay, removeOverlay } from './overlayStack';
 import { SheetGrip } from '../SheetChrome';
 
@@ -249,7 +250,10 @@ export function Overlay({
                 : ''
         }`;
 
-  return (
+  /* Drawn into the document rather than inside the page, like the pickers. A
+     dialog inside `.app` made every change in it, each letter typed included,
+     restyle thousands of rows behind it on a long list (#366, #367). */
+  return createPortal(
     <div className={`overlay${open ? ' open' : ' leaving'}${hung ? ' hung' : ''}`} role="dialog" aria-modal="true" aria-label={label}>
       <div className="scrim" onClick={open ? onClose : undefined} />
       <div className={sheetClass} ref={sheetRef} style={hung ?? undefined}>
@@ -257,6 +261,7 @@ export function Overlay({
         <SheetGrip onClose={onClose} close={false} />
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

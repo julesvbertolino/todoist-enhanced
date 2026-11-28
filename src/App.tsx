@@ -3,7 +3,7 @@ import { openItems } from './store/selectors';
 import { useLabelRenames } from './hooks/useLabelRenames';
 import { seesHireNote } from '@/domain/hireNote';
 import { EstimateConversion } from '@/components/overlays/EstimateConversion';
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from './components/Icon';
 import { Sidebar } from './components/Sidebar';
 import { BulkBar } from './components/BulkBar';
@@ -55,7 +55,7 @@ import { useT } from './hooks/useT';
 import { useSelectionBlocks } from './hooks/useSelectionBlocks';
 import { useKeyboard } from './hooks/useKeyboard';
 import { useData } from './hooks/useData';
-import { navigate, useRoute, type Route } from './hooks/useRoute';
+import { navigate, routeKey, useRoute, type Route } from './hooks/useRoute';
 import { labelRoots, rootItems } from './store/selectors';
 import { detectConflicts } from './domain/conflicts';
 import { placementForPage } from './domain/dnd';
@@ -135,8 +135,10 @@ export function App() {
   }, [insightsOpen]);
   const openSidePanel = useStore((s) => s.openSidePanel);
   const closeSidePanel = useStore((s) => s.closeSidePanel);
-  const setInsightsOpen = (open: boolean) =>
-    (open ? openSidePanel('insights') : closeSidePanel('insights'));
+  /* Stable, or every render of App (a dialog opening, a page changing) hands
+     the page new props and redraws every row of it (#367). */
+  const setInsightsOpen = useCallback((open: boolean) =>
+    (open ? openSidePanel('insights') : closeSidePanel('insights')), [openSidePanel, closeSidePanel]);
   /* Not a boolean: what the sheet was opened to do — create one here, or edit
      that one — is carried by the open state itself. */
   const [projectSheet, setProjectSheet] = useState<ProjectSheetTarget>(null);
@@ -699,7 +701,7 @@ function paintBrowserChrome(): void {
 const TIME_PAGES = new Set<Route['view']>(['week', 'today', 'project', 'label', 'inbox', 'month', 'someday']);
 
 function AppShell({
-  route, openTaskId, setOpenTaskId, composerOpen, setComposerOpen,
+  route: liveRoute, openTaskId, setOpenTaskId, composerOpen, setComposerOpen,
   searchOpen, setSearchOpen, searchSeed, openSearch, shortcutsOpen, setShortcutsOpen,
   issuesOpen, setIssuesOpen,
   insightsOpen, setInsightsOpen, projectSheet, setProjectSheet,
@@ -707,6 +709,10 @@ function AppShell({
   placement, setPlacement,
 }: ShellProps) {
   const { t } = useT();
+  /* The navigation answers a click at once; the page it leads to is drawn
+     behind it, and a second click starts over rather than waiting (#514).
+     Everything that describes the page on screen follows the page. */
+  const route = useDeferredValue(liveRoute);
   const { snapshot, items, childrenOf } = useData(route.view === 'project' ? `project:${route.id}` : route.view === 'label' ? `label:${route.id}` : route.view === 'filter' ? `filter:${route.id}` : route.view);
   const conflictSettings = useStore((s) => s.prefs.conflicts);
   const demo = useStore((s) => s.demo);
@@ -787,7 +793,7 @@ function AppShell({
 
   /* Every way out of the browse page is a navigation, so one effect closes it
      rather than each of its thirty buttons remembering to. */
-  useEffect(() => setBrowseOpen(false), [route.view, route.id, route.sectionId, setBrowseOpen]);
+  useEffect(() => setBrowseOpen(false), [liveRoute.view, liveRoute.id, liveRoute.sectionId, setBrowseOpen]);
 
   /* The "I have time" panel answers about the page it is on. A page with no
      pill for it (Upcoming, Insights, the review) has nothing to ask it of, so
@@ -871,11 +877,15 @@ function AppShell({
      in `App` because deleting a task asks for confirmation, and the dialog
      that asks lives inside this shell. */
   useSelectionBlocks();
+  /* The page in front is still the one being left until the next is drawn. */
+  const navigating = useRef(false);
+  useLayoutEffect(() => { navigating.current = route !== liveRoute; }, [route, liveRoute]);
   useKeyboard({
     openTask,
     openSearch,
     openComposer: addTask,
     openShortcuts: () => setShortcutsOpen(true),
+    navigating: () => navigating.current,
   });
   const addTaskTo = useCallback((next: ComposerPlacement) => {
     setPlacement(next);
@@ -938,7 +948,7 @@ function AppShell({
       data-density={density}
     >
       <Sidebar
-        route={route}
+        route={liveRoute}
         onAddTask={addTask}
         onSearch={() => setSearchOpen(true)}
         onIssues={() => setIssuesOpen(true)}
@@ -977,20 +987,21 @@ function AppShell({
           </span>
         </header>
 
-        <section className="screen active">
+        {/* Which page is drawn, which can be a moment behind the address (#514). */}
+        <section className="screen active" data-route={routeKey(route)}>
           {pageContent}
         </section>
 
         <nav className="mobile-nav" aria-label={t('nav.projects')}>
           <button
-            aria-current={route.view === 'inbox' ? 'page' : undefined}
+            aria-current={liveRoute.view === 'inbox' ? 'page' : undefined}
             onClick={() => navigate('inbox')}
            aria-label={t('nav.inbox')}>
             <Icon name="inbox" size="lg" />
             {t('nav.tab.inbox')}
           </button>
           <button
-            aria-current={route.view === 'week' ? 'page' : undefined}
+            aria-current={liveRoute.view === 'week' ? 'page' : undefined}
             onClick={() => navigate('week')}
            aria-label={t('nav.week')}>
             <Icon name="week" size="lg" />
@@ -1001,7 +1012,7 @@ function AppShell({
             <i><Icon name="plus" /></i>
           </button>
           <button
-            aria-current={route.view === 'upcoming' ? 'page' : undefined}
+            aria-current={liveRoute.view === 'upcoming' ? 'page' : undefined}
             onClick={() => navigate('upcoming')}
            aria-label={t('nav.upcoming')}>
             <Icon name="upcoming" size="lg" />
@@ -1013,7 +1024,7 @@ function AppShell({
               slot it gives up goes to a destination: Someday, which was
               otherwise two taps away behind that same menu. */}
           <button
-            aria-current={route.view === 'someday' ? 'page' : undefined}
+            aria-current={liveRoute.view === 'someday' ? 'page' : undefined}
             onClick={() => navigate('someday')}
            aria-label={t('nav.someday')}>
             <Icon name="someday" size="lg" />
@@ -1068,7 +1079,7 @@ function AppShell({
             </button>
           </div>
           <Sidebar
-            route={route}
+            route={liveRoute}
                 variant="sheet"
             onAddTask={() => { setBrowseOpen(false); addTask(); }}
             onSearch={() => { setBrowseOpen(false); setSearchOpen(true); }}

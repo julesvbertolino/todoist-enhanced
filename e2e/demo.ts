@@ -55,7 +55,11 @@ export const oneOffTitles = (page: Page): Promise<string[]> =>
 /** Goes to a page by its address, the way a sidebar click does, without reloading. */
 export async function go(page: Page, hash: string): Promise<void> {
   await page.evaluate((to) => { window.location.hash = to; }, hash);
-  await expect(page.locator('.screen.active')).toBeVisible();
+  /* The page is drawn a moment after the address changes (#514): wait for it. */
+  const [path] = hash.replace(/^#\/?/, '').split('?');
+  const [view, id] = path.split('/');
+  const key = view === 'dashboard' ? 'insights' : id ? `${view}:${decodeURIComponent(id)}` : view || 'week';
+  await expect(page.locator('.screen.active')).toHaveAttribute('data-route', key);
   if (hash === '#/settings') await expect(page.locator('.screen.active #features')).toBeVisible();
   if (hash === '#/review') await expect(page.locator('.screen.active .reviewrail')).toBeVisible();
   if (hash === '#/insights') await expect(page.locator('.screen.active .ptitle')).toBeVisible();

@@ -4,6 +4,7 @@ import { confirmUndatedMove } from '@/domain/confirmUndatedMove';
 import { AssigneeField } from './AssigneeField';
 import { assignees } from '@/domain/sharing';
 import { useProjectPeople } from '@/hooks/useProjectPeople';
+import { useRowArmed } from '@/hooks/useRowArmed';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { isUncompletable, toggleUncompletableContent, toTodoistPriority } from '@/domain/types';
@@ -201,6 +202,10 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
 
   useEffect(() => { if (menu !== 'move') { setDest(''); setDestPick(-1); } }, [menu]);
 
+  /* Their icons are drawn once the row is pointed at, touched or focused; the
+     buttons stay, with their size and names, so nothing moves (#365). */
+  const armed = useRowArmed(ref, contextOnly || fullMore);
+
   /* Two ways to be asked for a menu, and the row is where both arrive: a key
      pressed on the row the cursor is on, and a finger held on the row under
      it. Each is an event on the row's own element rather than a context,
@@ -268,11 +273,14 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
 
   /* Moving a task means moving it somewhere it can live. Where it sits in time
      is the schedule menu's business, which is the button next to this one. */
+  /* Worked out when the menu opens: every row on a long page doing it for a
+     menu nobody opened was a good part of the time the page took (#365). */
+  const moving = menu === 'move';
   const projects = useMemo(
-    () => Object.values(allProjects)
+    () => (moving ? Object.values(allProjects)
       .filter((p) => !p.is_deleted && !p.is_archived && !p.is_folder)
-      .sort(byChildOrder),
-    [allProjects],
+      .sort(byChildOrder) : []),
+    [allProjects, moving],
   );
 
   /**
@@ -283,6 +291,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
    * drag down the page into the right group.
    */
   const destinations = useMemo<Destination[]>(() => {
+    if (!moving) return [];
     const sections = Object.values(allSections)
       .filter((s) => !s.is_deleted && !s.is_archived)
       .sort(bySectionOrder);
@@ -313,7 +322,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
           current: section.id === item.section_id,
         })),
     ]);
-  }, [projects, allSections, item.project_id, item.section_id, t]);
+  }, [moving, projects, allSections, item.project_id, item.section_id, t]);
 
   /* Typing narrows the list, on the section's name or on the project's, so
      "rev" finds "In review" wherever it lives. */
@@ -785,14 +794,14 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
             title={t('task.edit')}
             onClick={() => onOpen(item.id)}
           >
-            <Icon name="edit" size="sm" />
+            {armed && <Icon name="edit" size="sm" />}
           </button>
           <button
             aria-label={t('task.setEstimate')}
             title={t('task.setEstimate')}
             onClick={() => setMenu('estimate')}
           >
-            <Icon name="clock" size="sm" />
+            {armed && <Icon name="clock" size="sm" />}
           </button>
       </>
 
@@ -802,7 +811,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
         aria-expanded={menu === 'schedule'}
         onClick={() => setMenu(menu === 'schedule' ? 'none' : 'schedule')}
       >
-        <Icon name="calendar" size="sm" />
+        {armed && <Icon name="calendar" size="sm" />}
       </button>
 
       <button
@@ -811,7 +820,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
         aria-expanded={menu === 'move'}
         onClick={() => setMenu(menu === 'move' ? 'none' : 'move')}
       >
-        <Icon name="project" size="sm" />
+        {armed && <Icon name="project" size="sm" />}
       </button>
 
       {(hasPeople || item.responsible_uid) && (
@@ -826,7 +835,7 @@ export function TaskActions({ item, childrenOf, onOpen, onKeep, contextOnly = fa
         aria-expanded={menu === 'more'}
         onClick={() => setMenu(menu === 'more' ? 'none' : 'more')}
       >
-        <Icon name="more" size="sm" />
+        {armed && <Icon name="more" size="sm" />}
       </button>
 
       {/* On a phone the menus come up from the bottom edge as sheets with

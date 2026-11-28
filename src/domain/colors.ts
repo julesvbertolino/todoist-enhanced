@@ -99,7 +99,17 @@ function fromHsl(h: number, s: number, l: number): string {
  * a project name would look washed out. The marker and every fill keep the
  * colour Todoist gave the project.
  */
+const inks = new Map<string, string>();
+
 export function colorInk(name: string | undefined | null, theme: 'light' | 'dark'): string {
+  /* Asked twice by every row of a list, for one of a score of colours (#365). */
+  const key = `${name}|${theme}`;
+  let ink = inks.get(key);
+  if (ink === undefined) { ink = findInk(name, theme); inks.set(key, ink); }
+  return ink;
+}
+
+function findInk(name: string | undefined | null, theme: 'light' | 'dark'): string {
   const base = colorValue(name);
   const surface = theme === 'light' ? LIGHT_SURFACE : DARK_SURFACE;
   if (contrast(base, surface) >= MIN_CONTRAST) return base;
