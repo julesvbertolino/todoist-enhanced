@@ -128,6 +128,8 @@ test('#336 after an update, the missed releases are one list, pictures first the
   await page.evaluate(() => window.dispatchEvent(new CustomEvent('enhanced:changelog', { detail: { versions: ['2.20.0', '2.21.0'] } })));
   const dialog = page.getByRole('dialog', { name: 'What’s new since your last visit' });
   await expect(dialog.locator('.whatsnew-release')).toHaveCount(0);
+  // The list is read from the changelog, which arrives a moment after the window.
+  await expect(dialog.locator('.whatsnew-feed > li').first()).toBeVisible();
   /* Pictures lead; inside the pictures and inside the rest, new, better, fixed. */
   const entries = await dialog.locator('.whatsnew-feed > li').evaluateAll((items) => items.map((item) => ({
     picture: item.classList.contains('whatsnew-illustrated'),
